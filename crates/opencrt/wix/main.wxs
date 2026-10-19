@@ -38,7 +38,8 @@
                 <Component Id='Shortcut' Guid='8A6D1F2E-5C3B-4E9A-B7D2-1F4E6C8A0B35'>
                     <Shortcut Id='StartMenu' Name='OpenCRT' Target='[APPLICATIONFOLDER]opencrt.exe'
                               WorkingDirectory='APPLICATIONFOLDER' Icon='ProductICO'/>
-                    <RegistryValue Root='HKLM' Key='Software\OpenCRT' Name='StartMenuShortcut' Type='integer' Value='1' KeyPath='yes'/>
+                    <!-- HKCU, as Windows Installer requires for a shortcut's key path; the shortcut is still for all users. -->
+                    <RegistryValue Root='HKCU' Key='Software\OpenCRT' Name='StartMenuShortcut' Type='integer' Value='1' KeyPath='yes'/>
                 </Component>
             </Directory>
             <Component Id='LinkHandlers' Guid='C2E5A7B9-1D3F-4A6C-8E0B-7F9D2B4C6E81'>

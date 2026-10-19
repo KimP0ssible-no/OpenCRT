@@ -12,7 +12,7 @@ jobs:
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -34,7 +34,7 @@ jobs:
     steps:
       - name: Build tools
         run: dnf -y -q install gcc gcc-c++ make perl git
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release
       - run: cargo build --release --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target
@@ -57,14 +57,14 @@ jobs:
           cargo install cargo-deb cargo-generate-rpm --locked
           cargo deb -p opencrt --no-build
           cargo generate-rpm -p crates/opencrt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: opencrt-Linux
           path: |
             target/debian/*.deb
             target/generate-rpm/*.rpm
       # The same binaries again for the Arch package.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux-binaries
           path: |
@@ -79,13 +79,13 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           name: linux-binaries
           path: ci-linux
       - run: BIN_DIR="$PWD/ci-linux/release" NOTICES_DIR="$PWD/ci-linux" packaging/arch/makepkg.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: opencrt-Arch
           path: dist/*.pkg.tar.zst
@@ -98,7 +98,7 @@ jobs:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release
       - run: cargo build --release --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target
@@ -136,7 +136,7 @@ jobs:
           cargo bundle --release -p opencrt
           cp target/release/opencrt-rdp target/release/ocrt target/release/bundle/osx/OpenCRT.app/Contents/MacOS/
           hdiutil create -volname OpenCRT -srcfolder target/release/bundle/osx/OpenCRT.app -ov -format UDZO target/release/OpenCRT.dmg
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: opencrt-${{ runner.os }}
           path: |
@@ -153,13 +153,13 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Tag matches the version in Cargo.toml and the Windows installer
         run: |
           v="${GITHUB_REF_NAME#v}"
           grep -qx "version = \"$v\"" crates/opencrt/Cargo.toml
           grep -qx "#define AppVersion \"$v\"" packaging/windows/opencrt.iss
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: opencrt-*
           path: artifacts

@@ -1,0 +1,24 @@
+# cargo-about: the licences OpenCRT's dependencies may use. Generate the
+# notices with `cargo about generate about.hbs` (see docs/packaging.md).
+accepted = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "MIT",
+    "MIT-0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "CC0-1.0",
+    "BSL-1.0",
+    "MPL-2.0",
+    "OpenSSL",
+    "LicenseRef-Slint-Royalty-free-2.0",
+]
+ignore-build-dependencies = false
+ignore-dev-dependencies = true
+
+# Slint's crates name their licence by reference, which cargo-about cannot
+# resolve; its text ships separately as SLINT-LICENSE.md (see NOTICE).

@@ -1,0 +1,109 @@
+[package]
+name = "opencrt"
+version = "0.1.0"
+edition = "2024"
+description = "SSH, Telnet, serial and local terminal client"
+authors = ["Kim Attree"]
+license = "Apache-2.0"
+
+# Linux packages: `cargo deb -p opencrt` and `cargo generate-rpm -p crates/opencrt`
+# after `cargo build --release` (see docs/packaging.md).
+[package.metadata.deb]
+maintainer = "Kim Attree"
+section = "net"
+# Built against glibc 2.28 (packaging/linux/build-portable.sh); nothing else is
+# needed. Written out because dpkg-shlibdeps on a newer build machine asks for more.
+depends = "libc6 (>= 2.28)"
+extended-description = "Tabbed terminal client with a session manager, SFTP, port forwarding and logging."
+assets = [
+    ["target/release/opencrt", "usr/bin/", "755"],
+    ["target/release/opencrt-rdp", "usr/bin/", "755"],
+    ["target/release/ocrt", "usr/bin/", "755"],
+    ["../../packaging/linux/opencrt.desktop", "usr/share/applications/", "644"],
+    ["../../packaging/icons/opencrt-256.png", "usr/share/icons/hicolor/256x256/apps/opencrt.png", "644"],
+    ["../../LICENSE", "usr/share/doc/opencrt/LICENSE", "644"],
+    ["../../NOTICE", "usr/share/doc/opencrt/NOTICE", "644"],
+    ["../../SLINT-LICENSE.md", "usr/share/doc/opencrt/SLINT-LICENSE.md", "644"],
+    ["ui/fonts/OFL.txt", "usr/share/doc/opencrt/OFL.txt", "644"],
+    ["../../target/THIRD-PARTY-NOTICES.html", "usr/share/doc/opencrt/THIRD-PARTY-NOTICES.html", "644"],
+    ["../../target/THIRD-PARTY-NOTICES-RDP.html", "usr/share/doc/opencrt/THIRD-PARTY-NOTICES-RDP.html", "644"],
+]
+
+[package.metadata.generate-rpm]
+# As for the .deb: glibc 2.28 is all it needs. The automatic scan writes
+# requirements ("...[WEAK]") that no package provides, so it is off.
+auto-req = "no"
+requires = { glibc = ">= 2.28" }
+assets = [
+    { source = "target/release/opencrt", dest = "/usr/bin/opencrt", mode = "755" },
+    { source = "target/release/opencrt-rdp", dest = "/usr/bin/opencrt-rdp", mode = "755" },
+    { source = "target/release/ocrt", dest = "/usr/bin/ocrt", mode = "755" },
+    { source = "../../packaging/linux/opencrt.desktop", dest = "/usr/share/applications/opencrt.desktop", mode = "644" },
+    { source = "../../packaging/icons/opencrt-256.png", dest = "/usr/share/icons/hicolor/256x256/apps/opencrt.png", mode = "644" },
+    { source = "../../LICENSE", dest = "/usr/share/doc/opencrt/LICENSE", mode = "644" },
+    { source = "../../NOTICE", dest = "/usr/share/doc/opencrt/NOTICE", mode = "644" },
+    { source = "../../SLINT-LICENSE.md", dest = "/usr/share/doc/opencrt/SLINT-LICENSE.md", mode = "644" },
+    { source = "ui/fonts/OFL.txt", dest = "/usr/share/doc/opencrt/OFL.txt", mode = "644" },
+    { source = "../../target/THIRD-PARTY-NOTICES.html", dest = "/usr/share/doc/opencrt/THIRD-PARTY-NOTICES.html", mode = "644" },
+    { source = "../../target/THIRD-PARTY-NOTICES-RDP.html", dest = "/usr/share/doc/opencrt/THIRD-PARTY-NOTICES-RDP.html", mode = "644" },
+]
+
+# macOS app bundle: `cargo bundle --release -p opencrt`.
+[package.metadata.bundle]
+name = "OpenCRT"
+identifier = "org.opencrt.OpenCRT"
+icon = ["../../packaging/icons/opencrt-128.png", "../../packaging/icons/opencrt-256.png"]
+category = "public.app-category.developer-tools"
+short_description = "SSH, Telnet, serial and local terminal client"
+resources = ["../../LICENSE", "../../NOTICE", "../../SLINT-LICENSE.md", "ui/fonts/OFL.txt", "../../target/THIRD-PARTY-NOTICES.html", "../../target/THIRD-PARTY-NOTICES-RDP.html"]
+
+[dependencies]
+alacritty_terminal = "0.26.0"
+anyhow = "1.0.104"
+arboard = "3.6.1"
+# Already built for Slint; local time for log timestamps.
+encoding_rs = "0.8"
+chrono = { version = "0.4.45", default-features = false, features = ["clock"] }
+fontdue = "0.9.4"
+futures = { version = "0.3.34", default-features = false }
+keyring = "4.2.0"
+# Messages to and from the RDP helper program (opencrt-rdp).
+opencrt-rdp-proto = { path = "../rdp-proto" }
+# Same version and feature russh already uses, for generating keys.
+# Already built (alacritty, rhai); keyword highlighting.
+regex = "1.13.1"
+rand = { version = "0.10.3", default-features = false, features = ["thread_rng"] }
+rfd = "0.17.2"
+rhai = "1.26.1"
+russh = "0.64.1"
+russh-sftp = "3.0.1"
+serde = { version = "1.0.229", features = ["derive"] }
+serialport = { version = "4.10.1", default-features = false }
+slint = { version = "1.18.1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-software", "software-renderer-systemfonts", "accessibility", "software-renderer-path", "unstable-winit-030"] }
+tokio = { version = "1.53.2", features = ["full"] }
+toml = "1.1.8"
+# Already built for Slint; opens Ctrl+clicked web addresses.
+webbrowser = "1.2.4"
+# Raw mode and window size for the command-line tools (ocrt).
+crossterm = { version = "0.29", default-features = false, features = ["windows"] }
+# Telnet over TLS, on the aws-lc crypto russh already builds; certificate fingerprints.
+rustls = { version = "0.23", default-features = false, features = ["aws_lc_rs", "std", "tls12"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["aws_lc_rs", "tls12"] }
+sha2 = "0.11"
+
+[build-dependencies]
+embed-resource = "3.0.12"
+slint-build = "1.18.1"
+
+# Slint finds system fonts through fontconfig: load it at run time if it is
+# there rather than linking it, so the Linux binary needs only glibc (the UI
+# and terminal fonts are built in).
+[target.'cfg(target_os = "linux")'.dependencies]
+fontique = { version = "0.11", default-features = false, features = ["fontconfig-dlopen"] }
+
+[target."cfg(windows)".dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging", "Win32_System_Diagnostics_Debug", "Win32_System_Console"] }
+
+[dev-dependencies]
+# A throwaway certificate for the Telnet/TLS test server.
+rcgen = { version = "0.14", default-features = false, features = ["aws_lc_rs", "pem"] }

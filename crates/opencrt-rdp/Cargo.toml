@@ -1,0 +1,35 @@
+[package]
+name = "opencrt-rdp"
+version = "0.1.0"
+edition = "2024"
+description = "RDP helper for OpenCRT: one process per RDP tab, driven over stdin/stdout"
+authors = ["Kim Attree"]
+license = "Apache-2.0"
+
+# Its own workspace: IronRDP and russh (in OpenCRT itself) pin incompatible
+# versions of the same crypto crates. Build into the shared target folder:
+#   cargo build --release --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target
+[workspace]
+
+[dependencies]
+anyhow = "1.0.104"
+# Devolutions IronRDP (MIT/Apache-2.0): connection sequence, NLA, session, codecs, input.
+ironrdp = { version = "0.17.0", features = ["connector", "session", "graphics", "input", "pdu", "dvc", "displaycontrol", "cliprdr"] }
+ironrdp-tls = { version = "0.2.2", features = ["rustls"] }
+ironrdp-tokio = "0.10.0"
+opencrt-rdp-proto = { path = "../rdp-proto" }
+sha2 = "0.10"
+tokio = { version = "1.53.2", features = ["rt", "net", "io-util", "sync", "macros", "time"] }
+# Same version ironrdp-tls returns; for the certificate fingerprint and subject.
+x509-cert = "0.2.5"
+
+[dev-dependencies]
+# For the local test server (examples/dev_rdp_server.rs, tests/session.rs).
+async-trait = "0.1.92"
+ironrdp = { version = "0.17.0", features = ["server"] }
+ironrdp-server = { version = "0.13.0", features = ["helper"] }
+rcgen = { version = "0.14.10", default-features = false, features = ["aws_lc_rs", "pem"] }
+
+[profile.release]
+strip = true
+lto = "thin"

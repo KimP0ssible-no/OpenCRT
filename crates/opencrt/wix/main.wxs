@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<!--
+  MSI package for unattended and Group Policy installs (no wizard), built in CI
+  with cargo-wix (see .github/workflows/ci.yml). The Inno Setup installer (packaging\windows\opencrt.iss) is the interactive one.
+  Optional feature "Links" (off by default; ADDLOCAL=Links) opens ssh://, telnet:// and rlogin:// links.
+-->
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+    <Product Id='*' Name='OpenCRT' UpgradeCode='B87A362F-4788-488E-A144-A86A475DC646'
+             Manufacturer='OpenCRT' Language='1033' Codepage='1252' Version='$(var.Version)'>
+        <Package Id='*' Description='SSH, Telnet, serial and local terminal client' Manufacturer='OpenCRT'
+                 InstallerVersion='500' Languages='1033' Compressed='yes' InstallScope='perMachine'
+                 Platform='x64' SummaryCodepage='1252'/>
+        <MajorUpgrade Schedule='afterInstallInitialize'
+                      DowngradeErrorMessage='A newer version of [ProductName] is already installed.'/>
+        <Media Id='1' Cabinet='opencrt.cab' EmbedCab='yes'/>
+        <Icon Id='ProductICO' SourceFile='packaging\icons\opencrt.ico'/>
+        <Property Id='ARPPRODUCTICON' Value='ProductICO'/>
+
+        <Directory Id='TARGETDIR' Name='SourceDir'>
+            <Directory Id='ProgramFiles64Folder'>
+                <Directory Id='APPLICATIONFOLDER' Name='OpenCRT'>
+                    <Component Id='App' Guid='3F0C4E8B-2B1D-4C6A-9E47-5D1A2C7B9E10' Win64='yes'>
+                        <File Id='OpenCRT' Name='opencrt.exe' Source='$(var.CargoTargetBinDir)\opencrt.exe' KeyPath='yes'/>
+                        <File Id='RdpHelper' Name='opencrt-rdp.exe' Source='$(var.CargoTargetBinDir)\opencrt-rdp.exe'/>
+                        <File Id='Cli' Name='ocrt.exe' Source='$(var.CargoTargetBinDir)\ocrt.exe'/>
+                        <!-- The command-line tools (ocrt) on PATH. -->
+                        <Environment Id='Path' Name='PATH' Value='[APPLICATIONFOLDER]' Permanent='no' Part='last' Action='set' System='yes'/>
+                        <File Id='License' Name='LICENSE.txt' Source='LICENSE'/>
+                        <File Id='Notice' Name='NOTICE.txt' Source='NOTICE'/>
+                        <File Id='SlintLicense' Name='SLINT-LICENSE.md' Source='SLINT-LICENSE.md'/>
+                        <File Id='FontLicense' Name='OFL.txt' Source='crates\opencrt\ui\fonts\OFL.txt'/>
+                        <File Id='Notices' Name='THIRD-PARTY-NOTICES.html' Source='$(var.CargoTargetDir)\THIRD-PARTY-NOTICES.html'/>
+                        <File Id='NoticesRdp' Name='THIRD-PARTY-NOTICES-RDP.html' Source='$(var.CargoTargetDir)\THIRD-PARTY-NOTICES-RDP.html'/>
+                    </Component>
+                </Directory>
+            </Directory>
+            <Directory Id='ProgramMenuFolder'>
+                <Component Id='Shortcut' Guid='8A6D1F2E-5C3B-4E9A-B7D2-1F4E6C8A0B35'>
+                    <Shortcut Id='StartMenu' Name='OpenCRT' Target='[APPLICATIONFOLDER]opencrt.exe'
+                              WorkingDirectory='APPLICATIONFOLDER' Icon='ProductICO'/>
+                    <RegistryValue Root='HKLM' Key='Software\OpenCRT' Name='StartMenuShortcut' Type='integer' Value='1' KeyPath='yes'/>
+                </Component>
+            </Directory>
+            <Component Id='LinkHandlers' Guid='C2E5A7B9-1D3F-4A6C-8E0B-7F9D2B4C6E81'>
+                <RegistryValue Root='HKLM' Key='Software\Classes\ssh' Type='string' Value='URL:SSH' KeyPath='yes'/>
+                <RegistryValue Root='HKLM' Key='Software\Classes\ssh' Name='URL Protocol' Type='string' Value=''/>
+                <RegistryValue Root='HKLM' Key='Software\Classes\ssh\DefaultIcon' Type='string' Value='[APPLICATIONFOLDER]opencrt.exe,0'/>
+                <RegistryValue Root='HKLM' Key='Software\Classes\ssh\shell\open\command' Type='string' Value='"[APPLICATIONFOLDER]opencrt.exe" /T "%1"'/>
+                <RegistryValue Root='HKLM' Key='Software\Classes\telnet' Type='string' Value='URL:Telnet'/>
+                <RegistryValue Root='HKLM' Key='Software\Classes\telnet' Name='URL Protocol' Type='string' Value=''/>
+                <RegistryValue Root='HKLM' Key='Software\Classes\telnet\DefaultIcon' Type='string' Value='[APPLICATIONFOLDER]opencrt.exe,0'/>
+                <RegistryValue Root='HKLM' Key='Software\Classes\telnet\shell\open\command' Type='string' Value='"[APPLICATIONFOLDER]opencrt.exe" /T "%1"'/>
+                <RegistryValue Root='HKLM' Key='Software\Classes\rlogin' Type='string' Value='URL:RLogin'/>
+                <RegistryValue Root='HKLM' Key='Software\Classes\rlogin' Name='URL Protocol' Type='string' Value=''/>
+                <RegistryValue Root='HKLM' Key='Software\Classes\rlogin\DefaultIcon' Type='string' Value='[APPLICATIONFOLDER]opencrt.exe,0'/>
+                <RegistryValue Root='HKLM' Key='Software\Classes\rlogin\shell\open\command' Type='string' Value='"[APPLICATIONFOLDER]opencrt.exe" /T "%1"'/>
+            </Component>
+        </Directory>
+
+        <Feature Id='Application' Title='OpenCRT' Level='1' Absent='disallow'>
+            <ComponentRef Id='App'/>
+            <ComponentRef Id='Shortcut'/>
+            <Feature Id='Links' Title='Open ssh://, telnet:// and rlogin:// links' Level='1000'>
+                <ComponentRef Id='LinkHandlers'/>
+            </Feature>
+        </Feature>
+        <SetProperty Id='ARPINSTALLLOCATION' Value='[APPLICATIONFOLDER]' After='CostFinalize'/>
+    </Product>
+</Wix>

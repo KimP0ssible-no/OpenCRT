@@ -1,0 +1,106 @@
+// OpenCRT's icons (design pack v1): monoline SVGs tinted with the theme's ink,
+// and the status badges drawn as dots.
+
+import { Theme } from "theme.slint";
+
+export enum IconKind {
+    sessions, connect, quick-connect, connect-tab, reconnect, disconnect, copy, paste, find, print, options,
+    connected, connecting, failed, sftp, local-shell, folder, folder-open, new-session, new-folder, properties,
+    delete, chevron-right, chevron-down, session-ssh, session-telnet, session-serial, session-rdp, session-local,
+    script, lock,
+}
+
+// The tree icon for a protocol index (config::Protocol::ALL: SSH2, Telnet, Raw, Serial, Local, RDP).
+export global Icons {
+    public pure function protocol-icon(protocol: int) -> IconKind {
+        return protocol == 0 ? IconKind.session-ssh
+            : protocol == 3 ? IconKind.session-serial
+            : protocol == 4 ? IconKind.session-local
+            : protocol == 5 ? IconKind.session-rdp
+            : IconKind.session-telnet;
+    }
+}
+
+export component Icon {
+    in property <IconKind> kind;
+    in property <bool> enabled: true;
+    in property <length> size: 16px;
+    in property <brush> ink: root.enabled ? Theme.text : Theme.text-disabled;
+    width: root.size;
+    height: root.size;
+
+    if root.kind == IconKind.connected || root.kind == IconKind.connecting || root.kind == IconKind.failed: Rectangle {
+        x: (root.size - self.width) / 2;
+        y: (root.size - self.height) / 2;
+        width: root.size / 2;
+        height: self.width;
+        border-radius: self.width / 2;
+        background: root.kind == IconKind.connected ? Theme.status-connected
+            : root.kind == IconKind.connecting ? Theme.status-connecting
+            : transparent;
+        border-width: root.kind == IconKind.failed ? 1.2px : 0px;
+        border-color: Theme.status-disconnected;
+    }
+    if root.kind != IconKind.connected && root.kind != IconKind.connecting && root.kind != IconKind.failed: Image {
+        width: 100%;
+        height: 100%;
+        colorize: root.ink;
+        source: root.kind == IconKind.sessions ? @image-url("images/toolbar/session-manager.svg")
+            : root.kind == IconKind.connect ? @image-url("images/toolbar/connect.svg")
+            : root.kind == IconKind.quick-connect ? @image-url("images/toolbar/quick-connect.svg")
+            : root.kind == IconKind.connect-tab ? @image-url("images/toolbar/new-tab.svg")
+            : root.kind == IconKind.reconnect ? @image-url("images/toolbar/reconnect.svg")
+            : root.kind == IconKind.disconnect ? @image-url("images/toolbar/disconnect.svg")
+            : root.kind == IconKind.copy ? @image-url("images/toolbar/copy.svg")
+            : root.kind == IconKind.paste ? @image-url("images/toolbar/paste.svg")
+            : root.kind == IconKind.find ? @image-url("images/toolbar/find.svg")
+            : root.kind == IconKind.print ? @image-url("images/toolbar/print.svg")
+            : root.kind == IconKind.options || root.kind == IconKind.properties ? @image-url("images/toolbar/session-options.svg")
+            : root.kind == IconKind.sftp ? @image-url("images/toolbar/transfer.svg")
+            : root.kind == IconKind.local-shell ? @image-url("images/toolbar/local-shell.svg")
+            : root.kind == IconKind.folder ? @image-url("images/tree/folder.svg")
+            : root.kind == IconKind.folder-open ? @image-url("images/tree/folder-open.svg")
+            : root.kind == IconKind.new-session ? @image-url("images/tree/plus-small.svg")
+            : root.kind == IconKind.new-folder ? @image-url("images/tree/folder-new.svg")
+            : root.kind == IconKind.delete ? @image-url("images/tree/close-small.svg")
+            : root.kind == IconKind.chevron-right ? @image-url("images/tree/chevron-right.svg")
+            : root.kind == IconKind.chevron-down ? @image-url("images/tree/chevron-down.svg")
+            : root.kind == IconKind.session-ssh ? @image-url("images/tree/session-ssh.svg")
+            : root.kind == IconKind.session-telnet ? @image-url("images/tree/session-telnet.svg")
+            : root.kind == IconKind.session-serial ? @image-url("images/tree/session-serial.svg")
+            : root.kind == IconKind.session-rdp ? @image-url("images/tree/session-rdp.svg")
+            : root.kind == IconKind.script ? @image-url("images/toolbar/script-run.svg")
+            : root.kind == IconKind.lock ? @image-url("images/tree/tab-lock.svg")
+            : @image-url("images/tree/session-local.svg");
+    }
+}
+
+// A session icon with its connection state as a badge at the bottom right.
+export component SessionIcon {
+    in property <int> protocol;
+    // 0 connecting, 1 connected, 2 disconnected or failed
+    in property <int> state;
+    // The background behind the icon, for the badge's cut-out ring.
+    in property <brush> backdrop;
+    width: 16px;
+    height: 16px;
+    Icon { kind: Icons.protocol-icon(root.protocol); }
+    Rectangle {
+        x: 9px;
+        y: 9px;
+        width: 8px;
+        height: 8px;
+        border-radius: 4px;
+        background: root.backdrop;
+        Rectangle {
+            x: 1px;
+            y: 1px;
+            width: 6px;
+            height: 6px;
+            border-radius: 3px;
+            background: root.state == 1 ? Theme.status-connected : root.state == 0 ? Theme.status-connecting : transparent;
+            border-width: root.state == 1 || root.state == 0 ? 0px : 1.2px;
+            border-color: Theme.status-disconnected;
+        }
+    }
+}

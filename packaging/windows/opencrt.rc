@@ -1,0 +1,2 @@
+// Windows resources: the application icon shown by Explorer and the taskbar.
+1 ICON "../icons/opencrt.ico"

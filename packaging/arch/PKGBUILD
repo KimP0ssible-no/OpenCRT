@@ -1,0 +1,29 @@
+# Arch Linux package of the prebuilt glibc 2.28 binaries
+# (packaging/linux/build-portable.sh). Built by packaging/arch/makepkg.sh,
+# which sets pkgver from crates/opencrt/Cargo.toml and OPENCRT_ROOT to the
+# repository; BIN_DIR and NOTICES_DIR say where the binaries and the
+# third-party notices are when not in target/portable/release and target/.
+pkgname=opencrt
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="SSH, Telnet, serial and local terminal client"
+arch=('x86_64')
+license=('Apache-2.0')
+depends=('glibc' 'gcc-libs')
+options=('!strip' '!debug')
+
+package() {
+    root="${OPENCRT_ROOT:?set OPENCRT_ROOT to the repository}"
+    bins="${BIN_DIR:-$root/target/portable/release}"
+    notices="${NOTICES_DIR:-$root/target}"
+    for bin in opencrt opencrt-rdp ocrt; do
+        install -Dm755 "$bins/$bin" "$pkgdir/usr/bin/$bin"
+    done
+    install -Dm644 "$root/packaging/linux/opencrt.desktop" "$pkgdir/usr/share/applications/opencrt.desktop"
+    install -Dm644 "$root/packaging/icons/opencrt-256.png" "$pkgdir/usr/share/icons/hicolor/256x256/apps/opencrt.png"
+    install -Dm644 "$root/LICENSE" "$pkgdir/usr/share/licenses/opencrt/LICENSE"
+    for doc in "$root/NOTICE" "$root/SLINT-LICENSE.md" "$root/crates/opencrt/ui/fonts/OFL.txt" \
+        "$notices/THIRD-PARTY-NOTICES.html" "$notices/THIRD-PARTY-NOTICES-RDP.html"; do
+        install -Dm644 "$doc" "$pkgdir/usr/share/doc/opencrt/$(basename "$doc")"
+    done
+}

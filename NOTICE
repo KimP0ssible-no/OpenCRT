@@ -1,0 +1,16 @@
+OpenCRT
+Copyright 2026 Kim Attree
+
+This product includes software developed by Kim Attree as OpenCRT.
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+OpenCRT's user interface is built with Slint (https://slint.dev), used under
+the Slint Royalty-free Desktop, Mobile, and Web Applications License 2.0
+(see SLINT-LICENSE.md).
+
+The licences of the other Rust crates OpenCRT is built from are listed in
+THIRD-PARTY-NOTICES.html (and THIRD-PARTY-NOTICES-RDP.html for the RDP helper).
+
+OpenCRT includes the IBM Plex Sans and IBM Plex Mono fonts, Copyright 2017
+IBM Corp., licensed under the SIL Open Font License 1.1 (see OFL.txt, from
+crates/opencrt/ui/fonts/OFL.txt).

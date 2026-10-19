@@ -1,0 +1,174 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Linux fontconfig headers and fonts for the renderer tests
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig-dev fonts-dejavu-core
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+      # The RDP helper is its own workspace (see Cargo.toml).
+      - run: cargo clippy --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target
+
+  # Built against glibc 2.28 so the packages install, with nothing else, on
+  # RHEL/Rocky/Alma 8+, Fedora, Debian 10+ and Ubuntu 20.04+.
+  linux-packages:
+    needs: test
+    runs-on: ubuntu-latest
+    container: almalinux:8
+    steps:
+      - name: Build tools
+        run: dnf -y -q install gcc gcc-c++ make perl git
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - run: cargo build --release --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target
+      - name: Only glibc 2.28 and its own libraries
+        run: |
+          for b in opencrt opencrt-rdp ocrt; do
+            needs=$(objdump -T target/release/$b | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)
+            libs=$(objdump -p target/release/$b | awk '/NEEDED/{print $2}' | tr '\n' ' ')
+            echo "$b: $needs; $libs"
+            [ "$(printf '%s\n' "$needs" GLIBC_2.28 | sort -V | tail -1)" = GLIBC_2.28 ]
+            ! echo "$libs" | grep -qvE '^((libc|libm|libdl|libpthread|librt|libgcc_s)\.so\.[0-9.]+|ld-linux-x86-64\.so\.2| )+$'
+          done
+      - name: Third-party licence notices
+        run: |
+          cargo install cargo-about --locked --features cli
+          cargo about generate about.hbs -o target/THIRD-PARTY-NOTICES.html
+          cargo about generate -c about.toml --manifest-path crates/opencrt-rdp/Cargo.toml about.hbs -o target/THIRD-PARTY-NOTICES-RDP.html
+      - name: Debian and RPM packages
+        run: |
+          cargo install cargo-deb cargo-generate-rpm --locked
+          cargo deb -p opencrt --no-build
+          cargo generate-rpm -p crates/opencrt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: opencrt-Linux
+          path: |
+            target/debian/*.deb
+            target/generate-rpm/*.rpm
+      # The same binaries again for the Arch package.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-binaries
+          path: |
+            target/release/opencrt
+            target/release/opencrt-rdp
+            target/release/ocrt
+            target/THIRD-PARTY-NOTICES.html
+            target/THIRD-PARTY-NOTICES-RDP.html
+
+  arch-package:
+    needs: linux-packages
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-binaries
+          path: ci-linux
+      - run: BIN_DIR="$PWD/ci-linux/release" NOTICES_DIR="$PWD/ci-linux" packaging/arch/makepkg.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: opencrt-Arch
+          path: dist/*.pkg.tar.zst
+
+  package:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - run: cargo build --release --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target
+      - name: Third-party licence notices
+        shell: bash
+        run: |
+          cargo install cargo-about --locked --features cli
+          cargo about generate about.hbs -o target/THIRD-PARTY-NOTICES.html
+          cargo about generate -c about.toml --manifest-path crates/opencrt-rdp/Cargo.toml about.hbs -o target/THIRD-PARTY-NOTICES-RDP.html
+      - name: Windows needs only system DLLs (C runtime linked in, see .cargo/config.toml)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          command -v objdump || { echo "::warning::no objdump on this runner; DLL check skipped"; exit 0; }
+          for b in opencrt opencrt-rdp ocrt; do
+            deps=$(objdump -p target/release/$b.exe | awk '/DLL Name/{print $3}' | tr 'A-Z' 'a-z' | sort -u | tr '\n' ' ')
+            echo "$b.exe: $deps"
+            ! echo "$deps" | grep -qE 'vcruntime|msvcp|ucrtbase|api-ms-win-crt'
+          done
+      - name: Windows installer
+        if: runner.os == 'Windows'
+        run: |
+          choco install innosetup -y
+          iscc packaging\windows\opencrt.iss
+      - name: Windows MSI (unattended / Group Policy installs)
+        if: runner.os == 'Windows'
+        run: |
+          choco install wixtoolset -y --no-progress
+          cargo install cargo-wix --locked
+          cargo wix -p opencrt --no-build --nocapture --bin-path "C:\Program Files (x86)\WiX Toolset v3.14\bin" -o target\wix\
+      - name: macOS app bundle and disk image
+        if: runner.os == 'macOS'
+        run: |
+          cargo install cargo-bundle
+          cargo bundle --release -p opencrt
+          cp target/release/opencrt-rdp target/release/ocrt target/release/bundle/osx/OpenCRT.app/Contents/MacOS/
+          hdiutil create -volname OpenCRT -srcfolder target/release/bundle/osx/OpenCRT.app -ov -format UDZO target/release/OpenCRT.dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: opencrt-${{ runner.os }}
+          path: |
+            packaging/windows/Output/*.exe
+            target/wix/*.msi
+            target/release/OpenCRT.dmg
+          if-no-files-found: ignore
+
+  # A pushed tag vX.Y.Z publishes every package above as a GitHub Release.
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux-packages, arch-package, package]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches the version in Cargo.toml and the Windows installer
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          grep -qx "version = \"$v\"" crates/opencrt/Cargo.toml
+          grep -qx "#define AppVersion \"$v\"" packaging/windows/opencrt.iss
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: opencrt-*
+          path: artifacts
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir release
+          find artifacts -type f -exec mv -t release {} +
+          cd release
+          sha256sum * > SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "OpenCRT ${GITHUB_REF_NAME#v}" --generate-notes *

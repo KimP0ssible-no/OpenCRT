@@ -1,0 +1,15 @@
+[env]
+AWS_LC_SYS_PREBUILT_NASM = "1"
+
+# Link the C runtime into the Windows executables, so a fresh Windows needs
+# no Visual C++ Redistributable.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+# Cross-built Windows executables (packaging/windows/build-cross.sh): the
+# MinGW runtime (libgcc, winpthread) linked in too.
+[target.x86_64-pc-windows-gnu]
+rustflags = ["-C", "target-feature=+crt-static"]

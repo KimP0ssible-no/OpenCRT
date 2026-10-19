@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=OpenCRT
+GenericName=Terminal Client
+Comment=SSH, Telnet, serial and local terminal sessions
+Exec=opencrt /T %u
+Icon=opencrt
+Terminal=false
+Categories=Network;System;TerminalEmulator;
+Keywords=ssh;telnet;serial;terminal;sftp;
+MimeType=x-scheme-handler/ssh;x-scheme-handler/telnet;x-scheme-handler/rlogin;

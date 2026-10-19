@@ -1,0 +1,9 @@
+[package]
+name = "opencrt-rdp-proto"
+version = "0.1.0"
+edition = "2024"
+description = "Messages between OpenCRT and its RDP helper (opencrt-rdp)"
+authors = ["Kim Attree"]
+license = "Apache-2.0"
+
+[dependencies]

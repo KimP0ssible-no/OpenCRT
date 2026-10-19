@@ -27,6 +27,17 @@ Installers for each release are on the
 The Linux packages need nothing beyond glibc 2.28 (RHEL 8, Debian 10, Ubuntu
 20.04 and newer). `SHA256SUMS` lists the checksum of every file.
 
+### Verifying a download
+`SHA256SUMS` is signed with the OpenCRT release key
+([`packaging/minisign.pub`](packaging/minisign.pub)), and every file has a
+GitHub build attestation tying it to the workflow run that built it:
+
+```
+minisign -Vm SHA256SUMS -p minisign.pub       # the list is genuine
+sha256sum -c --ignore-missing SHA256SUMS      # the files match it
+gh attestation verify <file> --repo KimP0ssible-no/OpenCRT
+```
+
 ### New versions
 Once a day at start-up OpenCRT asks GitHub which release is the newest (one
 request to `github.com/KimP0ssible-no/OpenCRT/releases/latest`, nothing about

@@ -166,6 +166,32 @@ jobs:
         run: |
           choco install innosetup -y
           iscc packaging\windows\opencrt.iss
+      # What Update Now does: the latest release installed per user, then the
+      # new setup run with the in-app switches. It must replace the program in
+      # the same place, stay closed without /RELAUNCH=1 and start with it.
+      - name: Windows setup upgrades the latest release in place
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh release download --repo $env:GITHUB_REPOSITORY --pattern '*-x64-setup.exe' --dir previous
+          $old = (Get-ChildItem previous\*.exe)[0].FullName
+          $new = (Get-ChildItem packaging\windows\Output\*.exe)[0].FullName
+          $quiet = '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'
+          Start-Process $old -ArgumentList ($quiet + '/CURRENTUSER') -Wait
+          $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{6F1D4C2E-8E0B-4E6B-9C5A-0C4C3D7A1E21}_is1'
+          $dir = (Get-ItemProperty $key).InstallLocation
+          Start-Process $new -ArgumentList ($quiet + '/CLOSEAPPLICATIONS') -Wait
+          if ((Get-FileHash "$dir\opencrt.exe").Hash -ne (Get-FileHash target\release\opencrt.exe).Hash) { throw "setup did not replace $dir\opencrt.exe" }
+          if (Get-Process opencrt -ErrorAction SilentlyContinue) { throw 'OpenCRT started without /RELAUNCH=1' }
+          Start-Process $new -ArgumentList ($quiet + '/CLOSEAPPLICATIONS', '/RELAUNCH=1') -Wait
+          Start-Sleep -Seconds 5
+          $running = Get-Process opencrt -ErrorAction SilentlyContinue
+          if (-not $running) { throw 'OpenCRT did not start again after /RELAUNCH=1' }
+          $running | Stop-Process
+          Start-Process "$dir\unins000.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES' -Wait
       - name: Windows MSI (unattended / Group Policy installs)
         if: runner.os == 'Windows'
         run: |

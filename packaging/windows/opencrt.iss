@@ -62,3 +62,13 @@ Name: "{autodesktop}\OpenCRT"; Filename: "{app}\opencrt.exe"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\opencrt.exe"; Description: "Launch OpenCRT"; Flags: nowait postinstall skipifsilent
+; The in-app update runs setup silently with /RELAUNCH=1 and has quit by then:
+; start OpenCRT again, as the user rather than the administrator. Other silent
+; installs (winget, scripts) leave it closed.
+Filename: "{app}\opencrt.exe"; Flags: nowait skipifnotsilent runasoriginaluser; Check: Relaunch
+
+[Code]
+function Relaunch: Boolean;
+begin
+  Result := ExpandConstant('{param:RELAUNCH|0}') = '1';
+end;

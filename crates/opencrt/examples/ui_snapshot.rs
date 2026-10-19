@@ -125,7 +125,8 @@ fn main() {
         "about" => ui.set_dialog(4),
         "update" => {
             ui.set_update_version("0.2.1".into());
-            ui.set_update_status("OpenCRT 0.2.1 is available. Download it from the release page.".into());
+            ui.set_update_status("OpenCRT 0.2.1 is available. Update Now installs it and restarts OpenCRT.".into());
+            ui.set_update_installable(true);
             ui.set_dialog(4);
         }
         "script" => {

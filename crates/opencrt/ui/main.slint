@@ -3089,7 +3089,10 @@ component AboutDialog inherits DialogFrame {
     in property <string> settings-dir;
     in property <string> update-version;
     in property <string> update-status;
+    // This copy can install the new version itself (Windows setup, macOS app).
+    in property <bool> update-installable;
     callback check-updates();
+    callback install-update();
     callback release-notes();
     callback close();
     title: "About OpenCRT";
@@ -3154,9 +3157,14 @@ component AboutDialog inherits DialogFrame {
             text: "Release Notes";
             clicked => { root.release-notes(); }
         }
+        if root.update-installable: Button {
+            text: "Update Now";
+            primary: true;
+            clicked => { root.install-update(); }
+        }
         Button {
             text: "OK";
-            primary: true;
+            primary: !root.update-installable;
             clicked => { root.close(); }
         }
     }
@@ -3216,6 +3224,7 @@ export component MainWindow inherits Window {
     // A newer release's version ("" when none), and the About dialog's line about updates.
     in property <string> update-version;
     in property <string> update-status;
+    in property <bool> update-installable;
     in property <string> status-cipher;
     in property <string> status-pos;
     in property <string> status-size;
@@ -5395,7 +5404,9 @@ export component MainWindow inherits Window {
         settings-dir: root.settings-dir;
         update-version: root.update-version;
         update-status: root.update-status;
+        update-installable: root.update-installable;
         check-updates => { root.action("check-updates"); }
+        install-update => { root.action("install-update"); }
         release-notes => { root.action("release-notes"); }
         close => {
             root.dialog = 0;

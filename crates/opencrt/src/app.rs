@@ -76,6 +76,8 @@ enum Deletion {
     Tabs(Vec<u64>),
     /// Connect All with more sessions than Global Options allows without asking.
     Connect(Vec<usize>),
+    /// Install the new version, which restarts OpenCRT.
+    Update,
 }
 
 /// A list of saved commands: the Button Bar's, or the Command Manager's.
@@ -1396,6 +1398,8 @@ struct App {
     keygen: Option<(PathBuf, std::sync::mpsc::Receiver<Result<String, String>>)>,
     /// A look for a new release: (asked for from the menu, the latest tag).
     update_check: Option<(bool, std::sync::mpsc::Receiver<Result<String, String>>)>,
+    /// The new version being downloaded (and on macOS put in place): what to start.
+    update_install: Option<(update::InstallKind, std::sync::mpsc::Receiver<Result<PathBuf, String>>)>,
     /// Public keys being added to servers' authorized_keys: (host, result).
     uploads: Vec<(String, std::sync::mpsc::Receiver<Result<bool, String>>)>,
     /// Key files still to load into the agent (encrypted ones ask first).
@@ -1651,6 +1655,7 @@ impl App {
             uploads: Vec::new(),
             keygen: None,
             update_check: None,
+            update_install: None,
             shown_tabs: Vec::new(),
             shown_recent: Vec::new(),
             window_title: String::new(),
@@ -2301,6 +2306,15 @@ impl App {
             "check-updates" => {
                 ui.set_dialog(DIALOG_ABOUT);
                 return self.check_updates(ui, true);
+            }
+            "install-update" => {
+                let live = self.tabs.iter().filter(|t| t.state != State::Closed).count();
+                match live {
+                    0 => self.install_update(ui),
+                    1 => self.ask_confirm(ui, "Updating restarts OpenCRT and disconnects the connected session. Update now?", Deletion::Update),
+                    n => self.ask_confirm(ui, &format!("Updating restarts OpenCRT and disconnects {n} connected sessions. Update now?"), Deletion::Update),
+                }
+                return;
             }
             "release-notes" => {
                 let url = format!("{}/tag/v{}", update::RELEASES, ui.get_update_version());
@@ -2957,6 +2971,7 @@ impl App {
         }
         self.keygen_done(ui);
         self.update_done(ui);
+        self.install_done(ui);
         let finished: Vec<(String, Result<bool, String>)> = {
             let mut done = Vec::new();
             self.uploads.retain(|(host, rx)| match rx.try_recv() {
@@ -3735,6 +3750,7 @@ impl App {
                     self.open_session(i);
                 }
             }
+            Some(Deletion::Update) if yes => return self.install_update(ui),
             _ => {}
         }
         ui.set_dialog(DIALOG_NONE);
@@ -4878,8 +4894,9 @@ impl App {
                 self.save_options();
                 if update::is_newer(&tag, current) {
                     let version = tag.trim_start_matches('v').to_string();
-                    let kind = std::env::current_exe().map_or(update::InstallKind::Manual, |exe| update::InstallKind::of(&exe));
+                    let kind = install_kind();
                     let status = format!("OpenCRT {version} is available. {}", kind.advice());
+                    ui.set_update_installable(kind.asset(&version).is_some());
                     ui.set_update_version(version.into());
                     status
                 } else {
@@ -4890,6 +4907,48 @@ impl App {
         };
         if asked || !ui.get_update_version().is_empty() {
             ui.set_update_status(status.into());
+        }
+    }
+
+    /// Download the new version in the background (Update Now in About).
+    fn install_update(&mut self, ui: &MainWindow) {
+        let (version, kind) = (ui.get_update_version().to_string(), install_kind());
+        let Ok(exe) = std::env::current_exe() else {
+            return;
+        };
+        if self.update_install.is_some() || version.is_empty() {
+            return;
+        }
+        let (tx, rx) = std::sync::mpsc::channel();
+        let shown = version.clone();
+        std::thread::spawn(move || {
+            let _ = tx.send(update::prepare(kind, &version, &exe).map_err(|e| format!("{e:#}")));
+        });
+        self.update_install = Some((kind, rx));
+        ui.set_update_installable(false);
+        ui.set_update_status(format!("Downloading OpenCRT {shown}…").into());
+        ui.set_dialog(DIALOG_ABOUT);
+    }
+
+    /// The download is checked (and on macOS in place): start it and quit.
+    fn install_done(&mut self, ui: &MainWindow) {
+        let Some((kind, rx)) = &self.update_install else {
+            return;
+        };
+        let (kind, result) = match rx.try_recv() {
+            Ok(result) => (*kind, result),
+            Err(std::sync::mpsc::TryRecvError::Empty) => return,
+            Err(_) => (*kind, Err("the download stopped".to_string())),
+        };
+        self.update_install = None;
+        match result.and_then(|path| update::launch(kind, &path).map_err(|e| format!("{e:#}"))) {
+            Ok(()) => {
+                let _ = slint::quit_event_loop();
+            }
+            Err(e) => {
+                ui.set_update_installable(true);
+                ui.set_update_status(format!("Could not update: {e}. Download it from the release page instead.").into());
+            }
         }
     }
 
@@ -6086,6 +6145,10 @@ const PRE_CONNECT_LIMIT: Duration = Duration::from_secs(60);
 
 /// Run `line` through the system shell on a thread; Ok once it exits
 /// successfully, Err if it fails, cannot start or outlasts `limit` (then it is killed).
+fn install_kind() -> update::InstallKind {
+    std::env::current_exe().map_or(update::InstallKind::Manual, |exe| update::InstallKind::of(&exe))
+}
+
 fn run_local_command(line: String, limit: Duration) -> std::sync::mpsc::Receiver<Result<(), String>> {
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
@@ -6651,6 +6714,9 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         }
         if let Some(e) = app.store_error.clone() {
             app.notify(format!("sessions.toml could not be loaded (left unchanged): {}", first_line(&e)));
+        }
+        if let Ok(exe) = std::env::current_exe() {
+            update::clean_up(&exe);
         }
         let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
         if app.options.check_updates && now.saturating_sub(app.options.last_update_check) >= 24 * 60 * 60 {

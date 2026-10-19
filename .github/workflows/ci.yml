@@ -19,7 +19,20 @@ jobs:
           components: clippy
       - name: Linux fontconfig headers and fonts for the renderer tests
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig-dev fonts-dejavu-core
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig-dev fonts-dejavu-core minisign
+      # The release job's signing script, with a throwaway key: it must sign,
+      # and refuse a signature the given public key does not match.
+      - name: Release signing script
+        if: runner.os == 'Linux'
+        run: |
+          t=$(mktemp -d)
+          echo test > "$t/SHA256SUMS"
+          minisign -G -W -p "$t/k.pub" -s "$t/k.key"
+          minisign -G -W -p "$t/other.pub" -s "$t/other.key"
+          MINISIGN_KEY="$(cat "$t/k.key")" packaging/sign-release.sh "$t" "$t/k.pub"
+          if MINISIGN_KEY="$(cat "$t/k.key")" packaging/sign-release.sh "$t" "$t/other.pub"; then
+            echo "::error::signed with a key the public key does not match"; exit 1
+          fi
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
       # The RDP helper is its own workspace (see Cargo.toml).
@@ -156,12 +169,18 @@ jobs:
           if-no-files-found: ignore
 
   # A pushed tag vX.Y.Z publishes every package above as a GitHub Release.
+  # The signing key is a secret of the "release" environment, which waits
+  # for approval before this job runs.
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [linux-packages, arch-package, package]
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     steps:
       - uses: actions/checkout@v7
       - name: Tag matches the version in Cargo.toml and the Windows installer
@@ -173,12 +192,25 @@ jobs:
         with:
           pattern: opencrt-*
           path: artifacts
+      # SHA256SUMS.minisig is what OpenCRT's Update Now checks before it
+      # installs anything (key: packaging/minisign.pub).
+      - name: Checksums, signed
+        env:
+          MINISIGN_KEY: ${{ secrets.MINISIGN_KEY }}
+          MINISIGN_PASSWORD: ${{ secrets.MINISIGN_PASSWORD }}
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q minisign
+          mkdir release
+          find artifacts -type f -exec mv -t release {} +
+          (cd release && sha256sum * > SHA256SUMS)
+          packaging/sign-release.sh release
+      # Build provenance for every file: gh attestation verify <file> --repo <this repo>.
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: release/*
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          mkdir release
-          find artifacts -type f -exec mv -t release {} +
           cd release
-          sha256sum * > SHA256SUMS
           gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "OpenCRT ${GITHUB_REF_NAME#v}" --generate-notes *

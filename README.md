@@ -24,6 +24,11 @@ Installers for each release are on the
 | RHEL / Rocky / Alma / Fedora / SUSE | `opencrt-<version>-1.x86_64.rpm` |
 | Arch Linux | `opencrt-<version>-1-x86_64.pkg.tar.zst` |
 
+On Linux, the [OpenCRT package repositories](https://kimp0ssible-no.github.io/OpenCRT/)
+(apt, dnf, zypper and pacman, signed) keep OpenCRT up to date with the rest of
+the system: set one up once, as that page shows. Downloaded packages install
+the same way but do not update.
+
 The Linux packages need nothing beyond glibc 2.28 (RHEL 8, Debian 10, Ubuntu
 20.04 and newer). `SHA256SUMS` lists the checksum of every file.
 

@@ -19,7 +19,7 @@ Installers for each release are on the
 | Platform | Package |
 | --- | --- |
 | Windows 10/11 (x64) | `opencrt-<version>-x64-setup.exe`, or the `.msi` for unattended and Group Policy installs |
-| macOS | `OpenCRT.dmg` |
+| macOS (Apple silicon and Intel) | `OpenCRT.dmg` |
 | Debian / Ubuntu | `opencrt_<version>-1_amd64.deb` |
 | RHEL / Rocky / Alma / Fedora / SUSE | `opencrt-<version>-1.x86_64.rpm` |
 | Arch Linux | `opencrt-<version>-1-x86_64.pkg.tar.zst` |

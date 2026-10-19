@@ -129,12 +129,21 @@ jobs:
           choco install wixtoolset -y --no-progress
           cargo install cargo-wix --locked
           cargo wix -p opencrt --no-build --nocapture --bin-path "C:\Program Files (x86)\WiX Toolset v3.14\bin" -o target\wix\
-      - name: macOS app bundle and disk image
+      # One app for Apple silicon and Intel Macs: the runner builds arm64, so
+      # build x86_64 too and join each program into a universal binary.
+      - name: macOS app bundle and disk image (universal)
         if: runner.os == 'macOS'
         run: |
+          rustup target add x86_64-apple-darwin
+          cargo build --release --target x86_64-apple-darwin
+          cargo build --release --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target --target x86_64-apple-darwin
           cargo install cargo-bundle
           cargo bundle --release -p opencrt
-          cp target/release/opencrt-rdp target/release/ocrt target/release/bundle/osx/OpenCRT.app/Contents/MacOS/
+          app=target/release/bundle/osx/OpenCRT.app/Contents/MacOS
+          for b in opencrt opencrt-rdp ocrt; do
+            lipo -create target/release/$b target/x86_64-apple-darwin/release/$b -output $app/$b
+            lipo $app/$b -verify_arch arm64 x86_64
+          done
           hdiutil create -volname OpenCRT -srcfolder target/release/bundle/osx/OpenCRT.app -ov -format UDZO target/release/OpenCRT.dmg
       - uses: actions/upload-artifact@v7
         with:

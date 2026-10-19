@@ -1,11 +1,13 @@
 //! New versions: the latest release on GitHub, and how this copy was installed
 //! (which decides what the user is told to do about it).
 
-use std::path::Path;
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::anyhow;
+use anyhow::{Context, anyhow, bail};
+use sha2::Digest;
 
 /// Every OpenCRT release, newest first; `/latest` redirects to the newest tag.
 pub const RELEASES: &str = "https://github.com/KimP0ssible-no/OpenCRT/releases";
@@ -64,6 +66,164 @@ fn repo_configured(root: &Path) -> bool {
         || std::fs::read_to_string(etc.join("pacman.conf")).is_ok_and(|c| c.lines().any(|l| l.trim() == "[opencrt]"))
 }
 
+/// The public half of the key that signs every release's `SHA256SUMS`.
+pub const RELEASE_KEY: &str = include_str!("../../../packaging/minisign.pub");
+
+/// Where downloads wait until they are installed; emptied at the next start.
+fn download_dir() -> PathBuf {
+    std::env::temp_dir().join("opencrt-update")
+}
+
+/// Download `asset` of release `tag` into `dir`, but only if `SHA256SUMS` is
+/// signed by `key` and lists the file with the same checksum.
+pub fn download_verified(releases: &str, tag: &str, asset: &str, dir: &Path, key: &str) -> anyhow::Result<PathBuf> {
+    let base = format!("{releases}/download/{tag}");
+    let agent = agent(10);
+    let small = |name: &str| -> anyhow::Result<Vec<u8>> {
+        let response = agent.get(format!("{base}/{name}")).call().with_context(|| format!("cannot download {name}"))?;
+        Ok(response.into_body().into_with_config().limit(1 << 20).read_to_vec()?)
+    };
+    let sums = small("SHA256SUMS")?;
+    let signature = String::from_utf8(small("SHA256SUMS.minisig")?)?;
+    let signed = minisign_verify::PublicKey::decode(key)
+        .and_then(|key| key.verify(&sums, &minisign_verify::Signature::decode(&signature)?, false));
+    if signed.is_err() {
+        bail!("SHA256SUMS is not signed with the OpenCRT release key");
+    }
+    let sums = String::from_utf8(sums)?;
+    let expected = sums
+        .lines()
+        .find_map(|line| line.split_once("  ").filter(|(_, name)| *name == asset).map(|(hash, _)| hash.to_ascii_lowercase()))
+        .ok_or_else(|| anyhow!("{asset} is not in SHA256SUMS"))?;
+
+    std::fs::create_dir_all(dir)?;
+    let path = dir.join(asset);
+    let response = agent.get(format!("{base}/{asset}")).call().with_context(|| format!("cannot download {asset}"))?;
+    let mut body = response.into_body().into_with_config().limit(512 << 20).reader();
+    let (mut file, mut hash) = (std::fs::File::create(&path)?, sha2::Sha256::new());
+    let mut buf = vec![0; 64 * 1024];
+    let copied = loop {
+        match body.read(&mut buf) {
+            Ok(0) => break file.flush(),
+            Ok(n) => {
+                hash.update(&buf[..n]);
+                if let Err(e) = file.write_all(&buf[..n]) {
+                    break Err(e);
+                }
+            }
+            Err(e) => break Err(e),
+        }
+    };
+    let actual: String = hash.finalize().iter().map(|b| format!("{b:02x}")).collect();
+    if let Err(e) = copied.map_err(anyhow::Error::from).and_then(|()| match actual == expected {
+        true => Ok(()),
+        false => Err(anyhow!("{asset} does not match its checksum in SHA256SUMS")),
+    }) {
+        let _ = std::fs::remove_file(&path);
+        return Err(e.context(format!("cannot download {asset}")));
+    }
+    Ok(path)
+}
+
+/// Download the new version and get it ready; returns what [`launch`] starts.
+/// Windows: the verified setup program. macOS: the new `OpenCRT.app`, already
+/// in place of this one.
+pub fn prepare(kind: InstallKind, version: &str, exe: &Path) -> anyhow::Result<PathBuf> {
+    let asset = kind.asset(version).ok_or_else(|| anyhow!("this copy of OpenCRT cannot update itself"))?;
+    let file = download_verified(RELEASES, &format!("v{version}"), &asset, &download_dir(), RELEASE_KEY)?;
+    match kind {
+        InstallKind::MacBundle => {
+            let app = exe.ancestors().nth(3).ok_or_else(|| anyhow!("cannot find OpenCRT.app"))?;
+            swap_bundle(&file, app)?;
+            Ok(app.to_path_buf())
+        }
+        _ => Ok(file),
+    }
+}
+
+/// Start what [`prepare`] returned; OpenCRT should quit straight after.
+pub fn launch(kind: InstallKind, path: &Path) -> anyhow::Result<()> {
+    match kind {
+        InstallKind::InnoSetup => run_setup(path),
+        _ => {
+            std::process::Command::new("open").arg("-n").arg(path).spawn()?;
+            Ok(())
+        }
+    }
+}
+
+/// ShellExecute rather than CreateProcess, so that a setup program that needs
+/// administrator rights gets its elevation prompt.
+#[cfg(windows)]
+fn run_setup(setup: &Path) -> anyhow::Result<()> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::UI::Shell::ShellExecuteW;
+    use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+    // No questions, close OpenCRT if it is still running, start it again
+    // afterwards (/RELAUNCH=1, see packaging/windows/opencrt.iss). CI runs the
+    // setup program with the same switches.
+    const ARGS: &str = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /RELAUNCH=1";
+    let wide = |s: &std::ffi::OsStr| s.encode_wide().chain([0]).collect::<Vec<u16>>();
+    let (file, args) = (wide(setup.as_os_str()), wide(std::ffi::OsStr::new(ARGS)));
+    // SAFETY: both strings are NUL-terminated and outlive the call.
+    let started = unsafe { ShellExecuteW(std::ptr::null_mut(), std::ptr::null(), file.as_ptr(), args.as_ptr(), std::ptr::null(), SW_SHOWNORMAL) };
+    // Values up to 32 are errors (ShellExecute's documented convention).
+    if started as usize <= 32 {
+        bail!("the setup program did not start (error {})", started as usize);
+    }
+    Ok(())
+}
+
+#[cfg(not(windows))]
+fn run_setup(_: &Path) -> anyhow::Result<()> {
+    bail!("the setup program only runs on Windows")
+}
+
+/// Replace `app` with the `OpenCRT.app` on disk image `dmg`. The old bundle
+/// is kept beside it as `.OpenCRT.app.old` (and put back if the swap fails)
+/// until the next start. Copies made here carry no quarantine attribute, so
+/// Gatekeeper does not hold up the new version.
+fn swap_bundle(dmg: &Path, app: &Path) -> anyhow::Result<()> {
+    let parent = app.parent().ok_or_else(|| anyhow!("cannot find the folder OpenCRT.app is in"))?;
+    let run = |program: &str, args: &[&std::ffi::OsStr]| -> anyhow::Result<()> {
+        let status = std::process::Command::new(program).args(args).stdout(std::process::Stdio::null()).status()?;
+        if !status.success() {
+            bail!("{program} failed ({status})");
+        }
+        Ok(())
+    };
+    let mount = dmg.with_extension("mount");
+    std::fs::create_dir_all(&mount)?;
+    run("hdiutil", &["attach".as_ref(), "-nobrowse".as_ref(), "-readonly".as_ref(), "-noautoopen".as_ref(), "-mountpoint".as_ref(), mount.as_os_str(), dmg.as_os_str()])?;
+    let (new, old) = (parent.join(".OpenCRT.app.new"), parent.join(".OpenCRT.app.old"));
+    let swapped = (|| {
+        let _ = std::fs::remove_dir_all(&new);
+        let _ = std::fs::remove_dir_all(&old);
+        run("ditto", &[mount.join("OpenCRT.app").as_os_str(), new.as_os_str()]).context("cannot copy the new version (is the Applications folder writable?)")?;
+        std::fs::rename(app, &old)?;
+        std::fs::rename(&new, app).inspect_err(|_| {
+            let _ = std::fs::rename(&old, app);
+        })?;
+        anyhow::Ok(())
+    })();
+    let _ = run("hdiutil", &["detach".as_ref(), "-quiet".as_ref(), mount.as_os_str()]);
+    let _ = std::fs::remove_dir(&mount);
+    if swapped.is_err() {
+        let _ = std::fs::remove_dir_all(&new);
+    }
+    swapped
+}
+
+/// At start-up: remove what the last update left behind.
+pub fn clean_up(exe: &Path) {
+    let _ = std::fs::remove_dir_all(download_dir());
+    if InstallKind::of(exe) == InstallKind::MacBundle
+        && let Some(parent) = exe.ancestors().nth(4)
+    {
+        let _ = std::fs::remove_dir_all(parent.join(".OpenCRT.app.old"));
+    }
+}
+
 /// How this copy of OpenCRT was installed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum InstallKind {
@@ -95,11 +255,21 @@ impl InstallKind {
     /// What to do about a new version, after "OpenCRT X is available.".
     pub fn advice(self) -> &'static str {
         match self {
+            Self::InnoSetup | Self::MacBundle => "Update Now installs it and restarts OpenCRT.",
             Self::Package { repo: true } => "Update it with your system's package manager.",
             Self::Package { repo: false } => {
                 "To get it, and later versions, with your system's updates, set up the OpenCRT package repository once: kimp0ssible-no.github.io/OpenCRT"
             }
-            Self::InnoSetup | Self::MacBundle | Self::Manual => "Download it from the release page.",
+            Self::Manual => "Download it from the release page.",
+        }
+    }
+
+    /// The release file this kind of install updates itself from.
+    pub fn asset(self, version: &str) -> Option<String> {
+        match self {
+            Self::InnoSetup => Some(format!("opencrt-{version}-x64-setup.exe")),
+            Self::MacBundle => Some("OpenCRT.dmg".to_string()),
+            Self::Package { .. } | Self::Manual => None,
         }
     }
 }
@@ -107,7 +277,6 @@ impl InstallKind {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::{Read, Write};
 
     #[test]
     fn versions() {
@@ -163,6 +332,100 @@ mod tests {
         std::fs::write(etc.join("yum.repos.d/opencrt.repo"), "[opencrt]").unwrap();
         assert!(repo_configured(&root));
         std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    /// A local server standing in for github.com: answers each request for
+    /// `/<name>` from `files`, 404 for anything else, until `requests` are served.
+    fn serve(files: Vec<(&'static str, Vec<u8>)>, requests: usize) -> String {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let base = format!("http://{}", listener.local_addr().unwrap());
+        std::thread::spawn(move || {
+            for _ in 0..requests {
+                let (mut stream, _) = listener.accept().unwrap();
+                let mut request = [0u8; 2048];
+                let n = stream.read(&mut request).unwrap();
+                let line = String::from_utf8_lossy(&request[..n]).lines().next().unwrap_or_default().to_string();
+                let path = line.split(' ').nth(1).unwrap_or_default().to_string();
+                match files.iter().find(|(name, _)| path == format!("/r/download/v1.2.3/{name}")) {
+                    Some((_, body)) => {
+                        write!(stream, "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len()).unwrap();
+                        stream.write_all(body).unwrap();
+                    }
+                    None => write!(stream, "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").unwrap(),
+                }
+            }
+        });
+        format!("{base}/r")
+    }
+
+    const SUMS: &[u8] = include_bytes!("../testdata/update/SHA256SUMS");
+    const SIG: &[u8] = include_bytes!("../testdata/update/SHA256SUMS.minisig");
+    const TEST_KEY: &str = include_str!("../testdata/update/test.pub");
+    const OTHER_KEY: &str = include_str!("../testdata/update/other.pub");
+    const ASSET: &[u8] = b"OpenCRT test asset\n";
+
+    fn download(files: Vec<(&'static str, Vec<u8>)>, requests: usize, key: &str) -> (anyhow::Result<PathBuf>, PathBuf) {
+        static N: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+        let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let dir = std::env::temp_dir().join(format!("opencrt-dl-{}-{n}", std::process::id()));
+        (download_verified(&serve(files, requests), "v1.2.3", "asset.bin", &dir, key), dir)
+    }
+
+    #[test]
+    fn downloads_only_what_the_signed_list_vouches_for() {
+        let good = || vec![("SHA256SUMS", SUMS.to_vec()), ("SHA256SUMS.minisig", SIG.to_vec()), ("asset.bin", ASSET.to_vec())];
+        let (ok, dir) = download(good(), 3, TEST_KEY);
+        assert_eq!(std::fs::read(ok.unwrap()).unwrap(), ASSET);
+        std::fs::remove_dir_all(dir).unwrap();
+
+        // Wrong key, edited list, swapped file: nothing is left on disk.
+        let (wrong_key, _) = download(good(), 2, OTHER_KEY);
+        assert!(wrong_key.unwrap_err().to_string().contains("not signed"));
+        let mut edited = good();
+        edited[0].1 = String::from_utf8_lossy(SUMS).replace("b9c3", "b9c4").into_bytes();
+        assert!(download(edited, 2, TEST_KEY).0.unwrap_err().to_string().contains("not signed"));
+        let mut swapped = good();
+        swapped[2].1 = b"something else".to_vec();
+        let (bad, dir) = download(swapped, 3, TEST_KEY);
+        assert!(format!("{:#}", bad.unwrap_err()).contains("does not match"));
+        assert!(!dir.join("asset.bin").exists());
+        let unlisted = download_verified(&serve(good(), 2), "v1.2.3", "other.bin", &std::env::temp_dir(), TEST_KEY);
+        assert!(unlisted.unwrap_err().to_string().contains("not in SHA256SUMS"));
+    }
+
+    #[test]
+    fn release_key_is_a_minisign_key() {
+        assert!(minisign_verify::PublicKey::decode(RELEASE_KEY).is_ok());
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn swaps_the_bundle_from_a_disk_image() {
+        let dir = std::env::temp_dir().join(format!("opencrt-swap-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let bundle = |root: &Path, version: &str| {
+            std::fs::create_dir_all(root.join("OpenCRT.app/Contents/MacOS")).unwrap();
+            std::fs::write(root.join("OpenCRT.app/Contents/Info.plist"), version).unwrap();
+        };
+        bundle(&dir.join("image"), "new");
+        bundle(&dir.join("Applications"), "old");
+        let dmg = dir.join("OpenCRT.dmg");
+        let made = std::process::Command::new("hdiutil")
+            .args(["create", "-quiet", "-volname", "OpenCRT", "-format", "UDZO", "-srcfolder"])
+            .arg(dir.join("image"))
+            .arg(&dmg)
+            .status()
+            .unwrap();
+        assert!(made.success());
+        let app = dir.join("Applications/OpenCRT.app");
+        swap_bundle(&dmg, &app).unwrap();
+        assert_eq!(std::fs::read_to_string(app.join("Contents/Info.plist")).unwrap(), "new");
+        assert_eq!(std::fs::read_to_string(dir.join("Applications/.OpenCRT.app.old/Contents/Info.plist")).unwrap(), "old");
+        let quarantine = std::process::Command::new("xattr").args(["-p", "com.apple.quarantine"]).arg(&app).output().unwrap();
+        assert!(!quarantine.status.success(), "the new bundle must not be quarantined");
+        clean_up(&app.join("Contents/MacOS/opencrt"));
+        assert!(!dir.join("Applications/.OpenCRT.app.old").exists());
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     /// One HTTP exchange with a local server standing in for github.com.

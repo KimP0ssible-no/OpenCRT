@@ -91,6 +91,7 @@ rustls = { version = "0.23", default-features = false, features = ["aws_lc_rs", 
 tokio-rustls = { version = "0.26", default-features = false, features = ["aws_lc_rs", "tls12"] }
 sha2 = "0.11"
 ureq = { version = "3.4.2", default-features = false, features = ["rustls-no-provider", "platform-verifier", "win-system-proxy"] }
+minisign-verify = "0.3.0"
 
 [build-dependencies]
 embed-resource = "3.0.12"
@@ -103,7 +104,7 @@ slint-build = "1.18.1"
 fontique = { version = "0.11", default-features = false, features = ["fontconfig-dlopen"] }
 
 [target."cfg(windows)".dependencies]
-windows-sys = { version = "0.61.2", features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging", "Win32_System_Diagnostics_Debug", "Win32_System_Console"] }
+windows-sys = { version = "0.61.2", features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging", "Win32_System_Diagnostics_Debug", "Win32_System_Console", "Win32_UI_Shell"] }
 
 [dev-dependencies]
 # A throwaway certificate for the Telnet/TLS test server.

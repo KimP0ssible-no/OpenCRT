@@ -104,6 +104,35 @@ jobs:
           name: opencrt-Arch
           path: dist/*.pkg.tar.zst
 
+  # The package repositories GitHub Pages serves, built from the two latest
+  # releases with a throwaway key: each distribution installs the older
+  # version from them and must upgrade to the newer one.
+  linux-repos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Packages of the two latest releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 2 --json tagName --jq '.[].tagName' > tags
+          for tag in $(cat tags); do
+            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir pkgs -p '*.deb' -p '*.rpm' -p '*.pkg.tar.zst'
+          done
+      - name: Build the repositories
+        run: |
+          export GNUPGHOME="$PWD/gnupg"
+          mkdir -m 700 "$GNUPGHOME"
+          gpg --batch --passphrase '' --quick-gen-key 'OpenCRT test <test@example.invalid>' rsa3072 sign never
+          key=$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr/ { print $10; exit }')
+          docker run --rm -v "$PWD:/w" -w /w -e GNUPGHOME=/w/gnupg -e REPO_KEY_ID="$key" debian:trixie sh -euc '
+            apt-get -qq update && apt-get -qq install -y --no-install-recommends apt-utils createrepo-c rpm pacman-package-manager makepkg libarchive-tools zstd gnupg > /dev/null
+            packaging/linux/build-repos.sh pkgs repo http://127.0.0.1:8765'
+      - name: Debian, Fedora, Rocky Linux 8 and Arch upgrade from them
+        run: |
+          new=$(sed -n 1p tags); old=$(sed -n 2p tags)
+          packaging/linux/test-repos.sh repo "pkgs/opencrt-${old#v}-1-x86_64.pkg.tar.zst" "${old#v}" "${new#v}"
+
   package:
     needs: test
     strategy:
@@ -214,3 +243,37 @@ jobs:
         run: |
           cd release
           gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "OpenCRT ${GITHUB_REF_NAME#v}" --generate-notes *
+      # apt / dnf / zypper / pacman repositories of the three latest releases
+      # (this one included), signed with the REPO_GPG_KEY secret; the pages
+      # job publishes them.
+      - name: Linux package repositories
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO_GPG_KEY: ${{ secrets.REPO_GPG_KEY }}
+        run: |
+          for tag in $(gh release list --repo "$GITHUB_REPOSITORY" --limit 3 --json tagName --jq '.[].tagName'); do
+            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir pkgs -p '*.deb' -p '*.rpm' -p '*.pkg.tar.zst'
+          done
+          export GNUPGHOME="$PWD/gnupg"
+          mkdir -m 700 "$GNUPGHOME"
+          printf '%s\n' "$REPO_GPG_KEY" | gpg --batch --import
+          key=$(gpg --batch --with-colons --list-secret-keys | awk -F: '/^fpr/ { print $10; exit }')
+          docker run --rm -v "$PWD:/w" -w /w -e GNUPGHOME=/w/gnupg -e REPO_KEY_ID="$key" debian:trixie sh -euc '
+            apt-get -qq update && apt-get -qq install -y --no-install-recommends apt-utils createrepo-c rpm pacman-package-manager makepkg libarchive-tools zstd gnupg > /dev/null
+            packaging/linux/build-repos.sh pkgs site https://kimp0ssible-no.github.io/OpenCRT'
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+  pages:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

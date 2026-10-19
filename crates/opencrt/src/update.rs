@@ -54,6 +54,16 @@ pub fn latest_tag(releases: &str) -> anyhow::Result<String> {
     tag_from_location(location).map(str::to_string).ok_or_else(|| anyhow!("no release found"))
 }
 
+/// The OpenCRT repository is set up for apt, dnf, zypper or pacman under `root`,
+/// as the setup page (`packaging/linux/repo-index.html`) does it.
+fn repo_configured(root: &Path) -> bool {
+    let etc = root.join("etc");
+    etc.join("yum.repos.d/opencrt.repo").is_file()
+        || etc.join("zypp/repos.d/opencrt.repo").is_file()
+        || std::fs::read_dir(etc.join("apt/sources.list.d")).is_ok_and(|d| d.flatten().any(|e| e.file_name().to_string_lossy().starts_with("opencrt")))
+        || std::fs::read_to_string(etc.join("pacman.conf")).is_ok_and(|c| c.lines().any(|l| l.trim() == "[opencrt]"))
+}
+
 /// How this copy of OpenCRT was installed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum InstallKind {
@@ -61,8 +71,9 @@ pub enum InstallKind {
     InnoSetup,
     /// `OpenCRT.app` from the disk image.
     MacBundle,
-    /// A .deb, .rpm or Arch package: the package manager owns it.
-    Package,
+    /// A .deb, .rpm or Arch package: the package manager owns it, and gets
+    /// new versions if the OpenCRT repository is set up (`repo`).
+    Package { repo: bool },
     /// The MSI, a copied folder or a development build.
     Manual,
 }
@@ -75,7 +86,7 @@ impl InstallKind {
         } else if dir.ends_with("Contents/MacOS") && dir.parent().and_then(Path::parent).is_some_and(|app| app.extension().is_some_and(|e| e == "app")) {
             Self::MacBundle
         } else if exe.starts_with("/usr/") {
-            Self::Package
+            Self::Package { repo: repo_configured(Path::new("/")) }
         } else {
             Self::Manual
         }
@@ -84,7 +95,10 @@ impl InstallKind {
     /// What to do about a new version, after "OpenCRT X is available.".
     pub fn advice(self) -> &'static str {
         match self {
-            Self::Package => "Update it with your system's package manager.",
+            Self::Package { repo: true } => "Update it with your system's package manager.",
+            Self::Package { repo: false } => {
+                "To get it, and later versions, with your system's updates, set up the OpenCRT package repository once: kimp0ssible-no.github.io/OpenCRT"
+            }
             Self::InnoSetup | Self::MacBundle | Self::Manual => "Download it from the release page.",
         }
     }
@@ -126,10 +140,29 @@ mod tests {
         std::fs::write(inno.join("unins000.exe"), b"").unwrap();
         assert_eq!(InstallKind::of(&inno.join("opencrt.exe")), InstallKind::InnoSetup);
         assert_eq!(InstallKind::of(&mac.join("opencrt")), InstallKind::MacBundle);
-        assert_eq!(InstallKind::of(Path::new("/usr/bin/opencrt")), InstallKind::Package);
+        assert!(matches!(InstallKind::of(Path::new("/usr/bin/opencrt")), InstallKind::Package { .. }));
         assert_eq!(InstallKind::of(&dir.join("target/release/opencrt")), InstallKind::Manual);
         assert_eq!(InstallKind::of(&dir.join("MacOS/opencrt")), InstallKind::Manual);
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn repository_set_up() {
+        let root = std::env::temp_dir().join(format!("opencrt-repo-{}", std::process::id()));
+        let etc = root.join("etc");
+        std::fs::create_dir_all(etc.join("apt/sources.list.d")).unwrap();
+        std::fs::create_dir_all(etc.join("yum.repos.d")).unwrap();
+        std::fs::write(etc.join("pacman.conf"), "[core]\nInclude = /etc/pacman.d/mirrorlist\n").unwrap();
+        assert!(!repo_configured(&root));
+        std::fs::write(etc.join("pacman.conf"), "[core]\n\n[opencrt]\nServer = https://example.invalid/arch\n").unwrap();
+        assert!(repo_configured(&root));
+        std::fs::remove_file(etc.join("pacman.conf")).unwrap();
+        std::fs::write(etc.join("apt/sources.list.d/opencrt.list"), "deb …").unwrap();
+        assert!(repo_configured(&root));
+        std::fs::remove_file(etc.join("apt/sources.list.d/opencrt.list")).unwrap();
+        std::fs::write(etc.join("yum.repos.d/opencrt.repo"), "[opencrt]").unwrap();
+        assert!(repo_configured(&root));
+        std::fs::remove_dir_all(&root).unwrap();
     }
 
     /// One HTTP exchange with a local server standing in for github.com.

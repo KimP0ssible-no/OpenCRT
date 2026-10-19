@@ -2520,6 +2520,7 @@ component GlobalOptionsDialog inherits DialogFrame {
     in-out property <bool> menubar;
     in-out property <bool> connect-bar;
     in-out property <bool> confirm-disconnect;
+    in-out property <bool> check-updates;
     in-out property <string> recent-count;
     in-out property <string> warn-count;
     in-out property <string> global-key;
@@ -2537,7 +2538,7 @@ component GlobalOptionsDialog inherits DialogFrame {
     dialog-width: 600px;
     HorizontalLayout {
         spacing: 14px;
-        height: 260px;
+        height: 290px;
         Rectangle {
             width: 130px;
             background: Theme.input-bg;
@@ -2583,6 +2584,10 @@ component GlobalOptionsDialog inherits DialogFrame {
             if root.category == 0: CheckBox {
                 text: "Ask before closing a connected tab or exiting";
                 checked <=> root.confirm-disconnect;
+            }
+            if root.category == 0: CheckBox {
+                text: "Check for a new version at start-up";
+                checked <=> root.check-updates;
             }
             if root.category == 0: GridLayout {
                 spacing-horizontal: 12px;
@@ -3082,6 +3087,10 @@ component ScriptEditor inherits DialogFrame {
 component AboutDialog inherits DialogFrame {
     in property <string> version;
     in property <string> settings-dir;
+    in property <string> update-version;
+    in property <string> update-status;
+    callback check-updates();
+    callback release-notes();
     callback close();
     title: "About OpenCRT";
     dialog-width: 520px;
@@ -3131,7 +3140,20 @@ component AboutDialog inherits DialogFrame {
     AboutSlint {
         height: 96px;
     }
+    if root.update-status != "": Text {
+        text: root.update-status;
+        wrap: word-wrap;
+        font-weight: root.update-version != "" ? 600 : 400;
+    }
     DialogButtons {
+        Button {
+            text: "Check for Updates";
+            clicked => { root.check-updates(); }
+        }
+        if root.update-version != "": Button {
+            text: "Release Notes";
+            clicked => { root.release-notes(); }
+        }
         Button {
             text: "OK";
             primary: true;
@@ -3191,6 +3213,9 @@ export component MainWindow inherits Window {
     // The active tab is an SSH2 shell (SFTP tabs can be opened from it).
     in property <bool> ssh-active;
     in property <string> status-text: "Ready";
+    // A newer release's version ("" when none), and the About dialog's line about updates.
+    in property <string> update-version;
+    in property <string> update-status;
     in property <string> status-cipher;
     in property <string> status-pos;
     in property <string> status-size;
@@ -3413,6 +3438,7 @@ export component MainWindow inherits Window {
     in-out property <bool> go-menubar;
     in-out property <bool> go-connect-bar;
     in-out property <bool> go-confirm-disconnect;
+    in-out property <bool> go-check-updates;
     in-out property <string> go-recent-count;
     in-out property <string> go-warn-count;
     in-out property <string> go-global-key;
@@ -3985,6 +4011,10 @@ export component MainWindow inherits Window {
         }
         Menu {
             title: "Help";
+            MenuItem {
+                title: "Check for Updates";
+                activated => { root.menu("check-updates"); }
+            }
             MenuItem {
                 title: "About OpenCRT";
                 activated => {
@@ -4634,6 +4664,17 @@ export component MainWindow inherits Window {
                     horizontal-stretch: 1;
                     overflow: elide;
                 }
+                if root.update-version != "": StatusCell {
+                    text: "OpenCRT " + root.update-version + " available";
+                    TouchArea {
+                        mouse-cursor: pointer;
+                        clicked => {
+                            if root.dialog == 0 {
+                                root.dialog = 4;
+                            }
+                        }
+                    }
+                }
                 StatusCell {
                     text: root.status-cipher;
                     min-cell-width: 120px;
@@ -4837,6 +4878,7 @@ export component MainWindow inherits Window {
         menubar <=> root.go-menubar;
         connect-bar <=> root.go-connect-bar;
         confirm-disconnect <=> root.go-confirm-disconnect;
+        check-updates <=> root.go-check-updates;
         recent-count <=> root.go-recent-count;
         warn-count <=> root.go-warn-count;
         global-key <=> root.go-global-key;
@@ -5351,6 +5393,10 @@ export component MainWindow inherits Window {
     if root.dialog == 4: AboutDialog {
         version: root.version;
         settings-dir: root.settings-dir;
+        update-version: root.update-version;
+        update-status: root.update-status;
+        check-updates => { root.action("check-updates"); }
+        release-notes => { root.action("release-notes"); }
         close => {
             root.dialog = 0;
             root.focus-terminal();

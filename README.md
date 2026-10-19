@@ -27,6 +27,13 @@ Installers for each release are on the
 The Linux packages need nothing beyond glibc 2.28 (RHEL 8, Debian 10, Ubuntu
 20.04 and newer). `SHA256SUMS` lists the checksum of every file.
 
+### New versions
+Once a day at start-up OpenCRT asks GitHub which release is the newest (one
+request to `github.com/KimP0ssible-no/OpenCRT/releases/latest`, nothing about
+you or your sessions is sent) and says so in the status bar when there is a
+newer one. Help > Check for Updates asks at any time; turn the daily check off
+in Options > Global Options > General.
+
 ## Features
 - **Protocols**: SSH2 (password, keyboard-interactive, public key incl. PuTTY
   PPK, with passphrase prompts, and SSH agent keys — Pageant or the OpenSSH

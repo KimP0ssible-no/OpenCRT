@@ -16,7 +16,7 @@ use slint::{ComponentHandle, Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffe
 use crate::config::{self, Credential, FlowControl, Options, Parity, Protocol, SerialLine, Session, SessionStore};
 use crate::forward::{Forward, ForwardKind};
 use crate::rdp::ToHelper;
-use crate::{kermit, local, rdp, rhaiscript, script, serial, sftp, telnet, tftp, xymodem, zmodem};
+use crate::{kermit, local, rdp, rhaiscript, script, serial, sftp, telnet, tftp, update, xymodem, zmodem};
 use crate::input::{self, KeyAction, Mods};
 use crate::log::SessionLog;
 use crate::render::{self, FONT_PX, Renderer};
@@ -57,6 +57,7 @@ const DIALOG_NONE: i32 = 0;
 const DIALOG_HOST_KEY: i32 = 1;
 const DIALOG_AUTH: i32 = 2;
 const DIALOG_QUICK_CONNECT: i32 = 3;
+const DIALOG_ABOUT: i32 = 4;
 const DIALOG_SESSION_OPTIONS: i32 = 5;
 const DIALOG_GLOBAL_OPTIONS: i32 = 6;
 const DIALOG_CONFIRM: i32 = 7;
@@ -1393,6 +1394,8 @@ struct App {
     agent_keys: Vec<(String, russh::keys::PublicKey)>,
     /// A key pair being created by Create Public Key: (file, result).
     keygen: Option<(PathBuf, std::sync::mpsc::Receiver<Result<String, String>>)>,
+    /// A look for a new release: (asked for from the menu, the latest tag).
+    update_check: Option<(bool, std::sync::mpsc::Receiver<Result<String, String>>)>,
     /// Public keys being added to servers' authorized_keys: (host, result).
     uploads: Vec<(String, std::sync::mpsc::Receiver<Result<bool, String>>)>,
     /// Key files still to load into the agent (encrypted ones ask first).
@@ -1647,6 +1650,7 @@ impl App {
             agent_keys_open: false,
             uploads: Vec::new(),
             keygen: None,
+            update_check: None,
             shown_tabs: Vec::new(),
             shown_recent: Vec::new(),
             window_title: String::new(),
@@ -2294,6 +2298,16 @@ impl App {
             "export-sessions" => self.export_sessions(),
             "import-sessions" => self.import_sessions(),
             "global-options" => return self.show_global_options(ui),
+            "check-updates" => {
+                ui.set_dialog(DIALOG_ABOUT);
+                return self.check_updates(ui, true);
+            }
+            "release-notes" => {
+                let url = format!("{}/tag/v{}", update::RELEASES, ui.get_update_version());
+                if let Err(e) = webbrowser::open(&url) {
+                    self.notify(format!("Cannot open {url}: {e}"));
+                }
+            }
             "reconnect" => self.tab_action(active, "reconnect"),
             "disconnect" => self.tab_action(active, "disconnect"),
             "disconnect-all" => {
@@ -2942,6 +2956,7 @@ impl App {
             self.show_buttons(ui);
         }
         self.keygen_done(ui);
+        self.update_done(ui);
         let finished: Vec<(String, Result<bool, String>)> = {
             let mut done = Vec::new();
             self.uploads.retain(|(host, rx)| match rx.try_recv() {
@@ -4830,6 +4845,54 @@ impl App {
         ui.set_kg_busy(true);
     }
 
+    /// Look for a new release in the background; `asked` reports the outcome
+    /// in About even when there is nothing new or the check fails.
+    fn check_updates(&mut self, ui: &MainWindow, asked: bool) {
+        if self.update_check.is_some() {
+            return;
+        }
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let _ = tx.send(update::latest_tag(update::RELEASES).map_err(|e| e.to_string()));
+        });
+        self.update_check = Some((asked, rx));
+        if asked {
+            ui.set_update_status("Checking for a new version…".into());
+        }
+    }
+
+    fn update_done(&mut self, ui: &MainWindow) {
+        let Some((asked, rx)) = &self.update_check else {
+            return;
+        };
+        let (asked, result) = match rx.try_recv() {
+            Ok(result) => (*asked, result),
+            Err(std::sync::mpsc::TryRecvError::Empty) => return,
+            Err(_) => (*asked, Err("the check stopped".to_string())),
+        };
+        self.update_check = None;
+        let current = env!("CARGO_PKG_VERSION");
+        let status = match result {
+            Ok(tag) => {
+                self.options.last_update_check = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
+                self.save_options();
+                if update::is_newer(&tag, current) {
+                    let version = tag.trim_start_matches('v').to_string();
+                    let kind = std::env::current_exe().map_or(update::InstallKind::Manual, |exe| update::InstallKind::of(&exe));
+                    let status = format!("OpenCRT {version} is available. {}", kind.advice());
+                    ui.set_update_version(version.into());
+                    status
+                } else {
+                    format!("OpenCRT {current} is the latest version.")
+                }
+            }
+            Err(e) => format!("Could not check for a new version: {e}"),
+        };
+        if asked || !ui.get_update_version().is_empty() {
+            ui.set_update_status(status.into());
+        }
+    }
+
     /// A key being created in the background has finished.
     fn keygen_done(&mut self, ui: &MainWindow) {
         let Some((path, rx)) = &self.keygen else {
@@ -5729,6 +5792,7 @@ impl App {
         ui.set_go_menubar(self.options.show_menubar);
         ui.set_go_connect_bar(self.options.show_connect_bar);
         ui.set_go_confirm_disconnect(self.options.confirm_disconnect);
+        ui.set_go_check_updates(self.options.check_updates);
         ui.set_go_recent_count(self.options.recent_count.to_string().into());
         ui.set_go_warn_count(self.options.warn_connect_count.to_string().into());
         ui.set_go_global_key(self.options.global_key.clone().into());
@@ -5827,6 +5891,7 @@ impl App {
         self.options.show_menubar = ui.get_go_menubar();
         self.options.show_connect_bar = ui.get_go_connect_bar();
         self.options.confirm_disconnect = ui.get_go_confirm_disconnect();
+        self.options.check_updates = ui.get_go_check_updates();
         self.options.recent_count = recent_count;
         self.options.warn_connect_count = warn_count;
         self.options.global_key = global_key;
@@ -6586,6 +6651,10 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         }
         if let Some(e) = app.store_error.clone() {
             app.notify(format!("sessions.toml could not be loaded (left unchanged): {}", first_line(&e)));
+        }
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
+        if app.options.check_updates && now.saturating_sub(app.options.last_update_check) >= 24 * 60 * 60 {
+            app.check_updates(&ui, false);
         }
     }
 

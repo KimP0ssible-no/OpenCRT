@@ -27,6 +27,7 @@ mod ssh;
 mod telnet;
 mod terminal;
 mod tftp;
+mod update;
 mod xymodem;
 mod zmodem;
 

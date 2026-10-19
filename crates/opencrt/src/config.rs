@@ -477,6 +477,10 @@ pub struct Options {
     pub confirm_disconnect: bool,
     /// Ask before Connect All opens more than this many sessions; 0 = never ask.
     pub warn_connect_count: usize,
+    /// Look for a new release at start-up (at most once a day).
+    pub check_updates: bool,
+    /// When that last succeeded, in seconds since 1970.
+    pub last_update_check: u64,
     /// SSH2 key file for sessions without one; empty to use the SSH agent.
     pub global_key: String,
     /// Saved sessions (paths) opened most recently, newest first.
@@ -743,6 +747,8 @@ impl Default for Options {
             show_menubar: true,
             show_connect_bar: true,
             confirm_disconnect: true,
+            check_updates: true,
+            last_update_check: 0,
             warn_connect_count: 20,
             global_key: String::new(),
             recent_sessions: Vec::new(),

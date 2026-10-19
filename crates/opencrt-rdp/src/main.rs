@@ -404,9 +404,11 @@ async fn session(
             },
         };
 
-        // None until the server has opened Display Control; then the server
-        // deactivates, reactivates at the new size, and DeactivateAll follows.
+        // Held until the server has sent Display Control's capabilities (a layout
+        // sent before then is ignored); then the server deactivates, reactivates
+        // at the new size, and DeactivateAll follows.
         if let Some((width, height)) = wanted
+            && display_control_ready(&mut stage)
             && let Some(request) = stage.encode_resize(width, height, None, None)
         {
             writer.write_all(&request?).await.context("writing to the server")?;
@@ -462,6 +464,13 @@ async fn session(
             }
         }
     }
+}
+
+fn display_control_ready(stage: &mut ActiveStage) -> bool {
+    stage
+        .get_dvc::<DisplayControlClient>()
+        .and_then(|dvc| dvc.channel_processor_downcast_ref::<DisplayControlClient>())
+        .is_some_and(DisplayControlClient::ready)
 }
 
 #[cfg(test)]

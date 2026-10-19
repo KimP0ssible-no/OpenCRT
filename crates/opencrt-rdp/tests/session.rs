@@ -204,3 +204,19 @@ fn a_wrong_password_is_reported() {
     let FromHelper::Error(e) = helper.next() else { panic!("expected an error") };
     assert!(e.starts_with("Login failed"), "{e}");
 }
+
+/// OpenCRT asks for the tab's size as soon as it connects, before the server
+/// has offered Display Control; the request must still be applied.
+#[test]
+fn a_resize_asked_on_connecting_is_applied() {
+    let (port, _events) = server("early-resize");
+    let mut helper = Helper::start();
+    helper.send(connect(port, "secret"));
+    assert!(matches!(helper.next(), FromHelper::Certificate { .. }));
+    helper.send(ToHelper::Trust(true));
+    assert!(matches!(helper.next(), FromHelper::Connected { width: 800, height: 600, .. }));
+    helper.send(ToHelper::Resize { width: 1000, height: 700 });
+    assert_eq!(helper.next(), FromHelper::DesktopSize { width: 1000, height: 700 });
+    helper.send(ToHelper::Close);
+    assert_eq!(helper.next(), FromHelper::Closed);
+}

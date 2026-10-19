@@ -17,6 +17,8 @@ accepted = [
     "OpenSSL",
     "LicenseRef-Slint-Royalty-free-2.0",
 ]
+# Only what ships: dependencies of other platforms (wasm, Android) stay out.
+targets = ["x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-apple-darwin", "aarch64-apple-darwin"]
 ignore-build-dependencies = false
 ignore-dev-dependencies = true
 

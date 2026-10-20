@@ -54,7 +54,11 @@ impl Drive {
 
     /// `\dir\file` as a path inside the shared folder; None for anything that
     /// would leave it (`..`, a drive or stream name) or is not a name at all.
+    /// With no folder shared (an empty root) nothing resolves.
     fn resolve(&self, remote: &str) -> Option<PathBuf> {
+        if self.root.as_os_str().is_empty() {
+            return None;
+        }
         let mut path = self.root.clone();
         for part in remote.split(['\\', '/']).filter(|p| !p.is_empty() && *p != ".") {
             if part == ".." || part.contains([':', '\0']) || (cfg!(windows) && is_device_name(part)) {
@@ -639,5 +643,8 @@ mod tests {
         assert_eq!(create(&mut drive, r"\missing.txt", CreateDisposition::FILE_OPEN, CreateOptions::empty()).0, NtStatus::NO_SUCH_FILE);
         assert_eq!(std::fs::read(root.join("kept.txt")).unwrap(), b"x");
         std::fs::remove_dir_all(root).unwrap();
+        // Offered for sound alone, with no folder: nothing is reachable.
+        let mut none = Drive::new(PathBuf::new());
+        assert_eq!(create(&mut none, r"\Cargo.toml", CreateDisposition::FILE_OPEN, CreateOptions::empty()).0, NtStatus::ACCESS_DENIED);
     }
 }

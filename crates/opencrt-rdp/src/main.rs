@@ -187,11 +187,17 @@ async fn connect(
         note(format_args!("sound: the static and dynamic sound channels are offered"));
     }
     // A shared folder appears on the remote computer as a drive named after it.
+    // Windows also starts sound only once this channel is set up, so sound
+    // offers it too, with no drive.
     let share = std::path::PathBuf::from(&target.share);
-    if !target.share.is_empty() && share.is_dir() {
-        let name = share.file_name().map_or("OpenCRT".into(), |n| n.to_string_lossy().into_owned());
-        let rdpdr = ironrdp::rdpdr::Rdpdr::new(Box::new(drive::Drive::new(share)), "OpenCRT".into())
-            .with_drives(Some(vec![(drive::DEVICE_ID, name)]));
+    let shared = !target.share.is_empty() && share.is_dir();
+    if shared || target.sound {
+        let drives = shared.then(|| {
+            let name = share.file_name().map_or("OpenCRT".into(), |n| n.to_string_lossy().into_owned());
+            vec![(drive::DEVICE_ID, name)]
+        });
+        let root = if shared { share } else { std::path::PathBuf::new() };
+        let rdpdr = ironrdp::rdpdr::Rdpdr::new(Box::new(drive::Drive::new(root)), "OpenCRT".into()).with_drives(drives);
         connector.attach_static_channel(rdpdr);
     }
     let mut framed = TokioFramed::new(stream);

@@ -86,6 +86,8 @@ pub struct Settings {
     pub speed: u8,
     /// Play the remote computer's sound here.
     pub sound: bool,
+    /// A local folder offered as a drive; empty for none.
+    pub share: String,
     /// Saved credential whose password is used instead of asking.
     pub credential: Option<String>,
     /// A password remembered from an earlier login this run.
@@ -271,6 +273,7 @@ async fn attempt(
         height: settings.height,
         speed: settings.speed,
         sound: settings.sound,
+        share: settings.share.clone(),
     };
     tell(&mut stdin, &connect)?;
     drop(connect); // the password is not kept

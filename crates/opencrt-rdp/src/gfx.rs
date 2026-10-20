@@ -489,6 +489,29 @@ mod tests {
         assert!(near(px(&canvas, 50, 20), [0, 0, 255]), "right: {:?}", px(&canvas, 50, 20));
     }
 
+    /// A ClearCodec band with a short V-bar laid out as Windows sends it
+    /// (shortVBarYOn in the first byte, shortVBarYOff in the next six bits);
+    /// IronRDP 0.9 read it the other way round (see vendor/ironrdp-pdu).
+    #[test]
+    fn clearcodec_short_vbars_as_windows_sends_them() {
+        // One column, rows 0..4: background grey, rows 1 and 2 from the V-bar.
+        let mut bands = Vec::new();
+        for v in [0u16, 0, 0, 3] {
+            bands.extend(v.to_le_bytes()); // xStart, xEnd, yStart, yEnd
+        }
+        bands.extend([0x80, 0x80, 0x80]); // background, BGR
+        bands.extend(((3u16 << 8) | 1).to_le_bytes()); // short V-bar miss: yOn 1, yOff 3
+        bands.extend([0, 0, 255, 255, 0, 0]); // red, blue (BGR)
+        let mut stream = vec![0u8, 0]; // flags, sequence number
+        for count in [0, bands.len() as u32, 0] {
+            stream.extend(count.to_le_bytes()); // residual, bands, subcodec byte counts
+        }
+        stream.extend(&bands);
+        let bgra = ClearCodecDecoder::new().decode(&stream, 1, 4).expect("decodes");
+        let rows: Vec<[u8; 4]> = bgra.as_chunks::<4>().0.to_vec();
+        assert_eq!(rows, [[0x80, 0x80, 0x80, 255], [0, 0, 255, 255], [255, 0, 0, 255], [0x80, 0x80, 0x80, 255]]);
+    }
+
     #[test]
     fn copies_and_the_cache() {
         let mut canvas = Canvas::new(4, 2);

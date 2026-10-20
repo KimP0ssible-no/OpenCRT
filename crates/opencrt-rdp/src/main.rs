@@ -160,6 +160,9 @@ async fn connect(
         Ok(Vec::new())
     });
     let mut dynamic = DrdynvcClient::new().with_dynamic_channel(display_control);
+    if target.sound {
+        dynamic = dynamic.with_dynamic_channel(sound::Dynamic::new());
+    }
     // The Graphics Pipeline (H.264, as Windows' own client gets it), with the
     // OpenH264 decoder built in; without it the server sends RemoteFX.
     let decoder = match target.h264.then(ironrdp_egfx::decode::OpenH264Decoder::new) {
@@ -181,7 +184,7 @@ async fn connect(
     let mut connector = ClientConnector::new(config, client_addr).with_static_channel(dynamic).with_static_channel(clipboard);
     if target.sound {
         connector.attach_static_channel(ironrdp::rdpsnd::client::Rdpsnd::new(Box::new(sound::Sound::new())));
-        note(format_args!("sound: the rdpsnd channel is offered"));
+        note(format_args!("sound: the static and dynamic sound channels are offered"));
     }
     // A shared folder appears on the remote computer as a drive named after it.
     let share = std::path::PathBuf::from(&target.share);

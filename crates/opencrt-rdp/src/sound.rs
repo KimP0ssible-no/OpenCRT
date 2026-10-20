@@ -31,23 +31,35 @@ pub struct Sound {
     volume: [f32; 2],
     /// No audio output here: stop trying.
     unavailable: bool,
+    /// Sound received so far, for the connection log.
+    waves: u64,
 }
 
 impl Sound {
     pub fn new() -> Self {
-        Sound { player: None, volume: [1.0, 1.0], unavailable: false }
+        Sound { player: None, volume: [1.0, 1.0], unavailable: false, waves: 0 }
     }
 }
 
 impl RdpsndClientHandler for Sound {
     fn get_formats(&self) -> &[AudioFormat] {
+        crate::note(format_args!("sound: the server's formats arrived; OpenCRT takes PCM 44.1 kHz 16-bit stereo"));
         &FORMATS
     }
 
-    fn wave(&mut self, _format_no: usize, _ts: u32, data: Cow<'_, [u8]>) {
+    fn wave(&mut self, format_no: usize, _ts: u32, data: Cow<'_, [u8]>) {
+        self.waves += 1;
+        if self.waves == 1 {
+            crate::note(format_args!("sound: first sound from the server ({} bytes, format {format_no})", data.len()));
+        }
         if self.player.is_none() && !self.unavailable {
             self.player = player::Player::start(RATE);
             self.unavailable = self.player.is_none();
+            if self.unavailable {
+                crate::note(format_args!("sound: no audio output could be opened here"));
+            } else {
+                crate::note(format_args!("sound: playing on the default output device"));
+            }
         }
         if let Some(player) = &self.player {
             player.play(frames(&data, self.volume));
@@ -56,11 +68,13 @@ impl RdpsndClientHandler for Sound {
 
     fn set_volume(&mut self, volume: VolumePdu) {
         self.volume = [volume.volume_left, volume.volume_right].map(|v| f32::from(v) / f32::from(u16::MAX));
+        crate::note(format_args!("sound: the server sets the volume to {:.0}% / {:.0}%", self.volume[0] * 100.0, self.volume[1] * 100.0));
     }
 
     fn set_pitch(&mut self, _: PitchPdu) {}
 
     fn close(&mut self) {
+        crate::note(format_args!("sound: the server closed the sound ({} pieces played)", self.waves));
         self.player = None;
     }
 }

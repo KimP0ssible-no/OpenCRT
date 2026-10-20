@@ -181,6 +181,7 @@ async fn connect(
     let mut connector = ClientConnector::new(config, client_addr).with_static_channel(dynamic).with_static_channel(clipboard);
     if target.sound {
         connector.attach_static_channel(ironrdp::rdpsnd::client::Rdpsnd::new(Box::new(sound::Sound::new())));
+        note(format_args!("sound: the rdpsnd channel is offered"));
     }
     // A shared folder appears on the remote computer as a drive named after it.
     let share = std::path::PathBuf::from(&target.share);

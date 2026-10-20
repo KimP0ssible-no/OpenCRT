@@ -25,7 +25,7 @@ use ironrdp::session::image::DecodedImage;
 use ironrdp::session::{ActiveStage, ActiveStageBuilder, ActiveStageOutput, fast_path};
 use ironrdp::graphics::image_processing::PixelFormat;
 use ironrdp_tokio::{FramedWrite as _, TokioFramed, single_sequence_step_read, split_tokio_framed};
-use opencrt_rdp_proto::{BUTTON_LEFT, BUTTON_MIDDLE, BUTTON_RIGHT, FromHelper, ToHelper};
+use opencrt_rdp_proto::{BUTTON_LEFT, BUTTON_MIDDLE, BUTTON_RIGHT, FromHelper, SPEED_BEST, SPEED_FASTEST, ToHelper};
 use sha2::{Digest as _, Sha256};
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
@@ -90,12 +90,13 @@ struct Target {
     password: String,
     width: u16,
     height: u16,
+    speed: u8,
 }
 
 async fn run(mut input: UnboundedReceiver<ToHelper>, out: &Out) -> anyhow::Result<()> {
     let target = match input.recv().await {
-        Some(ToHelper::Connect { host, port, user, domain, password, width, height }) => {
-            Target { host, port, user, domain, password, width, height }
+        Some(ToHelper::Connect { host, port, user, domain, password, width, height, speed }) => {
+            Target { host, port, user, domain, password, width, height, speed }
         }
         Some(ToHelper::Close) | None => return Ok(()),
         Some(other) => bail!("expected a connect request first, got {other:?}"),
@@ -236,13 +237,35 @@ fn config(target: &Target) -> connector::Config {
         compression_type: None,
         pointer_software_rendering: true,
         multitransport_flags: None,
-        performance_flags: PerformanceFlags::default(),
+        performance_flags: performance(target.speed),
         desktop_scale_factor: 0,
         hardware_id: None,
         license_cache: None,
         timezone_info: TimezoneInfo::default(),
         alternate_shell: String::new(),
         work_dir: String::new(),
+    }
+}
+
+/// The visual effects the server is asked to leave out at each speed (as
+/// Windows' own client does for LAN, broadband and modem links).
+fn performance(speed: u8) -> PerformanceFlags {
+    match speed {
+        SPEED_BEST => PerformanceFlags::ENABLE_FONT_SMOOTHING | PerformanceFlags::ENABLE_DESKTOP_COMPOSITION,
+        SPEED_FASTEST => {
+            PerformanceFlags::DISABLE_WALLPAPER
+                | PerformanceFlags::DISABLE_FULLWINDOWDRAG
+                | PerformanceFlags::DISABLE_MENUANIMATIONS
+                | PerformanceFlags::DISABLE_THEMING
+                | PerformanceFlags::DISABLE_CURSOR_SHADOW
+                | PerformanceFlags::DISABLE_CURSORSETTINGS
+        }
+        _ => {
+            PerformanceFlags::DISABLE_WALLPAPER
+                | PerformanceFlags::DISABLE_FULLWINDOWDRAG
+                | PerformanceFlags::DISABLE_MENUANIMATIONS
+                | PerformanceFlags::ENABLE_FONT_SMOOTHING
+        }
     }
 }
 
@@ -263,24 +286,36 @@ fn frame(image: &DecodedImage, rect: &InclusiveRectangle) -> FromHelper {
     FromHelper::Frame { x: left, y: top, width, height, rgba }
 }
 
-/// The bounding box of the pixels that differ between two RGBA pictures of
-/// `width` x `height`, or None when they are the same. (IronRDP's update
-/// regions are not reliable, so the helper finds the change itself.)
-fn changed(old: &[u8], new: &[u8], width: u16, height: u16) -> Option<InclusiveRectangle> {
+/// Rows per band in [`changed`].
+const BAND: usize = 64;
+
+/// What differs between two RGBA pictures of `width` x `height`: per band of
+/// [`BAND`] rows, the box around its changed pixels (empty when nothing
+/// changed). Separate bands keep a clock in one corner and the mouse in the
+/// other from becoming one desktop-sized update. (IronRDP's update regions
+/// are not reliable, so the helper finds the change itself.)
+fn changed(old: &[u8], new: &[u8], width: u16, height: u16) -> Vec<InclusiveRectangle> {
     let row_bytes = width as usize * 4;
     let rows = |r: usize| (&old[r * row_bytes..(r + 1) * row_bytes], &new[r * row_bytes..(r + 1) * row_bytes]);
-    let top = (0..height as usize).find(|&r| rows(r).0 != rows(r).1)?;
-    let bottom = (top..height as usize).rev().find(|&r| rows(r).0 != rows(r).1)?;
-    let (mut left, mut right) = (usize::MAX, 0);
-    for r in top..=bottom {
-        let (a, b) = rows(r);
-        let differs = |px: &usize| a[px * 4..px * 4 + 4] != b[px * 4..px * 4 + 4];
-        if let Some(first) = (0..width as usize).find(differs) {
-            left = left.min(first);
-            right = right.max((first..width as usize).rev().find(differs).unwrap_or(first));
+    let mut boxes = Vec::new();
+    for band in (0..height as usize).step_by(BAND) {
+        let end = (band + BAND).min(height as usize);
+        let Some(top) = (band..end).find(|&r| rows(r).0 != rows(r).1) else {
+            continue;
+        };
+        let bottom = (top..end).rev().find(|&r| rows(r).0 != rows(r).1).unwrap_or(top);
+        let (mut left, mut right) = (usize::MAX, 0);
+        for r in top..=bottom {
+            let (a, b) = rows(r);
+            let differs = |px: &usize| a[px * 4..px * 4 + 4] != b[px * 4..px * 4 + 4];
+            if let Some(first) = (0..width as usize).find(differs) {
+                left = left.min(first);
+                right = right.max((first..width as usize).rev().find(differs).unwrap_or(first));
+            }
         }
+        boxes.push(InclusiveRectangle { left: left as u16, top: top as u16, right: right as u16, bottom: bottom as u16 });
     }
-    Some(InclusiveRectangle { left: left as u16, top: top as u16, right: right as u16, bottom: bottom as u16 })
+    boxes
 }
 
 /// How often changed pixels are sent to OpenCRT, at most.
@@ -350,8 +385,11 @@ async fn session(
         let outputs = tokio::select! {
             _ = flush.tick(), if dirty => {
                 dirty = false;
-                if let Some(rect) = changed(&sent, image.data(), image.width(), image.height()) {
-                    send(out, frame(&image, &rect))?;
+                let boxes = changed(&sent, image.data(), image.width(), image.height());
+                for rect in &boxes {
+                    send(out, frame(&image, rect))?;
+                }
+                if !boxes.is_empty() {
                     sent.copy_from_slice(image.data());
                 }
                 Vec::new()
@@ -478,20 +516,33 @@ mod tests {
     use super::*;
 
     #[test]
-    fn changes_are_found_as_one_bounding_box() {
-        let (w, h) = (5u16, 4u16);
+    fn changes_are_found_per_band() {
+        let (w, h) = (300u16, 200u16);
         let old = vec![0u8; w as usize * h as usize * 4];
-        assert_eq!(changed(&old, &old, w, h), None);
-        let mut new = old.clone();
+        assert!(changed(&old, &old, w, h).is_empty());
         let set = |img: &mut Vec<u8>, x: usize, y: usize| img[(y * w as usize + x) * 4] = 7;
-        set(&mut new, 3, 1);
-        set(&mut new, 1, 2);
-        let rect = changed(&old, &new, w, h).unwrap();
-        assert_eq!((rect.left, rect.top, rect.right, rect.bottom), (1, 1, 3, 2));
-        // A single pixel in the last column and row.
-        let mut corner = old.clone();
-        set(&mut corner, 4, 3);
-        let rect = changed(&old, &corner, w, h).unwrap();
-        assert_eq!((rect.left, rect.top, rect.right, rect.bottom), (4, 3, 4, 3));
+        let boxed = |r: &InclusiveRectangle| (r.left, r.top, r.right, r.bottom);
+        // Two changes in one band share a box.
+        let mut new = old.clone();
+        set(&mut new, 30, 10);
+        set(&mut new, 10, 20);
+        assert_eq!(changed(&old, &new, w, h).iter().map(boxed).collect::<Vec<_>>(), [(10, 10, 30, 20)]);
+        // A clock at the top right and the mouse at the bottom left: two small boxes.
+        let mut new = old.clone();
+        set(&mut new, 290, 5);
+        set(&mut new, 3, 190);
+        assert_eq!(changed(&old, &new, w, h).iter().map(boxed).collect::<Vec<_>>(), [(290, 5, 290, 5), (3, 190, 3, 190)]);
+        // The last pixel of the last (short) band.
+        let mut new = old.clone();
+        set(&mut new, 299, 199);
+        assert_eq!(changed(&old, &new, w, h).iter().map(boxed).collect::<Vec<_>>(), [(299, 199, 299, 199)]);
+    }
+
+    #[test]
+    fn speeds_choose_the_effects() {
+        assert!(!performance(SPEED_BEST).contains(PerformanceFlags::DISABLE_WALLPAPER));
+        assert!(performance(opencrt_rdp_proto::SPEED_BALANCED).contains(PerformanceFlags::DISABLE_WALLPAPER));
+        assert!(performance(SPEED_FASTEST).contains(PerformanceFlags::DISABLE_THEMING));
+        assert!(!performance(SPEED_FASTEST).contains(PerformanceFlags::ENABLE_FONT_SMOOTHING));
     }
 }

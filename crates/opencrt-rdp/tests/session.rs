@@ -93,6 +93,7 @@ fn connect(port: u16, password: &str) -> ToHelper {
         password: password.into(),
         width: 800,
         height: 600,
+        speed: opencrt_rdp_proto::SPEED_BALANCED,
     }
 }
 
@@ -124,16 +125,23 @@ fn logs_in_shows_the_desktop_and_sends_input() {
     // The desktop has the size asked for, and pixels arrive.
     let security = "TLS 1.3, NLA".to_string();
     assert_eq!(helper.next(), FromHelper::Connected { width: 800, height: 600, security });
-    // The first frame is the test picture: the whole desktop, white bar first,
-    // then yellow (RemoteFX is lossy, so colours are close, not exact).
+    // The first update is the test picture, in bands of 64 rows down the whole
+    // desktop: white bar first, then yellow (RemoteFX is lossy, so colours are
+    // close, not exact).
     let FromHelper::Frame { x, y, width, height, rgba } = helper.frame() else { unreachable!() };
-    assert_eq!((x, y, width, height), (0, 0, 800, 600));
+    assert_eq!((x, y, width, height), (0, 0, 800, 64));
     let near = |at: usize, want: [u8; 4]| {
         let got = &rgba[at * 4..at * 4 + 4];
         assert!(got.iter().zip(want).all(|(&g, w)| g.abs_diff(w) <= 8), "pixel {at}: {got:?}, want {want:?} (RGBA)");
     };
     near(0, [255, 255, 255, 255]);
     near(10 * 800 + 150, [255, 255, 0, 255]);
+    let mut bottom = 64;
+    while bottom < 600 {
+        let FromHelper::Frame { y, height, .. } = helper.frame() else { unreachable!() };
+        assert_eq!(y, bottom, "bands follow each other");
+        bottom += height;
+    }
     // Then only the small moving square changes (within one 64x64 RemoteFX tile).
     let FromHelper::Frame { width, height, .. } = helper.frame() else { unreachable!() };
     assert!(width <= 64 && height <= 64, "{width}x{height}");

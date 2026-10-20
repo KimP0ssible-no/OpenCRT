@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, Command, Stdio};
 
 use anyhow::{Context as _, anyhow, bail};
-pub use opencrt_rdp_proto::{BUTTON_LEFT, BUTTON_MIDDLE, BUTTON_RIGHT, FromHelper, ToHelper};
+pub use opencrt_rdp_proto::{BUTTON_LEFT, BUTTON_MIDDLE, BUTTON_RIGHT, FromHelper, SPEED_BALANCED, ToHelper};
 use slint::winit_030::winit::keyboard::KeyCode;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 use tokio::sync::oneshot;
@@ -31,40 +31,43 @@ pub enum Screen {
     Clipboard(String),
 }
 
-/// The remote desktop picture of an RDP tab (RGBA, `width` x `height`).
+/// The remote desktop picture of an RDP tab (`width` x `height`), kept as RGB:
+/// an opaque picture Slint copies to the window instead of blending.
 pub struct Desktop {
     pub width: u16,
     pub height: u16,
-    rgba: Vec<u8>,
+    rgb: Vec<u8>,
 }
 
 impl Desktop {
     pub fn new(width: u16, height: u16) -> Self {
-        let mut rgba = vec![0u8; width as usize * height as usize * 4];
-        rgba.as_chunks_mut::<4>().0.iter_mut().for_each(|p| p[3] = 255);
-        Desktop { width, height, rgba }
+        Desktop { width, height, rgb: vec![0u8; width as usize * height as usize * 3] }
     }
 
-    /// Copy changed pixels in; anything outside the desktop is ignored.
+    /// Copy changed pixels (RGBA rows of `width`) in; anything outside the desktop is ignored.
     pub fn paint(&mut self, x: u16, y: u16, width: u16, height: u16, rgba: &[u8]) {
         let (x, y, width, height) = (x as usize, y as usize, width as usize, height as usize);
         let (dw, dh) = (self.width as usize, self.height as usize);
         let copy = width.min(dw.saturating_sub(x));
         for row in 0..height.min(dh.saturating_sub(y)) {
-            let src = row * width * 4;
-            let dst = ((y + row) * dw + x) * 4;
-            self.rgba[dst..dst + copy * 4].copy_from_slice(&rgba[src..src + copy * 4]);
+            let src = &rgba[row * width * 4..(row * width + copy) * 4];
+            let dst = &mut self.rgb[((y + row) * dw + x) * 3..((y + row) * dw + x + copy) * 3];
+            for (d, s) in dst.as_chunks_mut::<3>().0.iter_mut().zip(src.as_chunks::<4>().0) {
+                *d = [s[0], s[1], s[2]];
+            }
         }
     }
 
-    /// Draw into an RGBA image of `w` x `h` at 1:1 from the top left; a
+    /// Draw into an RGB image of `w` x `h` at 1:1 from the top left; a
     /// smaller desktop leaves the rest `background`, a bigger one is cut off.
-    pub fn draw(&self, out: &mut [u8], w: usize, h: usize, background: [u8; 4]) {
-        out.as_chunks_mut::<4>().0.iter_mut().for_each(|p| *p = background);
+    pub fn draw(&self, out: &mut [u8], w: usize, h: usize, background: [u8; 3]) {
         let (dw, dh) = (self.width as usize, self.height as usize);
+        if dw < w || dh < h {
+            out.as_chunks_mut::<3>().0.iter_mut().for_each(|p| *p = background);
+        }
         let copy = dw.min(w);
         for row in 0..dh.min(h) {
-            out[row * w * 4..(row * w + copy) * 4].copy_from_slice(&self.rgba[row * dw * 4..(row * dw + copy) * 4]);
+            out[row * w * 3..(row * w + copy) * 3].copy_from_slice(&self.rgb[row * dw * 3..(row * dw + copy) * 3]);
         }
     }
 }
@@ -77,6 +80,8 @@ pub struct Settings {
     pub user: String,
     pub width: u16,
     pub height: u16,
+    /// Visual effects allowed: `opencrt_rdp_proto::SPEED_*`.
+    pub speed: u8,
     /// Saved credential whose password is used instead of asking.
     pub credential: Option<String>,
     /// A password remembered from an earlier login this run.
@@ -260,6 +265,7 @@ async fn attempt(
         password,
         width: settings.width,
         height: settings.height,
+        speed: settings.speed,
     };
     tell(&mut stdin, &connect)?;
     drop(connect); // the password is not kept
@@ -470,17 +476,17 @@ mod tests {
         let mut desktop = Desktop::new(3, 2);
         // A 2x2 red square at (2, 1): only its top-left pixel is on the desktop.
         desktop.paint(2, 1, 2, 2, &[255, 0, 0, 255].repeat(4));
-        let mut out = vec![0u8; 4 * 3 * 4];
-        desktop.draw(&mut out, 4, 3, [9, 9, 9, 255]);
-        let px = |x: usize, y: usize| &out[(y * 4 + x) * 4..(y * 4 + x) * 4 + 4];
-        assert_eq!(px(2, 1), [255, 0, 0, 255]);
-        assert_eq!(px(0, 0), [0, 0, 0, 255], "the desktop starts black");
-        assert_eq!(px(3, 0), [9, 9, 9, 255], "right of the desktop");
-        assert_eq!(px(0, 2), [9, 9, 9, 255], "below the desktop");
+        let mut out = vec![0u8; 4 * 3 * 3];
+        desktop.draw(&mut out, 4, 3, [9, 9, 9]);
+        let px = |x: usize, y: usize| &out[(y * 4 + x) * 3..(y * 4 + x) * 3 + 3];
+        assert_eq!(px(2, 1), [255, 0, 0]);
+        assert_eq!(px(0, 0), [0, 0, 0], "the desktop starts black");
+        assert_eq!(px(3, 0), [9, 9, 9], "right of the desktop");
+        assert_eq!(px(0, 2), [9, 9, 9], "below the desktop");
         // A desktop bigger than the image is cut off, not wrapped.
-        let mut small = vec![0u8; 2 * 4];
-        desktop.draw(&mut small, 2, 1, [9, 9, 9, 255]);
-        assert_eq!(small, [0, 0, 0, 255, 0, 0, 0, 255]);
+        let mut small = vec![0u8; 2 * 3];
+        desktop.draw(&mut small, 2, 1, [9, 9, 9]);
+        assert_eq!(small, [0, 0, 0, 0, 0, 0]);
     }
 
     #[test]

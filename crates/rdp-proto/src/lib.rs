@@ -27,8 +27,20 @@ pub const BUTTON_MIDDLE: u8 = 3;
 pub enum ToHelper {
     /// Start the connection; sent once, first. `speed` picks the visual
     /// effects the server may use: [`SPEED_BEST`], [`SPEED_BALANCED`],
-    /// [`SPEED_FASTEST`]; `sound` plays the remote computer's sound here.
-    Connect { host: String, port: u16, user: String, domain: String, password: String, width: u16, height: u16, speed: u8, sound: bool },
+    /// [`SPEED_FASTEST`]; `sound` plays the remote computer's sound here;
+    /// `share` is a local folder to offer the remote computer as a drive ("" for none).
+    Connect {
+        host: String,
+        port: u16,
+        user: String,
+        domain: String,
+        password: String,
+        width: u16,
+        height: u16,
+        speed: u8,
+        sound: bool,
+        share: String,
+    },
     /// Answer to [`FromHelper::Certificate`]: continue (true) or abort.
     Trust(bool),
     /// A keyboard scancode (set 1); `extended` for the E0-prefixed keys.
@@ -175,9 +187,19 @@ fn read_message(input: &mut impl Read) -> io::Result<Option<(u8, Vec<u8>)>> {
 impl ToHelper {
     pub fn write(&self, out: &mut impl Write) -> io::Result<()> {
         let (tag, body) = match self {
-            ToHelper::Connect { host, port, user, domain, password, width, height, speed, sound } => (
+            ToHelper::Connect { host, port, user, domain, password, width, height, speed, sound, share } => (
                 1,
-                Body::default().str(host).u16(*port).str(user).str(domain).str(password).u16(*width).u16(*height).u8(*speed).u8(*sound as u8),
+                Body::default()
+                    .str(host)
+                    .u16(*port)
+                    .str(user)
+                    .str(domain)
+                    .str(password)
+                    .u16(*width)
+                    .u16(*height)
+                    .u8(*speed)
+                    .u8(*sound as u8)
+                    .str(share),
             ),
             ToHelper::Trust(yes) => (2, Body::default().u8(*yes as u8)),
             ToHelper::Key { scancode, extended, down } => {
@@ -212,6 +234,7 @@ impl ToHelper {
                 height: f.u16()?,
                 speed: f.u8()?,
                 sound: f.u8()? != 0,
+                share: f.str()?,
             },
             2 => ToHelper::Trust(f.u8()? != 0),
             3 => ToHelper::Key { scancode: f.u8()?, extended: f.u8()? != 0, down: f.u8()? != 0 },
@@ -299,6 +322,7 @@ mod tests {
                 height: 800,
                 speed: SPEED_FASTEST,
                 sound: true,
+                share: "/home/kim/Shared".into(),
             },
             ToHelper::Trust(true),
             ToHelper::Key { scancode: 0x1d, extended: true, down: false },

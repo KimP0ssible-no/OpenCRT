@@ -14,7 +14,7 @@ license = "Apache-2.0"
 [dependencies]
 anyhow = "1.0.104"
 # Devolutions IronRDP (MIT/Apache-2.0): connection sequence, NLA, session, codecs, input.
-ironrdp = { version = "0.17.0", features = ["connector", "session", "graphics", "input", "pdu", "dvc", "displaycontrol", "cliprdr", "rdpsnd"] }
+ironrdp = { version = "0.17.0", features = ["connector", "session", "graphics", "input", "pdu", "dvc", "displaycontrol", "cliprdr", "rdpsnd", "rdpdr", "svc"] }
 ironrdp-tls = { version = "0.2.2", features = ["rustls"] }
 ironrdp-tokio = "0.10.0"
 opencrt-rdp-proto = { path = "../rdp-proto" }

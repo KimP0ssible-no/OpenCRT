@@ -15,6 +15,7 @@ license = "Apache-2.0"
 anyhow = "1.0.104"
 # Devolutions IronRDP (MIT/Apache-2.0): connection sequence, NLA, session, codecs, input.
 ironrdp = { version = "0.17.0", features = ["connector", "session", "graphics", "input", "pdu", "dvc", "displaycontrol", "cliprdr", "rdpsnd", "rdpdr", "svc"] }
+ironrdp-egfx = { version = "0.3.0", features = ["openh264-bundled"] }
 ironrdp-tls = { version = "0.2.2", features = ["rustls"] }
 ironrdp-tokio = "0.10.0"
 opencrt-rdp-proto = { path = "../rdp-proto" }
@@ -37,8 +38,14 @@ libc = "0.2"
 async-trait = "0.1.92"
 ironrdp = { version = "0.17.0", features = ["server"] }
 ironrdp-server = { version = "0.13.0", features = ["helper"] }
+openh264 = "0.9"
 rcgen = { version = "0.14.10", default-features = false, features = ["aws_lc_rs", "pem"] }
 
 [profile.release]
 strip = true
 lto = "thin"
+
+# One field IronRDP has upstream but not yet in a release: see
+# vendor/ironrdp-connector/OPENCRT.md.
+[patch.crates-io]
+ironrdp-connector = { path = "vendor/ironrdp-connector" }

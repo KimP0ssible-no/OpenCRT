@@ -98,6 +98,7 @@ fn main() {
                 ui.set_so_rdp_speed(1);
                 ui.set_so_rdp_sound(true);
                 ui.set_so_rdp_share("~/Shared".into());
+                ui.set_so_rdp_h264(true);
             }
             ui.set_encoding_names(model(vec![SharedString::from("UTF-8"), "Shift_JIS (Japanese)".into()]));
             ui.set_so_columns("132".into());

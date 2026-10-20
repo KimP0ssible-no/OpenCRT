@@ -1488,6 +1488,7 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <int> rdp-speed;
     in-out property <bool> rdp-sound;
     in-out property <string> rdp-share;
+    in-out property <bool> rdp-h264;
     in-out property <string> terminal-type;
     // Index into codec::ENCODINGS.
     in-out property <int> encoding;
@@ -1930,6 +1931,11 @@ component SessionOptionsDialog inherits DialogFrame {
                         wrap: word-wrap;
                         color: Theme.text-secondary;
                         font-size: 11px;
+                    }
+                    CheckBox {
+                        text: "Use H.264 when the server offers it (much faster; turn off if the desktop stays black)";
+                        checked <=> root.rdp-h264;
+                        enabled: root.protocol == 5;
                     }
                     CheckBox {
                         text: "Play the remote computer's sound on this computer";
@@ -3433,6 +3439,7 @@ export component MainWindow inherits Window {
     in-out property <int> so-rdp-speed;
     in-out property <bool> so-rdp-sound;
     in-out property <string> so-rdp-share;
+    in-out property <bool> so-rdp-h264;
     in-out property <string> so-term;
     in-out property <int> so-encoding;
     in property <[string]> encoding-names;
@@ -4894,6 +4901,7 @@ export component MainWindow inherits Window {
         rdp-speed <=> root.so-rdp-speed;
         rdp-sound <=> root.so-rdp-sound;
         rdp-share <=> root.so-rdp-share;
+        rdp-h264 <=> root.so-rdp-h264;
         terminal-type <=> root.so-term;
         encoding <=> root.so-encoding;
         encoding-names: root.encoding-names;

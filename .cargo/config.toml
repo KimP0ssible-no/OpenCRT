@@ -1,5 +1,13 @@
 [env]
 AWS_LC_SYS_PREBUILT_NASM = "1"
+# The RDP helper's H.264 decoder (OpenH264) is C++: on Linux its runtime is
+# linked statically by crates/opencrt-rdp/build.rs, so the binary still needs
+# only glibc; cc must not add the shared libstdc++.
+CXXSTDLIB_x86_64_unknown_linux_gnu = ""
+# OpenH264 without its assembly: no nasm needed on any build machine (or for
+# the universal macOS build), and plain C still decodes a full 1080p frame in
+# well under 10 ms.
+OPENH264_NO_ASM = "1"
 
 # Link the C runtime into the Windows executables, so a fresh Windows needs
 # no Visual C++ Redistributable.

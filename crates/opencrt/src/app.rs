@@ -568,6 +568,8 @@ struct Tab {
     fixed_size: (Option<usize>, Option<usize>),
     allow_deccolm: bool,
     deccolm: Option<usize>,
+    /// RDP: the session's fixed desktop size, instead of following the pane.
+    rdp_fixed: Option<(u16, u16)>,
     /// The host speaks Latin-1: output is converted to UTF-8, input back.
     /// Converts traffic for a non-UTF-8 session.
     codec: Option<crate::codec::Codec>,
@@ -704,6 +706,7 @@ impl Tab {
             fixed_size: (None, None),
             allow_deccolm: true,
             deccolm: None,
+            rdp_fixed: None,
             codec: None,
             show_controls: false,
             fresh_output: false,
@@ -742,6 +745,7 @@ impl Tab {
         let size = |n: u16| (n > 0).then_some(n as usize);
         self.fixed_size = (size(s.columns), size(s.rows));
         self.allow_deccolm = s.allow_deccolm;
+        self.rdp_fixed = (s.rdp_width > 0 && s.rdp_height > 0).then(|| rdp_size((s.rdp_width.into(), s.rdp_height.into())));
         self.codec = crate::codec::Codec::new(s.encoding_label());
         self.log_timestamps = s.log_timestamps;
         self.color = s.tab_color.clone();
@@ -1116,7 +1120,7 @@ impl Tab {
                 ssh::shell_on(shared, self.target.credentials(), pty)
             }
             None if self.target.protocol == Protocol::Rdp => {
-                let (handle, input) = self.target.rdp(self.desktop);
+                let (handle, input) = self.target.rdp(self.rdp_fixed.unwrap_or(self.desktop));
                 self.rdp = Some(input);
                 handle
             }
@@ -3132,16 +3136,22 @@ impl App {
             // A fixed size (session or 80/132-column switch) is drawn whole and
             // scaled to fit the pane.
             let fixed = tab.screen.is_none().then(|| tab.size_override()).flatten();
-            let pixels = match fixed {
-                Some((c, l)) => {
+            // An RDP session's fixed desktop: its own size, scaled down to fit but never up.
+            let rdp_fixed = tab.rdp_fixed.and(tab.screen.as_ref()).map(|d| (d.width as usize, d.height as usize));
+            let pixels = match (fixed, rdp_fixed) {
+                (_, Some(size)) => size,
+                (Some((c, l)), None) => {
                     (cols, lines) = (c.unwrap_or(cols).max(2), l.unwrap_or(lines).max(2));
                     (cols * cell_w, lines * cell_h)
                 }
-                None => fit,
+                (None, None) => fit,
             };
             let mut pane = *pane;
-            if fixed.is_some() {
-                let zoom = (fit.0 as f32 / pixels.0 as f32).min(fit.1 as f32 / pixels.1 as f32);
+            if fixed.is_some() || rdp_fixed.is_some() {
+                let mut zoom = (fit.0 as f32 / pixels.0 as f32).min(fit.1 as f32 / pixels.1 as f32);
+                if rdp_fixed.is_some() {
+                    zoom = zoom.min(1.0);
+                }
                 let (w, h) = (pixels.0 as f32 * zoom / scale, pixels.1 as f32 * zoom / scale);
                 pane.image = [pane.image[0] + (pane.image[2] - w) / 2.0, pane.image[1] + (pane.image[3] - h) / 2.0, w, h];
                 pane.zoom = zoom;
@@ -3187,7 +3197,7 @@ impl App {
                 tab.desktop = size;
                 tab.desktop_changed = now;
             }
-            if let (Some(input), Some(screen)) = (&tab.rdp, &tab.screen)
+            if let (Some(input), Some(screen), None) = (&tab.rdp, &tab.screen, tab.rdp_fixed)
                 && (screen.width, screen.height) != size
                 && tab.desktop_asked != Some(size)
                 && now.duration_since(tab.desktop_changed) >= RESIZE_SETTLE
@@ -3905,6 +3915,8 @@ impl App {
         ui.set_so_columns(size(session.columns));
         ui.set_so_rows(size(session.rows));
         ui.set_so_deccolm(session.allow_deccolm);
+        ui.set_so_rdp_width(size(session.rdp_width));
+        ui.set_so_rdp_height(size(session.rdp_height));
         ui.set_so_term(session.terminal_type.clone().into());
         let names: Vec<SharedString> = crate::codec::ENCODINGS.iter().map(|(_, name)| SharedString::from(*name)).collect();
         ui.set_encoding_names(ModelRc::new(VecModel::from(names)));
@@ -3993,6 +4005,8 @@ impl App {
             columns: ui.get_so_columns().trim().parse::<u16>().unwrap_or(0).min(1000),
             rows: ui.get_so_rows().trim().parse::<u16>().unwrap_or(0).min(500),
             allow_deccolm: ui.get_so_deccolm(),
+            rdp_width: ui.get_so_rdp_width().trim().parse().unwrap_or(0),
+            rdp_height: ui.get_so_rdp_height().trim().parse().unwrap_or(0),
             terminal_type: ui.get_so_term().trim().to_string(),
             latin1: false,
             encoding: crate::codec::ENCODINGS.get(ui.get_so_encoding().max(0) as usize).map_or("", |(label, _)| label).to_string(),
@@ -4026,6 +4040,7 @@ impl App {
             .map(|e| format!("Logon script: {e}"))
             .or_else(|| input::parse_key_map(&session.key_map).err().map(|e| format!("Keyboard: {e}")))
             .or_else(|| anti_idle_secs.is_none().then(|| "Anti-idle: the interval must be a whole number of seconds.".into()))
+            .or_else(|| rdp_size_problem(ui.get_so_rdp_width().trim(), ui.get_so_rdp_height().trim()).map(String::from))
             .or_else(|| {
                 (!session.proxy.is_empty()).then(|| crate::proxy::check(&session.proxy).err()).flatten().map(|e| format!("Proxy: {e}"))
             });
@@ -6071,6 +6086,16 @@ fn line_from_ui([data, parity, stop, flow]: [i32; 4]) -> SerialLine {
     }
 }
 
+/// What is wrong with a fixed RDP desktop size as typed, if anything.
+fn rdp_size_problem(width: &str, height: &str) -> Option<&'static str> {
+    let ok = |v: &str| v.parse::<u16>().is_ok_and(|n| (200..=8192).contains(&n));
+    match (width.is_empty(), height.is_empty()) {
+        (true, true) => None,
+        _ if ok(width) && ok(height) => None,
+        _ => Some("Remote Desktop: enter both width and height (200 to 8192 pixels), or leave both blank to fit the window."),
+    }
+}
+
 /// The RDP desktop size for a tab of `pixels`: even width (some servers need
 /// it), within RDP's 200..=8192 limits.
 fn rdp_size(pixels: (usize, usize)) -> (u16, u16) {
@@ -7256,6 +7281,18 @@ mod tests {
         assert_eq!(line_to_ui(line), [1, 2, 1, 1]);
         assert_eq!(line_from_ui(line_to_ui(line)), line);
         assert_eq!(line_from_ui(line_to_ui(SerialLine::default())), SerialLine::default());
+    }
+
+    #[test]
+    fn fixed_rdp_sizes() {
+        assert_eq!(rdp_size_problem("", ""), None, "blank follows the window");
+        assert_eq!(rdp_size_problem("1920", "1080"), None);
+        assert!(rdp_size_problem("1920", "").is_some(), "both or neither");
+        assert!(rdp_size_problem("100", "1080").is_some(), "RDP needs 200 or more");
+        assert!(rdp_size_problem("9000", "1080").is_some());
+        assert!(rdp_size_problem("wide", "1080").is_some());
+        // An odd width is made even, as servers want.
+        assert_eq!(rdp_size((1365, 768)), (1364, 768));
     }
 
     #[test]

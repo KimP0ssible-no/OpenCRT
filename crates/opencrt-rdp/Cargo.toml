@@ -49,3 +49,5 @@ lto = "thin"
 [patch.crates-io]
 ironrdp-connector = { path = "vendor/ironrdp-connector" }
 ironrdp-pdu = { path = "vendor/ironrdp-pdu" }
+ironrdp-egfx = { path = "vendor/ironrdp-egfx" }
+ironrdp-graphics = { path = "vendor/ironrdp-graphics" }

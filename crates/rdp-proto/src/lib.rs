@@ -45,6 +45,8 @@ pub enum ToHelper {
     ReleaseAll,
     /// OpenCRT's clipboard text, offered to the server for pasting there.
     Clipboard(String),
+    /// A picture on OpenCRT's clipboard (RGBA rows of `width`), offered likewise.
+    ClipboardImage { width: u32, height: u32, rgba: Vec<u8> },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -65,6 +67,8 @@ pub enum FromHelper {
     Closed,
     /// Text copied on the server, for OpenCRT's clipboard.
     Clipboard(String),
+    /// A picture copied on the server (RGBA rows of `width`), for OpenCRT's clipboard.
+    ClipboardImage { width: u32, height: u32, rgba: Vec<u8> },
 }
 
 /// Body encoder: little-endian integers, length-prefixed strings and bytes.
@@ -77,6 +81,10 @@ impl Body {
         self
     }
     fn u16(mut self, v: u16) -> Self {
+        self.0.extend(v.to_le_bytes());
+        self
+    }
+    fn u32(mut self, v: u32) -> Self {
         self.0.extend(v.to_le_bytes());
         self
     }
@@ -111,6 +119,16 @@ impl Fields<'_> {
     }
     fn u16(&mut self) -> io::Result<u16> {
         Ok(u16::from_le_bytes(self.take(2)?.try_into().unwrap()))
+    }
+    fn u32(&mut self) -> io::Result<u32> {
+        Ok(u32::from_le_bytes(self.take(4)?.try_into().unwrap()))
+    }
+    fn image(&mut self) -> io::Result<(u32, u32, Vec<u8>)> {
+        let (width, height, rgba) = (self.u32()?, self.u32()?, self.bytes()?);
+        if rgba.len() as u64 != width as u64 * height as u64 * 4 {
+            return Err(invalid("picture size does not match its pixels"));
+        }
+        Ok((width, height, rgba))
     }
     fn i16(&mut self) -> io::Result<i16> {
         Ok(i16::from_le_bytes(self.take(2)?.try_into().unwrap()))
@@ -170,6 +188,7 @@ impl ToHelper {
             ToHelper::Close => (8, Body::default()),
             ToHelper::ReleaseAll => (9, Body::default()),
             ToHelper::Clipboard(text) => (10, Body::default().str(text)),
+            ToHelper::ClipboardImage { width, height, rgba } => (11, Body::default().u32(*width).u32(*height).bytes(rgba)),
         };
         write_message(out, tag, body)
     }
@@ -200,6 +219,10 @@ impl ToHelper {
             8 => ToHelper::Close,
             9 => ToHelper::ReleaseAll,
             10 => ToHelper::Clipboard(f.str()?),
+            11 => {
+                let (width, height, rgba) = f.image()?;
+                ToHelper::ClipboardImage { width, height, rgba }
+            }
             _ => return Err(invalid("unknown message")),
         };
         Ok(Some(message))
@@ -220,6 +243,7 @@ impl FromHelper {
             FromHelper::Error(message) => (5, Body::default().str(message)),
             FromHelper::Closed => (6, Body::default()),
             FromHelper::Clipboard(text) => (7, Body::default().str(text)),
+            FromHelper::ClipboardImage { width, height, rgba } => (8, Body::default().u32(*width).u32(*height).bytes(rgba)),
         };
         write_message(out, tag, body)
     }
@@ -245,6 +269,10 @@ impl FromHelper {
             5 => FromHelper::Error(f.str()?),
             6 => FromHelper::Closed,
             7 => FromHelper::Clipboard(f.str()?),
+            8 => {
+                let (width, height, rgba) = f.image()?;
+                FromHelper::ClipboardImage { width, height, rgba }
+            }
             _ => return Err(invalid("unknown message")),
         };
         Ok(Some(message))
@@ -277,6 +305,7 @@ mod tests {
             ToHelper::Close,
             ToHelper::ReleaseAll,
             ToHelper::Clipboard("zwölf\r\nlines".into()),
+            ToHelper::ClipboardImage { width: 1, height: 2, rgba: vec![9; 8] },
         ];
         let mut wire = Vec::new();
         for m in &to {
@@ -296,6 +325,7 @@ mod tests {
             FromHelper::Error("refused".into()),
             FromHelper::Closed,
             FromHelper::Clipboard("copied".into()),
+            FromHelper::ClipboardImage { width: 2, height: 1, rgba: vec![7; 8] },
         ];
         let mut wire = Vec::new();
         for m in &from {
@@ -320,5 +350,8 @@ mod tests {
         let mut wire = Vec::new();
         FromHelper::Frame { x: 0, y: 0, width: 2, height: 2, rgba: vec![0; 4] }.write(&mut wire).unwrap();
         assert!(FromHelper::read(&mut wire.as_slice()).is_err());
+        let mut wire = Vec::new();
+        ToHelper::ClipboardImage { width: 2, height: 2, rgba: vec![0; 4] }.write(&mut wire).unwrap();
+        assert!(ToHelper::read(&mut wire.as_slice()).is_err());
     }
 }

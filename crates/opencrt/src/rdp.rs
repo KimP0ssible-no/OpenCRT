@@ -200,7 +200,9 @@ async fn ask_password(user: &str, host: &str, io: &Io) -> anyhow::Result<String>
 
 fn start_helper() -> anyhow::Result<Child> {
     let mut command = Command::new(helper_path()?);
-    command.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null());
+    // The helper's connection log (rdp.log in the configuration folder), overwritten at each connect.
+    let log = crate::config::dir().and_then(|d| std::fs::File::create(d.join("rdp.log")).ok());
+    command.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(log.map_or_else(Stdio::null, Stdio::from));
     #[cfg(windows)]
     {
         // No console window flashing up for the helper.

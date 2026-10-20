@@ -35,6 +35,14 @@ mod drive;
 mod sound;
 use x509_cert::der::Encode as _;
 
+/// A line in the connection log: stderr, which OpenCRT keeps as `rdp.log`
+/// in its configuration folder (nothing secret goes there).
+fn note(text: std::fmt::Arguments) {
+    static START: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+    let at = START.get_or_init(std::time::Instant::now).elapsed();
+    eprintln!("{:>8.3} {text}", at.as_secs_f64());
+}
+
 /// How long the TCP connection may take before giving up.
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(20);
 
@@ -106,6 +114,10 @@ async fn run(mut input: UnboundedReceiver<ToHelper>, out: &Out) -> anyhow::Resul
         Some(other) => bail!("expected a connect request first, got {other:?}"),
     };
     let (clip_queue, clips) = unbounded_channel();
+    note(format_args!(
+        "connecting to {}:{} as {}x{}, speed {}, sound {}, shared folder {:?}",
+        target.host, target.port, target.width, target.height, target.speed, target.sound, target.share
+    ));
     let (result, framed, security) = connect(&target, &mut input, out, clip_queue).await?;
     session(result, framed, security, input, clips, out).await
 }
@@ -386,6 +398,7 @@ async fn session(
     }
     .build();
     let mut keys = Database::new();
+    note(format_args!("connected ({security}): the server's desktop is {}x{}", size.width, size.height));
     send(out, FromHelper::Connected { width: size.width, height: size.height, security })?;
     // What OpenCRT has been sent so far; changes are diffed against it and
     // sent at most every FRAME_INTERVAL.
@@ -395,6 +408,7 @@ async fn session(
     flush.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     // A desktop size OpenCRT asked for, kept until Display Control is ready.
     let mut wanted: Option<(u32, u32)> = None;
+    let mut waiting_noted = false;
 
     loop {
         let outputs = tokio::select! {
@@ -452,6 +466,8 @@ async fn session(
                 Some(ToHelper::Resize { width, height }) => {
                     let size = MonitorLayoutEntry::adjust_display_size(width.into(), height.into());
                     wanted = (size != (image.width().into(), image.height().into())).then_some(size);
+                    waiting_noted = false;
+                    note(format_args!("OpenCRT asks for {width}x{height} (as sent: {}x{}; now {}x{})", size.0, size.1, image.width(), image.height()));
                     Vec::new()
                 }
                 Some(message) => match operation(message) {
@@ -464,12 +480,21 @@ async fn session(
         // Held until the server has sent Display Control's capabilities (a layout
         // sent before then is ignored); then the server deactivates, reactivates
         // at the new size, and DeactivateAll follows.
-        if let Some((width, height)) = wanted
-            && display_control_ready(&mut stage)
-            && let Some(request) = stage.encode_resize(width, height, None, None)
-        {
-            writer.write_all(&request?).await.context("writing to the server")?;
-            wanted = None;
+        if let Some((width, height)) = wanted {
+            let ready = display_control_ready(&mut stage);
+            match ready.then(|| stage.encode_resize(width, height, None, None)).flatten() {
+                Some(request) => {
+                    writer.write_all(&request?).await.context("writing to the server")?;
+                    note(format_args!("resize to {width}x{height} sent"));
+                    wanted = None;
+                }
+                None if !waiting_noted => {
+                    let open = stage.get_dvc::<DisplayControlClient>().is_some_and(|dvc| dvc.channel_id().is_some());
+                    note(format_args!("resize held: Display Control channel open {open}, capabilities received {ready}"));
+                    waiting_noted = true;
+                }
+                None => {}
+            }
         }
 
         for output in outputs {
@@ -508,6 +533,7 @@ async fn session(
                             );
                             stage.set_share_id(share_id);
                             stage.set_enable_server_pointer(enable_server_pointer);
+                            note(format_args!("the server reactivated the session at {}x{}", desktop_size.width, desktop_size.height));
                             send(out, FromHelper::DesktopSize { width: desktop_size.width, height: desktop_size.height })?;
                             // OpenCRT starts the new desktop black: send it all.
                             send(out, frame(&image, &whole(&image)))?;

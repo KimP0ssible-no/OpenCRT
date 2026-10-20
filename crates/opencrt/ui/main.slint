@@ -1523,6 +1523,16 @@ component SessionOptionsDialog inherits DialogFrame {
     callback browse(string);
     // Editing this many sessions at once (only the changed options apply to all).
     in property <int> many;
+    // RDP has no terminal: its sessions skip the terminal pages (Terminal, Log
+    // File, Port Forwarding, Logon Script, Keyboard); others skip Remote Desktop.
+    pure function page-applies(page: int) -> bool {
+        root.protocol == 5 ? page == 0 || page == 1 || page == 3 || page == 8 : page != 8
+    }
+    changed protocol => {
+        if !root.page-applies(root.category) {
+            root.category = 0;
+        }
+    }
     title: root.many > 1 ? "Session Options (\{root.many} sessions)" : "Session Options";
     dialog-width: 640px;
     HorizontalLayout {
@@ -1537,7 +1547,8 @@ component SessionOptionsDialog inherits DialogFrame {
                 padding: 2px;
                 alignment: start;
                 for page[i] in ["Connection", "Authentication", "Terminal", "Appearance", "Log File", "Port Forwarding", "Logon Script", "Keyboard", "Remote Desktop"]: Rectangle {
-                    height: 24px;
+                    visible: root.page-applies(i);
+                    height: self.visible ? 24px : 0px;
                     background: i == root.category ? Theme.active-row-bg : page-touch.has-hover ? Theme.hover-bg : transparent;
                     Text {
                         x: 8px;

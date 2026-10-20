@@ -78,7 +78,7 @@ fn main() {
     ui.set_status_text("Connected".into());
 
     match scene.as_str() {
-        "session-options" | "connection" | "forwards" | "terminal" | "log-options" => {
+        "session-options" | "connection" | "forwards" | "terminal" | "log-options" | "remote-desktop" => {
             ui.set_so_name("core-sw1".into());
             ui.set_so_host("core-sw1.example.net".into());
             ui.set_so_port("22".into());
@@ -88,8 +88,14 @@ fn main() {
                 "terminal" => 2,
                 "log-options" => 4,
                 "connection" => 0,
+                "remote-desktop" => 8,
                 _ => 1,
             });
+            if scene == "remote-desktop" {
+                ui.set_so_protocol(5);
+                ui.set_so_rdp_width("1920".into());
+                ui.set_so_rdp_height("1080".into());
+            }
             ui.set_encoding_names(model(vec![SharedString::from("UTF-8"), "Shift_JIS (Japanese)".into()]));
             ui.set_so_columns("132".into());
             ui.set_credential_choices(model(vec![SharedString::from("None"), "Network admin".into()]));

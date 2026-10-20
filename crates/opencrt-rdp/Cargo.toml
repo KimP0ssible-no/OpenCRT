@@ -45,7 +45,7 @@ rcgen = { version = "0.14.10", default-features = false, features = ["aws_lc_rs"
 strip = true
 lto = "thin"
 
-# One field IronRDP has upstream but not yet in a release: see
-# vendor/ironrdp-connector/OPENCRT.md.
+# IronRDP fixes not yet in a release: see vendor/*/OPENCRT.md.
 [patch.crates-io]
 ironrdp-connector = { path = "vendor/ironrdp-connector" }
+ironrdp-pdu = { path = "vendor/ironrdp-pdu" }

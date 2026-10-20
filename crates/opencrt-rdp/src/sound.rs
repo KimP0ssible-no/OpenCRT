@@ -79,6 +79,63 @@ impl RdpsndClientHandler for Sound {
     }
 }
 
+/// The same sound over the dynamic channel Windows 8 and later prefer when
+/// the client has dynamic channels (and then never uses the static one): the
+/// same messages, without the static channel's framing, handled by the same
+/// IronRDP processor.
+pub struct Dynamic(ironrdp::rdpsnd::client::Rdpsnd);
+
+ironrdp::core::impl_as_any!(Dynamic);
+
+impl Dynamic {
+    pub fn new() -> Self {
+        Dynamic(ironrdp::rdpsnd::client::Rdpsnd::new(Box::new(Sound::new())))
+    }
+}
+
+/// Already-encoded bytes, as a dynamic channel message.
+struct Raw(Vec<u8>);
+
+impl ironrdp::core::Encode for Raw {
+    fn encode(&self, dst: &mut ironrdp::core::WriteCursor<'_>) -> ironrdp::core::EncodeResult<()> {
+        ironrdp::core::ensure_size!(in: dst, size: self.0.len());
+        dst.write_slice(&self.0);
+        Ok(())
+    }
+    fn name(&self) -> &'static str {
+        "RDPSND over DVC"
+    }
+    fn size(&self) -> usize {
+        self.0.len()
+    }
+}
+
+impl ironrdp::dvc::DvcEncode for Raw {}
+
+impl ironrdp::dvc::DvcProcessor for Dynamic {
+    fn channel_name(&self) -> &str {
+        "AUDIO_PLAYBACK_DVC"
+    }
+
+    fn start(&mut self, _: u32) -> ironrdp::pdu::PduResult<Vec<ironrdp::dvc::DvcMessage>> {
+        crate::note(format_args!("sound: the server opened the dynamic sound channel"));
+        Ok(Vec::new())
+    }
+
+    fn process(&mut self, _: u32, payload: &[u8]) -> ironrdp::pdu::PduResult<Vec<ironrdp::dvc::DvcMessage>> {
+        let replies = ironrdp::svc::SvcProcessor::process(&mut self.0, payload)?;
+        replies
+            .into_iter()
+            .map(|reply| {
+                let bytes = reply.encode_unframed_pdu().map_err(|e| ironrdp::pdu::encode_err!(e))?;
+                Ok(Box::new(Raw(bytes)) as ironrdp::dvc::DvcMessage)
+            })
+            .collect()
+    }
+}
+
+impl ironrdp::dvc::DvcClientProcessor for Dynamic {}
+
 /// Little-endian 16-bit stereo PCM as frames, at `volume`.
 fn frames(pcm: &[u8], volume: [f32; 2]) -> Vec<[i16; 2]> {
     let sample = |b: &[u8], v: f32| (f32::from(i16::from_le_bytes([b[0], b[1]])) * v) as i16;
@@ -334,6 +391,38 @@ mod player {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The server's side of a sound session over the dynamic channel: its
+    /// formats, a training, then sound; each gets the reply Windows waits for.
+    #[test]
+    fn sound_over_the_dynamic_channel() {
+        use ironrdp::dvc::DvcProcessor as _;
+        use ironrdp::rdpsnd::pdu::{ClientAudioOutputPdu, ServerAudioFormatPdu, ServerAudioOutputPdu, TrainingPdu, Version, Wave2Pdu};
+
+        let mut channel = Dynamic::new();
+        let send = |channel: &mut Dynamic, pdu: ServerAudioOutputPdu<'_>| -> Vec<ClientAudioOutputPdu> {
+            let bytes = ironrdp::core::encode_vec(&pdu).unwrap();
+            let replies = channel.process(7, &bytes).unwrap();
+            replies
+                .iter()
+                .map(|r| {
+                    let bytes = ironrdp::core::encode_vec(r.as_ref()).unwrap();
+                    ironrdp::core::decode::<ClientAudioOutputPdu>(&bytes).unwrap()
+                })
+                .collect()
+        };
+        // Windows offers several formats; ours is among them.
+        let mono = AudioFormat { n_channels: 1, n_avg_bytes_per_sec: RATE * 2, n_block_align: 2, ..FORMATS[0].clone() };
+        let formats = vec![mono, FORMATS[0].clone()];
+        let replies = send(&mut channel, ServerAudioOutputPdu::AudioFormat(ServerAudioFormatPdu { version: Version::V8, formats }));
+        let Some(ClientAudioOutputPdu::AudioFormat(ours)) = replies.first() else { panic!("no format answer: {replies:?}") };
+        assert_eq!(ours.formats, FORMATS, "only PCM 44.1 kHz stereo is taken");
+        let replies = send(&mut channel, ServerAudioOutputPdu::Training(TrainingPdu { timestamp: 5, data: Vec::new() }));
+        assert!(matches!(replies.as_slice(), [ClientAudioOutputPdu::TrainingConfirm(c)] if c.timestamp == 5));
+        let wave = Wave2Pdu { timestamp: 9, format_no: 0, block_no: 3, audio_timestamp: 0, data: vec![0; 64].into() };
+        let replies = send(&mut channel, ServerAudioOutputPdu::Wave2(wave));
+        assert!(matches!(replies.as_slice(), [ClientAudioOutputPdu::WaveConfirm(c)] if c.timestamp == 9 && c.block_no == 3));
+    }
 
     #[test]
     fn pcm_becomes_frames_at_the_servers_volume() {

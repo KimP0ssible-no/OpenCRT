@@ -12,6 +12,12 @@ use std::io::{self, Read, Write};
 /// (a full 8K desktop frame is about 133 MB; anything bigger is corrupt).
 pub const MAX_BODY: usize = 256 * 1024 * 1024;
 
+/// Connection speeds in [`ToHelper::Connect`]: everything (wallpaper, themes,
+/// animations), no wallpaper or animations, or no effects at all.
+pub const SPEED_BEST: u8 = 0;
+pub const SPEED_BALANCED: u8 = 1;
+pub const SPEED_FASTEST: u8 = 2;
+
 /// Mouse buttons in [`ToHelper::MouseButton`].
 pub const BUTTON_LEFT: u8 = 1;
 pub const BUTTON_RIGHT: u8 = 2;
@@ -19,8 +25,9 @@ pub const BUTTON_MIDDLE: u8 = 3;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ToHelper {
-    /// Start the connection; sent once, first.
-    Connect { host: String, port: u16, user: String, domain: String, password: String, width: u16, height: u16 },
+    /// Start the connection; sent once, first. `speed` picks the visual
+    /// effects the server may use: [`SPEED_BEST`], [`SPEED_BALANCED`], [`SPEED_FASTEST`].
+    Connect { host: String, port: u16, user: String, domain: String, password: String, width: u16, height: u16, speed: u8 },
     /// Answer to [`FromHelper::Certificate`]: continue (true) or abort.
     Trust(bool),
     /// A keyboard scancode (set 1); `extended` for the E0-prefixed keys.
@@ -149,8 +156,8 @@ fn read_message(input: &mut impl Read) -> io::Result<Option<(u8, Vec<u8>)>> {
 impl ToHelper {
     pub fn write(&self, out: &mut impl Write) -> io::Result<()> {
         let (tag, body) = match self {
-            ToHelper::Connect { host, port, user, domain, password, width, height } => {
-                (1, Body::default().str(host).u16(*port).str(user).str(domain).str(password).u16(*width).u16(*height))
+            ToHelper::Connect { host, port, user, domain, password, width, height, speed } => {
+                (1, Body::default().str(host).u16(*port).str(user).str(domain).str(password).u16(*width).u16(*height).u8(*speed))
             }
             ToHelper::Trust(yes) => (2, Body::default().u8(*yes as u8)),
             ToHelper::Key { scancode, extended, down } => {
@@ -182,6 +189,7 @@ impl ToHelper {
                 password: f.str()?,
                 width: f.u16()?,
                 height: f.u16()?,
+                speed: f.u8()?,
             },
             2 => ToHelper::Trust(f.u8()? != 0),
             3 => ToHelper::Key { scancode: f.u8()?, extended: f.u8()? != 0, down: f.u8()? != 0 },
@@ -258,6 +266,7 @@ mod tests {
                 password: "pä55".into(),
                 width: 1280,
                 height: 800,
+                speed: SPEED_FASTEST,
             },
             ToHelper::Trust(true),
             ToHelper::Key { scancode: 0x1d, extended: true, down: false },

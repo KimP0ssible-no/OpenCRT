@@ -278,6 +278,8 @@ pub struct Session {
     pub rdp_height: u16,
     /// RDP: 0 best appearance, 1 balanced (no wallpaper or animations), 2 fastest.
     pub rdp_speed: u8,
+    /// RDP: play the remote computer's sound here.
+    pub rdp_sound: bool,
     /// Terminal type (`TERM`) sent to SSH2 and Telnet hosts; empty for xterm-256color.
     pub terminal_type: String,
     /// The host speaks ISO-8859-1 (Latin-1) instead of UTF-8.
@@ -351,6 +353,7 @@ impl Default for Session {
             rdp_width: 0,
             rdp_height: 0,
             rdp_speed: 1,
+            rdp_sound: true,
             terminal_type: String::new(),
             latin1: false,
             encoding: String::new(),

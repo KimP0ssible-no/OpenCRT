@@ -31,6 +31,7 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 
 mod clipboard;
+mod sound;
 use x509_cert::der::Encode as _;
 
 /// How long the TCP connection may take before giving up.
@@ -91,12 +92,13 @@ struct Target {
     width: u16,
     height: u16,
     speed: u8,
+    sound: bool,
 }
 
 async fn run(mut input: UnboundedReceiver<ToHelper>, out: &Out) -> anyhow::Result<()> {
     let target = match input.recv().await {
-        Some(ToHelper::Connect { host, port, user, domain, password, width, height, speed }) => {
-            Target { host, port, user, domain, password, width, height, speed }
+        Some(ToHelper::Connect { host, port, user, domain, password, width, height, speed, sound }) => {
+            Target { host, port, user, domain, password, width, height, speed, sound }
         }
         Some(ToHelper::Close) | None => return Ok(()),
         Some(other) => bail!("expected a connect request first, got {other:?}"),
@@ -139,6 +141,9 @@ async fn connect(
     let clipboard = CliprdrClient::new(Box::new(clipboard::Clipboard::new(clip_queue, out.clone())));
     let mut connector =
         ClientConnector::new(config(target), client_addr).with_static_channel(dynamic).with_static_channel(clipboard);
+    if target.sound {
+        connector.attach_static_channel(ironrdp::rdpsnd::client::Rdpsnd::new(Box::new(sound::Sound::new())));
+    }
     let mut framed = TokioFramed::new(stream);
     let should_upgrade = ironrdp_tokio::connect_begin(&mut framed, &mut connector).await?;
     // NLA when the server chose CredSSP; otherwise TLS alone.
@@ -233,7 +238,7 @@ fn config(target: &Target) -> connector::Config {
         enable_server_pointer: false,
         request_data: None,
         autologon: false,
-        enable_audio_playback: false,
+        enable_audio_playback: target.sound,
         compression_type: None,
         pointer_software_rendering: true,
         multitransport_flags: None,

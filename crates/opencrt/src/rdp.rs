@@ -84,6 +84,8 @@ pub struct Settings {
     pub height: u16,
     /// Visual effects allowed: `opencrt_rdp_proto::SPEED_*`.
     pub speed: u8,
+    /// Play the remote computer's sound here.
+    pub sound: bool,
     /// Saved credential whose password is used instead of asking.
     pub credential: Option<String>,
     /// A password remembered from an earlier login this run.
@@ -268,6 +270,7 @@ async fn attempt(
         width: settings.width,
         height: settings.height,
         speed: settings.speed,
+        sound: settings.sound,
     };
     tell(&mut stdin, &connect)?;
     drop(connect); // the password is not kept

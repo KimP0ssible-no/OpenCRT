@@ -29,6 +29,8 @@ pub enum Screen {
     Pixels { x: u16, y: u16, width: u16, height: u16, rgba: Vec<u8> },
     /// Copied on the server, for the local clipboard.
     Clipboard(String),
+    /// A picture copied on the server (RGBA rows of `width`), likewise.
+    ClipboardImage { width: u32, height: u32, rgba: Vec<u8> },
 }
 
 /// The remote desktop picture of an RDP tab (`width` x `height`), kept as RGB:
@@ -293,6 +295,9 @@ async fn attempt(
                 }
                 Some(FromHelper::Clipboard(text)) => {
                     let _ = io.output.send(SshEvent::Screen(Screen::Clipboard(text)));
+                }
+                Some(FromHelper::ClipboardImage { width, height, rgba }) => {
+                    let _ = io.output.send(SshEvent::Screen(Screen::ClipboardImage { width, height, rgba }));
                 }
                 Some(FromHelper::Error(e)) => break Err(anyhow!(e)),
                 Some(FromHelper::Closed) => break Ok(()),

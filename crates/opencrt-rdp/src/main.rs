@@ -136,7 +136,7 @@ async fn connect(
     let client_addr = stream.local_addr()?;
     // Display Control (a dynamic channel) lets the desktop follow the tab's size.
     let dynamic = DrdynvcClient::new().with_dynamic_channel(DisplayControlClient::new(|_| Ok(Vec::new())));
-    let clipboard = CliprdrClient::new(Box::new(clipboard::Text::new(clip_queue, out.clone())));
+    let clipboard = CliprdrClient::new(Box::new(clipboard::Clipboard::new(clip_queue, out.clone())));
     let mut connector =
         ClientConnector::new(config(target), client_addr).with_static_channel(dynamic).with_static_channel(clipboard);
     let mut framed = TokioFramed::new(stream);
@@ -421,12 +421,16 @@ async fn session(
                     return Ok(());
                 }
                 Some(ToHelper::ReleaseAll) => stage.process_fastpath_input(&mut image, &keys.release_all())?,
-                Some(ToHelper::Clipboard(text)) => {
+                Some(message @ (ToHelper::Clipboard(_) | ToHelper::ClipboardImage { .. })) => {
                     if let Some(local) = stage
                         .get_svc_processor_mut::<CliprdrClient>()
-                        .and_then(|cliprdr| cliprdr.downcast_backend_mut::<clipboard::Text>())
+                        .and_then(|cliprdr| cliprdr.downcast_backend_mut::<clipboard::Clipboard>())
                     {
-                        local.set_local(text);
+                        match message {
+                            ToHelper::Clipboard(text) => local.set_text(text),
+                            ToHelper::ClipboardImage { width, height, rgba } => local.set_image(width, height, &rgba),
+                            _ => {}
+                        }
                     }
                     Vec::new()
                 }

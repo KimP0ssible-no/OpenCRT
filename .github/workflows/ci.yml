@@ -20,7 +20,9 @@ jobs:
         run: |
           code=true
           if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
-            files=$(gh pr diff "$PR" --repo "$GITHUB_REPOSITORY" --name-only)
+            # The file list, not the diff: GitHub refuses diffs over 20000 lines.
+            # Anything going wrong here means "build everything".
+            files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --jq '.[].filename' || true)
             printf '%s\n' "$files"
             if [ -n "$files" ] && ! printf '%s\n' "$files" | grep -qvE '(\.md$|^docs/)'; then
               code=false

@@ -6,15 +6,18 @@
 //!
 //! [MS-RDPEGFX]: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpegfx/da5c75f9-cd99-450c-98c4-014a496942b0
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
+use std::time::{Duration, Instant};
 
 use ironrdp::graphics::clearcodec::ClearCodecDecoder;
+use ironrdp::graphics::progressive::ProgressiveDecoder;
 use ironrdp::graphics::rdp6::BitmapStreamDecoder;
 use ironrdp::pdu::geometry::ExclusiveRectangle;
 use ironrdp_egfx::client::{BitmapUpdate, GraphicsPipelineHandler, Surface};
 use ironrdp_egfx::pdu::{
     CacheToSurfacePdu, CapabilitiesV103Flags, CapabilitiesV104Flags, CapabilitiesV107Flags, CapabilitiesV10Flags,
-    CapabilitySet, Codec1Type, EvictCacheEntryPdu, GfxPdu, MapSurfaceToScaledOutputPdu, SolidFillPdu, SurfaceToCachePdu, SurfaceToSurfacePdu,
+    CapabilitySet, Codec1Type, DeleteEncodingContextPdu, EvictCacheEntryPdu, GfxPdu, MapSurfaceToScaledOutputPdu, SolidFillPdu,
+    SurfaceToCachePdu, SurfaceToSurfacePdu, WireToSurface2Pdu,
 };
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -52,9 +55,17 @@ pub struct Handler {
     /// Codecs already reported as not decoded, or as seen (each once).
     unsupported: Vec<String>,
     seen: Vec<String>,
-    /// ClearCodec failures reported so far (the log keeps the first few).
-    clear_failures: u32,
+    /// Pictures that failed, by codec (the log keeps the first few of each).
+    failures: HashMap<&'static str, u32>,
+    progressive: ProgressiveDecoder,
+    /// Surface sizes, which Progressive tiles need.
+    sizes: HashMap<u16, (u16, u16)>,
+    /// Pictures per codec since `counted`, for the log every STATS_EVERY.
+    counts: BTreeMap<String, u32>,
+    counted: Instant,
 }
+
+const STATS_EVERY: Duration = Duration::from_secs(10);
 
 impl Handler {
     pub fn new(events: UnboundedSender<Event>) -> Self {
@@ -64,7 +75,11 @@ impl Handler {
             planar: BitmapStreamDecoder::default(),
             unsupported: Vec::new(),
             seen: Vec::new(),
-            clear_failures: 0,
+            failures: HashMap::new(),
+            progressive: ProgressiveDecoder::new(),
+            sizes: HashMap::new(),
+            counts: BTreeMap::new(),
+            counted: Instant::now(),
         }
     }
 
@@ -72,12 +87,27 @@ impl Handler {
         let _ = self.events.send(event);
     }
 
-    /// The first picture of each codec, for the connection log.
-    fn saw(&mut self, codec: Codec1Type, at: Area) {
-        let name = format!("{codec:?}");
+    /// The first picture of each codec, and how many of each, for the connection log.
+    fn saw(&mut self, name: String, at: Area) {
+        *self.counts.entry(name.clone()).or_default() += 1;
+        if self.counted.elapsed() >= STATS_EVERY {
+            let counts: Vec<String> = self.counts.iter().map(|(codec, n)| format!("{codec} {n}")).collect();
+            self.send(Event::Note(format!("graphics: pictures in the last {}s: {}", self.counted.elapsed().as_secs(), counts.join(", "))));
+            self.counts.clear();
+            self.counted = Instant::now();
+        }
         if !self.seen.contains(&name) {
             self.send(Event::Note(format!("graphics: first {name} picture, {}x{} at {},{}", at.2, at.3, at.0, at.1)));
             self.seen.push(name);
+        }
+    }
+
+    /// A picture that did not decode: logged for the first few of each codec.
+    fn failed(&mut self, codec: &'static str, why: String) {
+        let n = self.failures.entry(codec).or_default();
+        *n += 1;
+        if *n <= 5 {
+            self.send(Event::Note(format!("graphics: {codec} picture not decoded: {why}")));
         }
     }
 
@@ -90,17 +120,19 @@ impl Handler {
 }
 
 impl GraphicsPipelineHandler for Handler {
-    /// RDP 10 only, H.264 on: in RDP 10 Windows sends the screen as AVC420
-    /// (unless told by policy to use AVC444, which IronRDP does not decode).
-    /// RDP 8.x mixes in codecs that cannot be decoded here, so a server with
-    /// only those keeps sending the classic (RemoteFX) way.
+    /// RDP 10 only, H.264 on, as a thin client (AVC_THIN_CLIENT: H.264 for
+    /// the whole screen rather than mixed with ClearCodec and Progressive,
+    /// which are decoded too). Not AVC444, which IronRDP does not decode.
     fn capabilities(&self) -> Vec<CapabilitySet> {
+        use CapabilitiesV104Flags as V104;
+        use CapabilitiesV107Flags as V107;
+        let v104 = V104::SMALL_CACHE | V104::AVC_THIN_CLIENT;
         vec![
-            CapabilitySet::V10_7 { flags: CapabilitiesV107Flags::SMALL_CACHE.union(CapabilitiesV107Flags::SCALEDMAP_DISABLE) },
-            CapabilitySet::V10_6 { flags: CapabilitiesV104Flags::SMALL_CACHE },
-            CapabilitySet::V10_5 { flags: CapabilitiesV104Flags::SMALL_CACHE },
-            CapabilitySet::V10_4 { flags: CapabilitiesV104Flags::SMALL_CACHE },
-            CapabilitySet::V10_3 { flags: CapabilitiesV103Flags::empty() },
+            CapabilitySet::V10_7 { flags: V107::SMALL_CACHE | V107::AVC_THIN_CLIENT | V107::SCALEDMAP_DISABLE },
+            CapabilitySet::V10_6 { flags: v104 },
+            CapabilitySet::V10_5 { flags: v104 },
+            CapabilitySet::V10_4 { flags: v104 },
+            CapabilitySet::V10_3 { flags: CapabilitiesV103Flags::AVC_THIN_CLIENT },
             CapabilitySet::V10_2 { flags: CapabilitiesV10Flags::SMALL_CACHE },
             CapabilitySet::V10 { flags: CapabilitiesV10Flags::SMALL_CACHE },
         ]
@@ -111,14 +143,18 @@ impl GraphicsPipelineHandler for Handler {
     }
 
     fn on_reset_graphics(&mut self, width: u32, height: u32) {
+        self.progressive.reset();
+        self.sizes.clear();
         self.send(Event::Reset(width, height));
     }
 
     fn on_surface_created(&mut self, surface: &Surface) {
+        self.sizes.insert(surface.id, (surface.width, surface.height));
         self.send(Event::Created { id: surface.id, width: surface.width.into(), height: surface.height.into() });
     }
 
     fn on_surface_deleted(&mut self, id: u16) {
+        self.sizes.remove(&id);
         self.send(Event::Deleted(id));
     }
 
@@ -138,10 +174,32 @@ impl GraphicsPipelineHandler for Handler {
     fn on_bitmap_updated(&mut self, update: &BitmapUpdate) {
         let (left, top, ..) = area(&update.destination_rectangle);
         let at = (left, top, update.width.into(), update.height.into());
-        self.saw(update.codec_id, at);
+        self.saw(format!("{:?}", update.codec_id), at);
         if update.data.len() == at.2 as usize * at.3 as usize * 4 {
             self.send(Event::Pixels { id: update.surface_id, at, rgba: update.data.clone() });
         }
+    }
+
+    /// RemoteFX Progressive: 64x64 tiles of the surface.
+    fn on_wire_to_surface2(&mut self, pdu: &WireToSurface2Pdu) {
+        let id = pdu.surface_id;
+        let Some(&(w, h)) = self.sizes.get(&id) else {
+            return;
+        };
+        match self.progressive.decode_bitmap(pdu.codec_context_id, w, h, &pdu.bitmap_data) {
+            Ok(tiles) => {
+                for tile in tiles {
+                    let at = (u32::from(tile.x_idx) * 64, u32::from(tile.y_idx) * 64, 64, 64);
+                    self.saw("Progressive".into(), at);
+                    self.send(Event::Pixels { id, at, rgba: tile.pixels });
+                }
+            }
+            Err(e) => self.failed("Progressive", format!("{} bytes: {e}", pdu.bitmap_data.len())),
+        }
+    }
+
+    fn on_delete_encoding_context(&mut self, pdu: &DeleteEncodingContextPdu) {
+        self.progressive.delete_context(pdu.codec_context_id);
     }
 
     fn on_solid_fill(&mut self, pdu: &SolidFillPdu) {
@@ -178,14 +236,11 @@ impl GraphicsPipelineHandler for Handler {
     /// window edges) and Planar.
     fn on_unhandled_pdu(&mut self, pdu: &GfxPdu) {
         let GfxPdu::WireToSurface1(pdu) = pdu else {
-            if let GfxPdu::WireToSurface2(_) = pdu {
-                self.unsupported("RemoteFX Progressive".into());
-            }
             return;
         };
         let at = area(&pdu.destination_rectangle);
         let (w, h) = (at.2 as u16, at.3 as u16);
-        self.saw(pdu.codec_id, at);
+        self.saw(format!("{:?}", pdu.codec_id), at);
         let rgba = match pdu.codec_id {
             Codec1Type::ClearCodec => match self.clear.decode(&pdu.bitmap_data, w, h) {
                 Ok(mut rgba) => {
@@ -193,17 +248,9 @@ impl GraphicsPipelineHandler for Handler {
                     Some(rgba)
                 }
                 Err(e) => {
-                    self.clear_failures += 1;
-                    if self.clear_failures <= 5 {
-                        let head: Vec<String> = pdu.bitmap_data.iter().take(8).map(|b| format!("{b:02x}")).collect();
-                        self.send(Event::Note(format!(
-                            "graphics: ClearCodec {w}x{h} at {},{} ({} bytes, starting {}): {e}",
-                            at.0,
-                            at.1,
-                            pdu.bitmap_data.len(),
-                            head.join(" ")
-                        )));
-                    }
+                    let head: Vec<String> = pdu.bitmap_data.iter().take(8).map(|b| format!("{b:02x}")).collect();
+                    let why = format!("{w}x{h} at {},{} ({} bytes, starting {}): {e}", at.0, at.1, pdu.bitmap_data.len(), head.join(" "));
+                    self.failed("ClearCodec", why);
                     return;
                 }
             },
@@ -213,6 +260,11 @@ impl GraphicsPipelineHandler for Handler {
                     .decode_bitmap_stream_to_rgb24(&pdu.bitmap_data, &mut rgb, w.into(), h.into())
                     .ok()
                     .map(|()| rgb.as_chunks::<3>().0.iter().flat_map(|p| [p[0], p[1], p[2], 255]).collect())
+            }
+            // Left here by the client when OpenH264 gave no picture.
+            Codec1Type::Avc420 => {
+                self.failed("H.264", format!("{} bytes", pdu.bitmap_data.len()));
+                return;
             }
             other => {
                 self.unsupported(format!("{other:?}"));
@@ -286,6 +338,12 @@ impl Canvas {
         let mut output = Pixels::new(width, height);
         output.rgba.as_chunks_mut::<4>().0.fill([0, 0, 0, 255]);
         Canvas { output, layers: HashMap::new(), cache: HashMap::new() }
+    }
+
+    /// A new desktop after a graphics reset: the surfaces are gone, the
+    /// cache stays (the server keeps drawing from it).
+    pub fn reset(self, width: u32, height: u32) -> Self {
+        Canvas { cache: self.cache, ..Canvas::new(width, height) }
     }
 
     pub fn width(&self) -> u32 {
@@ -468,16 +526,26 @@ mod tests {
         exchange(&mut client, &mut server, hello);
         assert!(server.is_ready() && server.supports_avc420(), "RDP 10 with H.264 agreed");
 
-        // A 64x32 desktop: red left half, blue right half, as H.264.
+        // A 64x32 desktop: red left half, blue right half, as H.264
+        // (length-prefixed, as IronRDP's server sends it).
         let (w, h) = (64u16, 32u16);
         server.resize(w, h);
         let id = server.create_surface(w, h).unwrap();
         assert!(server.map_surface_to_output(id, 0, 0));
         let rgb: Vec<u8> = (0..w as usize * h as usize).flat_map(|i| if i % usize::from(w) < 32 { [255, 0, 0] } else { [0, 0, 255] }).collect();
         let yuv = YUVBuffer::from_rgb_source(RgbSliceU8::new(&rgb, (w.into(), h.into())));
-        let annex_b = openh264::encoder::Encoder::new().unwrap().encode(&yuv).unwrap().to_vec();
+        let mut encoder = openh264::encoder::Encoder::new().unwrap();
+        let annex_b = encoder.encode(&yuv).unwrap().to_vec();
         let region = Avc420Region { left: 0, top: 0, right: w - 1, bottom: h - 1, quantization_parameter: 22, quality: 100 };
         assert!(server.send_avc420_frame(id, &annex_b_to_avc(&annex_b), &[region], 0).is_some());
+        exchange(&mut client, &mut server, Vec::new());
+        // Then as Windows sends it: Annex B as it is, a picture of the whole
+        // surface (yellow | green) for its right half only.
+        let rgb: Vec<u8> = (0..w as usize * h as usize).flat_map(|i| if i % usize::from(w) < 32 { [255, 255, 0] } else { [0, 255, 0] }).collect();
+        let yuv = YUVBuffer::from_rgb_source(RgbSliceU8::new(&rgb, (w.into(), h.into())));
+        let annex_b = encoder.encode(&yuv).unwrap().to_vec();
+        let region = Avc420Region { left: 32, top: 0, right: w - 1, bottom: h - 1, quantization_parameter: 22, quality: 100 };
+        assert!(server.send_avc420_frame(id, &annex_b, &[region], 0).is_some());
         exchange(&mut client, &mut server, Vec::new());
 
         let mut canvas = None;
@@ -495,7 +563,7 @@ mod tests {
         // H.264 is lossy: close, not exact.
         let near = |got: [u8; 4], want: [u8; 3]| got.iter().zip(want).all(|(&g, w)| g.abs_diff(w) <= 48);
         assert!(near(px(&canvas, 10, 10), [255, 0, 0]), "left: {:?}", px(&canvas, 10, 10));
-        assert!(near(px(&canvas, 50, 20), [0, 0, 255]), "right: {:?}", px(&canvas, 50, 20));
+        assert!(near(px(&canvas, 50, 20), [0, 255, 0]), "right: {:?}", px(&canvas, 50, 20));
     }
 
     /// A ClearCodec band with a short V-bar laid out as Windows sends it
@@ -544,6 +612,21 @@ mod tests {
     }
 
     #[test]
+    fn clearcodec_glyph_hit_for_a_smaller_area() {
+        // Glyph 5: 2x2 of one colour (a residual run of 4).
+        let mut store = vec![0x01, 0, 5, 0];
+        for count in [4u32, 0, 0] {
+            store.extend(count.to_le_bytes());
+        }
+        store.extend([0x10, 0x20, 0x30, 4]);
+        let mut clear = ClearCodecDecoder::new();
+        assert_eq!(clear.decode(&store, 2, 2).expect("stored").len(), 16);
+        // Windows then reuses it for a 1x2 area (glyph hit, as in a Windows 11 log).
+        let hit = clear.decode(&[0x03, 1, 5, 0], 1, 2).expect("a hit for an area the glyph covers");
+        assert_eq!(hit, [0x10, 0x20, 0x30, 255, 0x10, 0x20, 0x30, 255]);
+    }
+
+    #[test]
     fn copies_and_the_cache() {
         let mut canvas = Canvas::new(4, 2);
         canvas.apply(Event::Created { id: 1, width: 4, height: 2 });
@@ -556,10 +639,16 @@ mod tests {
         canvas.apply(Event::ToCache { id: 1, at: (1, 0, 2, 1), slot: 7 });
         canvas.apply(Event::FromCache { slot: 7, id: 1, points: vec![(0, 1), (2, 1)] });
         assert_eq!([px(&canvas, 0, 1), px(&canvas, 1, 1), px(&canvas, 2, 1), px(&canvas, 3, 1)], [RED, BLUE, RED, BLUE]);
+        // A reset keeps the cache.
+        let mut canvas = canvas.reset(4, 2);
+        canvas.apply(Event::Created { id: 2, width: 4, height: 2 });
+        canvas.apply(Event::Mapped { id: 2, x: 0, y: 0 });
+        assert!(canvas.apply(Event::FromCache { slot: 7, id: 2, points: vec![(0, 0)] }));
+        assert_eq!([px(&canvas, 0, 0), px(&canvas, 1, 0)], [RED, BLUE]);
         canvas.apply(Event::Evict(7));
         assert!(!canvas.apply(Event::FromCache { slot: 7, id: 1, points: vec![(0, 0)] }), "an evicted entry draws nothing");
         // Gone surfaces and unknown ones are ignored.
-        assert!(canvas.apply(Event::Deleted(1)));
-        assert!(!canvas.apply(Event::Fill { id: 1, rgba: RED, areas: vec![(0, 0, 1, 1)] }));
+        assert!(canvas.apply(Event::Deleted(2)));
+        assert!(!canvas.apply(Event::Fill { id: 2, rgba: RED, areas: vec![(0, 0, 1, 1)] }));
     }
 }

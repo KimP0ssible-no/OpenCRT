@@ -382,6 +382,11 @@ fn changed(old: &[u8], new: &[u8], width: u16, height: u16) -> Vec<InclusiveRect
 /// How often changed pixels are sent to OpenCRT, at most.
 const FRAME_INTERVAL: Duration = Duration::from_millis(33);
 
+/// Windows takes a resize early in the session but keeps (or resets to) the
+/// old size until it is ready, so an unanswered one is asked again.
+const RESIZE_RETRY: Duration = Duration::from_secs(2);
+const RESIZE_TRIES: u8 = 5;
+
 fn whole(image: &DecodedImage) -> InclusiveRectangle {
     InclusiveRectangle { left: 0, top: 0, right: image.width().saturating_sub(1), bottom: image.height().saturating_sub(1) }
 }
@@ -444,11 +449,27 @@ async fn session(
     // A desktop size OpenCRT asked for, kept until Display Control is ready.
     let mut wanted: Option<(u32, u32)> = None;
     let mut waiting_noted = false;
+    // The last size sent, until the desktop has it; when to check, and how often it was sent.
+    let mut asked: Option<(u32, u32)> = None;
+    let mut check_at: Option<tokio::time::Instant> = None;
+    let mut tries = 0u8;
     // The desktop once the Graphics Pipeline draws it (instead of `image`).
     let mut canvas: Option<gfx::Canvas> = None;
 
     loop {
         let outputs = tokio::select! {
+            _ = tokio::time::sleep_until(check_at.unwrap_or_else(tokio::time::Instant::now)), if check_at.is_some() => {
+                check_at = None;
+                let now = shown(&image, canvas.as_ref()).1;
+                if let Some(size) = asked.take()
+                    && size != (now.0.into(), now.1.into())
+                    && tries < RESIZE_TRIES
+                {
+                    note(format_args!("the desktop is still {}x{}: asking for {}x{} again", now.0, now.1, size.0, size.1));
+                    wanted = Some(size);
+                }
+                Vec::new()
+            }
             _ = flush.tick(), if dirty => {
                 dirty = false;
                 let (picture, size) = shown(&image, canvas.as_ref());
@@ -506,6 +527,7 @@ async fn session(
                     let now = shown(&image, canvas.as_ref()).1;
                     wanted = (size != (now.0.into(), now.1.into())).then_some(size);
                     waiting_noted = false;
+                    tries = 0;
                     note(format_args!("OpenCRT asks for {width}x{height} (as sent: {}x{}; now {}x{})", size.0, size.1, now.0, now.1));
                     Vec::new()
                 }
@@ -526,6 +548,9 @@ async fn session(
                     writer.write_all(&request?).await.context("writing to the server")?;
                     note(format_args!("resize to {width}x{height} sent"));
                     wanted = None;
+                    asked = Some((width, height));
+                    check_at = Some(tokio::time::Instant::now() + RESIZE_RETRY);
+                    tries += 1;
                 }
                 None if !waiting_noted => {
                     let open = stage.get_dvc::<DisplayControlClient>().is_some_and(|dvc| dvc.channel_id().is_some());
@@ -593,7 +618,10 @@ async fn session(
             match event {
                 gfx::Event::Reset(width, height) => {
                     note(format_args!("graphics: the desktop is {width}x{height}"));
-                    let fresh = gfx::Canvas::new(width, height);
+                    let fresh = match canvas.take() {
+                        Some(old) => old.reset(width, height),
+                        None => gfx::Canvas::new(width, height),
+                    };
                     let (width, height) = (fresh.width() as u16, fresh.height() as u16);
                     sent = vec![0; fresh.rgba().len()];
                     canvas = Some(fresh);

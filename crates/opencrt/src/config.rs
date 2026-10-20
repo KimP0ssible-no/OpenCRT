@@ -273,6 +273,9 @@ pub struct Session {
     pub rows: u16,
     /// Let the host switch between 80 and 132 columns (DECCOLM).
     pub allow_deccolm: bool,
+    /// RDP: a fixed desktop size (pixels); 0 x 0 follows the tab's size.
+    pub rdp_width: u16,
+    pub rdp_height: u16,
     /// Terminal type (`TERM`) sent to SSH2 and Telnet hosts; empty for xterm-256color.
     pub terminal_type: String,
     /// The host speaks ISO-8859-1 (Latin-1) instead of UTF-8.
@@ -343,6 +346,8 @@ impl Default for Session {
             columns: 0,
             rows: 0,
             allow_deccolm: true,
+            rdp_width: 0,
+            rdp_height: 0,
             terminal_type: String::new(),
             latin1: false,
             encoding: String::new(),

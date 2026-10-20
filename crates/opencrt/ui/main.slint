@@ -1483,6 +1483,8 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <string> columns;
     in-out property <string> rows;
     in-out property <bool> deccolm;
+    in-out property <string> rdp-width;
+    in-out property <string> rdp-height;
     in-out property <string> terminal-type;
     // Index into codec::ENCODINGS.
     in-out property <int> encoding;
@@ -1531,7 +1533,7 @@ component SessionOptionsDialog inherits DialogFrame {
             VerticalLayout {
                 padding: 2px;
                 alignment: start;
-                for page[i] in ["Connection", "Authentication", "Terminal", "Appearance", "Log File", "Port Forwarding", "Logon Script", "Keyboard"]: Rectangle {
+                for page[i] in ["Connection", "Authentication", "Terminal", "Appearance", "Log File", "Port Forwarding", "Logon Script", "Keyboard", "Remote Desktop"]: Rectangle {
                     height: 24px;
                     background: i == root.category ? Theme.active-row-bg : page-touch.has-hover ? Theme.hover-bg : transparent;
                     Text {
@@ -1874,6 +1876,39 @@ component SessionOptionsDialog inherits DialogFrame {
                     }
                     Text {
                         text: "Session output is appended as plain text while connected. %S expands to the session name, %H to the hostname, %Y %M %D to the date and %h %m %s to the time (of connecting, in the file name; of writing, in the texts above). A log named with the date starts a new file at midnight.";
+                        wrap: word-wrap;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                    }
+                }
+                if root.category == 8: VerticalLayout {
+                    spacing: 8px;
+                    if root.protocol != 5: Text {
+                        text: "These settings are for RDP sessions.";
+                        color: Theme.text-secondary;
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        FormLabel { text: "Desktop size:"; }
+                        LineEdit {
+                            text <=> root.rdp-width;
+                            enabled: root.protocol == 5;
+                            placeholder-text: "width";
+                            input-type: number;
+                        }
+                        Text {
+                            text: "x";
+                            vertical-alignment: center;
+                        }
+                        LineEdit {
+                            text <=> root.rdp-height;
+                            enabled: root.protocol == 5;
+                            placeholder-text: "height";
+                            input-type: number;
+                        }
+                    }
+                    Text {
+                        text: "Blank: the remote desktop follows the tab's size. A fixed size (in pixels) stays the same whatever the window does: shown whole, scaled down when the tab is smaller.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
                         font-size: 11px;
@@ -3348,6 +3383,8 @@ export component MainWindow inherits Window {
     in-out property <string> so-columns;
     in-out property <string> so-rows;
     in-out property <bool> so-deccolm;
+    in-out property <string> so-rdp-width;
+    in-out property <string> so-rdp-height;
     in-out property <string> so-term;
     in-out property <int> so-encoding;
     in property <[string]> encoding-names;
@@ -4804,6 +4841,8 @@ export component MainWindow inherits Window {
         columns <=> root.so-columns;
         rows <=> root.so-rows;
         deccolm <=> root.so-deccolm;
+        rdp-width <=> root.so-rdp-width;
+        rdp-height <=> root.so-rdp-height;
         terminal-type <=> root.so-term;
         encoding <=> root.so-encoding;
         encoding-names: root.encoding-names;

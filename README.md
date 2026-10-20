@@ -3,6 +3,8 @@
 A tabbed terminal client for Windows, macOS and Linux, modelled on the look and
 workflow of SecureCRT and written from scratch in Rust.
 
+![OpenCRT connected over SSH, running htop](docs/screenshot.png)
+
 ## A clean-room implementation
 OpenCRT is an independent project. It is not affiliated with, endorsed by or
 derived from VanDyke Software or its SecureCRT product. No SecureCRT source

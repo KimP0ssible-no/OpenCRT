@@ -282,6 +282,8 @@ pub struct Session {
     pub rdp_sound: bool,
     /// RDP: a local folder offered to the remote computer as a drive; empty for none.
     pub rdp_share: String,
+    /// RDP: use the Graphics Pipeline (H.264) when the server offers it.
+    pub rdp_h264: bool,
     /// Terminal type (`TERM`) sent to SSH2 and Telnet hosts; empty for xterm-256color.
     pub terminal_type: String,
     /// The host speaks ISO-8859-1 (Latin-1) instead of UTF-8.
@@ -357,6 +359,7 @@ impl Default for Session {
             rdp_speed: 1,
             rdp_sound: true,
             rdp_share: String::new(),
+            rdp_h264: true,
             terminal_type: String::new(),
             latin1: false,
             encoding: String::new(),

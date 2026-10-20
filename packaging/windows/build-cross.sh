@@ -15,7 +15,7 @@ docker run --rm -v "$PWD":/src -w /src -v opencrt-windows-cross:/cache \
     export DEBIAN_FRONTEND=noninteractive
     dpkg --add-architecture i386
     apt-get -qq update
-    apt-get -qq install -y --no-install-recommends gcc libc6-dev gcc-mingw-w64-x86-64 nasm curl ca-certificates \
+    apt-get -qq install -y --no-install-recommends gcc libc6-dev gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 nasm curl ca-certificates \
         wine wine32:i386 wine64 xvfb xauth >/dev/null
     /cache/cargo/bin/rustc --version >/dev/null 2>&1 || curl -sSf https://sh.rustup.rs | sh -s -- -y -q --profile minimal --no-modify-path
     export PATH=/cache/cargo/bin:$PATH

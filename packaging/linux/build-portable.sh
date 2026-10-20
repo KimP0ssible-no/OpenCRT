@@ -10,7 +10,7 @@ set -eu
 docker run --rm -v "$PWD":/src -w /src -v opencrt-linux-cargo:/cargo \
     -e CARGO_HOME=/cargo -e RUSTUP_HOME=/cargo/rustup \
     -e HOST_IDS="$(id -u):$(id -g)" almalinux:8 sh -euc '
-    dnf -y -q install gcc gcc-c++ make perl git >/dev/null
+    dnf -y -q --enablerepo=powertools install gcc gcc-c++ libstdc++-static make perl git >/dev/null
     /cargo/bin/rustc --version >/dev/null 2>&1 || curl -sSf https://sh.rustup.rs | sh -s -- -y -q --profile minimal --no-modify-path
     export PATH=/cargo/bin:$PATH
     export CARGO_TARGET_DIR=target/portable

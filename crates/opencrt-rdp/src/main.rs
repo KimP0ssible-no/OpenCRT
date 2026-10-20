@@ -32,6 +32,7 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 
 mod clipboard;
 mod drive;
+mod gfx;
 mod sound;
 use x509_cert::der::Encode as _;
 
@@ -103,23 +104,25 @@ struct Target {
     speed: u8,
     sound: bool,
     share: String,
+    h264: bool,
 }
 
 async fn run(mut input: UnboundedReceiver<ToHelper>, out: &Out) -> anyhow::Result<()> {
     let target = match input.recv().await {
-        Some(ToHelper::Connect { host, port, user, domain, password, width, height, speed, sound, share }) => {
-            Target { host, port, user, domain, password, width, height, speed, sound, share }
+        Some(ToHelper::Connect { host, port, user, domain, password, width, height, speed, sound, share, h264 }) => {
+            Target { host, port, user, domain, password, width, height, speed, sound, share, h264 }
         }
         Some(ToHelper::Close) | None => return Ok(()),
         Some(other) => bail!("expected a connect request first, got {other:?}"),
     };
     let (clip_queue, clips) = unbounded_channel();
+    let (gfx_queue, gfx_events) = unbounded_channel();
     note(format_args!(
-        "connecting to {}:{} as {}x{}, speed {}, sound {}, shared folder {:?}",
-        target.host, target.port, target.width, target.height, target.speed, target.sound, target.share
+        "connecting to {}:{} as {}x{}, speed {}, sound {}, shared folder {:?}, H.264 {}",
+        target.host, target.port, target.width, target.height, target.speed, target.sound, target.share, target.h264
     ));
-    let (result, framed, security) = connect(&target, &mut input, out, clip_queue).await?;
-    session(result, framed, security, input, clips, out).await
+    let (result, framed, security) = connect(&target, &mut input, out, clip_queue, gfx_queue).await?;
+    session(result, framed, security, input, clips, gfx_events, out).await
 }
 
 /// The certificate check: OpenCRT decides; nothing secret has been sent yet.
@@ -144,6 +147,7 @@ async fn connect(
     input: &mut UnboundedReceiver<ToHelper>,
     out: &Out,
     clip_queue: UnboundedSender<ClipboardMessage>,
+    gfx_queue: UnboundedSender<gfx::Event>,
 ) -> anyhow::Result<(ConnectionResult, Framed, String)> {
     let stream = tokio::time::timeout(CONNECT_TIMEOUT, TcpStream::connect((target.host.as_str(), target.port)))
         .await
@@ -151,10 +155,26 @@ async fn connect(
         .with_context(|| format!("cannot connect to {}:{}", target.host, target.port))?;
     let client_addr = stream.local_addr()?;
     // Display Control (a dynamic channel) lets the desktop follow the tab's size.
-    let dynamic = DrdynvcClient::new().with_dynamic_channel(DisplayControlClient::new(|_| Ok(Vec::new())));
+    let mut dynamic = DrdynvcClient::new().with_dynamic_channel(DisplayControlClient::new(|_| Ok(Vec::new())));
+    // The Graphics Pipeline (H.264, as Windows' own client gets it), with the
+    // OpenH264 decoder built in; without it the server sends RemoteFX.
+    let decoder = match target.h264.then(ironrdp_egfx::decode::OpenH264Decoder::new) {
+        Some(Ok(decoder)) => Some(decoder),
+        Some(Err(e)) => {
+            note(format_args!("no H.264 decoder ({e}): RemoteFX instead"));
+            None
+        }
+        None => None,
+    };
+    let pipeline = decoder.is_some();
+    if let Some(decoder) = decoder {
+        let handler = Box::new(gfx::Handler::new(gfx_queue));
+        dynamic = dynamic.with_dynamic_channel(ironrdp_egfx::client::GraphicsPipelineClient::new(handler, Some(Box::new(decoder))));
+    }
     let clipboard = CliprdrClient::new(Box::new(clipboard::Clipboard::new(clip_queue, out.clone())));
-    let mut connector =
-        ClientConnector::new(config(target), client_addr).with_static_channel(dynamic).with_static_channel(clipboard);
+    let mut config = config(target);
+    config.support_dyn_vc_gfx_protocol = pipeline;
+    let mut connector = ClientConnector::new(config, client_addr).with_static_channel(dynamic).with_static_channel(clipboard);
     if target.sound {
         connector.attach_static_channel(ironrdp::rdpsnd::client::Rdpsnd::new(Box::new(sound::Sound::new())));
     }
@@ -258,6 +278,7 @@ fn config(target: &Target) -> connector::Config {
         // OpenCRT shows its own arrow; the server's pointer shapes are not used
         // yet (IronRDP leaves the default pointer to the client to draw).
         enable_server_pointer: false,
+        support_dyn_vc_gfx_protocol: false, // set in connect, with the channel
         request_data: None,
         autologon: false,
         enable_audio_playback: target.sound,
@@ -296,21 +317,20 @@ fn performance(speed: u8) -> PerformanceFlags {
     }
 }
 
-/// The changed rectangle of `image` as tightly packed RGBA rows.
-fn frame(image: &DecodedImage, rect: &InclusiveRectangle) -> FromHelper {
-    let (w, h) = (image.width(), image.height());
+/// The `rect` part of an RGBA picture `w` x `h` as tightly packed rows.
+fn frame(rgba: &[u8], (w, h): (u16, u16), rect: &InclusiveRectangle) -> FromHelper {
     let left = rect.left.min(w.saturating_sub(1));
     let top = rect.top.min(h.saturating_sub(1));
     let right = rect.right.min(w.saturating_sub(1)).max(left);
     let bottom = rect.bottom.min(h.saturating_sub(1)).max(top);
     let (width, height) = (right - left + 1, bottom - top + 1);
-    let stride = image.stride();
-    let mut rgba = Vec::with_capacity(width as usize * height as usize * 4);
+    let stride = w as usize * 4;
+    let mut part = Vec::with_capacity(width as usize * height as usize * 4);
     for row in top..=bottom {
         let start = row as usize * stride + left as usize * 4;
-        rgba.extend_from_slice(&image.data()[start..start + width as usize * 4]);
+        part.extend_from_slice(&rgba[start..start + width as usize * 4]);
     }
-    FromHelper::Frame { x: left, y: top, width, height, rgba }
+    FromHelper::Frame { x: left, y: top, width, height, rgba: part }
 }
 
 /// Rows per band in [`changed`].
@@ -380,6 +400,7 @@ async fn session(
     security: String,
     mut input: UnboundedReceiver<ToHelper>,
     mut clips: UnboundedReceiver<ClipboardMessage>,
+    mut gfx_events: UnboundedReceiver<gfx::Event>,
     out: &Out,
 ) -> anyhow::Result<()> {
     let (mut reader, mut writer) = split_tokio_framed(framed);
@@ -409,17 +430,20 @@ async fn session(
     // A desktop size OpenCRT asked for, kept until Display Control is ready.
     let mut wanted: Option<(u32, u32)> = None;
     let mut waiting_noted = false;
+    // The desktop once the Graphics Pipeline draws it (instead of `image`).
+    let mut canvas: Option<gfx::Canvas> = None;
 
     loop {
         let outputs = tokio::select! {
             _ = flush.tick(), if dirty => {
                 dirty = false;
-                let boxes = changed(&sent, image.data(), image.width(), image.height());
+                let (picture, size) = shown(&image, canvas.as_ref());
+                let boxes = changed(&sent, picture, size.0, size.1);
                 for rect in &boxes {
-                    send(out, frame(&image, rect))?;
+                    send(out, frame(picture, size, rect))?;
                 }
                 if !boxes.is_empty() {
-                    sent.copy_from_slice(image.data());
+                    sent.copy_from_slice(picture);
                 }
                 Vec::new()
             }
@@ -465,9 +489,10 @@ async fn session(
                 }
                 Some(ToHelper::Resize { width, height }) => {
                     let size = MonitorLayoutEntry::adjust_display_size(width.into(), height.into());
-                    wanted = (size != (image.width().into(), image.height().into())).then_some(size);
+                    let now = shown(&image, canvas.as_ref()).1;
+                    wanted = (size != (now.0.into(), now.1.into())).then_some(size);
                     waiting_noted = false;
-                    note(format_args!("OpenCRT asks for {width}x{height} (as sent: {}x{}; now {}x{})", size.0, size.1, image.width(), image.height()));
+                    note(format_args!("OpenCRT asks for {width}x{height} (as sent: {}x{}; now {}x{})", size.0, size.1, now.0, now.1));
                     Vec::new()
                 }
                 Some(message) => match operation(message) {
@@ -520,6 +545,8 @@ async fn session(
                         } = activation.connection_activation_state()
                         {
                             image = DecodedImage::new(PixelFormat::RgbA32, desktop_size.width, desktop_size.height);
+                            // The pipeline, if still on, starts again with a reset.
+                            canvas = None;
                             stage.set_fastpath_processor(
                                 fast_path::ProcessorBuilder {
                                     io_channel_id: activation.io_channel_id(),
@@ -536,7 +563,7 @@ async fn session(
                             note(format_args!("the server reactivated the session at {}x{}", desktop_size.width, desktop_size.height));
                             send(out, FromHelper::DesktopSize { width: desktop_size.width, height: desktop_size.height })?;
                             // OpenCRT starts the new desktop black: send it all.
-                            send(out, frame(&image, &whole(&image)))?;
+                            send(out, frame(image.data(), (image.width(), image.height()), &whole(&image)))?;
                             sent = image.data().to_vec();
                             break;
                         }
@@ -546,6 +573,36 @@ async fn session(
                 _ => {}
             }
         }
+
+        // What the Graphics Pipeline drew while the server's messages were handled.
+        while let Ok(event) = gfx_events.try_recv() {
+            match event {
+                gfx::Event::Reset(width, height) => {
+                    note(format_args!("graphics: the desktop is {width}x{height}"));
+                    let fresh = gfx::Canvas::new(width, height);
+                    let (width, height) = (fresh.width() as u16, fresh.height() as u16);
+                    sent = vec![0; fresh.rgba().len()];
+                    canvas = Some(fresh);
+                    send(out, FromHelper::DesktopSize { width, height })?;
+                    dirty = true;
+                }
+                gfx::Event::Note(text) => note(format_args!("{text}")),
+                event => {
+                    if let Some(canvas) = canvas.as_mut() {
+                        dirty |= canvas.apply(event);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// What OpenCRT is shown: the Graphics Pipeline's desktop once it is on,
+/// else the classic one, with its size.
+fn shown<'a>(image: &'a DecodedImage, canvas: Option<&'a gfx::Canvas>) -> (&'a [u8], (u16, u16)) {
+    match canvas {
+        Some(canvas) => (canvas.rgba(), (canvas.width() as u16, canvas.height() as u16)),
+        None => (image.data(), (image.width(), image.height())),
     }
 }
 

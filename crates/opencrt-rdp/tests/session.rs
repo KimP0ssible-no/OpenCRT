@@ -96,6 +96,7 @@ fn connect(port: u16, password: &str) -> ToHelper {
         speed: opencrt_rdp_proto::SPEED_BALANCED,
         sound: true,
         share: String::new(),
+        h264: true,
     }
 }
 

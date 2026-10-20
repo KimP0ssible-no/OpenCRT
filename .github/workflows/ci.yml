@@ -71,7 +71,9 @@ jobs:
     container: almalinux:8
     steps:
       - name: Build tools
-        run: dnf -y -q install gcc gcc-c++ make perl git
+        # libstdc++-static: the RDP helper links the C++ runtime of its H.264
+        # decoder statically (crates/opencrt-rdp/build.rs).
+        run: dnf -y -q --enablerepo=powertools install gcc gcc-c++ libstdc++-static make perl git
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release

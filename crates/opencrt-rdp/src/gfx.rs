@@ -14,7 +14,7 @@ use ironrdp::pdu::geometry::ExclusiveRectangle;
 use ironrdp_egfx::client::{BitmapUpdate, GraphicsPipelineHandler, Surface};
 use ironrdp_egfx::pdu::{
     CacheToSurfacePdu, CapabilitiesV103Flags, CapabilitiesV104Flags, CapabilitiesV107Flags, CapabilitiesV10Flags,
-    CapabilitySet, Codec1Type, EvictCacheEntryPdu, GfxPdu, SolidFillPdu, SurfaceToCachePdu, SurfaceToSurfacePdu,
+    CapabilitySet, Codec1Type, EvictCacheEntryPdu, GfxPdu, MapSurfaceToScaledOutputPdu, SolidFillPdu, SurfaceToCachePdu, SurfaceToSurfacePdu,
 };
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -96,7 +96,7 @@ impl GraphicsPipelineHandler for Handler {
     /// only those keeps sending the classic (RemoteFX) way.
     fn capabilities(&self) -> Vec<CapabilitySet> {
         vec![
-            CapabilitySet::V10_7 { flags: CapabilitiesV107Flags::SMALL_CACHE },
+            CapabilitySet::V10_7 { flags: CapabilitiesV107Flags::SMALL_CACHE.union(CapabilitiesV107Flags::SCALEDMAP_DISABLE) },
             CapabilitySet::V10_6 { flags: CapabilitiesV104Flags::SMALL_CACHE },
             CapabilitySet::V10_5 { flags: CapabilitiesV104Flags::SMALL_CACHE },
             CapabilitySet::V10_4 { flags: CapabilitiesV104Flags::SMALL_CACHE },
@@ -123,6 +123,15 @@ impl GraphicsPipelineHandler for Handler {
     }
 
     fn on_surface_mapped(&mut self, id: u16, x: u32, y: u32) {
+        self.send(Event::Note(format!("graphics: surface {id} shown at {x},{y}")));
+        self.send(Event::Mapped { id, x, y });
+    }
+
+    /// Asked not to (SCALEDMAP_DISABLE); if it comes anyway, shown unscaled.
+    fn on_map_surface_to_scaled_output(&mut self, pdu: &MapSurfaceToScaledOutputPdu) {
+        let (id, x, y) = (pdu.surface_id, pdu.output_origin_x, pdu.output_origin_y);
+        let (w, h) = (pdu.target_width, pdu.target_height);
+        self.send(Event::Note(format!("graphics: surface {id} shown at {x},{y}, scaled to {w}x{h}")));
         self.send(Event::Mapped { id, x, y });
     }
 
@@ -510,6 +519,28 @@ mod tests {
         let bgra = ClearCodecDecoder::new().decode(&stream, 1, 4).expect("decodes");
         let rows: Vec<[u8; 4]> = bgra.as_chunks::<4>().0.to_vec();
         assert_eq!(rows, [[0x80, 0x80, 0x80, 255], [0, 0, 255, 255], [255, 0, 0, 255], [0x80, 0x80, 0x80, 255]]);
+    }
+
+    #[test]
+    fn clearcodec_one_colour_rlex_as_windows_sends_it() {
+        // An 89x2 area in one colour (33 bytes, as in a Windows 11 log):
+        // packed byte (stop 0, depth 0), a run of 177, then the one-pixel suite.
+        let rlex = [1, 0x10, 0x20, 0x30, 0x00, 177];
+        let mut sub = Vec::new();
+        for v in [0u16, 0, 89, 2] {
+            sub.extend(v.to_le_bytes()); // xStart, yStart, width, height
+        }
+        sub.extend((rlex.len() as u32).to_le_bytes());
+        sub.push(2); // RLEX
+        sub.extend(rlex);
+        let mut stream = vec![0u8, 0x2b];
+        for count in [0, 0, sub.len() as u32] {
+            stream.extend(count.to_le_bytes()); // residual, bands, subcodec byte counts
+        }
+        stream.extend(&sub);
+        assert_eq!(stream.len(), 33);
+        let bgra = ClearCodecDecoder::new().decode(&stream, 89, 2).expect("decodes");
+        assert!(bgra.as_chunks::<4>().0.iter().all(|p| *p == [0x10, 0x20, 0x30, 255]));
     }
 
     #[test]

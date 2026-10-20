@@ -65,40 +65,17 @@ pub fn decode_rlex(data: &[u8]) -> DecodeResult<RlexData> {
         palette.push([b, g, r]);
     }
 
-    // Compute bit widths
-    let stop_index_bits = if palette_count <= 1 {
-        // Edge case: only 1 palette entry
-        0
-    } else {
-        bit_length(u32::from(palette_count - 1))
-    };
+    // Compute bit widths. A one-colour palette still has a 1-bit stopIndex
+    // (log2 of 0 counts as 0), as Windows sends it and FreeRDP reads it.
+    let stop_index_bits = bit_length(u32::from(palette_count - 1)).max(1);
     let suite_depth_bits = 8u8.saturating_sub(stop_index_bits);
 
     // Decode segments from remaining bytes
     let mut segments = Vec::new();
     let remaining = src.len();
-
-    if stop_index_bits == 0 {
-        // Single palette entry: no stop/suite bits, only run lengths
-        // Each byte is a run length factor for palette[0]
-        decode_single_palette_segments(&mut src, &mut segments)?;
-    } else {
-        decode_multi_palette_segments(remaining, &mut src, stop_index_bits, suite_depth_bits, &mut segments)?;
-    }
+    decode_multi_palette_segments(remaining, &mut src, stop_index_bits, suite_depth_bits, &mut segments)?;
 
     Ok(RlexData { palette, segments })
-}
-
-fn decode_single_palette_segments(src: &mut ReadCursor<'_>, segments: &mut Vec<RlexSegment>) -> DecodeResult<()> {
-    while !src.is_empty() {
-        let run_length = decode_run_length(src)?;
-        segments.push(RlexSegment {
-            start_index: 0,
-            stop_index: 0,
-            run_length,
-        });
-    }
-    Ok(())
 }
 
 fn decode_multi_palette_segments(

@@ -154,6 +154,8 @@ pub struct Target {
     pub rdp_speed: Option<u8>,
     /// RDP: play the remote sound here; None for yes.
     pub rdp_sound: Option<bool>,
+    /// RDP: a local folder offered as a drive (expanded); empty for none.
+    pub rdp_share: String,
 }
 
 /// A remembered secret; kept out of debug output.
@@ -201,6 +203,7 @@ impl Target {
             cached_passphrase: None,
             rdp_speed: Some(s.rdp_speed),
             rdp_sound: Some(s.rdp_sound),
+            rdp_share: config::expand_env(&s.rdp_share),
         }
     }
 
@@ -294,6 +297,7 @@ impl Target {
             height: size.1,
             speed: self.rdp_speed.unwrap_or(rdp::SPEED_BALANCED),
             sound: self.rdp_sound.unwrap_or(true),
+            share: self.rdp_share.clone(),
             credential: self.credential.clone(),
             password: self.cached_password.as_ref().map(|s| s.0.clone()),
         })
@@ -3963,6 +3967,7 @@ impl App {
         ui.set_so_rdp_height(size(session.rdp_height));
         ui.set_so_rdp_speed(session.rdp_speed.min(2).into());
         ui.set_so_rdp_sound(session.rdp_sound);
+        ui.set_so_rdp_share(session.rdp_share.clone().into());
         ui.set_so_term(session.terminal_type.clone().into());
         let names: Vec<SharedString> = crate::codec::ENCODINGS.iter().map(|(_, name)| SharedString::from(*name)).collect();
         ui.set_encoding_names(ModelRc::new(VecModel::from(names)));
@@ -4055,6 +4060,7 @@ impl App {
             rdp_height: ui.get_so_rdp_height().trim().parse().unwrap_or(0),
             rdp_speed: ui.get_so_rdp_speed().clamp(0, 2) as u8,
             rdp_sound: ui.get_so_rdp_sound(),
+            rdp_share: ui.get_so_rdp_share().trim().to_string(),
             terminal_type: ui.get_so_term().trim().to_string(),
             latin1: false,
             encoding: crate::codec::ENCODINGS.get(ui.get_so_encoding().max(0) as usize).map_or("", |(label, _)| label).to_string(),
@@ -4089,6 +4095,11 @@ impl App {
             .or_else(|| input::parse_key_map(&session.key_map).err().map(|e| format!("Keyboard: {e}")))
             .or_else(|| anti_idle_secs.is_none().then(|| "Anti-idle: the interval must be a whole number of seconds.".into()))
             .or_else(|| rdp_size_problem(ui.get_so_rdp_width().trim(), ui.get_so_rdp_height().trim()).map(String::from))
+            .or_else(|| {
+                let share = ui.get_so_rdp_share().trim().to_string();
+                (!share.is_empty() && !Path::new(&config::expand_env(&share)).is_dir())
+                    .then(|| format!("Remote Desktop: {share} is not a folder on this computer."))
+            })
             .or_else(|| {
                 (!session.proxy.is_empty()).then(|| crate::proxy::check(&session.proxy).err()).flatten().map(|e| format!("Proxy: {e}"))
             });
@@ -4874,6 +4885,7 @@ impl App {
             "fwd-app" => dialog.set_title("Application").pick_file(),
             "go-download" => dialog.set_title("Download Folder").pick_folder(),
             "go-config-dir" => dialog.set_title("Configuration Folder").pick_folder(),
+            "so-rdp-share" => dialog.set_title("Folder to Share with the Remote Computer").pick_folder(),
             "kg-file" => {
                 let current = PathBuf::from(ui.get_kg_file().as_str());
                 match current.parent().filter(|d| d.is_dir()) {
@@ -4906,6 +4918,7 @@ impl App {
             "so-log" => ui.set_so_log(text),
             "so-script" => ui.set_so_script(text),
             "go-download" => ui.set_go_download(text),
+            "so-rdp-share" => ui.set_so_rdp_share(text),
             "go-config-dir" => ui.set_go_config_dir(text),
             "go-key" => ui.set_go_global_key(text),
             "kg-file" => ui.set_kg_file(text),

@@ -78,6 +78,8 @@ enum Deletion {
     Connect(Vec<usize>),
     /// Install the new version, which restarts OpenCRT.
     Update,
+    /// Start again on the configuration folder just chosen.
+    Restart,
 }
 
 /// A list of saved commands: the Button Bar's, or the Command Manager's.
@@ -1468,6 +1470,9 @@ struct App {
     send_to_all: bool,
     /// Alt+Enter was pressed: flip View > Full Screen on the next tick.
     toggle_full_screen: bool,
+    /// Repaint the whole window at the next tick: Windows cleared it while it
+    /// was minimised or hidden, and Slint only repaints what changed.
+    repaint_all: bool,
     last_beep: Option<Instant>,
     /// Parsed `Options::key_map`: (key name, action, its text).
     key_map: Vec<(String, input::ActionKind, String)>,
@@ -1689,6 +1694,7 @@ impl App {
             notice: None,
             send_to_all: false,
             toggle_full_screen: false,
+            repaint_all: false,
             last_beep: None,
             key_map,
             pending_menus: Vec::new(),
@@ -3077,6 +3083,18 @@ impl App {
         } else {
             self.hex_shown = (u64::MAX, 0);
         }
+        // Minimised: nothing is drawn, and RDP desktops keep their size rather
+        // than following the empty pane.
+        if ui.window().is_minimized() {
+            self.repaint_all = true;
+            return;
+        }
+        if std::mem::take(&mut self.repaint_all) {
+            ui.set_repaint_all(!ui.get_repaint_all());
+            for tab in &mut self.tabs {
+                tab.dirty = true;
+            }
+        }
         // Tabs on the "follow the system" scheme repaint when the theme flips.
         let dark = ui.global::<crate::Theme>().get_dark();
         if crate::terminal::SYSTEM_DARK.swap(dark, std::sync::atomic::Ordering::Relaxed) != dark {
@@ -3751,6 +3769,8 @@ impl App {
                 }
             }
             Some(Deletion::Update) if yes => return self.install_update(ui),
+            Some(Deletion::Restart) if yes => self.restart(),
+            Some(Deletion::Restart) => self.notify("The new configuration folder is used from the next start."),
             _ => {}
         }
         ui.set_dialog(DIALOG_NONE);
@@ -5983,13 +6003,21 @@ impl App {
         self.apply_keywords();
         self.save_options();
         // After saving, so a copy into the new folder has today's settings.
+        let mut restart = None;
         if config_dir != config::chosen_dir() {
             let shown = if config_dir.is_empty() { "the default folder" } else { &config_dir };
-            match config::choose_dir(&config_dir) {
-                Ok(true) => self.notify(format!("Settings copied to {shown}; OpenCRT uses it from the next start.")),
-                Ok(false) => self.notify(format!("OpenCRT uses {shown} for its settings from the next start.")),
-                Err(e) => self.notify(format!("Configuration folder not changed: {e:#}")),
-            }
+            restart = match config::choose_dir(&config_dir) {
+                Ok(copied) => {
+                    let copied = if copied { " (your current settings were copied there)" } else { "" };
+                    let live = self.tabs.iter().filter(|t| t.state != State::Closed).count();
+                    let closes = if live > 0 { " Connected sessions will be disconnected." } else { "" };
+                    Some(format!("Settings now live in {shown}{copied}. Restart OpenCRT to use them?{closes}"))
+                }
+                Err(e) => {
+                    self.notify(format!("Configuration folder not changed: {e:#}"));
+                    None
+                }
+            };
         }
         self.renderer.set_px((font_size * self.scale.max(0.5)).round());
         // Tabs without a session-specific scheme follow the new default.
@@ -6002,6 +6030,19 @@ impl App {
         }
         ui.set_dialog(DIALOG_NONE);
         ui.invoke_focus_terminal();
+        if let Some(question) = restart {
+            self.ask_confirm(ui, &question, Deletion::Restart);
+        }
+    }
+
+    /// Start a new OpenCRT (it reads the configuration folder afresh) and quit this one.
+    fn restart(&mut self) {
+        match std::env::current_exe().and_then(|exe| std::process::Command::new(exe).spawn()) {
+            Ok(_) => {
+                let _ = slint::quit_event_loop();
+            }
+            Err(e) => self.notify(format!("Cannot restart OpenCRT ({e}); the new configuration folder is used from the next start.")),
+        }
     }
 }
 
@@ -6667,6 +6708,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
                 WindowEvent::KeyboardInput { event, .. } if app.rdp_key(event, &ui) => {
                     return EventResult::PreventDefault;
                 }
+                WindowEvent::Occluded(false) => app.repaint_all = true,
                 WindowEvent::Focused(false) => app.rdp_release_all(),
                 // Back from another program: its copied text may be pasted remotely.
                 WindowEvent::Focused(true) => app.rdp_offer_clipboard(),

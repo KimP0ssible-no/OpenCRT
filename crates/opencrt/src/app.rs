@@ -531,6 +531,10 @@ struct Tab {
     /// text copied on the server waiting for the app; offer ours on next tick.
     clip_synced: Option<String>,
     remote_copy: Option<String>,
+    /// RDP pictures: the hash of the one last passed either way, and one
+    /// copied on the server waiting for the local clipboard.
+    clip_synced_image: Option<u64>,
+    remote_image: Option<(u32, u32, Vec<u8>)>,
     clip_check: bool,
     /// Zmodem transfer in progress.
     transfer: Option<Transfer>,
@@ -688,6 +692,8 @@ impl Tab {
             desktop_asked: None,
             clip_synced: None,
             remote_copy: None,
+            clip_synced_image: None,
+            remote_image: None,
             clip_check: false,
             transfer: None,
             upload: None,
@@ -1238,6 +1244,10 @@ impl Tab {
                 SshEvent::Screen(rdp::Screen::Clipboard(text)) => {
                     self.clip_synced = Some(text.clone());
                     self.remote_copy = Some(text);
+                }
+                SshEvent::Screen(rdp::Screen::ClipboardImage { width, height, rgba }) => {
+                    self.clip_synced_image = Some(picture_hash(&rgba));
+                    self.remote_image = Some((width, height, rgba));
                 }
                 SshEvent::Screen(rdp::Screen::Pixels { x, y, width, height, rgba }) => {
                     if let Some(screen) = self.screen.as_mut() {
@@ -2622,8 +2632,8 @@ impl App {
         }
     }
 
-    /// RDP: offer the local clipboard's text to the active tab's server,
-    /// unless it is the text last passed either way.
+    /// RDP: offer the local clipboard's text, or else its picture, to the
+    /// active tab's server, unless it is what was last passed either way.
     fn rdp_offer_clipboard(&mut self) {
         let Some(tab) = self.tabs.get_mut(self.active).filter(|tab| tab.screen.is_some()) else {
             return;
@@ -2631,11 +2641,26 @@ impl App {
         let Some(input) = tab.rdp.as_ref() else {
             return;
         };
-        if let Some(text) = self.clipboard.as_mut().and_then(|c| c.get_text().ok())
-            && tab.clip_synced.as_deref() != Some(text.as_str())
-        {
-            let _ = input.send(ToHelper::Clipboard(text.clone()));
-            tab.clip_synced = Some(text);
+        let Some(clipboard) = self.clipboard.as_mut() else {
+            return;
+        };
+        match clipboard.get_text() {
+            Ok(text) => {
+                if tab.clip_synced.as_deref() != Some(text.as_str()) {
+                    let _ = input.send(ToHelper::Clipboard(text.clone()));
+                    tab.clip_synced = Some(text);
+                }
+            }
+            Err(_) => {
+                if let Ok(image) = clipboard.get_image() {
+                    let hash = picture_hash(&image.bytes);
+                    if tab.clip_synced_image != Some(hash) {
+                        let (width, height) = (image.width as u32, image.height as u32);
+                        let _ = input.send(ToHelper::ClipboardImage { width, height, rgba: image.bytes.into_owned() });
+                        tab.clip_synced_image = Some(hash);
+                    }
+                }
+            }
         }
     }
 
@@ -3056,6 +3081,12 @@ impl App {
                 && let Some(clipboard) = self.clipboard.as_mut()
             {
                 let _ = clipboard.set_text(text);
+            }
+            if let Some((width, height, rgba)) = tab.remote_image.take()
+                && let Some(clipboard) = self.clipboard.as_mut()
+            {
+                let image = arboard::ImageData { width: width as usize, height: height as usize, bytes: rgba.into() };
+                let _ = clipboard.set_image(image);
             }
             if std::mem::take(&mut tab.wants_upload) {
                 let picked = rfd::FileDialog::new().set_title("Zmodem Upload").pick_file();
@@ -6095,6 +6126,14 @@ fn line_from_ui([data, parity, stop, flow]: [i32; 4]) -> SerialLine {
         stop_bits: stop.clamp(0, 1) as u8 + 1,
         flow: [FlowControl::None, FlowControl::Software, FlowControl::Hardware][flow.clamp(0, 2) as usize],
     }
+}
+
+/// Tells clipboard pictures apart without keeping a copy of each.
+fn picture_hash(rgba: &[u8]) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    rgba.hash(&mut hasher);
+    hasher.finish()
 }
 
 /// What is wrong with a fixed RDP desktop size as typed, if anything.

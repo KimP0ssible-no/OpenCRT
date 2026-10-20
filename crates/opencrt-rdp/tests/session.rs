@@ -189,6 +189,9 @@ fn clipboard_text_goes_both_ways() {
     // Copied in OpenCRT: offered to the server, which pastes it.
     helper.send(ToHelper::Clipboard("zwölf\r\nlines".into()));
     server_saw(&events, "clipboard zwölf\r\nlines");
+    // A picture (a screenshot, say) reaches the server as a bitmap.
+    helper.send(ToHelper::ClipboardImage { width: 3, height: 2, rgba: vec![200; 3 * 2 * 4] });
+    server_saw(&events, "clipboard image 3x2");
 }
 
 #[test]

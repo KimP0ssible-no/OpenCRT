@@ -148,8 +148,10 @@ impl RdpServerDisplayUpdates for Picture {
 }
 
 /// Clipboard: offers [`SERVER_TEXT`] as soon as the channel is ready, and
-/// reports text the client offers as `clipboard <text>`.
+/// reports text the client offers as `clipboard <text>`, a picture as
+/// `clipboard image <width>x<height>`.
 const TEXT: ClipboardFormat = ClipboardFormat::new(ClipboardFormatId::CF_UNICODETEXT);
+const DIB: ClipboardFormat = ClipboardFormat::new(ClipboardFormatId::CF_DIB);
 pub const SERVER_TEXT: &str = "copied on the server";
 
 #[derive(Debug)]
@@ -195,15 +197,20 @@ impl CliprdrBackend for Clipboard {
     fn on_request_format_list(&mut self) {}
     fn on_process_negotiated_capabilities(&mut self, _: ClipboardGeneralCapabilityFlags) {}
     fn on_remote_copy(&mut self, formats: &[ClipboardFormat]) {
-        if formats.iter().any(|f| f.id == TEXT.id) {
-            self.queue(ClipboardMessage::SendInitiatePaste(TEXT.id));
+        if let Some(format) = [TEXT, DIB].into_iter().find(|wanted| formats.iter().any(|f| f.id == wanted.id)) {
+            self.queue(ClipboardMessage::SendInitiatePaste(format.id));
         }
     }
     fn on_format_data_request(&mut self, _: FormatDataRequest) {
         self.queue(ClipboardMessage::SendFormatData(FormatDataResponse::new_unicode_string(SERVER_TEXT)));
     }
     fn on_format_data_response(&mut self, response: FormatDataResponse<'_>) {
-        if let Ok(text) = response.to_unicode_string() {
+        // A bitmap starts with its 40-byte header size; text never does.
+        let data = response.data();
+        if data.len() >= 12 && data[..4] == 40u32.to_le_bytes() {
+            let side = |at: usize| i32::from_le_bytes(data[at..at + 4].try_into().unwrap());
+            let _ = self.report.send(format!("clipboard image {}x{}", side(4), side(8)));
+        } else if let Ok(text) = response.to_unicode_string() {
             let _ = self.report.send(format!("clipboard {text}"));
         }
     }

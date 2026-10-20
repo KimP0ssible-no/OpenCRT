@@ -95,6 +95,7 @@ fn main() {
                 ui.set_so_protocol(5);
                 ui.set_so_rdp_width("1920".into());
                 ui.set_so_rdp_height("1080".into());
+                ui.set_so_rdp_speed(1);
             }
             ui.set_encoding_names(model(vec![SharedString::from("UTF-8"), "Shift_JIS (Japanese)".into()]));
             ui.set_so_columns("132".into());

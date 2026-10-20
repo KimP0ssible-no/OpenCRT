@@ -155,7 +155,11 @@ async fn connect(
         .with_context(|| format!("cannot connect to {}:{}", target.host, target.port))?;
     let client_addr = stream.local_addr()?;
     // Display Control (a dynamic channel) lets the desktop follow the tab's size.
-    let mut dynamic = DrdynvcClient::new().with_dynamic_channel(DisplayControlClient::new(|_| Ok(Vec::new())));
+    let display_control = DisplayControlClient::new(|caps| {
+        note(format_args!("Display Control: the server allows {caps:?}"));
+        Ok(Vec::new())
+    });
+    let mut dynamic = DrdynvcClient::new().with_dynamic_channel(display_control);
     // The Graphics Pipeline (H.264, as Windows' own client gets it), with the
     // OpenH264 decoder built in; without it the server sends RemoteFX.
     let decoder = match target.h264.then(ironrdp_egfx::decode::OpenH264Decoder::new) {

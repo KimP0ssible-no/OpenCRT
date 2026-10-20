@@ -49,17 +49,36 @@ pub struct Handler {
     events: UnboundedSender<Event>,
     clear: ClearCodecDecoder,
     planar: BitmapStreamDecoder,
-    /// Codecs already reported as not decoded (each once).
+    /// Codecs already reported as not decoded, or as seen (each once).
     unsupported: Vec<String>,
+    seen: Vec<String>,
+    /// ClearCodec failures reported so far (the log keeps the first few).
+    clear_failures: u32,
 }
 
 impl Handler {
     pub fn new(events: UnboundedSender<Event>) -> Self {
-        Handler { events, clear: ClearCodecDecoder::new(), planar: BitmapStreamDecoder::default(), unsupported: Vec::new() }
+        Handler {
+            events,
+            clear: ClearCodecDecoder::new(),
+            planar: BitmapStreamDecoder::default(),
+            unsupported: Vec::new(),
+            seen: Vec::new(),
+            clear_failures: 0,
+        }
     }
 
     fn send(&self, event: Event) {
         let _ = self.events.send(event);
+    }
+
+    /// The first picture of each codec, for the connection log.
+    fn saw(&mut self, codec: Codec1Type, at: Area) {
+        let name = format!("{codec:?}");
+        if !self.seen.contains(&name) {
+            self.send(Event::Note(format!("graphics: first {name} picture, {}x{} at {},{}", at.2, at.3, at.0, at.1)));
+            self.seen.push(name);
+        }
     }
 
     fn unsupported(&mut self, what: String) {
@@ -110,6 +129,7 @@ impl GraphicsPipelineHandler for Handler {
     fn on_bitmap_updated(&mut self, update: &BitmapUpdate) {
         let (left, top, ..) = area(&update.destination_rectangle);
         let at = (left, top, update.width.into(), update.height.into());
+        self.saw(update.codec_id, at);
         if update.data.len() == at.2 as usize * at.3 as usize * 4 {
             self.send(Event::Pixels { id: update.surface_id, at, rgba: update.data.clone() });
         }
@@ -156,12 +176,28 @@ impl GraphicsPipelineHandler for Handler {
         };
         let at = area(&pdu.destination_rectangle);
         let (w, h) = (at.2 as u16, at.3 as u16);
+        self.saw(pdu.codec_id, at);
         let rgba = match pdu.codec_id {
-            Codec1Type::ClearCodec => self.clear.decode(&pdu.bitmap_data, w, h).ok().map(|bgra| {
-                let mut rgba = bgra;
-                rgba.as_chunks_mut::<4>().0.iter_mut().for_each(|p| p.swap(0, 2));
-                rgba
-            }),
+            Codec1Type::ClearCodec => match self.clear.decode(&pdu.bitmap_data, w, h) {
+                Ok(mut rgba) => {
+                    rgba.as_chunks_mut::<4>().0.iter_mut().for_each(|p| p.swap(0, 2));
+                    Some(rgba)
+                }
+                Err(e) => {
+                    self.clear_failures += 1;
+                    if self.clear_failures <= 5 {
+                        let head: Vec<String> = pdu.bitmap_data.iter().take(8).map(|b| format!("{b:02x}")).collect();
+                        self.send(Event::Note(format!(
+                            "graphics: ClearCodec {w}x{h} at {},{} ({} bytes, starting {}): {e}",
+                            at.0,
+                            at.1,
+                            pdu.bitmap_data.len(),
+                            head.join(" ")
+                        )));
+                    }
+                    return;
+                }
+            },
             Codec1Type::Planar => {
                 let mut rgb = Vec::new();
                 self.planar

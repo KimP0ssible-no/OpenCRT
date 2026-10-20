@@ -1486,6 +1486,7 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <string> rdp-width;
     in-out property <string> rdp-height;
     in-out property <int> rdp-speed;
+    in-out property <bool> rdp-sound;
     in-out property <string> terminal-type;
     // Index into codec::ENCODINGS.
     in-out property <int> encoding;
@@ -1928,6 +1929,11 @@ component SessionOptionsDialog inherits DialogFrame {
                         wrap: word-wrap;
                         color: Theme.text-secondary;
                         font-size: 11px;
+                    }
+                    CheckBox {
+                        text: "Play the remote computer's sound on this computer";
+                        checked <=> root.rdp-sound;
+                        enabled: root.protocol == 5;
                     }
                 }
                 if root.category == 7: VerticalLayout {
@@ -3405,6 +3411,7 @@ export component MainWindow inherits Window {
     in-out property <string> so-rdp-width;
     in-out property <string> so-rdp-height;
     in-out property <int> so-rdp-speed;
+    in-out property <bool> so-rdp-sound;
     in-out property <string> so-term;
     in-out property <int> so-encoding;
     in property <[string]> encoding-names;
@@ -4864,6 +4871,7 @@ export component MainWindow inherits Window {
         rdp-width <=> root.so-rdp-width;
         rdp-height <=> root.so-rdp-height;
         rdp-speed <=> root.so-rdp-speed;
+        rdp-sound <=> root.so-rdp-sound;
         terminal-type <=> root.so-term;
         encoding <=> root.so-encoding;
         encoding-names: root.encoding-names;

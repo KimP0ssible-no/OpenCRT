@@ -14,7 +14,7 @@ license = "Apache-2.0"
 [dependencies]
 anyhow = "1.0.104"
 # Devolutions IronRDP (MIT/Apache-2.0): connection sequence, NLA, session, codecs, input.
-ironrdp = { version = "0.17.0", features = ["connector", "session", "graphics", "input", "pdu", "dvc", "displaycontrol", "cliprdr"] }
+ironrdp = { version = "0.17.0", features = ["connector", "session", "graphics", "input", "pdu", "dvc", "displaycontrol", "cliprdr", "rdpsnd"] }
 ironrdp-tls = { version = "0.2.2", features = ["rustls"] }
 ironrdp-tokio = "0.10.0"
 opencrt-rdp-proto = { path = "../rdp-proto" }
@@ -22,6 +22,15 @@ sha2 = "0.10"
 tokio = { version = "1.53.2", features = ["rt", "net", "io-util", "sync", "macros", "time"] }
 # Same version ironrdp-tls returns; for the certificate fingerprint and subject.
 x509-cert = "0.2.5"
+
+# Remote sound: the system's own audio on Windows (WASAPI) and macOS (CoreAudio).
+[target.'cfg(any(windows, target_os = "macos"))'.dependencies]
+cpal = "0.17"
+
+# Remote sound on Linux: ALSA, loaded at run time (dlopen) so the helper still
+# needs only glibc; its default device feeds PulseAudio or PipeWire.
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2"
 
 [dev-dependencies]
 # For the local test server (examples/dev_rdp_server.rs, tests/session.rs).

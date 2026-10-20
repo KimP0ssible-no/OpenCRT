@@ -152,6 +152,8 @@ pub struct Target {
     pub cached_passphrase: Option<Secret>,
     /// RDP: visual effects allowed (`rdp::SPEED_*`); None for balanced.
     pub rdp_speed: Option<u8>,
+    /// RDP: play the remote sound here; None for yes.
+    pub rdp_sound: Option<bool>,
 }
 
 /// A remembered secret; kept out of debug output.
@@ -198,6 +200,7 @@ impl Target {
             cached_password: None,
             cached_passphrase: None,
             rdp_speed: Some(s.rdp_speed),
+            rdp_sound: Some(s.rdp_sound),
         }
     }
 
@@ -290,6 +293,7 @@ impl Target {
             width: size.0,
             height: size.1,
             speed: self.rdp_speed.unwrap_or(rdp::SPEED_BALANCED),
+            sound: self.rdp_sound.unwrap_or(true),
             credential: self.credential.clone(),
             password: self.cached_password.as_ref().map(|s| s.0.clone()),
         })
@@ -3958,6 +3962,7 @@ impl App {
         ui.set_so_rdp_width(size(session.rdp_width));
         ui.set_so_rdp_height(size(session.rdp_height));
         ui.set_so_rdp_speed(session.rdp_speed.min(2).into());
+        ui.set_so_rdp_sound(session.rdp_sound);
         ui.set_so_term(session.terminal_type.clone().into());
         let names: Vec<SharedString> = crate::codec::ENCODINGS.iter().map(|(_, name)| SharedString::from(*name)).collect();
         ui.set_encoding_names(ModelRc::new(VecModel::from(names)));
@@ -4049,6 +4054,7 @@ impl App {
             rdp_width: ui.get_so_rdp_width().trim().parse().unwrap_or(0),
             rdp_height: ui.get_so_rdp_height().trim().parse().unwrap_or(0),
             rdp_speed: ui.get_so_rdp_speed().clamp(0, 2) as u8,
+            rdp_sound: ui.get_so_rdp_sound(),
             terminal_type: ui.get_so_term().trim().to_string(),
             latin1: false,
             encoding: crate::codec::ENCODINGS.get(ui.get_so_encoding().max(0) as usize).map_or("", |(label, _)| label).to_string(),

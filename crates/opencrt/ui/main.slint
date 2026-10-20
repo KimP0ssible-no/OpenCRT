@@ -3177,7 +3177,10 @@ export component MainWindow inherits Window {
     preferred-height: 720px;
     min-width: 480px;
     min-height: 300px;
-    background: Theme.window-bg;
+    // Flipped to repaint the whole window (after being minimised); the two
+    // backgrounds look the same.
+    in-out property <bool> repaint-all;
+    background: root.repaint-all ? Theme.window-bg.with-alpha(0.996) : Theme.window-bg;
     default-font-family: "IBM Plex Sans";
     default-font-size: 12px;
 

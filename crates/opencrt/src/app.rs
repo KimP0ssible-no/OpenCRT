@@ -11,7 +11,7 @@ use alacritty_terminal::selection::SelectionType;
 use alacritty_terminal::term::TermMode;
 use slint::winit_030::winit::event::{ElementState, KeyEvent};
 use slint::winit_030::winit::keyboard::{KeyCode, PhysicalKey};
-use slint::{ComponentHandle, Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString, Timer, TimerMode, VecModel};
+use slint::{ComponentHandle, Image, Model, ModelRc, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer, SharedString, Timer, TimerMode, VecModel};
 
 use crate::config::{self, Credential, FlowControl, Options, Parity, Protocol, SerialLine, Session, SessionStore};
 use crate::forward::{Forward, ForwardKind};
@@ -150,6 +150,8 @@ pub struct Target {
     /// run (Global Options > Connection), never saved to disk.
     pub cached_password: Option<Secret>,
     pub cached_passphrase: Option<Secret>,
+    /// RDP: visual effects allowed (`rdp::SPEED_*`); None for balanced.
+    pub rdp_speed: Option<u8>,
 }
 
 /// A remembered secret; kept out of debug output.
@@ -195,6 +197,7 @@ impl Target {
             cert_path: (!s.cert_path.is_empty()).then(|| config::expand_env(&s.cert_path)),
             cached_password: None,
             cached_passphrase: None,
+            rdp_speed: Some(s.rdp_speed),
         }
     }
 
@@ -286,6 +289,7 @@ impl Target {
             user: self.user.clone(),
             width: size.0,
             height: size.1,
+            speed: self.rdp_speed.unwrap_or(rdp::SPEED_BALANCED),
             credential: self.credential.clone(),
             password: self.cached_password.as_ref().map(|s| s.0.clone()),
         })
@@ -3168,11 +3172,16 @@ impl App {
             let drawn = (tab.id, pixels, focused && pane.tab == self.active);
             let image = match self.pane_model.row_data(k) {
                 Some(row) if !tab.dirty && self.pane_drawn.get(k) == Some(&drawn) => row.image,
+                // An RDP tab shows the remote desktop, 1:1 in physical pixels.
+                _ if let Some(desktop) = &tab.screen => {
+                    let mut buffer = SharedPixelBuffer::<Rgb8Pixel>::new(pixels.0 as u32, pixels.1 as u32);
+                    desktop.draw(buffer.make_mut_bytes(), pixels.0, pixels.1, [0, 0, 0]);
+                    Image::from_rgb8(buffer)
+                }
                 _ => {
                     let mut buffer = SharedPixelBuffer::<Rgba8Pixel>::new(pixels.0 as u32, pixels.1 as u32);
                     match &tab.screen {
-                        // An RDP tab shows the remote desktop, 1:1 in physical pixels.
-                        Some(desktop) => desktop.draw(buffer.make_mut_bytes(), pixels.0, pixels.1, [0, 0, 0, 255]),
+                        Some(_) => {}
                         // Locked with its output hidden: an empty screen.
                         None if tab.lock.as_ref().is_some_and(|(_, hide)| *hide) => {
                             let [r, g, b] = tab.terminal.colours().bg;
@@ -3917,6 +3926,7 @@ impl App {
         ui.set_so_deccolm(session.allow_deccolm);
         ui.set_so_rdp_width(size(session.rdp_width));
         ui.set_so_rdp_height(size(session.rdp_height));
+        ui.set_so_rdp_speed(session.rdp_speed.min(2).into());
         ui.set_so_term(session.terminal_type.clone().into());
         let names: Vec<SharedString> = crate::codec::ENCODINGS.iter().map(|(_, name)| SharedString::from(*name)).collect();
         ui.set_encoding_names(ModelRc::new(VecModel::from(names)));
@@ -4007,6 +4017,7 @@ impl App {
             allow_deccolm: ui.get_so_deccolm(),
             rdp_width: ui.get_so_rdp_width().trim().parse().unwrap_or(0),
             rdp_height: ui.get_so_rdp_height().trim().parse().unwrap_or(0),
+            rdp_speed: ui.get_so_rdp_speed().clamp(0, 2) as u8,
             terminal_type: ui.get_so_term().trim().to_string(),
             latin1: false,
             encoding: crate::codec::ENCODINGS.get(ui.get_so_encoding().max(0) as usize).map_or("", |(label, _)| label).to_string(),

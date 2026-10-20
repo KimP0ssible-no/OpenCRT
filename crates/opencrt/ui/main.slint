@@ -1485,6 +1485,7 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <bool> deccolm;
     in-out property <string> rdp-width;
     in-out property <string> rdp-height;
+    in-out property <int> rdp-speed;
     in-out property <string> terminal-type;
     // Index into codec::ENCODINGS.
     in-out property <int> encoding;
@@ -1909,6 +1910,21 @@ component SessionOptionsDialog inherits DialogFrame {
                     }
                     Text {
                         text: "Blank: the remote desktop follows the tab's size. A fixed size (in pixels) stays the same whatever the window does: shown whole, scaled down when the tab is smaller.";
+                        wrap: word-wrap;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        FormLabel { text: "Connection speed:"; }
+                        ComboBox {
+                            model: ["Best appearance (fast network)", "Balanced: no wallpaper or animations", "Fastest: no visual effects (slow links)"];
+                            current-index <=> root.rdp-speed;
+                            enabled: root.protocol == 5;
+                        }
+                    }
+                    Text {
+                        text: "The less the server draws, the less it sends: leaving out the wallpaper and animations makes the desktop noticeably quicker over the internet or a VPN.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
                         font-size: 11px;
@@ -3388,6 +3404,7 @@ export component MainWindow inherits Window {
     in-out property <bool> so-deccolm;
     in-out property <string> so-rdp-width;
     in-out property <string> so-rdp-height;
+    in-out property <int> so-rdp-speed;
     in-out property <string> so-term;
     in-out property <int> so-encoding;
     in property <[string]> encoding-names;
@@ -4846,6 +4863,7 @@ export component MainWindow inherits Window {
         deccolm <=> root.so-deccolm;
         rdp-width <=> root.so-rdp-width;
         rdp-height <=> root.so-rdp-height;
+        rdp-speed <=> root.so-rdp-speed;
         terminal-type <=> root.so-term;
         encoding <=> root.so-encoding;
         encoding-names: root.encoding-names;

@@ -39,6 +39,9 @@ pub enum Event {
     Mapped { id: u16, x: u32, y: u32 },
     /// Pixels (RGBA rows of the area's width) for a surface.
     Pixels { id: u16, at: Area, rgba: Vec<u8> },
+    /// The same, but fully transparent pixels leave the surface as it is:
+    /// ClearCodec need not draw all of its area.
+    Partial { id: u16, at: Area, rgba: Vec<u8> },
     Fill { id: u16, rgba: [u8; 4], areas: Vec<Area> },
     Copy { from: u16, at: Area, to: u16, points: Vec<(u32, u32)> },
     ToCache { id: u16, at: Area, slot: u16 },
@@ -63,6 +66,7 @@ pub struct Handler {
     /// Pictures per codec since `counted`, for the log every STATS_EVERY.
     counts: BTreeMap<String, u32>,
     counted: Instant,
+    dump: Option<(std::path::PathBuf, u32)>,
 }
 
 const STATS_EVERY: Duration = Duration::from_secs(10);
@@ -80,6 +84,7 @@ impl Handler {
             sizes: HashMap::new(),
             counts: BTreeMap::new(),
             counted: Instant::now(),
+            dump: std::env::var_os("OPENCRT_RDP_DUMP").map(|d| (d.into(), 0)),
         }
     }
 
@@ -188,14 +193,23 @@ impl GraphicsPipelineHandler for Handler {
         let Some(&(w, h)) = self.sizes.get(&id) else {
             return;
         };
+        if let Some((dir, n)) = self.dump.as_mut() {
+            *n += 1;
+            let _ = std::fs::write(dir.join(format!("{n:06}-{id}-{w}x{h}.prog")), &pdu.bitmap_data);
+        }
         // Tile state per surface, not per codec context: Windows uses a new
         // context id for each picture (FreeRDP keys it by surface too).
         match self.progressive.decode_bitmap(id.into(), w, h, &pdu.bitmap_data) {
             Ok(tiles) => {
                 for tile in tiles {
-                    let at = (u32::from(tile.x_idx) * 64, u32::from(tile.y_idx) * 64, 64, 64);
-                    self.saw("Progressive".into(), at);
-                    self.send(Event::Pixels { id, at, rgba: tile.pixels });
+                    let (tx, ty) = (u32::from(tile.x_idx) * 64, u32::from(tile.y_idx) * 64);
+                    self.saw("Progressive".into(), (tx, ty, 64, 64));
+                    // Only where the region's rectangles cover the tile.
+                    for (x, y, w, h) in tile.rects {
+                        let (x, y, w, h) = (usize::from(x), usize::from(y), usize::from(w), usize::from(h));
+                        let rgba = (y..y + h).flat_map(|row| &tile.pixels[(row * 64 + x) * 4..(row * 64 + x + w) * 4]).copied().collect();
+                        self.send(Event::Pixels { id, at: (tx + x as u32, ty + y as u32, w as u32, h as u32), rgba });
+                    }
                 }
             }
             Err(e) => self.failed("Progressive", format!("{} bytes: {e}", pdu.bitmap_data.len())),
@@ -272,6 +286,7 @@ impl GraphicsPipelineHandler for Handler {
             }
         };
         match rgba.filter(|px: &Vec<u8>| px.len() == usize::from(w) * usize::from(h) * 4) {
+            Some(rgba) if pdu.codec_id == Codec1Type::ClearCodec => self.send(Event::Partial { id: pdu.surface_id, at, rgba }),
             Some(rgba) => self.send(Event::Pixels { id: pdu.surface_id, at, rgba }),
             None => self.send(Event::Note(format!("graphics: a {:?} picture could not be decoded", pdu.codec_id))),
         }
@@ -307,6 +322,22 @@ impl Pixels {
             let s = ((src.1 as usize + row) * from.width as usize + src.0 as usize) * 4;
             let d = ((dst.1 as usize + row) * self.width as usize + dst.0 as usize) * 4;
             self.rgba[d..d + w * 4].copy_from_slice(&from.rgba[s..s + w * 4]);
+        }
+    }
+
+    /// `paste` of a whole picture at `dst`, except its fully transparent pixels.
+    fn over(&mut self, from: &Pixels, dst: (u32, u32)) {
+        let w = from.width.min(self.width.saturating_sub(dst.0)) as usize;
+        let h = from.height.min(self.height.saturating_sub(dst.1)) as usize;
+        for row in 0..h {
+            let s = row * from.width as usize * 4;
+            let d = ((dst.1 as usize + row) * self.width as usize + dst.0 as usize) * 4;
+            let to = self.rgba[d..d + w * 4].as_chunks_mut::<4>().0;
+            for (to, px) in to.iter_mut().zip(from.rgba[s..s + w * 4].as_chunks::<4>().0) {
+                if px[3] != 0 {
+                    *to = *px;
+                }
+            }
         }
     }
 
@@ -390,6 +421,14 @@ impl Canvas {
                 Some(layer) => {
                     let patch = Pixels { width: at.2, height: at.3, rgba };
                     layer.pixels.paste(&patch, (0, 0), (at.0, at.1), (at.2, at.3));
+                    self.show(id, at);
+                    true
+                }
+                None => false,
+            },
+            Event::Partial { id, at, rgba } => match self.layers.get_mut(&id) {
+                Some(layer) => {
+                    layer.pixels.over(&Pixels { width: at.2, height: at.3, rgba }, (at.0, at.1));
                     self.show(id, at);
                     true
                 }
@@ -611,6 +650,43 @@ mod tests {
         assert!(bgra.as_chunks::<4>().0.iter().all(|p| *p == [0x10, 0x20, 0x30, 255]));
     }
 
+    /// ClearCodec without a residual layer draws only what its bands and
+    /// subcodecs cover; the rest of its area keeps what the surface had.
+    #[test]
+    fn clearcodec_leaves_what_it_does_not_draw() {
+        use ironrdp_egfx::pdu::{PixelFormat, WireToSurface1Pdu};
+        let rlex = [1, 0x10, 0x20, 0x30, 0x00, 3]; // one colour, a run of 3 and the suite: 2x2
+        let mut sub = Vec::new();
+        for v in [0u16, 0, 2, 2] {
+            sub.extend(v.to_le_bytes()); // xStart, yStart, width, height
+        }
+        sub.extend((rlex.len() as u32).to_le_bytes());
+        sub.push(2); // RLEX
+        sub.extend(rlex);
+        let mut stream = vec![0u8, 0];
+        for count in [0, 0, sub.len() as u32] {
+            stream.extend(count.to_le_bytes()); // no residual, no bands
+        }
+        stream.extend(&sub);
+        let (events, mut received) = tokio::sync::mpsc::unbounded_channel();
+        let mut handler = Handler::new(events);
+        handler.on_unhandled_pdu(&GfxPdu::WireToSurface1(WireToSurface1Pdu {
+            surface_id: 1,
+            codec_id: Codec1Type::ClearCodec,
+            pixel_format: PixelFormat::XRgb,
+            destination_rectangle: ExclusiveRectangle { left: 0, top: 0, right: 4, bottom: 2 },
+            bitmap_data: stream,
+        }));
+        let mut canvas = Canvas::new(4, 2);
+        canvas.apply(Event::Created { id: 1, width: 4, height: 2 });
+        canvas.apply(Event::Mapped { id: 1, x: 0, y: 0 });
+        canvas.apply(Event::Fill { id: 1, rgba: RED, areas: vec![(0, 0, 4, 2)] });
+        while let Ok(event) = received.try_recv() {
+            canvas.apply(event);
+        }
+        assert_eq!([px(&canvas, 1, 1), px(&canvas, 2, 0), px(&canvas, 3, 1)], [[0x30, 0x20, 0x10, 255], RED, RED]);
+    }
+
     #[test]
     fn clearcodec_glyph_hit_for_a_smaller_area() {
         // Glyph 5: 2x2 of one colour (a residual run of 4).
@@ -636,13 +712,14 @@ mod tests {
         use ironrdp::pdu::codecs::rfx::progressive::*;
         use ironrdp_egfx::pdu::{Codec2Type, PixelFormat};
 
-        // Fine quantization, so the colours come back close.
-        let quant = ComponentCodecQuant { ll3: 1, hl3: 1, lh3: 1, hh3: 1, hl2: 1, lh2: 1, hh2: 1, hl1: 1, lh1: 1, hh1: 1 };
+        // Windows' quantization (66 76 88 99 a9 on the wire).
+        let quant = ComponentCodecQuant { ll3: 6, hl3: 6, lh3: 6, hh3: 7, hl2: 8, lh2: 8, hh2: 9, hl1: 9, lh1: 9, hh1: 10 };
         let encode = |rgb: [u8; 3]| -> [Vec<u8>; 3] {
             let rgba: Vec<u8> = (0..4096).flat_map(|_| [rgb[0], rgb[1], rgb[2], 255]).collect();
             let (mut y, mut cb, mut cr) = (vec![0i16; 4096], vec![0i16; 4096], vec![0i16; 4096]);
             rgba_to_ycbcr(&rgba, &mut y, &mut cb, &mut cr);
-            [y, cb, cr].map(|mut c| {
+            // With 5 fractional bits, as Windows encodes (and FreeRDP decodes).
+            [y, cb, cr].map(|c| c.iter().map(|v| v << 5).collect::<Vec<i16>>()).map(|mut c| {
                 let mut out = vec![0u8; 16384];
                 let n = encode_first_pass(&mut c, &mut out, &quant, &ComponentCodecQuant::LOSSLESS, true).unwrap();
                 out.truncate(n);
@@ -709,6 +786,47 @@ mod tests {
         let near = |got: [u8; 4], want: [u8; 3]| got.iter().zip(want).all(|(&g, w)| g.abs_diff(w) <= 24);
         assert!(near(px(&canvas, 30, 30), [255, 0, 0]), "first tile: {:?}", px(&canvas, 30, 30));
         assert!(near(px(&canvas, 100, 30), [0, 0, 255]), "second tile: {:?}", px(&canvas, 100, 30));
+    }
+
+    /// Not a test: replays $REPLAY_DIR/*.prog (from OPENCRT_RDP_DUMP) to $REPLAY_DIR/ours.ppm.
+    #[test]
+    #[ignore]
+    fn replay() {
+        use ironrdp_egfx::pdu::{Codec2Type, PixelFormat};
+        let dir = std::path::PathBuf::from(std::env::var("REPLAY_DIR").unwrap());
+        let limit: usize = std::env::var("REPLAY_LIMIT").ok().and_then(|s| s.parse().ok()).unwrap_or(usize::MAX);
+        let mut names: Vec<String> = std::fs::read_dir(&dir).unwrap().filter_map(|e| e.ok()?.file_name().into_string().ok()).filter(|n| n.ends_with(".prog")).collect();
+        names.sort();
+        let (events, mut received) = tokio::sync::mpsc::unbounded_channel();
+        let mut handler = Handler::new(events);
+        let mut canvas: Option<Canvas> = None;
+        for name in names.iter().take(limit) {
+            let parts: Vec<&str> = name.trim_end_matches(".prog").split('-').collect();
+            let id: u16 = parts[1].parse().unwrap();
+            let (w, h) = parts[2].split_once('x').unwrap();
+            let (w, h): (u16, u16) = (w.parse().unwrap(), h.parse().unwrap());
+            let c = canvas.get_or_insert_with(|| {
+                let mut c = Canvas::new(w.into(), h.into());
+                c.apply(Event::Created { id, width: w.into(), height: h.into() });
+                c.apply(Event::Mapped { id, x: 0, y: 0 });
+                c
+            });
+            handler.sizes.insert(id, (w, h));
+            let bitmap_data = std::fs::read(dir.join(name)).unwrap();
+            handler.on_wire_to_surface2(&WireToSurface2Pdu { surface_id: id, codec_id: Codec2Type::RemoteFxProgressive, codec_context_id: 0, pixel_format: PixelFormat::XRgb, bitmap_data });
+            while let Ok(event) = received.try_recv() {
+                match event {
+                    Event::Note(t) => eprintln!("{name}: {t}"),
+                    e => {
+                        c.apply(e);
+                    }
+                }
+            }
+        }
+        let c = canvas.unwrap();
+        let mut out = format!("P6 {} {} 255\n", c.width(), c.height()).into_bytes();
+        out.extend(c.rgba().chunks(4).flat_map(|p| [p[0], p[1], p[2]]));
+        std::fs::write(dir.join("ours.ppm"), out).unwrap();
     }
 
     #[test]

@@ -455,6 +455,8 @@ async fn session(
     let mut tries = 0u8;
     // The desktop once the Graphics Pipeline draws it (instead of `image`).
     let mut canvas: Option<gfx::Canvas> = None;
+    // Drawn into the canvas since the last frame end.
+    let mut drawn = false;
 
     loop {
         let outputs = tokio::select! {
@@ -629,9 +631,12 @@ async fn session(
                     dirty = true;
                 }
                 gfx::Event::Note(text) => note(format_args!("{text}")),
+                // Shown only whole: between frames the server may have moved
+                // a window without yet repainting where it was.
+                gfx::Event::FrameEnd => dirty |= std::mem::take(&mut drawn),
                 event => {
                     if let Some(canvas) = canvas.as_mut() {
-                        dirty |= canvas.apply(event);
+                        drawn |= canvas.apply(event);
                     }
                 }
             }

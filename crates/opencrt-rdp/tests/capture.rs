@@ -40,7 +40,7 @@ fn capture() {
         password: get("RDP_PASSWORD"),
         width,
         height,
-        speed: 1,
+        speed: std::env::var("CAPTURE_SPEED").ok().and_then(|s| s.parse().ok()).unwrap_or(1),
         sound: false,
         share: String::new(),
         h264: true,
@@ -56,8 +56,72 @@ fn capture() {
     });
     let (mut w, mut h) = (0usize, 0usize);
     let mut desk = Vec::new();
-    let end = Instant::now() + Duration::from_secs(seconds);
-    while let Ok(m) = rx.recv_timeout(end.saturating_duration_since(Instant::now())) {
+    // CAPTURE_DRAG: from 5 s, drag the window by its title bar (x, y of
+    // CAPTURE_DRAG, e.g. "1100,18") in circles for 10 s, then double-click
+    // the title to maximise it again; a snapshot every 2 s meanwhile.
+    let mut script: Vec<(u64, ToHelper)> = Vec::new();
+    if let Ok(at) = std::env::var("CAPTURE_DRAG") {
+        let (x, y) = at.split_once(',').map(|(x, y)| (x.parse::<f64>().unwrap(), y.parse::<f64>().unwrap())).unwrap();
+        let pos = |x: f64, y: f64| ToHelper::MouseMove { x: x as u16, y: y as u16 };
+        let button = |down| ToHelper::MouseButton { button: opencrt_rdp_proto::BUTTON_LEFT, down };
+        for (t, down) in [(4400, true), (4450, false)] {
+            script.push((t, ToHelper::Key { scancode: 0x01, extended: false, down })); // Escape
+        }
+        script.push((5000, pos(x, y)));
+        script.push((5100, button(true)));
+        // Whole circles through the start (CAPTURE_DRAG_SECS long), back to it.
+        let secs: u64 = std::env::var("CAPTURE_DRAG_SECS").ok().and_then(|s| s.parse().ok()).unwrap_or(10);
+        let steps = secs * 20;
+        let turns = (secs / 5).max(1) as f64;
+        for i in 0..=steps {
+            let a = std::f64::consts::TAU * turns * i as f64 / steps as f64;
+            script.push((5200 + i * 50, pos(x - 250.0 + 250.0 * a.cos(), y + 150.0 * a.sin())));
+        }
+        let done = 5300 + steps * 50;
+        script.push((done, pos(x, y)));
+        script.push((done + 100, button(false)));
+        for (t, down) in [(done + 800, true), (done + 880, false), (done + 960, true), (done + 1040, false)] {
+            script.push((t, pos(x, y)));
+            script.push((t, button(down)));
+        }
+    }
+    // CAPTURE_TIDY: Escape, then Win+Up (maximise the foreground window).
+    if std::env::var_os("CAPTURE_TIDY").is_some() {
+        let key = |scancode, extended, down| ToHelper::Key { scancode, extended, down };
+        script.extend([
+            (3000, key(0x01, false, true)),
+            (3050, key(0x01, false, false)),
+            (3500, key(0x5B, true, true)),
+            (3550, key(0x48, true, true)),
+            (3600, key(0x48, true, false)),
+            (3650, key(0x5B, true, false)),
+        ]);
+    }
+    script.sort_by_key(|(t, _)| *t);
+    let mut script = script.into_iter().peekable();
+    let mut snapshot = 0;
+    let start = Instant::now();
+    let end = start + Duration::from_secs(seconds);
+    let write = |path: String, w: usize, h: usize, desk: &[u8]| {
+        let mut out = std::fs::File::create(path).unwrap();
+        writeln!(out, "P6 {w} {h} 255").unwrap();
+        out.write_all(&desk.chunks(4).flat_map(|p| [p[0], p[1], p[2]]).collect::<Vec<u8>>()).unwrap();
+    };
+    loop {
+        let now = start.elapsed().as_millis() as u64;
+        while script.peek().is_some_and(|(t, _)| *t <= now) {
+            script.next().unwrap().1.write(&mut stdin).unwrap();
+        }
+        if std::env::var_os("CAPTURE_DRAG").is_some() && now >= 6000 + snapshot * 2000 && now < 6000 + 2000 * 40 && w > 0 {
+            write(format!("{dir}/snap-{snapshot:02}.ppm"), w, h, &desk);
+            snapshot += 1;
+        }
+        let Ok(m) = rx.recv_timeout(Duration::from_millis(20).min(end.saturating_duration_since(Instant::now()))) else {
+            if Instant::now() >= end {
+                break;
+            }
+            continue;
+        };
         if !matches!(m, FromHelper::Frame { .. }) {
             eprintln!("capture: {}", format!("{m:?}").chars().take(60).collect::<String>());
         }
@@ -84,8 +148,6 @@ fn capture() {
         }
     }
     let _ = ToHelper::Close.write(&mut stdin);
-    let mut out = std::fs::File::create(format!("{dir}/desktop.ppm")).unwrap();
-    writeln!(out, "P6 {w} {h} 255").unwrap();
-    out.write_all(&desk.chunks(4).flat_map(|p| [p[0], p[1], p[2]]).collect::<Vec<u8>>()).unwrap();
+    write(format!("{dir}/desktop.ppm"), w, h, &desk);
     let _ = child.wait();
 }

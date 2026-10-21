@@ -1045,6 +1045,9 @@ struct ProgressiveContext {
 /// ```
 pub struct ProgressiveDecoder {
     contexts: BTreeMap<u32, ProgressiveContext>,
+    /// The last CONTEXT block's band layout: Windows sends CONTEXT once and
+    /// then uses new codec context ids (FreeRDP keeps it decoder-wide too).
+    last_reduce_extrapolate: Option<bool>,
 }
 
 impl ProgressiveDecoder {
@@ -1052,6 +1055,7 @@ impl ProgressiveDecoder {
     pub fn new() -> Self {
         Self {
             contexts: BTreeMap::new(),
+            last_reduce_extrapolate: None,
         }
     }
 
@@ -1098,8 +1102,10 @@ impl ProgressiveDecoder {
                 .contexts
                 .get(&codec_context_id)
                 .map(|c| c.surface.use_reduce_extrapolate)
+                .or(self.last_reduce_extrapolate)
                 .ok_or(ProgressiveDecodeError::MissingBlock("CONTEXT"))?,
         };
+        self.last_reduce_extrapolate = Some(use_reduce_extrapolate);
 
         // Get or create the context for this codec_context_id
         let context = match self.contexts.entry(codec_context_id) {
@@ -1162,6 +1168,23 @@ impl ProgressiveDecoder {
     clippy::similar_names,
     reason = "q_y/q_cb/q_cr are standard component quant index names"
 )]
+/// The progressive quantization for a tile's quality byte: 0xFF is full
+/// quality (no progressive quantization), as Windows sends it with an empty
+/// table and FreeRDP reads it; anything else indexes the region's table.
+fn prog_quant(
+    prog_quant_vals: &[ironrdp_pdu::codecs::rfx::progressive::ProgressiveCodecQuant],
+    quality: u8,
+) -> Result<[ComponentCodecQuant; 3], ProgressiveDecodeError> {
+    if quality == 0xFF {
+        return Ok([ComponentCodecQuant::LOSSLESS; 3]);
+    }
+    let pq = prog_quant_vals.get(usize::from(quality)).ok_or(ProgressiveDecodeError::InvalidQuantIndex {
+        index: usize::from(quality),
+        table_len: prog_quant_vals.len(),
+    })?;
+    Ok([pq.y_quant, pq.cb_quant, pq.cr_quant])
+}
+
 fn decode_tile_block(
     surface: &mut SurfaceTiles,
     tile_block: &ironrdp_pdu::codecs::rfx::progressive::ProgressiveTile<'_>,
@@ -1228,19 +1251,12 @@ fn decode_tile_block(
                 });
             }
 
-            let pq_idx = usize::from(tile.quality);
-            if pq_idx >= prog_quant_vals.len() {
-                return Err(ProgressiveDecodeError::InvalidQuantIndex {
-                    index: pq_idx,
-                    table_len: prog_quant_vals.len(),
-                });
-            }
-            let pq = &prog_quant_vals[pq_idx];
+            let pq = prog_quant(prog_quant_vals, tile.quality)?;
 
             tile_state.decode_first(
                 [tile.y_data, tile.cb_data, tile.cr_data],
                 [&quant_vals[q_y], &quant_vals[q_cb], &quant_vals[q_cr]],
-                [pq.y_quant, pq.cb_quant, pq.cr_quant],
+                pq,
                 [tile.quant_idx_y, tile.quant_idx_cb, tile.quant_idx_cr],
                 tile.quality,
                 use_reduce_extrapolate,
@@ -1265,19 +1281,12 @@ fn decode_tile_block(
                 return Ok(Vec::new());
             }
 
-            let pq_idx = usize::from(tile.quality);
-            if pq_idx >= prog_quant_vals.len() {
-                return Err(ProgressiveDecodeError::InvalidQuantIndex {
-                    index: pq_idx,
-                    table_len: prog_quant_vals.len(),
-                });
-            }
-            let pq = &prog_quant_vals[pq_idx];
+            let pq = prog_quant(prog_quant_vals, tile.quality)?;
 
             tile_state.decode_upgrade(
                 [tile.y_srl_data, tile.cb_srl_data, tile.cr_srl_data],
                 [tile.y_raw_data, tile.cb_raw_data, tile.cr_raw_data],
-                [pq.y_quant, pq.cb_quant, pq.cr_quant],
+                pq,
                 tile.quality,
             );
 

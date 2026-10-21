@@ -8,6 +8,9 @@ A copy of [ironrdp-graphics](https://crates.io/crates/ironrdp-graphics) 0.9.0
   a cached ClearCodec glyph for any area it covers, taking its first width x height
   pixels (as FreeRDP reads it). 0.9.0 demanded the exact cached size and failed
   with "cached glyph dimensions mismatch".
+- `src/clearcodec/nscodec.rs` (new): the NSCodec subcodec ([MS-RDPNSC]), which
+  0.9.0 left undrawn ("not yet implemented"); Windows uses it for pictures such as
+  album art. Checked against FreeRDP on Windows 11 pictures.
 - `src/progressive.rs` (`prog_quant`): a Progressive tile's quality 0xFF means full
   quality (no progressive quantization), and Windows then sends no quality table;
   0.9.0 looked 255 up in the empty table ("quant index 255 exceeds table length 0").

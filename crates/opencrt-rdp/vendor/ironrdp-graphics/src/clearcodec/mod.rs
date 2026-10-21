@@ -5,6 +5,7 @@
 //! efficiently encode text, UI elements, and icons.
 
 mod glyph_cache;
+mod nscodec;
 mod vbar_cache;
 
 pub use self::glyph_cache::{GLYPH_CACHE_SIZE, GlyphCache, GlyphEntry};
@@ -338,7 +339,20 @@ impl ClearCodecDecoder {
                 }
             }
             SubcodecId::NsCodec => {
-                // Not yet implemented; encoder avoids generating NSCodec tiles.
+                let (w, h) = (usize::from(sub.width), usize::from(sub.height));
+                let bgra = nscodec::decode(sub.bitmap_data, w, h)
+                    .ok_or_else(|| invalid_field_err!("nscodec", "malformed NSCodec subcodec"))?;
+                for row in 0..h {
+                    let y = usize::from(sub.y_start) + row;
+                    let x = usize::from(sub.x_start);
+                    if y >= sh || x + w > sw {
+                        return Err(invalid_field_err!("nscodec", "subcodec outside the area"));
+                    }
+                    let dst = (y * sw + x) * 4;
+                    output[dst..dst + w * 4].copy_from_slice(&bgra[row * w * 4..(row + 1) * w * 4]);
+                    // Opaque as every ClearCodec pixel.
+                    output[dst..dst + w * 4].chunks_exact_mut(4).for_each(|p| p[3] = 0xFF);
+                }
             }
         }
 

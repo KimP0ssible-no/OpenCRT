@@ -16,7 +16,7 @@ use ironrdp::pdu::geometry::ExclusiveRectangle;
 use ironrdp_egfx::client::{BitmapUpdate, GraphicsPipelineHandler, Surface};
 use ironrdp_egfx::pdu::{
     CacheToSurfacePdu, CapabilitiesV103Flags, CapabilitiesV104Flags, CapabilitiesV107Flags, CapabilitiesV10Flags,
-    CapabilitySet, Codec1Type, DeleteEncodingContextPdu, EvictCacheEntryPdu, GfxPdu, MapSurfaceToScaledOutputPdu, SolidFillPdu,
+    CapabilitySet, Codec1Type, EvictCacheEntryPdu, GfxPdu, MapSurfaceToScaledOutputPdu, SolidFillPdu,
     SurfaceToCachePdu, SurfaceToSurfacePdu, WireToSurface2Pdu,
 };
 use tokio::sync::mpsc::UnboundedSender;
@@ -156,6 +156,7 @@ impl GraphicsPipelineHandler for Handler {
 
     fn on_surface_deleted(&mut self, id: u16) {
         self.sizes.remove(&id);
+        self.progressive.delete_context(id.into());
         self.send(Event::Deleted(id));
     }
 
@@ -187,7 +188,9 @@ impl GraphicsPipelineHandler for Handler {
         let Some(&(w, h)) = self.sizes.get(&id) else {
             return;
         };
-        match self.progressive.decode_bitmap(pdu.codec_context_id, w, h, &pdu.bitmap_data) {
+        // Tile state per surface, not per codec context: Windows uses a new
+        // context id for each picture (FreeRDP keys it by surface too).
+        match self.progressive.decode_bitmap(id.into(), w, h, &pdu.bitmap_data) {
             Ok(tiles) => {
                 for tile in tiles {
                     let at = (u32::from(tile.x_idx) * 64, u32::from(tile.y_idx) * 64, 64, 64);
@@ -197,10 +200,6 @@ impl GraphicsPipelineHandler for Handler {
             }
             Err(e) => self.failed("Progressive", format!("{} bytes: {e}", pdu.bitmap_data.len())),
         }
-    }
-
-    fn on_delete_encoding_context(&mut self, pdu: &DeleteEncodingContextPdu) {
-        self.progressive.delete_context(pdu.codec_context_id);
     }
 
     fn on_solid_fill(&mut self, pdu: &SolidFillPdu) {
@@ -625,6 +624,91 @@ mod tests {
         // Windows then reuses it for a 1x2 area (glyph hit, as in a Windows 11 log).
         let hit = clear.decode(&[0x03, 1, 5, 0], 1, 2).expect("a hit for an area the glyph covers");
         assert_eq!(hit, [0x10, 0x20, 0x30, 255, 0x10, 0x20, 0x30, 255]);
+    }
+
+    /// Progressive as Windows sends it: SYNC and CONTEXT once, full-quality
+    /// tiles (quality 0xFF, no progressive table), a new codec context id for
+    /// the next picture without CONTEXT.
+    #[test]
+    fn progressive_tiles_as_windows_sends_them() {
+        use ironrdp::graphics::progressive::{encode_first_pass, rgba_to_ycbcr};
+        use ironrdp::pdu::codecs::rfx::RfxRectangle;
+        use ironrdp::pdu::codecs::rfx::progressive::*;
+        use ironrdp_egfx::pdu::{Codec2Type, PixelFormat};
+
+        // Fine quantization, so the colours come back close.
+        let quant = ComponentCodecQuant { ll3: 1, hl3: 1, lh3: 1, hh3: 1, hl2: 1, lh2: 1, hh2: 1, hl1: 1, lh1: 1, hh1: 1 };
+        let encode = |rgb: [u8; 3]| -> [Vec<u8>; 3] {
+            let rgba: Vec<u8> = (0..4096).flat_map(|_| [rgb[0], rgb[1], rgb[2], 255]).collect();
+            let (mut y, mut cb, mut cr) = (vec![0i16; 4096], vec![0i16; 4096], vec![0i16; 4096]);
+            rgba_to_ycbcr(&rgba, &mut y, &mut cb, &mut cr);
+            [y, cb, cr].map(|mut c| {
+                let mut out = vec![0u8; 16384];
+                let n = encode_first_pass(&mut c, &mut out, &quant, &ComponentCodecQuant::LOSSLESS, true).unwrap();
+                out.truncate(n);
+                out
+            })
+        };
+        let stream = |context: bool, x_idx: u16, data: &[Vec<u8>; 3]| -> Vec<u8> {
+            let tile = TileFirst {
+                quant_idx_y: 0,
+                quant_idx_cb: 0,
+                quant_idx_cr: 0,
+                x_idx,
+                y_idx: 0,
+                flags: 0,
+                quality: 0xFF,
+                y_data: &data[0],
+                cb_data: &data[1],
+                cr_data: &data[2],
+                tail_data: &[],
+            };
+            let rects = vec![RfxRectangle { x: x_idx * 64, y: 0, width: 64, height: 64 }];
+            let region = ProgressiveRegion {
+                tile_size: 64,
+                rects,
+                quant_vals: vec![quant],
+                quant_prog_vals: vec![],
+                flags: FLAG_DWT_REDUCE_EXTRAPOLATE,
+                tiles: vec![ProgressiveTile::First(tile)],
+            };
+            let mut blocks = Vec::new();
+            if context {
+                blocks.push(ProgressiveBlock::Sync(ProgressiveSyncPdu));
+                blocks.push(ProgressiveBlock::Context(ProgressiveContextPdu { context_id: 0, tile_size: 64, flags: FLAG_DWT_REDUCE_EXTRAPOLATE }));
+            }
+            blocks.push(ProgressiveBlock::FrameBegin(ProgressiveFrameBeginPdu { frame_index: 0, region_count: 1 }));
+            blocks.push(ProgressiveBlock::Region(region));
+            blocks.push(ProgressiveBlock::FrameEnd(ProgressiveFrameEndPdu));
+            encode_progressive_stream(&blocks).unwrap()
+        };
+
+        let (events, mut received) = tokio::sync::mpsc::unbounded_channel();
+        let mut handler = Handler::new(events);
+        handler.sizes.insert(1, (128, 64));
+        let (red, blue) = (encode([255, 0, 0]), encode([0, 0, 255]));
+        for (context_id, context, x_idx, data) in [(7, true, 0, &red), (8, false, 1, &blue)] {
+            let bitmap_data = stream(context, x_idx, data);
+            handler.on_wire_to_surface2(&WireToSurface2Pdu {
+                surface_id: 1,
+                codec_id: Codec2Type::RemoteFxProgressive,
+                codec_context_id: context_id,
+                pixel_format: PixelFormat::XRgb,
+                bitmap_data,
+            });
+        }
+        let mut canvas = Canvas::new(128, 64);
+        canvas.apply(Event::Created { id: 1, width: 128, height: 64 });
+        canvas.apply(Event::Mapped { id: 1, x: 0, y: 0 });
+        while let Ok(event) = received.try_recv() {
+            if let Event::Note(text) = &event {
+                assert!(!text.contains("not decoded"), "{text}");
+            }
+            canvas.apply(event);
+        }
+        let near = |got: [u8; 4], want: [u8; 3]| got.iter().zip(want).all(|(&g, w)| g.abs_diff(w) <= 24);
+        assert!(near(px(&canvas, 30, 30), [255, 0, 0]), "first tile: {:?}", px(&canvas, 30, 30));
+        assert!(near(px(&canvas, 100, 30), [0, 0, 255]), "second tile: {:?}", px(&canvas, 100, 30));
     }
 
     #[test]

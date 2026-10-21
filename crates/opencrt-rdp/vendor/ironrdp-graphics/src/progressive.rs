@@ -741,15 +741,18 @@ impl TileState {
         quant_idx: [u8; 3],
         quality: u8,
         use_reduce_extrapolate: bool,
+        difference: bool,
     ) -> Result<(), RlgrError> {
         self.pass = 1;
         self.quality = quality;
         self.quant_idx = quant_idx;
         self.use_reduce_extrapolate = use_reduce_extrapolate;
-        self.is_difference = false;
+        self.is_difference = difference;
         self.prog_quant = prog_quants;
 
         for c in 0..3 {
+            // RFX_TILE_DIFFERENCE: the coefficients add to the tile's current ones.
+            let previous = self.coefficients[c];
             decode_first_pass(
                 component_data[c],
                 base_quants[c],
@@ -758,39 +761,54 @@ impl TileState {
                 &mut self.coefficients[c],
                 &mut self.sign[c],
             )?;
+            if difference {
+                for (coeff, prev) in self.coefficients[c].iter_mut().zip(previous) {
+                    *coeff = coeff.wrapping_add(prev);
+                }
+            }
         }
 
         Ok(())
     }
 
-    /// Decode an upgrade-pass tile (TILE_UPGRADE).
-    ///
-    /// Accumulates refinement data into existing coefficients.
-    ///
-    /// # Arguments
-    /// - `srl_data`: SRL-encoded streams for [Y, Cb, Cr]
-    /// - `raw_data`: raw bit streams for [Y, Cb, Cr]
-    /// - `prog_quants`: progressive quantization for this upgrade level
-    /// - `quality`: progressive quality byte for this pass
+    /// Decode an upgrade-pass tile (TILE_UPGRADE): each band gains
+    /// `previous - current` progressive bits, read from the SRL stream where a
+    /// coefficient is still zero and from the raw stream where it is not (and
+    /// always for LL3). Both streams run on across the bands of a component.
     pub fn decode_upgrade(
         &mut self,
         srl_data: [&[u8]; 3],
         raw_data: [&[u8]; 3],
+        base_quants: [&ComponentCodecQuant; 3],
         prog_quants: [ComponentCodecQuant; 3],
         quality: u8,
     ) {
-        let prev_prog_quant = self.prog_quant;
-
+        let bands = get_band_layout(self.use_reduce_extrapolate);
         for c in 0..3 {
-            decode_upgrade_pass(
-                srl_data[c],
-                raw_data[c],
-                &prev_prog_quant[c],
-                &prog_quants[c],
-                self.use_reduce_extrapolate,
-                &mut self.coefficients[c],
-                &mut self.sign[c],
-            );
+            let mut srl = SrlReader::new(srl_data[c]);
+            let mut raw = MsbBits::new(raw_data[c]);
+            for (band_idx, band) in bands.iter().enumerate() {
+                let num_bits = self.prog_quant[c].for_band(band_idx).saturating_sub(prog_quants[c].for_band(band_idx));
+                if num_bits == 0 {
+                    continue;
+                }
+                let shift = (base_quants[c].for_band(band_idx) + prog_quants[c].for_band(band_idx)).saturating_sub(1);
+                let ll3 = band_idx == 9;
+                for idx in band.offset..band.offset + band.count() {
+                    let coeff = &mut self.coefficients[c][idx];
+                    let sign = &mut self.sign[c][idx];
+                    let delta = if ll3 || *sign > 0 {
+                        i32::try_from(raw.read(num_bits)).unwrap_or(0)
+                    } else if *sign < 0 {
+                        -i32::try_from(raw.read(num_bits)).unwrap_or(0)
+                    } else {
+                        let value = srl.read(num_bits);
+                        *sign = value.signum() as i8;
+                        value
+                    };
+                    *coeff = clamp_i16(i32::from(*coeff) + (delta << shift));
+                }
+            }
         }
 
         self.prog_quant = prog_quants;
@@ -828,16 +846,17 @@ impl TileState {
             crate::dwt::decode(&mut cr_buf, &mut dwt_temp);
         }
 
-        // YCbCr to RGBA conversion
+        // YCbCr to RGBA. The coefficients carry 5 fractional bits (the
+        // dequantization shifts by quant - 1, as for RemoteFX), so the values
+        // are 32 times the pixel scale until here. MS-RDPRFX constants.
         for i in 0..64 * 64 {
-            let y = i32::from(y_buf[i]) + 128;
+            let y = (i32::from(y_buf[i]) + (128 << 5)) << 16;
             let cb = i32::from(cb_buf[i]);
             let cr = i32::from(cr_buf[i]);
 
-            // ITU-R BT.601 YCbCr to RGB conversion
-            let r = y + ((cr * 91881 + 32768) >> 16);
-            let g = y - ((cb * 22554 + cr * 46802 + 32768) >> 16);
-            let b = y + ((cb * 116130 + 32768) >> 16);
+            let r = ((y + cr * 91915) >> 16) >> 5;
+            let g = ((y - cb * 22526 - cr * 46818) >> 16) >> 5;
+            let b = ((y + cb * 115992) >> 16) >> 5;
 
             let off = i * 4;
             pixels[off] = clamp_u8(r);
@@ -952,6 +971,10 @@ pub struct DecodedTile {
     pub y_idx: u16,
     /// RGBA pixel data (64x64 = 16384 bytes).
     pub pixels: Vec<u8>,
+    /// The parts of the tile to draw, as (left, top, width, height) within
+    /// the tile: where the region's rectangles cover it. Outside them the
+    /// tile's pixels are not the desktop's.
+    pub rects: Vec<(u16, u16, u16, u16)>,
 }
 
 /// Per-axis cap on surface dimensions, in pixels.
@@ -1144,7 +1167,21 @@ impl ProgressiveDecoder {
                     prog_quant_vals,
                     use_reduce_extrapolate,
                 )?;
-                decoded_tiles.extend(tiles);
+                for mut tile in tiles {
+                    let (tx, ty) = (u32::from(tile.x_idx) * 64, u32::from(tile.y_idx) * 64);
+                    tile.rects = region
+                        .rects
+                        .iter()
+                        .filter_map(|r| {
+                            let (left, top) = (u32::from(r.x).max(tx), u32::from(r.y).max(ty));
+                            let right = (u32::from(r.x) + u32::from(r.width)).min(tx + 64);
+                            let bottom = (u32::from(r.y) + u32::from(r.height)).min(ty + 64);
+                            let part = |v: u32| u16::try_from(v).unwrap_or(0);
+                            (left < right && top < bottom).then(|| (part(left - tx), part(top - ty), part(right - left), part(bottom - top)))
+                        })
+                        .collect();
+                    decoded_tiles.push(tile);
+                }
             }
         }
 
@@ -1168,6 +1205,80 @@ impl ProgressiveDecoder {
     clippy::similar_names,
     reason = "q_y/q_cb/q_cr are standard component quant index names"
 )]
+/// RFX_TILE_DIFFERENCE (tile flags bit 0).
+const RFX_TILE_DIFFERENCE: u8 = 0x01;
+
+/// MSB-first bits of a byte slice; past the end, zeros.
+struct MsbBits<'a> {
+    data: &'a [u8],
+    pos: usize,
+}
+
+impl<'a> MsbBits<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        Self { data, pos: 0 }
+    }
+
+    fn bit(&mut self) -> u32 {
+        let bit = self.data.get(self.pos / 8).map_or(0, |b| u32::from(b >> (7 - self.pos % 8)) & 1);
+        self.pos += 1;
+        bit
+    }
+
+    fn read(&mut self, count: u8) -> u32 {
+        (0..count).fold(0, |v, _| (v << 1) | self.bit())
+    }
+}
+
+/// The SRL (simplified run-length) stream of an upgrade pass. Its state runs
+/// on across the bands of a component; after a run of fewer than 2^k zeros
+/// (a '1' bit and the run length), a non-zero value follows directly.
+struct SrlReader<'a> {
+    bits: MsbBits<'a>,
+    kp: u32,
+    zeros: u32,
+    value_next: bool,
+}
+
+impl<'a> SrlReader<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        // kp starts at 8 (k = 1): with 0, Windows' streams are read short or long.
+        Self { bits: MsbBits::new(data), kp: 8, zeros: 0, value_next: false }
+    }
+
+    fn read(&mut self, num_bits: u8) -> i32 {
+        if self.zeros > 0 {
+            self.zeros -= 1;
+            return 0;
+        }
+        let k = self.kp / 8;
+        if !self.value_next {
+            if self.bits.bit() == 0 {
+                // A full run of 2^k zeros.
+                self.zeros = (1u32 << k) - 1;
+                self.kp = (self.kp + 4).min(80);
+                return 0;
+            }
+            self.value_next = true;
+            self.zeros = self.bits.read(u8::try_from(k).unwrap_or(0));
+            if self.zeros > 0 {
+                self.zeros -= 1;
+                return 0;
+            }
+        }
+        self.value_next = false;
+        let negative = self.bits.bit() == 1;
+        self.kp = self.kp.saturating_sub(6);
+        // Magnitude 1..=2^num_bits - 1: unary, '0's ended by a '1' (none at the maximum).
+        let max = (1i32 << num_bits) - 1;
+        let mut magnitude = 1;
+        while magnitude < max && self.bits.bit() == 0 {
+            magnitude += 1;
+        }
+        if negative { -magnitude } else { magnitude }
+    }
+}
+
 /// The progressive quantization for a tile's quality byte: 0xFF is full
 /// quality (no progressive quantization), as Windows sends it with an empty
 /// table and FreeRDP reads it; anything else indexes the region's table.
@@ -1224,12 +1335,13 @@ fn decode_tile_block(
                 [tile.quant_idx_y, tile.quant_idx_cb, tile.quant_idx_cr],
                 0xFF, // full quality
                 use_reduce_extrapolate,
+                tile.flags & RFX_TILE_DIFFERENCE != 0,
             )?;
 
             let mut pixels = vec![0u8; 64 * 64 * 4];
             tile_state.reconstruct_to_rgba(&mut pixels);
 
-            Ok(vec![DecodedTile { x_idx, y_idx, pixels }])
+            Ok(vec![DecodedTile { x_idx, y_idx, pixels, rects: Vec::new() }])
         }
 
         ProgressiveTile::First(tile) => {
@@ -1260,12 +1372,13 @@ fn decode_tile_block(
                 [tile.quant_idx_y, tile.quant_idx_cb, tile.quant_idx_cr],
                 tile.quality,
                 use_reduce_extrapolate,
+                tile.flags & RFX_TILE_DIFFERENCE != 0,
             )?;
 
             let mut pixels = vec![0u8; 64 * 64 * 4];
             tile_state.reconstruct_to_rgba(&mut pixels);
 
-            Ok(vec![DecodedTile { x_idx, y_idx, pixels }])
+            Ok(vec![DecodedTile { x_idx, y_idx, pixels, rects: Vec::new() }])
         }
 
         ProgressiveTile::Upgrade(tile) => {
@@ -1282,10 +1395,18 @@ fn decode_tile_block(
             }
 
             let pq = prog_quant(prog_quant_vals, tile.quality)?;
+            let quants = [tile.quant_idx_y, tile.quant_idx_cb, tile.quant_idx_cr].map(|q| quant_vals.get(usize::from(q)));
+            let [Some(q_y), Some(q_cb), Some(q_cr)] = quants else {
+                return Err(ProgressiveDecodeError::InvalidQuantIndex {
+                    index: usize::from(tile.quant_idx_y.max(tile.quant_idx_cb).max(tile.quant_idx_cr)),
+                    table_len: quant_vals.len(),
+                });
+            };
 
             tile_state.decode_upgrade(
                 [tile.y_srl_data, tile.cb_srl_data, tile.cr_srl_data],
                 [tile.y_raw_data, tile.cb_raw_data, tile.cr_raw_data],
+                [q_y, q_cb, q_cr],
                 pq,
                 tile.quality,
             );
@@ -1293,7 +1414,7 @@ fn decode_tile_block(
             let mut pixels = vec![0u8; 64 * 64 * 4];
             tile_state.reconstruct_to_rgba(&mut pixels);
 
-            Ok(vec![DecodedTile { x_idx, y_idx, pixels }])
+            Ok(vec![DecodedTile { x_idx, y_idx, pixels, rects: Vec::new() }])
         }
     }
 }

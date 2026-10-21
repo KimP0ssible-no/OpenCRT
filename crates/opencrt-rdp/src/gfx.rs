@@ -120,19 +120,20 @@ impl Handler {
 }
 
 impl GraphicsPipelineHandler for Handler {
-    /// RDP 10 only, H.264 on, as a thin client (AVC_THIN_CLIENT: H.264 for
-    /// the whole screen rather than mixed with ClearCodec and Progressive,
-    /// which are decoded too). Not AVC444, which IronRDP does not decode.
+    /// RDP 10 only, H.264 on: Windows then sends video as AVC420, the rest as
+    /// ClearCodec, Planar and Progressive. Not as a thin client
+    /// (AVC_THIN_CLIENT): Windows then sends the whole screen as AVC444v2,
+    /// which IronRDP does not decode.
     fn capabilities(&self) -> Vec<CapabilitySet> {
         use CapabilitiesV104Flags as V104;
         use CapabilitiesV107Flags as V107;
-        let v104 = V104::SMALL_CACHE | V104::AVC_THIN_CLIENT;
+        let v104 = V104::SMALL_CACHE;
         vec![
-            CapabilitySet::V10_7 { flags: V107::SMALL_CACHE | V107::AVC_THIN_CLIENT | V107::SCALEDMAP_DISABLE },
+            CapabilitySet::V10_7 { flags: V107::SMALL_CACHE | V107::SCALEDMAP_DISABLE },
             CapabilitySet::V10_6 { flags: v104 },
             CapabilitySet::V10_5 { flags: v104 },
             CapabilitySet::V10_4 { flags: v104 },
-            CapabilitySet::V10_3 { flags: CapabilitiesV103Flags::AVC_THIN_CLIENT },
+            CapabilitySet::V10_3 { flags: CapabilitiesV103Flags::empty() },
             CapabilitySet::V10_2 { flags: CapabilitiesV10Flags::SMALL_CACHE },
             CapabilitySet::V10 { flags: CapabilitiesV10Flags::SMALL_CACHE },
         ]

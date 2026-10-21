@@ -47,6 +47,8 @@ pub enum Event {
     ToCache { id: u16, at: Area, slot: u16 },
     FromCache { slot: u16, id: u16, points: Vec<(u32, u32)> },
     Evict(u16),
+    /// The end of a frame: what came since is a complete picture to show.
+    FrameEnd,
     /// For the connection log.
     Note(String),
 }
@@ -152,6 +154,10 @@ impl GraphicsPipelineHandler for Handler {
         self.progressive.reset();
         self.sizes.clear();
         self.send(Event::Reset(width, height));
+    }
+
+    fn on_frame_complete(&mut self, _frame_id: u32) {
+        self.send(Event::FrameEnd);
     }
 
     fn on_surface_created(&mut self, surface: &Surface) {
@@ -491,7 +497,7 @@ impl Canvas {
                 self.cache.remove(&slot);
                 false
             }
-            Event::Reset(..) | Event::Note(_) => false,
+            Event::Reset(..) | Event::FrameEnd | Event::Note(_) => false,
         }
     }
 }
@@ -594,15 +600,19 @@ mod tests {
         exchange(&mut client, &mut server, Vec::new());
 
         let mut canvas = None;
+        // The session shows the canvas at frame ends: one must follow the pictures.
+        let mut shown = false;
         while let Ok(event) = received.try_recv() {
             match event {
                 Event::Reset(width, height) => canvas = Some(Canvas::new(width, height)),
                 Event::Note(_) => {}
+                Event::FrameEnd => shown = true,
                 event => {
-                    canvas.as_mut().expect("reset first").apply(event);
+                    shown &= !canvas.as_mut().expect("reset first").apply(event);
                 }
             }
         }
+        assert!(shown, "a frame end after the last picture");
         let canvas = canvas.expect("the server reset the graphics");
         assert_eq!((canvas.width(), canvas.height()), (64, 32));
         // H.264 is lossy: close, not exact.

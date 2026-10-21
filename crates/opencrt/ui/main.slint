@@ -1485,6 +1485,7 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <bool> deccolm;
     in-out property <string> rdp-width;
     in-out property <string> rdp-height;
+    in-out property <bool> rdp-scale;
     in-out property <int> rdp-speed;
     in-out property <bool> rdp-sound;
     in-out property <string> rdp-share;
@@ -1922,8 +1923,13 @@ component SessionOptionsDialog inherits DialogFrame {
                             input-type: number;
                         }
                     }
+                    CheckBox {
+                        text: "Scale to window";
+                        checked <=> root.rdp-scale;
+                        enabled: root.protocol == 5 && root.rdp-width != "" && root.rdp-height != "";
+                    }
                     Text {
-                        text: "Blank: the remote desktop follows the tab's size. A fixed size (in pixels) stays the same whatever the window does: shown whole, scaled down when the tab is smaller.";
+                        text: "Blank: the remote desktop follows the tab's size. A fixed size (in pixels) stays the same whatever the window does: shown whole, scaled down when the tab is smaller, or with Scale to window stretched to fill the tab.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
                         font-size: 11px;
@@ -3447,6 +3453,7 @@ export component MainWindow inherits Window {
     in-out property <bool> so-deccolm;
     in-out property <string> so-rdp-width;
     in-out property <string> so-rdp-height;
+    in-out property <bool> so-rdp-scale;
     in-out property <int> so-rdp-speed;
     in-out property <bool> so-rdp-sound;
     in-out property <string> so-rdp-share;
@@ -4909,6 +4916,7 @@ export component MainWindow inherits Window {
         deccolm <=> root.so-deccolm;
         rdp-width <=> root.so-rdp-width;
         rdp-height <=> root.so-rdp-height;
+        rdp-scale <=> root.so-rdp-scale;
         rdp-speed <=> root.so-rdp-speed;
         rdp-sound <=> root.so-rdp-sound;
         rdp-share <=> root.so-rdp-share;

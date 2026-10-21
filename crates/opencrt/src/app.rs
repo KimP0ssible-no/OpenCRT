@@ -590,6 +590,8 @@ struct Tab {
     deccolm: Option<usize>,
     /// RDP: the session's fixed desktop size, instead of following the pane.
     rdp_fixed: Option<(u16, u16)>,
+    /// RDP: stretch the fixed desktop to fill the pane.
+    rdp_scale: bool,
     /// The host speaks Latin-1: output is converted to UTF-8, input back.
     /// Converts traffic for a non-UTF-8 session.
     codec: Option<crate::codec::Codec>,
@@ -729,6 +731,7 @@ impl Tab {
             allow_deccolm: true,
             deccolm: None,
             rdp_fixed: None,
+            rdp_scale: false,
             codec: None,
             show_controls: false,
             fresh_output: false,
@@ -768,6 +771,7 @@ impl Tab {
         self.fixed_size = (size(s.columns), size(s.rows));
         self.allow_deccolm = s.allow_deccolm;
         self.rdp_fixed = (s.rdp_width > 0 && s.rdp_height > 0).then(|| rdp_size((s.rdp_width.into(), s.rdp_height.into())));
+        self.rdp_scale = s.rdp_scale;
         self.codec = crate::codec::Codec::new(s.encoding_label());
         self.log_timestamps = s.log_timestamps;
         self.color = s.tab_color.clone();
@@ -1559,9 +1563,10 @@ struct Pane {
     tab: usize,
     tile: [f32; 4],
     image: [f32; 4],
-    /// Image pixels per terminal pixel: below 1 when a fixed-size terminal is
-    /// shrunk to fit (`Tab::size_override`).
-    zoom: f32,
+    /// Image pixels per terminal pixel (across, down): below 1 when a
+    /// fixed-size terminal is shrunk to fit (`Tab::size_override`); either way
+    /// for an RDP desktop stretched to fill the pane.
+    zoom: [f32; 2],
 }
 
 /// Height of a tile's title bar, in logical pixels.
@@ -2738,15 +2743,15 @@ impl App {
             Layout::Tabs if group_count(&self.tabs) > 1 => group_rects(group_count(&self.tabs), w, h)
                 .into_iter()
                 .enumerate()
-                .filter_map(|(g, r)| Some(Pane { tab: shown_in(&self.tabs, g)?, tile: r, image: r, zoom: 1.0 }))
+                .filter_map(|(g, r)| Some(Pane { tab: shown_in(&self.tabs, g)?, tile: r, image: r, zoom: [1.0; 2] }))
                 .collect(),
-            Layout::Tabs => vec![Pane { tab: self.active, tile: full, image: full, zoom: 1.0 }],
+            Layout::Tabs => vec![Pane { tab: self.active, tile: full, image: full, zoom: [1.0; 2] }],
             Layout::Columns | Layout::Rows => tile_rects(self.tabs.len(), w, h, self.layout == Layout::Columns)
                 .into_iter()
                 .enumerate()
                 .map(|(tab, t)| {
                     let image = [t[0] + 1.0, t[1] + TILE_TITLE, (t[2] - 2.0).max(1.0), (t[3] - TILE_TITLE - 1.0).max(1.0)];
-                    Pane { tab, tile: t, image, zoom: 1.0 }
+                    Pane { tab, tile: t, image, zoom: [1.0; 2] }
                 })
                 .collect(),
         }
@@ -2766,7 +2771,7 @@ impl App {
             }
         }
         let pane = self.panes.iter().find(|p| p.tab == self.active)?;
-        Some(((x - pane.image[0]) / pane.zoom, (y - pane.image[1]) / pane.zoom))
+        Some(((x - pane.image[0]) / pane.zoom[0], (y - pane.image[1]) / pane.zoom[1]))
     }
 
     fn on_pointer(&mut self, kind: i32, button: i32, x: f32, y: f32, mods: Mods) {
@@ -3195,13 +3200,12 @@ impl App {
             };
             let mut pane = *pane;
             if fixed.is_some() || rdp_fixed.is_some() {
-                let mut zoom = (fit.0 as f32 / pixels.0 as f32).min(fit.1 as f32 / pixels.1 as f32);
-                if rdp_fixed.is_some() {
-                    zoom = zoom.min(1.0);
-                }
-                let (w, h) = (pixels.0 as f32 * zoom / scale, pixels.1 as f32 * zoom / scale);
-                pane.image = [pane.image[0] + (pane.image[2] - w) / 2.0, pane.image[1] + (pane.image[3] - h) / 2.0, w, h];
-                pane.zoom = zoom;
+                let how = match rdp_fixed {
+                    Some(_) if tab.rdp_scale => Fit::Stretch,
+                    Some(_) => Fit::ShrinkOnly,
+                    None => Fit::Whole,
+                };
+                (pane.image, pane.zoom) = fit_image(pane.image, fit, pixels, scale, how);
                 fitted.push((k, pane));
             }
             if tab.terminal.size() != (cols, lines) {
@@ -3969,6 +3973,7 @@ impl App {
         ui.set_so_deccolm(session.allow_deccolm);
         ui.set_so_rdp_width(size(session.rdp_width));
         ui.set_so_rdp_height(size(session.rdp_height));
+        ui.set_so_rdp_scale(session.rdp_scale);
         ui.set_so_rdp_speed(session.rdp_speed.min(2).into());
         ui.set_so_rdp_sound(session.rdp_sound);
         ui.set_so_rdp_share(session.rdp_share.clone().into());
@@ -4063,6 +4068,7 @@ impl App {
             allow_deccolm: ui.get_so_deccolm(),
             rdp_width: ui.get_so_rdp_width().trim().parse().unwrap_or(0),
             rdp_height: ui.get_so_rdp_height().trim().parse().unwrap_or(0),
+            rdp_scale: ui.get_so_rdp_scale(),
             rdp_speed: ui.get_so_rdp_speed().clamp(0, 2) as u8,
             rdp_sound: ui.get_so_rdp_sound(),
             rdp_share: ui.get_so_rdp_share().trim().to_string(),
@@ -6162,6 +6168,31 @@ fn picture_hash(rgba: &[u8]) -> u64 {
 }
 
 /// What is wrong with a fixed RDP desktop size as typed, if anything.
+/// How a fixed-size picture sits in its pane.
+#[derive(Clone, Copy)]
+enum Fit {
+    /// Shown whole, scaled up or down (a fixed-size terminal).
+    Whole,
+    /// Shown whole, scaled down but never up (an RDP desktop).
+    ShrinkOnly,
+    /// Stretched to fill the pane each way (an RDP desktop, Scale to window).
+    Stretch,
+}
+
+/// Where a `pixels`-sized picture goes in a pane (`image`, logical units,
+/// `fit` physical pixels across), and its zoom across and down.
+fn fit_image(image: [f32; 4], fit: (usize, usize), pixels: (usize, usize), scale: f32, how: Fit) -> ([f32; 4], [f32; 2]) {
+    let across = fit.0 as f32 / pixels.0 as f32;
+    let down = fit.1 as f32 / pixels.1 as f32;
+    let zoom = match how {
+        Fit::Stretch => return (image, [across, down]),
+        Fit::Whole => across.min(down),
+        Fit::ShrinkOnly => across.min(down).min(1.0),
+    };
+    let (w, h) = (pixels.0 as f32 * zoom / scale, pixels.1 as f32 * zoom / scale);
+    ([image[0] + (image[2] - w) / 2.0, image[1] + (image[3] - h) / 2.0, w, h], [zoom; 2])
+}
+
 fn rdp_size_problem(width: &str, height: &str) -> Option<&'static str> {
     let ok = |v: &str| v.parse::<u16>().is_ok_and(|n| (200..=8192).contains(&n));
     match (width.is_empty(), height.is_empty()) {
@@ -7368,6 +7399,27 @@ mod tests {
         assert!(rdp_size_problem("wide", "1080").is_some());
         // An odd width is made even, as servers want.
         assert_eq!(rdp_size((1365, 768)), (1364, 768));
+    }
+
+    #[test]
+    fn fixed_rdp_desktop_in_its_pane() {
+        // A 1000x500 logical pane at scale 2 (2000x1000 physical), a 1280x1024 desktop.
+        let pane = [10.0, 20.0, 1000.0, 500.0];
+        let (fit, desktop) = ((2000, 1000), (1280, 1024));
+        // Shown whole, never enlarged: 1280x1024 needs a zoom of 1000/1024, centred.
+        let (image, zoom) = fit_image(pane, fit, desktop, 2.0, Fit::ShrinkOnly);
+        assert_eq!(zoom, [1000.0 / 1024.0; 2]);
+        assert_eq!((image[1], image[3]), (20.0, 500.0));
+        assert!(image[0] > 10.0 && image[2] < 1000.0, "space left and right: {image:?}");
+        // Scale to window: the whole pane, each way on its own.
+        let (image, zoom) = fit_image(pane, fit, desktop, 2.0, Fit::Stretch);
+        assert_eq!((image, zoom), (pane, [2000.0 / 1280.0, 1000.0 / 1024.0]));
+        // The pane's bottom right corner (logical) is the desktop's (physical).
+        let corner = |zoom: [f32; 2]| ((1000.0 / zoom[0]) * 2.0, (500.0 / zoom[1]) * 2.0);
+        assert_eq!(corner(zoom), (1280.0, 1024.0));
+        // A small desktop is enlarged only when stretched.
+        assert_eq!(fit_image(pane, fit, (800, 600), 2.0, Fit::ShrinkOnly).1, [1.0; 2]);
+        assert!(fit_image(pane, fit, (800, 600), 2.0, Fit::Stretch).1[0] > 1.0);
     }
 
     #[test]

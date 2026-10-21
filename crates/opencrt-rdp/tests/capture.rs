@@ -15,6 +15,8 @@ fn capture() {
     let get = |key: &str| env.lines().find_map(|l| l.strip_prefix(&format!("{key}="))).unwrap_or("").trim().to_string();
     let dir = std::env::var("OPENCRT_RDP_DUMP").expect("OPENCRT_RDP_DUMP");
     let seconds: u64 = std::env::var("CAPTURE_SECONDS").ok().and_then(|s| s.parse().ok()).unwrap_or(15);
+    let size = std::env::var("CAPTURE_SIZE").unwrap_or_else(|_| "1428x1257".into());
+    let (width, height): (u16, u16) = size.split_once('x').map(|(w, h)| (w.parse().unwrap(), h.parse().unwrap())).unwrap();
     let mut command = match std::env::var("CAPTURE_STRACE") {
         Ok(out) => {
             let mut c = Command::new("strace");
@@ -36,8 +38,8 @@ fn capture() {
         user,
         domain,
         password: get("RDP_PASSWORD"),
-        width: 1428,
-        height: 1257,
+        width,
+        height,
         speed: 1,
         sound: false,
         share: String::new(),
@@ -75,7 +77,7 @@ fn capture() {
             }
             FromHelper::Certificate { .. } => {
                 ToHelper::Trust(true).write(&mut stdin).unwrap();
-                ToHelper::Resize { width: 1428, height: 1257 }.write(&mut stdin).unwrap();
+                ToHelper::Resize { width, height }.write(&mut stdin).unwrap();
             }
             FromHelper::Error(e) => panic!("{e}"),
             _ => {}

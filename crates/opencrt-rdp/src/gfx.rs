@@ -255,6 +255,12 @@ impl GraphicsPipelineHandler for Handler {
         let at = area(&pdu.destination_rectangle);
         let (w, h) = (at.2 as u16, at.3 as u16);
         self.saw(format!("{:?}", pdu.codec_id), at);
+        if let Some((dir, n)) = self.dump.as_mut()
+            && pdu.codec_id == Codec1Type::ClearCodec
+        {
+            *n += 1;
+            let _ = std::fs::write(dir.join(format!("{n:06}-{}-{w}x{h}.clear", pdu.surface_id)), &pdu.bitmap_data);
+        }
         let rgba = match pdu.codec_id {
             Codec1Type::ClearCodec => match self.clear.decode(&pdu.bitmap_data, w, h) {
                 Ok(mut rgba) => {
@@ -687,6 +693,38 @@ mod tests {
         assert_eq!([px(&canvas, 1, 1), px(&canvas, 2, 0), px(&canvas, 3, 1)], [[0x30, 0x20, 0x10, 255], RED, RED]);
     }
 
+    /// An NSCodec subcodec (IronRDP 0.9 drew nothing): a luma plane with a long
+    /// run (0xFF, then a u32 that is the length itself) and its last four
+    /// bytes raw, raw chroma, no alpha plane.
+    #[test]
+    fn clearcodec_nscodec_subcodec() {
+        let luma = [0x40, 0x40, 0xFF, 10, 0, 0, 0, 0x50, 0x60, 0x80, 0x80, 0x80, 0x80]; // 16 bytes once decoded
+        let mut ns = Vec::new();
+        for count in [luma.len() as u32, 16, 16, 0] {
+            ns.extend(count.to_le_bytes());
+        }
+        ns.extend([1, 0, 0, 0]); // colour loss 1, no subsampling
+        ns.extend(luma);
+        ns.extend([0; 32]); // Co, Cg
+        let mut sub = Vec::new();
+        for v in [0u16, 0, 4, 4] {
+            sub.extend(v.to_le_bytes());
+        }
+        sub.extend((ns.len() as u32).to_le_bytes());
+        sub.push(1); // NSCodec
+        sub.extend(ns);
+        let mut stream = vec![0u8, 0];
+        for count in [0, 0, sub.len() as u32] {
+            stream.extend(count.to_le_bytes());
+        }
+        stream.extend(&sub);
+        let bgra = ClearCodecDecoder::new().decode(&stream, 4, 4).expect("decodes");
+        let px: Vec<[u8; 4]> = bgra.as_chunks::<4>().0.to_vec();
+        let grey = |v: u8| [v, v, v, 255];
+        let want: Vec<[u8; 4]> = [0x40; 10].into_iter().chain([0x50, 0x60, 0x80, 0x80, 0x80, 0x80]).map(grey).collect();
+        assert_eq!(px, want);
+    }
+
     #[test]
     fn clearcodec_glyph_hit_for_a_smaller_area() {
         // Glyph 5: 2x2 of one colour (a residual run of 4).
@@ -786,6 +824,57 @@ mod tests {
         let near = |got: [u8; 4], want: [u8; 3]| got.iter().zip(want).all(|(&g, w)| g.abs_diff(w) <= 24);
         assert!(near(px(&canvas, 30, 30), [255, 0, 0]), "first tile: {:?}", px(&canvas, 30, 30));
         assert!(near(px(&canvas, 100, 30), [0, 0, 255]), "second tile: {:?}", px(&canvas, 100, 30));
+    }
+
+    /// Not a test: decodes $REPLAY_DIR/*.clear in order and compares each with
+    /// its .clear.ref (FreeRDP's decode; 01 02 03 04 where it drew nothing).
+    #[test]
+    #[ignore]
+    fn replay_clear() {
+        use ironrdp_egfx::pdu::{PixelFormat, WireToSurface1Pdu};
+        let dir = std::path::PathBuf::from(std::env::var("REPLAY_DIR").unwrap());
+        let mut names: Vec<String> = std::fs::read_dir(&dir).unwrap().filter_map(|e| e.ok()?.file_name().into_string().ok()).filter(|n| n.ends_with(".clear")).collect();
+        names.sort();
+        let (events, mut received) = tokio::sync::mpsc::unbounded_channel();
+        let mut handler = Handler::new(events);
+        let (mut bad, mut total) = (0, 0);
+        for name in &names {
+            let parts: Vec<&str> = name.trim_end_matches(".clear").split('-').collect();
+            let (w, h) = parts[2].split_once('x').unwrap();
+            let (w, h): (u16, u16) = (w.parse().unwrap(), h.parse().unwrap());
+            let data = std::fs::read(dir.join(name)).unwrap();
+            let want = std::fs::read(dir.join(format!("{name}.ref"))).unwrap();
+            handler.on_unhandled_pdu(&GfxPdu::WireToSurface1(WireToSurface1Pdu {
+                surface_id: 0,
+                codec_id: Codec1Type::ClearCodec,
+                pixel_format: PixelFormat::XRgb,
+                destination_rectangle: ExclusiveRectangle { left: 0, top: 0, right: w, bottom: h },
+                bitmap_data: data.clone(),
+            }));
+            let mut got = None;
+            while let Ok(event) = received.try_recv() {
+                match event {
+                    Event::Partial { rgba, .. } | Event::Pixels { rgba, .. } => got = Some(rgba),
+                    Event::Note(t) => eprintln!("{name}: {t}"),
+                    _ => {}
+                }
+            }
+            total += 1;
+            let Some(got) = got else {
+                bad += 1;
+                eprintln!("{name}: not decoded");
+                continue;
+            };
+            let wrong = want.chunks(4).zip(got.chunks(4)).filter(|(r, o)| if *r == [1, 2, 3, 4] { o[3] != 0 } else { r[..3] != o[..3] }).count();
+            if wrong > 0 {
+                bad += 1;
+                if bad <= 12 {
+                    let head: Vec<String> = data.iter().take(14).map(|b| format!("{b:02x}")).collect();
+                    eprintln!("{name}: {wrong} of {} pixels differ; starts {}", want.len() / 4, head.join(" "));
+                }
+            }
+        }
+        eprintln!("{bad} of {total} pictures differ");
     }
 
     /// Not a test: replays $REPLAY_DIR/*.prog (from OPENCRT_RDP_DUMP) to $REPLAY_DIR/ours.ppm.

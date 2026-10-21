@@ -47,6 +47,12 @@ pub enum Event {
     ToCache { id: u16, at: Area, slot: u16 },
     FromCache { slot: u16, id: u16, points: Vec<(u32, u32)> },
     Evict(u16),
+    /// A ClearCodec glyph (`index`): the surface's `at` as it is now, kept
+    /// to be drawn again whole, background included.
+    ToGlyph { id: u16, at: Area, index: u16 },
+    /// A kept glyph drawn at `at`'s place; a smaller area takes its first
+    /// width x height pixels (as Windows and FreeRDP use it).
+    FromGlyph { id: u16, at: Area, index: u16 },
     /// The end of a frame: what came since is a complete picture to show.
     FrameEnd,
     /// For the connection log.
@@ -267,6 +273,13 @@ impl GraphicsPipelineHandler for Handler {
             *n += 1;
             let _ = std::fs::write(dir.join(format!("{n:06}-{}-{w}x{h}.clear", pdu.surface_id)), &pdu.bitmap_data);
         }
+        // ClearCodec glyphs: flags (index 0x01, hit 0x02), sequence, index.
+        let glyph = (pdu.codec_id == Codec1Type::ClearCodec && pdu.bitmap_data.len() >= 4 && pdu.bitmap_data[0] & 0x01 != 0)
+            .then(|| (pdu.bitmap_data[0] & 0x02 != 0, u16::from_le_bytes([pdu.bitmap_data[2], pdu.bitmap_data[3]])));
+        if let Some((true, index)) = glyph {
+            self.send(Event::FromGlyph { id: pdu.surface_id, at, index });
+            return;
+        }
         let rgba = match pdu.codec_id {
             Codec1Type::ClearCodec => match self.clear.decode(&pdu.bitmap_data, w, h) {
                 Ok(mut rgba) => {
@@ -298,7 +311,14 @@ impl GraphicsPipelineHandler for Handler {
             }
         };
         match rgba.filter(|px: &Vec<u8>| px.len() == usize::from(w) * usize::from(h) * 4) {
-            Some(rgba) if pdu.codec_id == Codec1Type::ClearCodec => self.send(Event::Partial { id: pdu.surface_id, at, rgba }),
+            Some(rgba) if pdu.codec_id == Codec1Type::ClearCodec => {
+                self.send(Event::Partial { id: pdu.surface_id, at, rgba });
+                if let Some((false, index)) = glyph
+                    && at.2 * at.3 <= 1024
+                {
+                    self.send(Event::ToGlyph { id: pdu.surface_id, at, index });
+                }
+            }
             Some(rgba) => self.send(Event::Pixels { id: pdu.surface_id, at, rgba }),
             None => self.send(Event::Note(format!("graphics: a {:?} picture could not be decoded", pdu.codec_id))),
         }
@@ -374,19 +394,20 @@ pub struct Canvas {
     output: Pixels,
     layers: HashMap<u16, Layer>,
     cache: HashMap<u16, Pixels>,
+    glyphs: HashMap<u16, Pixels>,
 }
 
 impl Canvas {
     pub fn new(width: u32, height: u32) -> Self {
         let mut output = Pixels::new(width, height);
         output.rgba.as_chunks_mut::<4>().0.fill([0, 0, 0, 255]);
-        Canvas { output, layers: HashMap::new(), cache: HashMap::new() }
+        Canvas { output, layers: HashMap::new(), cache: HashMap::new(), glyphs: HashMap::new() }
     }
 
     /// A new desktop after a graphics reset: the surfaces are gone, the
-    /// cache stays (the server keeps drawing from it).
+    /// cache and the glyphs stay (the server keeps drawing from them).
     pub fn reset(self, width: u32, height: u32) -> Self {
-        Canvas { cache: self.cache, ..Canvas::new(width, height) }
+        Canvas { cache: self.cache, glyphs: self.glyphs, ..Canvas::new(width, height) }
     }
 
     pub fn width(&self) -> u32 {
@@ -472,6 +493,24 @@ impl Canvas {
                 for (x, y) in points {
                     self.show(to, (x, y, part.width, part.height));
                 }
+                true
+            }
+            Event::ToGlyph { id, at, index } => {
+                if let Some(layer) = self.layers.get(&id) {
+                    self.glyphs.insert(index, layer.pixels.cut(at));
+                }
+                false
+            }
+            Event::FromGlyph { id, at, index } => {
+                let (Some(glyph), Some(layer)) = (self.glyphs.get(&index), self.layers.get_mut(&id)) else {
+                    return false;
+                };
+                let bytes = at.2 as usize * at.3 as usize * 4;
+                let Some(rgba) = glyph.rgba.get(..bytes) else {
+                    return false;
+                };
+                layer.pixels.paste(&Pixels { width: at.2, height: at.3, rgba: rgba.to_vec() }, (0, 0), (at.0, at.1), (at.2, at.3));
+                self.show(id, at);
                 true
             }
             Event::ToCache { id, at, slot } => {
@@ -735,6 +774,54 @@ mod tests {
         assert_eq!(px, want);
     }
 
+    /// A reused ClearCodec glyph brings the background it was drawn on, as
+    /// Windows expects: it keeps the surface's pixels, not only those drawn.
+    #[test]
+    fn clearcodec_glyphs_keep_their_background() {
+        use ironrdp_egfx::pdu::{PixelFormat, WireToSurface1Pdu};
+        let picture = |flags: u8, at: (u16, u16), data: Vec<u8>| {
+            GfxPdu::WireToSurface1(WireToSurface1Pdu {
+                surface_id: 1,
+                codec_id: Codec1Type::ClearCodec,
+                pixel_format: PixelFormat::XRgb,
+                destination_rectangle: ExclusiveRectangle { left: at.0, top: at.1, right: at.0 + 2, bottom: at.1 + 2 },
+                bitmap_data: [vec![flags, 0, 7, 0], data].concat(), // glyph 7
+            })
+        };
+        // Glyph 7: a 2x2 area of which only the top left pixel is drawn (green).
+        let rlex = [1, 0x00, 0xFF, 0x00, 0x00, 0];
+        let mut sub = Vec::new();
+        for v in [0u16, 0, 1, 1] {
+            sub.extend(v.to_le_bytes());
+        }
+        sub.extend((rlex.len() as u32).to_le_bytes());
+        sub.push(2);
+        sub.extend(rlex);
+        let mut body = Vec::new();
+        for count in [0, 0, sub.len() as u32] {
+            body.extend(count.to_le_bytes());
+        }
+        body.extend(&sub);
+        let (events, mut received) = tokio::sync::mpsc::unbounded_channel();
+        let mut handler = Handler::new(events);
+        let mut canvas = Canvas::new(4, 2);
+        canvas.apply(Event::Created { id: 1, width: 4, height: 2 });
+        canvas.apply(Event::Mapped { id: 1, x: 0, y: 0 });
+        canvas.apply(Event::Fill { id: 1, rgba: RED, areas: vec![(0, 0, 4, 2)] });
+        handler.on_unhandled_pdu(&picture(0x01, (0, 0), body));
+        while let Ok(event) = received.try_recv() {
+            canvas.apply(event);
+        }
+        // The surface turns blue; the glyph is drawn again on the right.
+        canvas.apply(Event::Fill { id: 1, rgba: BLUE, areas: vec![(0, 0, 4, 2)] });
+        handler.on_unhandled_pdu(&picture(0x03, (2, 0), Vec::new()));
+        while let Ok(event) = received.try_recv() {
+            canvas.apply(event);
+        }
+        let green = [0, 0xFF, 0, 255];
+        assert_eq!([px(&canvas, 2, 0), px(&canvas, 3, 0), px(&canvas, 3, 1), px(&canvas, 0, 0)], [green, RED, RED, BLUE]);
+    }
+
     #[test]
     fn clearcodec_glyph_hit_for_a_smaller_area() {
         // Glyph 5: 2x2 of one colour (a residual run of 4).
@@ -871,8 +958,10 @@ mod tests {
             }
             total += 1;
             let Some(got) = got else {
-                bad += 1;
-                eprintln!("{name}: not decoded");
+                if data[0] & 0x02 == 0 {
+                    bad += 1;
+                    eprintln!("{name}: not decoded");
+                }
                 continue;
             };
             let wrong = want.chunks(4).zip(got.chunks(4)).filter(|(r, o)| if *r == [1, 2, 3, 4] { o[3] != 0 } else { r[..3] != o[..3] }).count();

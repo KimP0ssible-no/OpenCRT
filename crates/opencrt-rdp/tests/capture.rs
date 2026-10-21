@@ -85,6 +85,12 @@ fn capture() {
             script.push((t, button(down)));
         }
     }
+    // CAPTURE_CLICK: a left click at x,y after 2 s (e.g. to pick a tab).
+    if let Ok(at) = std::env::var("CAPTURE_CLICK") {
+        let (x, y) = at.split_once(',').map(|(x, y)| (x.parse::<u16>().unwrap(), y.parse::<u16>().unwrap())).unwrap();
+        let button = |down| ToHelper::MouseButton { button: opencrt_rdp_proto::BUTTON_LEFT, down };
+        script.extend([(2000, ToHelper::MouseMove { x, y }), (2050, button(true)), (2100, button(false))]);
+    }
     // CAPTURE_TIDY: Escape, then Win+Up (maximise the foreground window).
     if std::env::var_os("CAPTURE_TIDY").is_some() {
         let key = |scancode, extended, down| ToHelper::Key { scancode, extended, down };

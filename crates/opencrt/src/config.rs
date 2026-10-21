@@ -276,6 +276,8 @@ pub struct Session {
     /// RDP: a fixed desktop size (pixels); 0 x 0 follows the tab's size.
     pub rdp_width: u16,
     pub rdp_height: u16,
+    /// RDP: a fixed desktop size is stretched to fill the tab instead of shown whole.
+    pub rdp_scale: bool,
     /// RDP: 0 best appearance, 1 balanced (no wallpaper or animations), 2 fastest.
     pub rdp_speed: u8,
     /// RDP: play the remote computer's sound here.
@@ -356,6 +358,7 @@ impl Default for Session {
             allow_deccolm: true,
             rdp_width: 0,
             rdp_height: 0,
+            rdp_scale: false,
             rdp_speed: 1,
             rdp_sound: true,
             rdp_share: String::new(),

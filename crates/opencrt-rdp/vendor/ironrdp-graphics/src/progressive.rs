@@ -971,10 +971,6 @@ pub struct DecodedTile {
     pub y_idx: u16,
     /// RGBA pixel data (64x64 = 16384 bytes).
     pub pixels: Vec<u8>,
-    /// The parts of the tile to draw, as (left, top, width, height) within
-    /// the tile: where the region's rectangles cover it. Outside them the
-    /// tile's pixels are not the desktop's.
-    pub rects: Vec<(u16, u16, u16, u16)>,
 }
 
 /// Per-axis cap on surface dimensions, in pixels.
@@ -1167,21 +1163,7 @@ impl ProgressiveDecoder {
                     prog_quant_vals,
                     use_reduce_extrapolate,
                 )?;
-                for mut tile in tiles {
-                    let (tx, ty) = (u32::from(tile.x_idx) * 64, u32::from(tile.y_idx) * 64);
-                    tile.rects = region
-                        .rects
-                        .iter()
-                        .filter_map(|r| {
-                            let (left, top) = (u32::from(r.x).max(tx), u32::from(r.y).max(ty));
-                            let right = (u32::from(r.x) + u32::from(r.width)).min(tx + 64);
-                            let bottom = (u32::from(r.y) + u32::from(r.height)).min(ty + 64);
-                            let part = |v: u32| u16::try_from(v).unwrap_or(0);
-                            (left < right && top < bottom).then(|| (part(left - tx), part(top - ty), part(right - left), part(bottom - top)))
-                        })
-                        .collect();
-                    decoded_tiles.push(tile);
-                }
+                decoded_tiles.extend(tiles);
             }
         }
 
@@ -1341,7 +1323,7 @@ fn decode_tile_block(
             let mut pixels = vec![0u8; 64 * 64 * 4];
             tile_state.reconstruct_to_rgba(&mut pixels);
 
-            Ok(vec![DecodedTile { x_idx, y_idx, pixels, rects: Vec::new() }])
+            Ok(vec![DecodedTile { x_idx, y_idx, pixels }])
         }
 
         ProgressiveTile::First(tile) => {
@@ -1378,7 +1360,7 @@ fn decode_tile_block(
             let mut pixels = vec![0u8; 64 * 64 * 4];
             tile_state.reconstruct_to_rgba(&mut pixels);
 
-            Ok(vec![DecodedTile { x_idx, y_idx, pixels, rects: Vec::new() }])
+            Ok(vec![DecodedTile { x_idx, y_idx, pixels }])
         }
 
         ProgressiveTile::Upgrade(tile) => {
@@ -1414,7 +1396,7 @@ fn decode_tile_block(
             let mut pixels = vec![0u8; 64 * 64 * 4];
             tile_state.reconstruct_to_rgba(&mut pixels);
 
-            Ok(vec![DecodedTile { x_idx, y_idx, pixels, rects: Vec::new() }])
+            Ok(vec![DecodedTile { x_idx, y_idx, pixels }])
         }
     }
 }

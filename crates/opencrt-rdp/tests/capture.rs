@@ -80,7 +80,11 @@ fn capture() {
         let done = 5300 + steps * 50;
         script.push((done, pos(x, y)));
         script.push((done + 100, button(false)));
-        for (t, down) in [(done + 800, true), (done + 880, false), (done + 960, true), (done + 1040, false)] {
+        let mut clicks = vec![(done + 800, true), (done + 880, false), (done + 960, true), (done + 1040, false)];
+        if std::env::var_os("CAPTURE_DRAG_STAY").is_some() {
+            clicks.clear();
+        }
+        for (t, down) in clicks {
             script.push((t, pos(x, y)));
             script.push((t, button(down)));
         }
@@ -102,6 +106,18 @@ fn capture() {
             (3600, key(0x48, true, false)),
             (3650, key(0x5B, true, false)),
         ]);
+    }
+    // CAPTURE_MAXRESTORE: Win+Up at 3 s, Win+Down at 6 s.
+    if std::env::var_os("CAPTURE_MAXRESTORE").is_some() {
+        let key = |scancode, extended, down| ToHelper::Key { scancode, extended, down };
+        for (t, arrow) in [(3000, 0x48), (6000, 0x50)] {
+            script.extend([(t, key(0x5B, true, true)), (t + 50, key(arrow, true, true)), (t + 100, key(arrow, true, false)), (t + 150, key(0x5B, true, false))]);
+        }
+    }
+    // CAPTURE_RESTORE: Win+Down (un-maximise the foreground window).
+    if std::env::var_os("CAPTURE_RESTORE").is_some() {
+        let key = |scancode, extended, down| ToHelper::Key { scancode, extended, down };
+        script.extend([(3000, key(0x5B, true, true)), (3050, key(0x50, true, true)), (3100, key(0x50, true, false)), (3150, key(0x5B, true, false))]);
     }
     script.sort_by_key(|(t, _)| *t);
     let mut script = script.into_iter().peekable();
@@ -147,7 +163,9 @@ fn capture() {
             }
             FromHelper::Certificate { .. } => {
                 ToHelper::Trust(true).write(&mut stdin).unwrap();
-                ToHelper::Resize { width, height }.write(&mut stdin).unwrap();
+                if std::env::var_os("CAPTURE_NORESIZE").is_none() {
+                    ToHelper::Resize { width, height }.write(&mut stdin).unwrap();
+                }
             }
             FromHelper::Error(e) => panic!("{e}"),
             _ => {}

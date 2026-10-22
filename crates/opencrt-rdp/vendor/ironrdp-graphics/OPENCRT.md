@@ -28,8 +28,6 @@ A copy of [ironrdp-graphics](https://crates.io/crates/ironrdp-graphics) 0.9.0
   - an upgrade pass reads its SRL and raw streams on across all ten bands of a
     component (0.9.0 restarted both at every band), reads LL3 from the raw stream
     only, shifts by quant + progQuant - 1, and keeps the SRL state (a value
-    directly after a short zero run; kp starting at 8);
-  - each decoded tile says which parts of it the region's rectangles cover
-    (`DecodedTile::rects`); only those parts are the desktop's.
+    directly after a short zero run; kp starting at 8).
 
 Delete this copy and the patch once a released ironrdp-graphics does the same.

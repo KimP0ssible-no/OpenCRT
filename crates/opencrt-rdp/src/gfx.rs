@@ -12,6 +12,7 @@ use std::time::{Duration, Instant};
 use ironrdp::graphics::clearcodec::ClearCodecDecoder;
 use ironrdp::graphics::progressive::ProgressiveDecoder;
 use ironrdp::graphics::rdp6::BitmapStreamDecoder;
+use ironrdp::pdu::codecs::rfx::progressive::{ProgressiveBlock, decode_progressive_stream};
 use ironrdp::pdu::geometry::ExclusiveRectangle;
 use ironrdp_egfx::client::{BitmapUpdate, GraphicsPipelineHandler, Surface};
 use ironrdp_egfx::pdu::{
@@ -42,6 +43,10 @@ pub enum Event {
     /// The same, but fully transparent pixels leave the surface as it is:
     /// ClearCodec need not draw all of its area.
     Partial { id: u16, at: Area, rgba: Vec<u8> },
+    /// Pixels for a surface that are not shown yet: a `Show` follows.
+    Hidden { id: u16, at: Area, rgba: Vec<u8> },
+    /// Show these areas of a surface as it is now.
+    Show { id: u16, areas: Vec<Area> },
     Fill { id: u16, rgba: [u8; 4], areas: Vec<Area> },
     Copy { from: u16, at: Area, to: u16, points: Vec<(u32, u32)> },
     ToCache { id: u16, at: Area, slot: u16 },
@@ -213,16 +218,21 @@ impl GraphicsPipelineHandler for Handler {
         // context id for each picture (FreeRDP keys it by surface too).
         match self.progressive.decode_bitmap(id.into(), w, h, &pdu.bitmap_data) {
             Ok(tiles) => {
+                // Whole tiles go into the surface, but only the region's
+                // rectangles are shown: a later picture's rectangles may show
+                // parts of tiles sent before (as FreeRDP draws it).
                 for tile in tiles {
-                    let (tx, ty) = (u32::from(tile.x_idx) * 64, u32::from(tile.y_idx) * 64);
-                    self.saw("Progressive".into(), (tx, ty, 64, 64));
-                    // Only where the region's rectangles cover the tile.
-                    for (x, y, w, h) in tile.rects {
-                        let (x, y, w, h) = (usize::from(x), usize::from(y), usize::from(w), usize::from(h));
-                        let rgba = (y..y + h).flat_map(|row| &tile.pixels[(row * 64 + x) * 4..(row * 64 + x + w) * 4]).copied().collect();
-                        self.send(Event::Pixels { id, at: (tx + x as u32, ty + y as u32, w as u32, h as u32), rgba });
-                    }
+                    let at = (u32::from(tile.x_idx) * 64, u32::from(tile.y_idx) * 64, 64, 64);
+                    self.saw("Progressive".into(), at);
+                    self.send(Event::Hidden { id, at, rgba: tile.pixels });
                 }
+                let areas = decode_progressive_stream(&pdu.bitmap_data)
+                    .unwrap_or_default()
+                    .iter()
+                    .filter_map(|b| if let ProgressiveBlock::Region(r) = b { Some(r) } else { None })
+                    .flat_map(|r| r.rects.iter().map(|r| (r.x.into(), r.y.into(), r.width.into(), r.height.into())))
+                    .collect();
+                self.send(Event::Show { id, areas });
             }
             Err(e) => self.failed("Progressive", format!("{} bytes: {e}", pdu.bitmap_data.len())),
         }
@@ -459,6 +469,18 @@ impl Canvas {
                 }
                 None => false,
             },
+            Event::Hidden { id, at, rgba } => {
+                if let Some(layer) = self.layers.get_mut(&id) {
+                    layer.pixels.paste(&Pixels { width: at.2, height: at.3, rgba }, (0, 0), (at.0, at.1), (at.2, at.3));
+                }
+                false
+            }
+            Event::Show { id, areas } => {
+                for at in &areas {
+                    self.show(id, *at);
+                }
+                !areas.is_empty()
+            }
             Event::Partial { id, at, rgba } => match self.layers.get_mut(&id) {
                 Some(layer) => {
                     layer.pixels.over(&Pixels { width: at.2, height: at.3, rgba }, (at.0, at.1));
@@ -839,7 +861,9 @@ mod tests {
 
     /// Progressive as Windows sends it: SYNC and CONTEXT once, full-quality
     /// tiles (quality 0xFF, no progressive table), a new codec context id for
-    /// the next picture without CONTEXT.
+    /// the next picture without CONTEXT. A picture shows only its region's
+    /// rectangles, and a later one may show more of a tile without resending
+    /// it (or the old desktop stays there: ghosts of moved windows).
     #[test]
     fn progressive_tiles_as_windows_sends_them() {
         use ironrdp::graphics::progressive::{encode_first_pass, rgba_to_ycbcr};
@@ -861,7 +885,7 @@ mod tests {
                 out
             })
         };
-        let stream = |context: bool, x_idx: u16, data: &[Vec<u8>; 3]| -> Vec<u8> {
+        let stream = |context: bool, x_idx: u16, data: &[Vec<u8>; 3], rects: Vec<RfxRectangle>| -> Vec<u8> {
             let tile = TileFirst {
                 quant_idx_y: 0,
                 quant_idx_cb: 0,
@@ -875,7 +899,6 @@ mod tests {
                 cr_data: &data[2],
                 tail_data: &[],
             };
-            let rects = vec![RfxRectangle { x: x_idx * 64, y: 0, width: 64, height: 64 }];
             let region = ProgressiveRegion {
                 tile_size: 64,
                 rects,
@@ -899,8 +922,14 @@ mod tests {
         let mut handler = Handler::new(events);
         handler.sizes.insert(1, (128, 64));
         let (red, blue) = (encode([255, 0, 0]), encode([0, 0, 255]));
-        for (context_id, context, x_idx, data) in [(7, true, 0, &red), (8, false, 1, &blue)] {
-            let bitmap_data = stream(context, x_idx, data);
+        let rect = |x, y, width, height| RfxRectangle { x, y, width, height };
+        let mut canvas = Canvas::new(128, 64);
+        canvas.apply(Event::Created { id: 1, width: 128, height: 64 });
+        canvas.apply(Event::Mapped { id: 1, x: 0, y: 0 });
+        let near = |got: [u8; 4], want: [u8; 3]| got.iter().zip(want).all(|(&g, w)| g.abs_diff(w) <= 24);
+        let pictures = [(7, true, 0, &red, vec![rect(0, 0, 64, 32)]), (8, false, 1, &blue, vec![rect(64, 0, 64, 64), rect(0, 32, 64, 32)])];
+        for (context_id, context, x_idx, data, rects) in pictures {
+            let bitmap_data = stream(context, x_idx, data, rects);
             handler.on_wire_to_surface2(&WireToSurface2Pdu {
                 surface_id: 1,
                 codec_id: Codec2Type::RemoteFxProgressive,
@@ -908,18 +937,18 @@ mod tests {
                 pixel_format: PixelFormat::XRgb,
                 bitmap_data,
             });
-        }
-        let mut canvas = Canvas::new(128, 64);
-        canvas.apply(Event::Created { id: 1, width: 128, height: 64 });
-        canvas.apply(Event::Mapped { id: 1, x: 0, y: 0 });
-        while let Ok(event) = received.try_recv() {
-            if let Event::Note(text) = &event {
-                assert!(!text.contains("not decoded"), "{text}");
+            while let Ok(event) = received.try_recv() {
+                if let Event::Note(text) = &event {
+                    assert!(!text.contains("not decoded"), "{text}");
+                }
+                canvas.apply(event);
             }
-            canvas.apply(event);
+            if context_id == 7 {
+                assert!(near(px(&canvas, 30, 10), [255, 0, 0]), "first picture: {:?}", px(&canvas, 30, 10));
+                assert_eq!(px(&canvas, 30, 50), [0, 0, 0, 0], "outside the first picture's rectangle");
+            }
         }
-        let near = |got: [u8; 4], want: [u8; 3]| got.iter().zip(want).all(|(&g, w)| g.abs_diff(w) <= 24);
-        assert!(near(px(&canvas, 30, 30), [255, 0, 0]), "first tile: {:?}", px(&canvas, 30, 30));
+        assert!(near(px(&canvas, 30, 50), [255, 0, 0]), "first tile, shown by the second picture: {:?}", px(&canvas, 30, 50));
         assert!(near(px(&canvas, 100, 30), [0, 0, 255]), "second tile: {:?}", px(&canvas, 100, 30));
     }
 

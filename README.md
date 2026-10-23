@@ -212,5 +212,6 @@ If OpenCRT ever stops unexpectedly, `crash.log` in the same folder records why.
 ## Licence
 Copyright 2026 Kim Attree. Licensed under the Apache License, Version 2.0
 (`LICENSE`); redistributions must keep the `NOTICE` file. The user interface
-uses Slint under its Royalty-free License 2.0, which requires the Slint credit
-shown in Help > About.
+uses Slint under GPL-3.0-only (`SLINT-LICENSE.md`), so the `opencrt` program as
+built and shipped is GPL-3.0-only; the RDP helper `opencrt-rdp` does not use
+Slint and stays Apache-2.0.

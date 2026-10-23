@@ -5,8 +5,9 @@ This product includes software developed by Kim Attree as OpenCRT.
 Licensed under the Apache License, Version 2.0 (see LICENSE).
 
 OpenCRT's user interface is built with Slint (https://slint.dev), used under
-the Slint Royalty-free Desktop, Mobile, and Web Applications License 2.0
-(see SLINT-LICENSE.md).
+the GNU General Public License, version 3 (see SLINT-LICENSE.md). The opencrt
+program is therefore distributed as a whole under GPL-3.0-only; its source
+code stays available under Apache-2.0, which is compatible with GPL-3.0.
 
 The licences of the other Rust crates OpenCRT is built from are listed in
 THIRD-PARTY-NOTICES.html (and THIRD-PARTY-NOTICES-RDP.html for the RDP helper).

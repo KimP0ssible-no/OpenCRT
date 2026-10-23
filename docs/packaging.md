@@ -100,8 +100,10 @@ git push github v0.1.0
 ```
 
 ## Before a public release
-- **Licence**: OpenCRT is Apache-2.0; Slint is used under its Royalty-free
-  2.0 licence (the About dialog shows its badge, as that licence asks).
+- **Licence**: OpenCRT's source is Apache-2.0; Slint is used under
+  GPL-3.0-only, so the shipped `opencrt` binary is GPL-3.0-only (every
+  component OSI-licensed, as SignPath Foundation requires). Dependencies must
+  stay GPL-3.0-compatible: `about.toml` accepts no GPL-2.0-only licence.
 - **Code signing**: Windows installer/executable and macOS bundle are unsigned;
   macOS also needs notarisation for Gatekeeper.
 - **Identifiers**: the macOS bundle id (`org.opencrt.OpenCRT`) and the Inno

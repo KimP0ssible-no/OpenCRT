@@ -15,12 +15,9 @@ accepted = [
     "BSL-1.0",
     "MPL-2.0",
     "OpenSSL",
-    "LicenseRef-Slint-Royalty-free-2.0",
+    "GPL-3.0-only",
 ]
 # Only what ships: dependencies of other platforms (wasm, Android) stay out.
 targets = ["x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-apple-darwin", "aarch64-apple-darwin"]
 ignore-build-dependencies = false
 ignore-dev-dependencies = true
-
-# Slint's crates name their licence by reference, which cargo-about cannot
-# resolve; its text ships separately as SLINT-LICENSE.md (see NOTICE).

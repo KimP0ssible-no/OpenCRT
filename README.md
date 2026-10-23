@@ -16,7 +16,8 @@ OpenCRT is original. SecureCRT is a trademark of VanDyke Software, Inc.
 
 ## Download
 Installers for each release are on the
-[Releases](https://github.com/KimP0ssible-no/OpenCRT/releases) page:
+[Releases](https://github.com/KimP0ssible-no/OpenCRT/releases) page (Windows
+files are signed as the [Code signing policy](#code-signing-policy) describes):
 
 | Platform | Package |
 | --- | --- |
@@ -208,6 +209,31 @@ If OpenCRT ever stops unexpectedly, `crash.log` in the same folder records why.
   puts "copied on the server" on your clipboard when you connect).
 - Docs: `docs/architecture.md` (stack and layout), `docs/packaging.md`
   (installers and releases).
+
+## Code signing policy
+Free code signing provided by [SignPath.io](https://about.signpath.io),
+certificate by [SignPath Foundation](https://signpath.org). (Applied for in
+October 2026; until it is granted, Windows releases are unsigned.)
+
+Only Windows files built from this repository's source by its GitHub Actions
+release workflow are signed, and every signing request is approved by hand.
+
+| Role | Members |
+| --- | --- |
+| Committers and reviewers | [Kim Attree](https://github.com/KimP0ssible-no) |
+| Approvers | [Kim Attree](https://github.com/KimP0ssible-no) |
+
+Pull requests from anyone else are reviewed by a committer before they are
+merged.
+
+### Privacy policy
+This program will not transfer any information to other networked systems
+unless specifically requested by the user or the person installing or
+operating it. The one exception is the daily update check described under
+[New versions](#new-versions): a single request to GitHub that sends nothing
+about you or your sessions, and that Options > Global Options > General turns
+off. GitHub handles that request under the
+[GitHub General Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
 
 ## Licence
 Copyright 2026 Kim Attree. Licensed under the Apache License, Version 2.0

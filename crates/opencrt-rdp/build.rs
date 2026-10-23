@@ -2,8 +2,15 @@
 //! through the compiler), so the helper still needs nothing beyond glibc.
 //! `.cargo/config.toml` keeps cc from asking for the shared one.
 
+include!("../../packaging/windows/resources.rs");
+
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
+        // Released as part of OpenCRT, so it carries OpenCRT's version.
+        println!("cargo:rerun-if-changed=../opencrt/Cargo.toml");
+        windows_resources(&package_version("../opencrt/Cargo.toml"), "OpenCRT remote desktop helper", None);
+    }
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("linux") {
         return;
     }

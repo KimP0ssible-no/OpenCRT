@@ -62,7 +62,9 @@ all of them.
 
 Icons: `packaging/make-icons.ps1` renders `packaging/icons/*.png` and
 `opencrt.ico` from the design in `crates/opencrt/ui/opencrt.svg`. The Windows
-executable embeds `opencrt.ico` through `packaging/windows/opencrt.rc`.
+executables embed `opencrt.ico` and version information (ProductName OpenCRT,
+ProductVersion from `crates/opencrt/Cargo.toml`, also for `opencrt-rdp.exe`)
+through `packaging/windows/resources.rs`, which both build scripts include.
 
 ## Building everything on Linux for sharing
 With Docker, all three packages can be made on the Linux workstation into

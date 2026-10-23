@@ -191,6 +191,16 @@ jobs:
             echo "$b.exe: $deps"
             ! echo "$deps" | grep -qE 'vcruntime|msvcp|ucrtbase|api-ms-win-crt'
           done
+      # SignPath signs a file only when its ProductName and ProductVersion match.
+      - name: Windows executables name OpenCRT and its version
+        if: runner.os == 'Windows'
+        run: |
+          $v = (Select-String -Path crates\opencrt\Cargo.toml -Pattern '^version = "(.*)"').Matches[0].Groups[1].Value
+          foreach ($b in 'opencrt', 'opencrt-rdp', 'ocrt') {
+            $info = (Get-Item "target\release\$b.exe").VersionInfo
+            "$b.exe: $($info.ProductName) $($info.ProductVersion)"
+            if ($info.ProductName -ne 'OpenCRT' -or $info.ProductVersion -ne $v) { throw "$b.exe has the wrong version information" }
+          }
       - name: Windows installer
         if: runner.os == 'Windows'
         run: |
@@ -322,7 +332,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd release
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "OpenCRT ${GITHUB_REF_NAME#v}" --generate-notes *
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "OpenCRT ${GITHUB_REF_NAME#v}" \
+            --notes "Windows files are signed as the [Code signing policy](https://github.com/$GITHUB_REPOSITORY#code-signing-policy) describes." --generate-notes *
       # apt / dnf / zypper / pacman repositories of the three latest releases
       # (this one included), signed with the REPO_GPG_KEY secret; the pages
       # job publishes them.

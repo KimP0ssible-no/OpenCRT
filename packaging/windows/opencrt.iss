@@ -3,7 +3,7 @@
 ;   iscc packaging\windows\opencrt.iss
 ; The installer is written to packaging\windows\Output\.
 
-#define AppVersion "0.3.2"
+#define AppVersion "0.3.3"
 ; Where the executables are (iscc /DBinDir=... for a cross-compiled build).
 #ifndef BinDir
   #define BinDir "..\..\target\release"
@@ -14,6 +14,8 @@ AppId={{6F1D4C2E-8E0B-4E6B-9C5A-0C4C3D7A1E21}
 AppName=OpenCRT
 AppVersion={#AppVersion}
 AppPublisher=OpenCRT
+VersionInfoVersion={#AppVersion}
+VersionInfoProductTextVersion={#AppVersion}
 DefaultDirName={autopf}\OpenCRT
 DefaultGroupName=OpenCRT
 DisableProgramGroupPage=yes

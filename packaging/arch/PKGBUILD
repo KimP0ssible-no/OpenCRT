@@ -4,11 +4,11 @@
 # repository; BIN_DIR and NOTICES_DIR say where the binaries and the
 # third-party notices are when not in target/portable/release and target/.
 pkgname=opencrt
-pkgver=0.3.2
+pkgver=0.3.3
 pkgrel=1
 pkgdesc="SSH, Telnet, serial and local terminal client"
 arch=('x86_64')
-license=('Apache-2.0')
+license=('Apache-2.0' 'GPL-3.0-only')
 depends=('glibc' 'gcc-libs')
 options=('!strip' '!debug')
 

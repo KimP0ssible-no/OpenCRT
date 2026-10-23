@@ -1,6 +1,6 @@
 [package]
 name = "opencrt"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2024"
 description = "SSH, Telnet, serial and local terminal client"
 authors = ["Kim Attree"]
@@ -30,6 +30,8 @@ assets = [
 ]
 
 [package.metadata.generate-rpm]
+# opencrt is GPL-3.0-only as built with Slint; opencrt-rdp is Apache-2.0.
+license = "Apache-2.0 AND GPL-3.0-only"
 # As for the .deb: glibc 2.28 is all it needs. The automatic scan writes
 # requirements ("...[WEAK]") that no package provides, so it is off.
 auto-req = "no"

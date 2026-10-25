@@ -7,8 +7,13 @@ updates:
     groups:
       cargo:
         update-types: [minor, patch]
+    ignore:
+      # Slint's own version (i-slint-common): moves when Slint does.
+      - dependency-name: fontique
+        update-types: [version-update:semver-major]
   # The RDP helper's own workspace. IronRDP stays put: its crates are patched
-  # from vendor/ and move together, by hand (vendor/*/OPENCRT.md).
+  # from vendor/ and move together, by hand (vendor/*/OPENCRT.md), and so do
+  # breaking updates of what they share with it (rand, sha1, sha2...).
   - package-ecosystem: cargo
     directory: /crates/opencrt-rdp
     schedule:
@@ -18,6 +23,8 @@ updates:
         update-types: [minor, patch]
     ignore:
       - dependency-name: "ironrdp*"
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
     directory: /
     schedule:

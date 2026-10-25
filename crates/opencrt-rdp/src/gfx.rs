@@ -570,6 +570,30 @@ mod tests {
     const RED: [u8; 4] = [255, 0, 0, 255];
     const BLUE: [u8; 4] = [0, 0, 255, 255];
 
+    /// A ZGFX segment longer than its message is the server's error, not a
+    /// panic (found by fuzz/fuzz_targets/egfx.rs).
+    #[test]
+    fn zgfx_segment_past_the_end() {
+        use ironrdp::dvc::DvcProcessor;
+        use ironrdp_egfx::client::GraphicsPipelineClient;
+        let (events, _received) = tokio::sync::mpsc::unbounded_channel();
+        let mut client = GraphicsPipelineClient::new(Box::new(Handler::new(events)), None);
+        assert!(client.process(1, &[0xE1, 1, 0, 0, 0, 0, 0, 0xFF, 0, 0, 0, 0x04]).is_err());
+    }
+
+    /// A ResetGraphics cut short before its padding is an error, not a
+    /// cursor past the end (found by fuzz/fuzz_targets/egfx.rs).
+    #[test]
+    fn reset_graphics_without_its_padding() {
+        use ironrdp::dvc::DvcProcessor;
+        use ironrdp_egfx::client::GraphicsPipelineClient;
+        let (events, _received) = tokio::sync::mpsc::unbounded_channel();
+        let mut client = GraphicsPipelineClient::new(Box::new(Handler::new(events)), None);
+        // Uncompressed ZGFX; RDPGFX_RESET_GRAPHICS (340 bytes) of 64x32, no monitors, then nothing.
+        let message = [0xE0, 0x04, 0x0E, 0, 0, 0, 0x54, 0x01, 0, 0, 64, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0];
+        assert!(client.process(1, &message).is_err());
+    }
+
     fn px(canvas: &Canvas, x: u32, y: u32) -> [u8; 4] {
         let i = ((y * canvas.width() + x) * 4) as usize;
         canvas.rgba()[i..i + 4].try_into().unwrap()

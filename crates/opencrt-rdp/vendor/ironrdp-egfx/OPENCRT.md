@@ -1,4 +1,4 @@
-# ironrdp-egfx 0.3.0, with three fixes
+# ironrdp-egfx 0.3.0, with four fixes
 
 A copy of [ironrdp-egfx](https://crates.io/crates/ironrdp-egfx) 0.3.0 (Devolutions,
 MIT OR Apache-2.0; see LICENSE-MIT and LICENSE-APACHE), used through
@@ -15,5 +15,8 @@ MIT OR Apache-2.0; see LICENSE-MIT and LICENSE-APACHE), used through
 - `src/client.rs` (`decode_avc420`, `crop_decoded_frame`): when the decoded
   picture covers the whole surface, the destination rectangle is cut from its
   own place in it, not from the top left.
+- `src/pdu/cmd.rs` (`ResetGraphicsPdu::decode`): a ResetGraphics shorter than
+  its padding is an error; 0.3.0 skipped the padding unchecked, left the cursor
+  past the end and panicked, so any server could crash the helper (found by fuzz/).
 
 Delete this copy and the patch once a released ironrdp-egfx does the same.

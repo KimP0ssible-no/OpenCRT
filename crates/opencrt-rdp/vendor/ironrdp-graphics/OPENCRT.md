@@ -29,5 +29,9 @@ A copy of [ironrdp-graphics](https://crates.io/crates/ironrdp-graphics) 0.9.0
     component (0.9.0 restarted both at every band), reads LL3 from the raw stream
     only, shifts by quant + progQuant - 1, and keeps the SRL state (a value
     directly after a short zero run; kp starting at 8).
+- `src/zgfx/`, `src/utils.rs`: the ZGFX decoder hardened against what a server
+  sends, from upstream commit 42320260 (IronRDP #1333). 0.9.0 panicked on a
+  multipart segment longer than its message or a bad trailing-bits byte, so
+  any server could crash the helper (both found by fuzz/).
 
 Delete this copy and the patch once a released ironrdp-graphics does the same.

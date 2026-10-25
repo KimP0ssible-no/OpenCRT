@@ -2,7 +2,7 @@ name: Security
 
 # Each night: advisories (the code does not change overnight but the
 # advisory database does, so a failure can mean a shipped release depends on
-# a vulnerable crate) and long fuzzing runs.
+# a vulnerable crate) and long fuzzing runs. Each Monday: Miri. By hand: all.
 on:
   schedule:
     - cron: '17 5 * * *'

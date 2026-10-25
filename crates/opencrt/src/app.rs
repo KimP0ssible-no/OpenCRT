@@ -1635,6 +1635,7 @@ fn beep() -> bool {
     {
         use windows_sys::Win32::System::Diagnostics::Debug::MessageBeep;
         use windows_sys::Win32::UI::WindowsAndMessaging::MB_OK;
+        // SAFETY: no pointers; any MB_* value is valid.
         unsafe { MessageBeep(MB_OK) != 0 }
     }
     #[cfg(not(windows))]
@@ -6602,6 +6603,7 @@ fn lock_keys() -> Option<(bool, bool)> {
     {
         use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetKeyState, VK_CAPITAL, VK_NUMLOCK};
         // The low bit of GetKeyState is the key's toggle state.
+        // SAFETY: no pointers; any virtual-key code is valid.
         let on = |key: u16| unsafe { GetKeyState(key as i32) } & 1 != 0;
         Some((on(VK_CAPITAL), on(VK_NUMLOCK)))
     }

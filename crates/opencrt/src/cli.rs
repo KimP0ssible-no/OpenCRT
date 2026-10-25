@@ -375,6 +375,8 @@ impl RawMode {
                 (STD_INPUT_HANDLE, ENABLE_VIRTUAL_TERMINAL_INPUT),
                 (STD_OUTPUT_HANDLE, ENABLE_VIRTUAL_TERMINAL_PROCESSING),
             ]) {
+                // SAFETY: plain console calls on our own standard handle; `mode`
+                // outlives GetConsoleMode, which writes it.
                 unsafe {
                     let handle = GetStdHandle(std);
                     let mut mode = 0;
@@ -396,6 +398,7 @@ impl Drop for RawMode {
         #[cfg(windows)]
         for (handle, mode) in self.modes {
             if !handle.is_null() {
+                // SAFETY: the standard handle and the mode it had before.
                 unsafe { windows_sys::Win32::System::Console::SetConsoleMode(handle, mode) };
             }
         }

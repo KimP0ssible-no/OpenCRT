@@ -103,7 +103,7 @@ slint-build = "1.18.1"
 # there rather than linking it, so the Linux binary needs only glibc (the UI
 # and terminal fonts are built in).
 [target.'cfg(target_os = "linux")'.dependencies]
-fontique = { version = "0.11", default-features = false, features = ["fontconfig-dlopen"] }
+fontique = { version = "0.12", default-features = false, features = ["fontconfig-dlopen"] }
 
 [target."cfg(windows)".dependencies]
 windows-sys = { version = "0.61.2", features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging", "Win32_System_Diagnostics_Debug", "Win32_System_Console", "Win32_UI_Shell"] }

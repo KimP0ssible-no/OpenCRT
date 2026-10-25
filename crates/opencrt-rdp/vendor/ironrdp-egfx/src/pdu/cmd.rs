@@ -1236,6 +1236,7 @@ impl<'a> Decode<'a> for ResetGraphicsPdu {
             monitors,
         };
 
+        ensure_size!(in: src, size: pdu.padding_size());
         read_padding!(src, pdu.padding_size());
 
         Ok(pdu)

@@ -1,0 +1,22 @@
+name: Security
+
+# The code does not change overnight but the advisory database does: a
+# failed run here means a shipped release depends on a vulnerable crate.
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  advisories:
+    strategy:
+      fail-fast: false
+      matrix:
+        manifest: [Cargo.toml, crates/opencrt-rdp/Cargo.toml]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
+        with:
+          manifest-path: ${{ matrix.manifest }}
+          command-arguments: advisories

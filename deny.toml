@@ -1,0 +1,48 @@
+# cargo-deny: known vulnerabilities, licences and crate sources. The RDP
+# helper is its own workspace, so check both:
+#   cargo deny check
+#   cargo deny --manifest-path crates/opencrt-rdp/Cargo.toml check
+# The IronRDP crates patched in from crates/opencrt-rdp/vendor/ are path
+# dependencies, which advisories never match: watch IronRDP's own by hand.
+
+[graph]
+# What ships, as in about.toml.
+targets = ["x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-apple-darwin", "aarch64-apple-darwin"]
+exclude-dev = true
+
+[advisories]
+# Only a direct dependency going unmaintained is ours to act on.
+unmaintained = "workspace"
+ignore = [
+    # Marvin: RSA decryption timing. OpenCRT never decrypts with RSA; russh
+    # signs with the user's key and IronRDP only uses public keys. No fixed
+    # rsa release exists yet.
+    { id = "RUSTSEC-2023-0071", reason = "no RSA decryption; no fixed release" },
+]
+
+[licenses]
+# Keep in step with `accepted` in about.toml.
+allow = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "MIT",
+    "MIT-0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "CC0-1.0",
+    "BSL-1.0",
+    "MPL-2.0",
+    "OpenSSL",
+    "GPL-3.0-only",
+]
+
+[bans]
+multiple-versions = "allow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

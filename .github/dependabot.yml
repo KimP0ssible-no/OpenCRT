@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      cargo:
+        update-types: [minor, patch]
+  # The RDP helper's own workspace. IronRDP stays put: its crates are patched
+  # from vendor/ and move together, by hand (vendor/*/OPENCRT.md).
+  - package-ecosystem: cargo
+    directory: /crates/opencrt-rdp
+    schedule:
+      interval: weekly
+    groups:
+      cargo:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "ironrdp*"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

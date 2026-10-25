@@ -65,6 +65,29 @@ jobs:
       - run: cargo clippy --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target --all-targets -- -D warnings
       - run: cargo test --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target
 
+  # deny.toml for both workspaces. Licences, bans and sources fail any run;
+  # a new advisory only reports on a pull request (it is rarely the pull
+  # request's doing) but fails a release tag. security.yml checks daily.
+  deny:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        manifest: [Cargo.toml, crates/opencrt-rdp/Cargo.toml]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
+        with:
+          manifest-path: ${{ matrix.manifest }}
+          command-arguments: bans licenses sources
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
+        with:
+          manifest-path: ${{ matrix.manifest }}
+          command-arguments: advisories
+
   # Built against glibc 2.28 so the packages install, with nothing else, on
   # RHEL/Rocky/Alma 8+, Fedora, Debian 10+ and Ubuntu 20.04+.
   linux-packages:
@@ -276,7 +299,7 @@ jobs:
   # the pull request only changes documentation.
   ci-ok:
     if: always()
-    needs: [changes, test, linux-packages, arch-package, linux-repos, package]
+    needs: [changes, test, deny, linux-packages, arch-package, linux-repos, package]
     runs-on: ubuntu-latest
     steps:
       - env:
@@ -292,7 +315,7 @@ jobs:
   # for approval before this job runs.
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [linux-packages, arch-package, package]
+    needs: [deny, linux-packages, arch-package, package]
     runs-on: ubuntu-latest
     environment: release
     permissions:

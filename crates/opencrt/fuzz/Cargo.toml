@@ -1,0 +1,51 @@
+[package]
+name = "opencrt-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+opencrt = { path = ".." }
+
+# Its own workspace: cargo fuzz needs nightly. Run from crates/opencrt:
+#   cargo +nightly fuzz run terminal
+[workspace]
+
+[[bin]]
+name = "terminal"
+path = "fuzz_targets/terminal.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "telnet"
+path = "fuzz_targets/telnet.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "zmodem"
+path = "fuzz_targets/zmodem.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "xymodem"
+path = "fuzz_targets/xymodem.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "kermit"
+path = "fuzz_targets/kermit.rs"
+test = false
+doc = false
+bench = false

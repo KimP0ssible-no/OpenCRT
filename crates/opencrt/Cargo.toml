@@ -111,3 +111,7 @@ windows-sys = { version = "0.61.2", features = ["Win32_UI_Input_KeyboardAndMouse
 [dev-dependencies]
 # A throwaway certificate for the Telnet/TLS test server.
 rcgen = { version = "0.14", default-features = false, features = ["aws_lc_rs", "pem"] }
+
+[lints.rust]
+# Set by cargo fuzz (src/fuzz.rs).
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fuzzing)"] }

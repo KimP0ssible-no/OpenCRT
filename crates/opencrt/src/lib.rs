@@ -7,6 +7,8 @@ mod cli;
 mod codec;
 mod config;
 mod forward;
+#[cfg(fuzzing)]
+pub mod fuzz;
 mod input;
 mod instance;
 mod kermit;

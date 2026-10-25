@@ -88,6 +88,35 @@ jobs:
           manifest-path: ${{ matrix.manifest }}
           command-arguments: advisories
 
+  # Every fuzz target for a minute, from the corpus security.yml grows each
+  # night: what once found a crash is tried again. A crash input is uploaded.
+  fuzz:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        crate: [opencrt, opencrt-rdp]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+      - if: matrix.crate == 'opencrt'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig-dev
+      - run: cargo install cargo-fuzz --locked
+      - uses: actions/cache/restore@v6
+        with:
+          path: crates/${{ matrix.crate }}/fuzz/corpus
+          key: fuzz-corpus-${{ matrix.crate }}-${{ github.run_id }}
+          restore-keys: fuzz-corpus-${{ matrix.crate }}-
+      - working-directory: crates/${{ matrix.crate }}
+        run: for t in $(cargo fuzz list); do cargo fuzz run "$t" -- -max_total_time=60; done
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: fuzz-crash-${{ matrix.crate }}
+          path: crates/${{ matrix.crate }}/fuzz/artifacts
+
   # Built against glibc 2.28 so the packages install, with nothing else, on
   # RHEL/Rocky/Alma 8+, Fedora, Debian 10+ and Ubuntu 20.04+.
   linux-packages:
@@ -299,7 +328,7 @@ jobs:
   # the pull request only changes documentation.
   ci-ok:
     if: always()
-    needs: [changes, test, deny, linux-packages, arch-package, linux-repos, package]
+    needs: [changes, test, deny, fuzz, linux-packages, arch-package, linux-repos, package]
     runs-on: ubuntu-latest
     steps:
       - env:
@@ -315,7 +344,7 @@ jobs:
   # for approval before this job runs.
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [deny, linux-packages, arch-package, package]
+    needs: [deny, fuzz, linux-packages, arch-package, package]
     runs-on: ubuntu-latest
     environment: release
     permissions:

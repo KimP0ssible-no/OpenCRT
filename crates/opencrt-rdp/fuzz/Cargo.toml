@@ -1,0 +1,31 @@
+[package]
+name = "opencrt-rdp-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+# What src/gfx.rs uses, as the helper has it.
+[dependencies]
+libfuzzer-sys = "0.4"
+ironrdp = { version = "0.17.0", features = ["graphics", "pdu", "dvc"] }
+ironrdp-egfx = { version = "0.3.0", features = ["openh264-bundled"] }
+tokio = { version = "1.53.2", features = ["sync"] }
+
+# Its own workspace: cargo fuzz needs nightly. Run from crates/opencrt-rdp:
+#   cargo +nightly fuzz run egfx
+[workspace]
+
+[patch.crates-io]
+ironrdp-pdu = { path = "../vendor/ironrdp-pdu" }
+ironrdp-egfx = { path = "../vendor/ironrdp-egfx" }
+ironrdp-graphics = { path = "../vendor/ironrdp-graphics" }
+
+[[bin]]
+name = "egfx"
+path = "fuzz_targets/egfx.rs"
+test = false
+doc = false
+bench = false

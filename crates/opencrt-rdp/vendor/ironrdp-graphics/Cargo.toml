@@ -64,7 +64,7 @@ version = "0.9"
 features = ["std"]
 
 [dependencies.num-derive]
-version = "0.4"
+version = "0.5"
 
 [dependencies.num-traits]
 version = "0.2"

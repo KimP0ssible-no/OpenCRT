@@ -95,7 +95,7 @@ package = "md-5"
 version = "0.4"
 
 [dependencies.num-derive]
-version = "0.4"
+version = "0.5"
 
 [dependencies.num-integer]
 version = "0.1"

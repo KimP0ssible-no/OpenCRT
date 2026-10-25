@@ -5,11 +5,17 @@ on:
     tags: ['v*']
   pull_request:
 
+# Read-only unless a job says otherwise (release and pages).
+permissions:
+  contents: read
+
 jobs:
   # Pull requests that only touch Markdown or docs/ skip the builds; tags
   # always build everything.
   changes:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
     outputs:
       code: ${{ steps.check.outputs.code }}
     steps:

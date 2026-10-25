@@ -6,6 +6,7 @@ name: Security
 on:
   schedule:
     - cron: '17 5 * * *'
+    - cron: '17 6 * * 1'  # Mondays: Miri only
   workflow_dispatch:
 
 permissions:
@@ -13,6 +14,7 @@ permissions:
 
 jobs:
   advisories:
+    if: github.event.schedule != '17 6 * * 1'
     strategy:
       fail-fast: false
       matrix:
@@ -28,6 +30,7 @@ jobs:
   # Each fuzz target for 20 minutes. The corpus it grows is saved for the
   # next night and for the minute-long runs in ci.yml.
   fuzz:
+    if: github.event.schedule != '17 6 * * 1'
     strategy:
       fail-fast: false
       matrix:
@@ -57,3 +60,21 @@ jobs:
         with:
           name: fuzz-crash-${{ matrix.crate }}
           path: crates/${{ matrix.crate }}/fuzz/artifacts
+
+  # Weekly: the RDP graphics tests (through the vendored IronRDP codecs) and
+  # the helper protocol under Miri; H.264 is C, which Miri cannot run.
+  # OpenCRT's own tests cannot run there at all: Slint loads Xlib before any
+  # test starts. Tree Borrows, because bitvec (IronRDP's RLGR) makes a
+  # zero-size retag the older Stacked Borrows model rejects.
+  miri:
+    if: github.event.schedule != '17 5 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri
+      - run: cargo miri test -p opencrt-rdp-proto
+      - run: 'cargo miri test --manifest-path crates/opencrt-rdp/Cargo.toml -- gfx:: --skip h264'
+        env:
+          MIRIFLAGS: -Zmiri-tree-borrows

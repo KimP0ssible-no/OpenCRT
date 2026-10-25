@@ -355,10 +355,13 @@ mod player {
                         let written = unsafe { (alsa.writei)(pcm, rest.as_ptr().cast(), rest.len() as c_ulong) };
                         if written >= 0 {
                             rest = &rest[(written as usize).min(rest.len())..];
-                        } else if unsafe { (alsa.recover)(pcm, written as c_int, 1) } < 0 {
-                            // SAFETY (above and here): `pcm` is open until closed below.
-                            unsafe { (alsa.close)(pcm) };
-                            return;
+                        } else {
+                            // SAFETY: `pcm` is open until closed below.
+                            if unsafe { (alsa.recover)(pcm, written as c_int, 1) } < 0 {
+                                // SAFETY: closing the open handle, once.
+                                unsafe { (alsa.close)(pcm) };
+                                return;
+                            }
                         }
                     }
                 }

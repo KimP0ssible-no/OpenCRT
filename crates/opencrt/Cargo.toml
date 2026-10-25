@@ -115,3 +115,7 @@ rcgen = { version = "0.14", default-features = false, features = ["aws_lc_rs", "
 [lints.rust]
 # Set by cargo fuzz (src/fuzz.rs).
 unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fuzzing)"] }
+
+[lints.clippy]
+# Every unsafe block says why it is sound (// SAFETY:).
+undocumented_unsafe_blocks = "warn"

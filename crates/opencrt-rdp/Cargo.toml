@@ -45,6 +45,10 @@ rcgen = { version = "0.14.10", default-features = false, features = ["aws_lc_rs"
 strip = true
 lto = "thin"
 
+[lints.clippy]
+# Every unsafe block says why it is sound (// SAFETY:).
+undocumented_unsafe_blocks = "warn"
+
 # IronRDP fixes not yet in a release: see vendor/*/OPENCRT.md.
 [patch.crates-io]
 ironrdp-connector = { path = "vendor/ironrdp-connector" }

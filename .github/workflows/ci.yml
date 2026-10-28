@@ -2,12 +2,19 @@ name: CI
 
 on:
   push:
+    # Main builds the cache that pull requests and tags start from.
+    branches: [main]
     tags: ['v*']
   pull_request:
 
 # Read-only unless a job says otherwise (release and pages).
 permissions:
   contents: read
+
+# A newer merge makes an older main run moot; other runs never cancel.
+concurrency:
+  group: ${{ github.ref == 'refs/heads/main' && 'ci-main' || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   # Pull requests that only touch Markdown or docs/ skip the builds; tags
@@ -44,11 +51,22 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
+    # Line numbers in backtraces, without full debug info: a smaller cache.
+    env:
+      CARGO_PROFILE_DEV_DEBUG: line-tables-only
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
+      # Dependencies and cargo-installed tools, as built by the last run on
+      # main; pull requests and tags only read it.
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: |
+            . -> target
+            crates/opencrt-rdp -> target
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Linux fontconfig headers and fonts for the renderer tests
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libfontconfig-dev fonts-dejavu-core minisign
@@ -72,8 +90,8 @@ jobs:
       - run: cargo test --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target
 
   # deny.toml for both workspaces. Licences, bans and sources fail any run;
-  # a new advisory only reports on a pull request (it is rarely the pull
-  # request's doing) but fails a release tag. security.yml checks daily.
+  # a new advisory only reports on a pull request or main (it is rarely the
+  # change's doing) but fails a release tag. security.yml checks daily.
   deny:
     needs: changes
     if: needs.changes.outputs.code == 'true'
@@ -89,7 +107,7 @@ jobs:
           manifest-path: ${{ matrix.manifest }}
           command-arguments: bans licenses sources
       - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
-        continue-on-error: ${{ github.event_name == 'pull_request' }}
+        continue-on-error: ${{ github.ref_type != 'tag' }}
         with:
           manifest-path: ${{ matrix.manifest }}
           command-arguments: advisories
@@ -109,6 +127,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
       - if: matrix.crate == 'opencrt'
         run: sudo apt-get update && sudo apt-get install -y libfontconfig-dev
+      # Shared with security.yml's nightly fuzzing; a new nightly starts afresh.
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: ${{ matrix.crate }}
+          workspaces: crates/${{ matrix.crate }}/fuzz -> target
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: cargo install cargo-fuzz --locked
       - uses: actions/cache/restore@v6
         with:
@@ -136,6 +160,14 @@ jobs:
         run: dnf -y -q --enablerepo=powertools install gcc gcc-c++ libstdc++-static make perl git
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+      # Dependencies and cargo-installed tools, as built by the last run on
+      # main; pull requests and tags only read it.
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: |
+            . -> target
+            crates/opencrt-rdp -> target
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: cargo build --release
       - run: cargo build --release --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target
       - name: Only glibc 2.28 and its own libraries
@@ -231,6 +263,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+      # Dependencies and cargo-installed tools, as built by the last run on
+      # main; pull requests and tags only read it.
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: |
+            . -> target
+            crates/opencrt-rdp -> target
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: cargo build --release
       - run: cargo build --release --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target
       - name: Third-party licence notices

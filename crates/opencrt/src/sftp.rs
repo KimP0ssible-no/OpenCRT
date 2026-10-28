@@ -113,10 +113,70 @@ async fn run_on(session: &client::Handle<ssh::SshHandler>, host: &str, commands:
                     }
                     out(io, PROMPT);
                 }
+                Edit::Complete => {
+                    let (start, word, local) = completing(&editor.line);
+                    let split = word.rfind(|c| c == '/' || (cfg!(windows) && local == Some(true) && c == '\\')).map_or(0, |i| i + 1);
+                    let (dir, prefix) = word.split_at(split);
+                    let names = match local {
+                        None => COMMANDS.map(String::from).to_vec(),
+                        Some(local) => cli.names(local, dir).await.unwrap_or_default(),
+                    };
+                    let mut found: Vec<String> = names.into_iter().filter(|n| n.starts_with(prefix)).collect();
+                    found.sort();
+                    let paths: Vec<String> = found.iter().map(|n| format!("{dir}{n}")).collect();
+                    match complete_line(&editor.line, start, &paths) {
+                        Some(line) => {
+                            let _ = io.output.send(SshEvent::Data(editor.set(line)));
+                        }
+                        None if found.len() > 1 => out(io, &format!("\n{}\n{PROMPT}{}", found.join("  "), editor.line)),
+                        None => out(io, "\x07"),
+                    }
+                }
             }
         }
     }
     Ok(())
+}
+
+const COMMANDS: [&str; 14] = ["cd", "exit", "get", "help", "lcd", "lls", "lpwd", "ls", "mkdir", "put", "pwd", "rename", "rm", "rmdir"];
+
+/// The word Tab completes: where it starts in `line`, its text without quotes,
+/// and what it names: a command (None), a local path (Some(true)) or a remote one.
+fn completing(line: &str) -> (usize, String, Option<bool>) {
+    let (mut start, mut quote) = (0, None);
+    for (i, c) in line.char_indices() {
+        match (quote, c) {
+            (Some(q), c) if c == q => quote = None,
+            (None, '"' | '\'') => quote = Some(c),
+            (None, c) if c.is_whitespace() => start = i + c.len_utf8(),
+            _ => {}
+        }
+    }
+    let before = split_args(&line[..start]);
+    let word = split_args(&line[start..]).concat();
+    let local = match (before.first().map(String::as_str), before.len()) {
+        (None, _) => None,
+        (Some("lcd" | "lls" | "ldir"), _) | (Some("put" | "mput"), 1) | (Some("get" | "mget"), 2) => Some(true),
+        _ => Some(false),
+    };
+    (start, word, local)
+}
+
+/// `line` with the word from `start` completed as far as all of `found` agree,
+/// closed off when only one fits (a directory, ending in `/`, stays open); None if
+/// that adds nothing.
+fn complete_line(line: &str, start: usize, found: &[String]) -> Option<String> {
+    let first = found.first()?;
+    let len = found.iter().map(|n| first.chars().zip(n.chars()).take_while(|(a, b)| a == b).map(|(a, _)| a.len_utf8()).sum()).min()?;
+    let common = &first[..len];
+    let typed = &line[start..];
+    let quote = typed.chars().next().filter(|c| matches!(c, '"' | '\'')).or(common.contains(char::is_whitespace).then_some('"'));
+    let mut word: String = quote.into_iter().chain(common.chars()).collect();
+    if found.len() == 1 && !common.ends_with('/') {
+        word.extend(quote);
+        word.push(' ');
+    }
+    (word != typed).then(|| format!("{}{word}", &line[..start]))
 }
 
 struct Cli {
@@ -249,6 +309,23 @@ impl Cli {
             Some(other) => bail!("unknown command: {other} (type help)"),
         }
         Ok(())
+    }
+
+    /// Names in a remote or local directory (relative to the current one), for
+    /// Tab; directories end in `/`.
+    async fn names(&self, local: bool, dir: &str) -> anyhow::Result<Vec<String>> {
+        let dir = if dir.is_empty() { "." } else { dir };
+        let entries: Vec<(String, bool)> = if local {
+            std::fs::read_dir(self.local_path(dir))?.filter_map(Result::ok).map(|e| (e.file_name().to_string_lossy().into_owned(), e.path().is_dir())).collect()
+        } else {
+            self.sftp.read_dir(self.remote_path(dir).as_str()).await?.map(|e| (e.file_name(), e.metadata().is_dir())).collect()
+        };
+        // A name with escape sequences must not drive the terminal.
+        Ok(entries
+            .into_iter()
+            .filter(|(n, _)| n != "." && n != ".." && !n.contains(char::is_control))
+            .map(|(n, is_dir)| if is_dir { n + "/" } else { n })
+            .collect())
     }
 
     async fn download(&self, remote: &str, local: &Path, io: &Io) -> anyhow::Result<()> {
@@ -385,10 +462,12 @@ enum Edit {
     Echo(Vec<u8>),
     /// A finished line.
     Submit(String),
+    /// Tab: complete the word being typed.
+    Complete,
 }
 
 /// Minimal line editing for the `sftp>` prompt: typing, Backspace, Ctrl+U,
-/// Ctrl+C (cancel line), and Up/Down history.
+/// Ctrl+C (cancel line), Tab completion and Up/Down history.
 #[derive(Default)]
 struct LineEditor {
     line: String,
@@ -406,6 +485,10 @@ impl LineEditor {
                 b"\x1b[B" | b"\x1bOB" => self.recall(false),
                 _ => Vec::new(),
             };
+        }
+        // A pasted tab is not a request to complete.
+        if bytes == b"\t" {
+            return vec![Edit::Complete];
         }
         let mut edits = Vec::new();
         for c in String::from_utf8_lossy(bytes).chars() {
@@ -446,6 +529,18 @@ impl LineEditor {
         let erase = "\x08 \x08".repeat(self.line.chars().count());
         self.line = text;
         format!("{erase}{}", self.line).into_bytes()
+    }
+
+    /// Show `text` as the line, echoing only what was added when it extends the old one.
+    fn set(&mut self, text: String) -> Vec<u8> {
+        match text.strip_prefix(self.line.as_str()) {
+            Some(added) => {
+                let added = added.as_bytes().to_vec();
+                self.line = text;
+                added
+            }
+            None => self.replace(text),
+        }
     }
 
     fn recall(&mut self, older: bool) -> Vec<Edit> {
@@ -496,6 +591,34 @@ mod tests {
         // Ctrl+C abandons the line.
         assert_eq!(e.feed(b"\x03"), [Edit::Echo(b"^C\r\n".to_vec()), Edit::Submit(String::new())]);
         assert_eq!(e.line, "");
+    }
+
+    #[test]
+    fn tab_completes_commands_and_paths() {
+        assert_eq!(LineEditor::default().feed(b"\t"), [Edit::Complete]);
+        assert_eq!(completing("l"), (0, "l".into(), None));
+        assert_eq!(completing("cd sr"), (3, "sr".into(), Some(false)));
+        assert_eq!(completing("put "), (4, "".into(), Some(true)));
+        assert_eq!(completing("put a.txt we"), (10, "we".into(), Some(false)));
+        assert_eq!(completing("get a.txt \"my d"), (10, "my d".into(), Some(true)));
+        assert_eq!(completing("lcd /tmp/x"), (4, "/tmp/x".into(), Some(true)));
+
+        let names = |list: &[&str]| list.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        // One match: a file is closed off with a space, a directory stays open.
+        assert_eq!(complete_line("get re", 4, &names(&["readme.md"])).as_deref(), Some("get readme.md "));
+        assert_eq!(complete_line("cd s", 3, &names(&["src/"])).as_deref(), Some("cd src/"));
+        // Several: as far as they agree, then nothing more to add.
+        assert_eq!(complete_line("ls a", 3, &names(&["abc1", "abc2"])).as_deref(), Some("ls abc"));
+        assert_eq!(complete_line("ls abc", 3, &names(&["abc1", "abc2"])), None);
+        assert_eq!(complete_line("ls x", 3, &[]), None);
+        // Spaces get quoted, and an opened quote is kept.
+        assert_eq!(complete_line("get my", 4, &names(&["my file.txt"])).as_deref(), Some("get \"my file.txt\" "));
+        assert_eq!(complete_line("cd 'my", 3, &names(&["my dir/"])).as_deref(), Some("cd 'my dir/"));
+
+        let mut e = LineEditor::default();
+        e.feed(b"get re");
+        assert_eq!(e.set("get readme.md ".into()), b"adme.md ");
+        assert_eq!(e.line, "get readme.md ");
     }
 
     #[test]
@@ -581,8 +704,12 @@ mod tests {
         port
     }
 
-    /// Feed events until the output ends with the prompt; returns the text seen.
     fn until_prompt(handle: &mut SshHandle) -> String {
+        until(handle, PROMPT)
+    }
+
+    /// Feed events until the output ends with `end`; returns the text seen.
+    fn until(handle: &mut SshHandle, end: &str) -> String {
         let deadline = Instant::now() + Duration::from_secs(10);
         let mut text = String::new();
         loop {
@@ -598,10 +725,10 @@ mod tests {
                 Ok(_) => {}
                 Err(_) => std::thread::sleep(Duration::from_millis(10)),
             }
-            if text.ends_with(PROMPT) {
+            if text.ends_with(end) {
                 return text;
             }
-            assert!(Instant::now() < deadline, "no prompt; got {text:?}");
+            assert!(Instant::now() < deadline, "no {end:?}; got {text:?}");
         }
     }
 
@@ -664,6 +791,12 @@ mod tests {
         let put = command(&mut handle, "put up.bin");
         assert!(put.contains("Uploaded"), "{put}");
         assert_eq!(files.lock().unwrap().get("/home/up.bin"), Some(&payload));
+
+        // Tab completes a remote name; Ctrl+U then drops the line.
+        handle.send_input(b"get u".to_vec());
+        handle.send_input(b"\t".to_vec());
+        until(&mut handle, "get up.bin ");
+        handle.send_input(b"\x15".to_vec());
 
         let ls = command(&mut handle, "ls -l");
         assert!(ls.contains("up.bin") && ls.contains("200000"), "{ls}");

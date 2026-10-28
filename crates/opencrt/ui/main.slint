@@ -690,8 +690,15 @@ component SessionTab inherits Rectangle {
     callback select();
     callback close();
     callback action(string);
-    // Dragged and let go at this x (in the window): moving it to another group.
+    // Dragged and let go at this x (in the window): moving it to another place or group.
     callback dropped(length);
+    // Where the pointer is (in the window) while this tab is dragged; -1px when let go.
+    callback drag-moved(length);
+    // The pointer of a tab being dragged, if any. Over this one (or the gap after
+    // it), the dragged tab would land on this side of it: -1 before, 1 after, 0 neither.
+    in property <length> drag-x: -1px;
+    out property <int> drop-side: touch.dragged || self.drag-x < self.absolute-position.x || self.drag-x >= self.absolute-position.x + self.width + 1px ? 0
+        : self.drag-x < self.absolute-position.x + self.width / 2 ? -1 : 1;
     height: 24px;
     // Sized to the title; squeezed (title elided) when many tabs are open.
     preferred-width: min(240px, max(100px, label.preferred-width + 52px));
@@ -766,16 +773,28 @@ component SessionTab inherits Rectangle {
             }
         }
         touch := TouchArea {
-            property <bool> dragging: self.pressed && abs(self.mouse-x - self.pressed-x) > 20px;
-            mouse-cursor: self.dragging ? MouseCursor.grabbing : MouseCursor.default;
+            // Kept by hand: `pressed` is already false when the release arrives.
+            property <bool> dragged;
+            mouse-cursor: self.dragged ? MouseCursor.grabbing : MouseCursor.default;
             clicked => { root.select(); }
+            moved => {
+                if self.dragged || abs(self.mouse-x - self.pressed-x) > 20px {
+                    self.dragged = true;
+                    root.drag-moved(self.absolute-position.x + self.mouse-x);
+                }
+            }
             pointer-event(event) => {
                 if (event.kind == PointerEventKind.down && event.button == PointerEventButton.right) {
                     tab-menu.show({ x: self.mouse-x, y: self.mouse-y });
                 } else if (event.kind == PointerEventKind.down && event.button == PointerEventButton.middle) {
                     root.close();
-                } else if (event.kind == PointerEventKind.up && event.button == PointerEventButton.left && self.dragging) {
+                } else if (event.kind == PointerEventKind.up && event.button == PointerEventButton.left && self.dragged) {
+                    self.dragged = false;
                     root.dropped(self.absolute-position.x + self.mouse-x);
+                    root.drag-moved(-1px);
+                } else if (event.kind == PointerEventKind.cancel) {
+                    self.dragged = false;
+                    root.drag-moved(-1px);
                 }
             }
         }
@@ -849,6 +868,12 @@ component SessionTab inherits Rectangle {
         width: parent.width - 2px;
         height: 3px;
         background: root.focused && root.group-count > 1 ? Theme.accent : root.strip;
+    }
+    // Where a dragged tab would land: a bar in the gap on that side.
+    if root.drop-side != 0: Rectangle {
+        x: root.drop-side < 0 ? -2px : root.width - 1px;
+        width: 3px;
+        background: Theme.accent;
     }
 }
 
@@ -4362,6 +4387,10 @@ export component MainWindow inherits Window {
             VerticalLayout {
             horizontal-stretch: 1;
             tab-strip := Rectangle {
+                // A dragged tab's pointer, and the tab it would land next to (-1: none).
+                property <length> drag-x: -1px;
+                property <int> drop: -1;
+                property <bool> after;
                 height: 27px;
                 background: Theme.tabbar-bg;
                 // One strip per tab group, over its column of the terminal area.
@@ -4388,8 +4417,21 @@ export component MainWindow inherits Window {
                             select => { root.select-tab(i); }
                             close => { root.close-tab(i); }
                             action(name) => { root.tab-action(i, name); }
+                            drag-x: tab-strip.drag-x;
+                            drag-moved(x) => { tab-strip.drag-x = x; }
+                            changed drop-side => {
+                                if self.drop-side != 0 {
+                                    tab-strip.drop = i;
+                                    tab-strip.after = self.drop-side > 0;
+                                } else if tab-strip.drop == i {
+                                    tab-strip.drop = -1;
+                                }
+                            }
                             dropped(x) => {
-                                if root.group-count > 1 {
+                                if tab-strip.drop >= 0 {
+                                    root.tab-action(i, "move-to-" + tab-strip.drop + (tab-strip.after ? "-after" : ""));
+                                    tab-strip.drop = -1;
+                                } else if root.group-count > 1 {
                                     root.tab-action(i, "group-to-" + max(0, min(root.group-count - 1, floor((x - tab-strip.absolute-position.x - 4px) / (root.term-width / root.group-count)))));
                                 }
                             }

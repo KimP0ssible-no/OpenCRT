@@ -337,6 +337,15 @@ impl Terminal {
         std::mem::take(&mut pending.reply)
     }
 
+    /// A new connection in this tab: drop the old session's screen into history
+    /// and undo the modes it set (alternate screen, mouse reporting, keypad,
+    /// colours, scroll region). Not RIS: that would also wipe the scrollback.
+    pub fn restart(&mut self) {
+        self.feed(b"\x1b[?1049l\x1b[0m\x1b(B\x1b[r\x1b[4l\x1b[?6l\x1b[?7h\x1b[?25h\x1b[?1l\x1b>");
+        self.feed(b"\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1004l\x1b[?1006l\x1b[?2004l\x1b[H\x1b[2J");
+        self.term.scroll_display(Scroll::Bottom);
+    }
+
     /// True once per bell (BEL) received since the last call.
     pub fn take_bell(&mut self) -> bool {
         std::mem::take(&mut self.listener.0.borrow_mut().bell)
@@ -788,6 +797,20 @@ mod tests {
         // Clear Scrollback: the history goes too.
         t.feed(b"\x1b[3J");
         assert_eq!(t.scroll_position().1, 0);
+    }
+
+    #[test]
+    fn restart_clears_the_screen_and_modes_but_keeps_history() {
+        let mut t = Terminal::new(10, 2);
+        t.feed(b"old\r\n\x1b[?1049h\x1b[?1000h\x1b[?1h\x1b[?2004hvim");
+        assert!(t.mode().contains(TermMode::ALT_SCREEN | TermMode::MOUSE_REPORT_CLICK));
+        t.restart();
+        let mut text = String::new();
+        t.for_each_cell(false, |c| text.push(c.c));
+        assert!(text.trim().is_empty(), "{text:?}");
+        assert!(!t.mode().intersects(TermMode::ALT_SCREEN | TermMode::MOUSE_MODE | TermMode::APP_CURSOR | TermMode::BRACKETED_PASTE));
+        assert!(t.scroll_position().1 > 0, "the old screen went into history");
+        assert_eq!(t.cursor_position(), (1, 1));
     }
 
     #[test]

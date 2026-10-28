@@ -808,8 +808,7 @@ impl Tab {
             }
         }
         if self.state == State::Closed && self.retry.is_some_and(|(at, _)| now >= at) {
-            self.terminal.feed(b"\r\n");
-            self.connect();
+            self.reconnect();
         }
     }
 
@@ -1124,6 +1123,12 @@ impl Tab {
         } else {
             self.open_log(now);
         }
+    }
+
+    /// Connect again in this tab, on a clean screen (the old one stays in the scrollback).
+    fn reconnect(&mut self) {
+        self.terminal.restart();
+        self.connect();
     }
 
     fn connect(&mut self) {
@@ -1614,6 +1619,18 @@ fn compact_groups(tabs: &mut [Tab]) {
     for tab in tabs {
         tab.group = used.iter().position(|g| *g == tab.group).unwrap_or(0);
     }
+}
+
+/// Drag and drop: tab `from` goes just before tab `to` (or `after` it), into
+/// its group; returns where it went.
+fn move_tab(tabs: &mut Vec<Tab>, from: usize, to: usize, after: bool) -> usize {
+    let group = tabs[to].group;
+    let mut tab = tabs.remove(from);
+    tab.group = group;
+    let at = if from < to { to - 1 } else { to } + after as usize;
+    tabs.insert(at, tab);
+    compact_groups(tabs);
+    at
 }
 
 /// Side-by-side columns for `n` tab groups, a 1-pixel gap between them.
@@ -2455,10 +2472,7 @@ impl App {
             return;
         };
         match name {
-            "reconnect" if tab.state == State::Closed => {
-                tab.terminal.feed(b"\r\n");
-                tab.connect();
-            }
+            "reconnect" if tab.state == State::Closed => tab.reconnect(),
             "disconnect" if tab.state != State::Closed => tab.disconnect("Disconnected."),
             "clone" => {
                 let target = tab.target.clone();
@@ -2504,6 +2518,15 @@ impl App {
                 self.select(index);
             }
             // Not while a dialog is tied to a tab by its position.
+            _ if name.starts_with("move-to-") && self.dialog_tab.is_none() && self.editing_tab.is_none() && self.renaming_tab.is_none() => {
+                let spot = &name["move-to-".len()..];
+                let (spot, after) = spot.strip_suffix("-after").map_or((spot, false), |s| (s, true));
+                let Some(to) = spot.parse().ok().filter(|t| *t < self.tabs.len() && *t != index) else { return };
+                let active = self.tabs[self.active].id;
+                let at = move_tab(&mut self.tabs, index, to, after);
+                self.active = self.tabs.iter().position(|t| t.id == active).unwrap_or(at);
+                self.select(at);
+            }
             "move-left" | "move-right"
                 if self.dialog_tab.is_none() && self.editing_tab.is_none() && self.renaming_tab.is_none() =>
             {
@@ -2547,8 +2570,7 @@ impl App {
             return false;
         };
         if tab.state == State::Closed && (text == "\n" || text == "\r") && !alt && !control {
-            tab.terminal.feed(b"\r\n");
-            tab.connect();
+            tab.reconnect();
             return true;
         }
         if tab.transfer.is_some() {
@@ -7260,6 +7282,25 @@ mod tests {
         assert_eq!(group_count(&tabs), 3);
         assert_eq!((shown_in(&tabs, 0), shown_in(&tabs, 1), shown_in(&tabs, 3)), (Some(0), Some(2), None));
         assert_eq!(group_rects(2, 100.0, 50.0), [[0.0, 0.0, 49.0, 50.0], [50.0, 0.0, 50.0, 50.0]]);
+    }
+
+    #[test]
+    fn dragged_tabs_take_the_drop_targets_place_and_group() {
+        let mut tabs: Vec<Tab> = (0..4).map(|_| Tab::new(Target::default(), Terminal::new(10, 2))).collect();
+        let ids: Vec<u64> = tabs.iter().map(|t| t.id).collect();
+        let order = |tabs: &[Tab]| tabs.iter().map(|t| ids.iter().position(|id| *id == t.id).unwrap()).collect::<Vec<_>>();
+        // Into the gap before tab 2, after the last one, before the first.
+        assert_eq!(move_tab(&mut tabs, 0, 2, false), 1);
+        assert_eq!(order(&tabs), [1, 0, 2, 3]);
+        assert_eq!(move_tab(&mut tabs, 0, 3, true), 3);
+        assert_eq!(order(&tabs), [0, 2, 3, 1]);
+        assert_eq!(move_tab(&mut tabs, 2, 0, false), 0);
+        assert_eq!(order(&tabs), [3, 0, 2, 1]);
+        // Next to a tab in another group: it joins that group, and an emptied group goes.
+        tabs[3].group = 1;
+        assert_eq!(move_tab(&mut tabs, 3, 1, true), 2);
+        assert_eq!(order(&tabs), [3, 0, 1, 2]);
+        assert_eq!(group_count(&tabs), 1);
     }
 
     #[test]

@@ -42,6 +42,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
       - if: matrix.crate == 'opencrt'
         run: sudo apt-get update && sudo apt-get install -y libfontconfig-dev
+      # The day's nightly build, for ci.yml's fuzz runs to start from.
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: ${{ matrix.crate }}
+          workspaces: crates/${{ matrix.crate }}/fuzz -> target
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: cargo install cargo-fuzz --locked
       - uses: actions/cache/restore@v6
         with:

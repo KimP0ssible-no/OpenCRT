@@ -742,7 +742,7 @@ impl Default for Options {
             print_font_size: 0,
             print_margin_mm: 0,
             paste_on_right_click: false,
-            paste_on_middle_click: false,
+            paste_on_middle_click: true,
             confirm_multiline_paste: false,
             send_char_delay_ms: 0,
             send_line_delay_ms: 0,

@@ -767,26 +767,45 @@ impl GraphicsPipelineClient {
             return Err(pdu_other_err!("decoded frame smaller than destination rectangle"));
         }
 
-        // A picture of the whole surface (as Windows sends it) is cut at the
-        // rectangle's place; one of the rectangle's size, from its top left.
+        // A picture of the whole surface (as Windows sends it) starts at the
+        // surface's top left; one of the rectangle's size, at the rectangle.
         let whole = self
             .surfaces
             .get(&surface_id)
             .is_some_and(|s| frame.width() >= u32::from(s.width) && frame.height() >= u32::from(s.height));
-        let origin = if whole { (u32::from(dest_rect.left), u32::from(dest_rect.top)) } else { (0, 0) };
-        let cropped_data =
-            crop_decoded_frame(frame.data(), frame.width(), frame.height(), origin, dest_width, dest_height);
-
-        let update = BitmapUpdate {
-            surface_id,
-            destination_rectangle: dest_rect.clone(),
-            codec_id: Codec1Type::Avc420,
-            data: cropped_data,
-            width: dest_width,
-            height: dest_height,
+        let (origin, end) = if whole {
+            ((0, 0), (frame.width(), frame.height()))
+        } else {
+            ((u32::from(dest_rect.left), u32::from(dest_rect.top)), (u32::from(dest_rect.right), u32::from(dest_rect.bottom)))
         };
 
-        self.handler.on_bitmap_updated(&update);
+        // Only the region's rectangles are new (surface coordinates, right and
+        // bottom exclusive, as FreeRDP reads them); elsewhere the picture holds
+        // whatever the encoder had there before.
+        for r in &stream.rectangles {
+            let (left, top) = (u32::from(r.left).max(origin.0), u32::from(r.top).max(origin.1));
+            let (right, bottom) = (u32::from(r.right).min(end.0), u32::from(r.bottom).min(end.1));
+            let (Ok(l), Ok(t), Ok(w), Ok(h)) = (
+                u16::try_from(left),
+                u16::try_from(top),
+                u16::try_from(right.saturating_sub(left)),
+                u16::try_from(bottom.saturating_sub(top)),
+            ) else {
+                continue;
+            };
+            if w == 0 || h == 0 {
+                continue;
+            }
+            let data = crop_decoded_frame(frame.data(), frame.width(), frame.height(), (left - origin.0, top - origin.1), w, h);
+            self.handler.on_bitmap_updated(&BitmapUpdate {
+                surface_id,
+                destination_rectangle: ExclusiveRectangle { left: l, top: t, right: l + w, bottom: t + h },
+                codec_id: Codec1Type::Avc420,
+                data,
+                width: w,
+                height: h,
+            });
+        }
         Ok(())
     }
 
@@ -1055,6 +1074,50 @@ mod tests {
         assert!(client.surfaces.is_empty(), "surfaces should be cleared");
         assert!(client.current_frame_id.is_none(), "frame_id should be reset");
         assert_eq!(client.frames_queued, 0, "frame queue should be reset");
+    }
+
+    #[test]
+    fn avc420_shows_only_its_region_rectangles() {
+        use std::sync::{Arc, Mutex};
+
+        /// An 8x4 picture whose pixels hold their own position.
+        struct Positions;
+        impl H264Decoder for Positions {
+            fn decode(&mut self, _data: &[u8]) -> crate::decode::DecoderResult<crate::decode::DecodedFrame> {
+                let data = (0..4u8).flat_map(|y| (0..8u8).flat_map(move |x| [x, y, 0, 255])).collect();
+                Ok(crate::decode::DecodedFrame::new(data, 8, 4))
+            }
+        }
+        struct Updates(Arc<Mutex<Vec<(ExclusiveRectangle, Vec<u8>)>>>);
+        impl GraphicsPipelineHandler for Updates {
+            fn on_bitmap_updated(&mut self, update: &BitmapUpdate) {
+                self.0.lock().unwrap().push((update.destination_rectangle.clone(), update.data.clone()));
+            }
+        }
+
+        let seen = Arc::new(Mutex::new(Vec::new()));
+        let mut client = GraphicsPipelineClient::new(Box::new(Updates(seen.clone())), Some(Box::new(Positions)));
+        let _ = client.handle_pdu(GfxPdu::CreateSurface(crate::pdu::CreateSurfacePdu {
+            surface_id: 1,
+            width: 8,
+            height: 4,
+            pixel_format: PixelFormat::XRgb,
+        }));
+        let region = crate::pdu::Avc420Region { left: 2, top: 1, right: 5, bottom: 3, quantization_parameter: 22, quality: 100 };
+        let _ = client.handle_pdu(GfxPdu::WireToSurface1(crate::pdu::WireToSurface1Pdu {
+            surface_id: 1,
+            codec_id: Codec1Type::Avc420,
+            pixel_format: PixelFormat::XRgb,
+            destination_rectangle: ExclusiveRectangle { left: 0, top: 0, right: 8, bottom: 4 },
+            bitmap_data: crate::pdu::encode_avc420_bitmap_stream(&[region], b"h264"),
+        }));
+
+        // Columns 2..5 of rows 1..3, and nothing else of the picture.
+        let seen = seen.lock().unwrap();
+        assert_eq!(seen.len(), 1);
+        assert_eq!(seen[0].0, ExclusiveRectangle { left: 2, top: 1, right: 5, bottom: 3 });
+        let positions: Vec<(u8, u8)> = seen[0].1.chunks(4).map(|p| (p[0], p[1])).collect();
+        assert_eq!(positions, [(2, 1), (3, 1), (4, 1), (2, 2), (3, 2), (4, 2)]);
     }
 
     #[test]

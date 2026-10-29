@@ -80,6 +80,8 @@ enum Deletion {
     Update,
     /// Start again on the configuration folder just chosen.
     Restart,
+    /// Delete files or folders in a file browser tab (by tab id).
+    Files(u64, sftp::Side, Vec<(String, bool)>),
 }
 
 /// A list of saved commands: the Button Bar's, or the Command Manager's.
@@ -122,6 +124,8 @@ pub struct Target {
     pub tls: bool,
     /// An SSH2 target opened as an SFTP tab instead of a shell.
     pub sftp: bool,
+    /// The SFTP tab shows file lists and a queue instead of an `sftp>` prompt.
+    pub files: bool,
     /// SSH2 port forwards started with the shell.
     pub forwards: Vec<Forward>,
     /// SSH2 jump host, `[user@]host[:port]`.
@@ -188,6 +192,7 @@ impl Target {
             dial: (s.protocol == Protocol::Serial && !s.dial_number.trim().is_empty())
                 .then(|| serial::Dial { init: s.modem_init.clone(), number: s.dial_number.clone() }),
             sftp: s.sftp && s.protocol == Protocol::Ssh2,
+            files: false,
             tls: s.tls && s.protocol == Protocol::Telnet,
             // Rules are validated when the session is saved.
             forwards: s.forwards.iter().filter(|f| f.enabled).cloned().collect(),
@@ -532,6 +537,8 @@ struct Tab {
     via: Option<ssh::Shared>,
     /// RDP: keyboard and mouse input to the helper, while connected.
     rdp: Option<rdp::Input>,
+    /// File browser tabs: the lists and the transfer queue.
+    files: Option<crate::filebrowser::Browser>,
     /// RDP: the remote desktop picture, once the helper has reported its size.
     screen: Option<rdp::Desktop>,
     /// RDP: the desktop size to ask for (the tab's size in physical pixels).
@@ -667,6 +674,7 @@ impl Tab {
         static NEXT_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         Self {
             id: NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+            files: (target.sftp && target.files).then(crate::filebrowser::Browser::new),
             target,
             terminal,
             ssh: None,
@@ -1144,6 +1152,18 @@ impl Tab {
         let (cols, rows) = self.terminal.size();
         self.link = None;
         self.ssh = Some(match self.via.take() {
+            via if let Some(files) = self.files.as_mut() => {
+                let (handle, requests) = match via {
+                    Some(shared) => sftp::browse_shared(shared),
+                    None => {
+                        let t = &self.target;
+                        sftp::browse(t.host.clone(), t.port, t.credentials(), config::known_hosts())
+                    }
+                };
+                // Requests wait in the channel until the worker has logged in.
+                files.attach(requests);
+                handle
+            }
             // An SFTP tab or clone opened from a shell tab: a channel on its connection.
             Some(shared) if self.target.sftp => sftp::connect_shared(shared, self.target.host.clone()),
             Some(shared) => {
@@ -1258,6 +1278,11 @@ impl Tab {
                     self.last_input = Instant::now();
                 }
                 SshEvent::Session(link) => self.link = Some(link),
+                SshEvent::Files(update) => {
+                    if let Some(files) = self.files.as_mut() {
+                        files.apply(update);
+                    }
+                }
                 SshEvent::Screen(rdp::Screen::Size { width, height }) => {
                     self.screen = Some(rdp::Desktop::new(width, height));
                     self.clip_check = true;
@@ -1357,6 +1382,9 @@ impl Tab {
                     self.transfer = None;
                     self.state = State::Closed;
                     self.status = msg.lines().next().unwrap_or_default().to_string();
+                    if let Some(files) = self.files.as_mut() {
+                        files.detach(&self.status);
+                    }
                 }
                 SshEvent::Closed => {
                     self.pending_password = None;
@@ -1373,11 +1401,22 @@ impl Tab {
                     self.transfer = None;
                     self.state = State::Closed;
                     self.status = "Disconnected".into();
+                    if let Some(files) = self.files.as_mut() {
+                        files.detach("Disconnected");
+                    }
                 }
             }
         }
         self.run_script();
         self.pump_upload();
+        if let Some(files) = self.files.as_mut().filter(|_| self.state == State::Connected) {
+            files.pump();
+            let status = files.status().unwrap_or_else(|| "Ready".into());
+            if status != self.status {
+                self.status = status;
+                self.dirty = true;
+            }
+        }
         match (self.anti_idle_due(Instant::now()), &self.ssh) {
             (Some(text), Some(ssh)) if text.is_empty() => ssh.send_telnet(crate::telnet::NOP),
             (Some(text), _) => self.send(text),
@@ -1485,6 +1524,9 @@ struct App {
     /// The firewall open in its editor (None for a new one).
     editing_firewall: Option<usize>,
     confirm: Option<Deletion>,
+    /// A file browser tab's New Folder (no old name) or Rename, by tab id.
+    files_naming: Option<(u64, sftp::Side, Option<String>)>,
+    files_model: Rc<VecModel<crate::FilesView>>,
     /// Parent folder for the folder name being asked for.
     new_folder_parent: Option<String>,
     /// Button or command being edited: index `None` for a new one.
@@ -1734,6 +1776,8 @@ impl App {
             editing_credential: None,
             editing_firewall: None,
             confirm: None,
+            files_naming: None,
+            files_model: Rc::new(VecModel::default()),
             new_folder_parent: None,
             editing_button: None,
             renaming_tab: None,
@@ -2390,6 +2434,7 @@ impl App {
             }
             "clone" => self.tab_action(active, "clone"),
             "sftp-tab" => self.tab_action(active, "sftp"),
+            "sftp-gui-tab" => self.tab_action(active, "sftp-gui"),
             "close-tab" => self.close_tab(active, ui),
             "exit" => {
                 if self.may_exit(ui) {
@@ -2488,8 +2533,8 @@ impl App {
                     tab.cipher = cipher;
                 }
             }
-            "sftp" if tab.target.protocol == Protocol::Ssh2 => {
-                let target = Target { sftp: true, ..tab.target.clone() };
+            "sftp" | "sftp-gui" if tab.target.protocol == Protocol::Ssh2 => {
+                let target = Target { sftp: true, files: name == "sftp-gui", ..tab.target.clone() };
                 // Reuse the shell's connection when it is up: no second login.
                 let via = tab.link.as_ref().and_then(|l| l.upgrade()).filter(|s| !s.is_closed());
                 // A shared connection reports no cipher of its own.
@@ -3202,6 +3247,7 @@ impl App {
 
         let (cell_w, cell_h) = (self.renderer.cell_w, self.renderer.cell_h);
         let mut rows = Vec::with_capacity(self.panes.len());
+        let mut views = Vec::new();
         self.pane_drawn.truncate(self.panes.len());
         let mut fitted = Vec::new();
         for (k, pane) in self.panes.iter().enumerate() {
@@ -3242,6 +3288,8 @@ impl App {
             let drawn = (tab.id, pixels, focused && pane.tab == self.active);
             let image = match self.pane_model.row_data(k) {
                 Some(row) if !tab.dirty && self.pane_drawn.get(k) == Some(&drawn) => row.image,
+                // A file browser draws its own lists over the pane.
+                _ if tab.files.is_some() => Image::default(),
                 // An RDP tab shows the remote desktop, 1:1 in physical pixels.
                 _ if let Some(desktop) = &tab.screen => {
                     let mut buffer = SharedPixelBuffer::<Rgb8Pixel>::new(pixels.0 as u32, pixels.1 as u32);
@@ -3285,6 +3333,9 @@ impl App {
                 tab.desktop_asked = Some(size);
             }
             let [x, y, width, height] = pane.image;
+            if let Some(files) = tab.files.as_mut() {
+                views.push(files.view(pane.tab, pane.image));
+            }
             let titled = self.layout != Layout::Tabs;
             let title = if titled { tab.title().into() } else { SharedString::new() };
             rows.push(PaneData { x, y, width, height, image, title, titled, active: pane.tab == self.active });
@@ -3292,6 +3343,7 @@ impl App {
         for (k, pane) in fitted {
             self.panes[k] = pane;
         }
+        crate::filebrowser::show(&self.files_model, views);
         if self.pane_model.row_count() != rows.len() {
             self.pane_model.set_vec(rows);
         } else {
@@ -3752,10 +3804,11 @@ impl App {
                     ui.invoke_focus_terminal();
                 }
             }
-            ("connect-sftp", Some(Node::Session(i))) => {
+            ("connect-sftp" | "connect-sftp-gui", Some(Node::Session(i))) => {
                 let session = &self.store.sessions[i];
                 if session.protocol == Protocol::Ssh2 {
-                    let target = Target { sftp: true, ..Target::from_session(session, &self.options.credentials) };
+                    let files = name == "connect-sftp-gui";
+                    let target = Target { sftp: true, files, ..Target::from_session(session, &self.options.credentials) };
                     let color = session.tab_color.clone();
                     self.open_tab(target, None);
                     if let Some(tab) = self.tabs.last_mut() {
@@ -3860,10 +3913,62 @@ impl App {
             Some(Deletion::Update) if yes => return self.install_update(ui),
             Some(Deletion::Restart) if yes => self.restart(),
             Some(Deletion::Restart) => self.notify("The new configuration folder is used from the next start."),
+            Some(Deletion::Files(id, side, names)) if yes => {
+                if let Some(files) = self.tabs.iter_mut().find(|t| t.id == id).and_then(|t| t.files.as_mut()) {
+                    files.delete(side, &names);
+                }
+            }
             _ => {}
         }
         ui.set_dialog(DIALOG_NONE);
         ui.invoke_focus_terminal();
+    }
+
+    /// A file browser tab's menu, button or header action; `side` 0 local, 1 remote, 2 the queue.
+    fn files_action(&mut self, index: usize, side: i32, name: &str, ui: &MainWindow) {
+        let Some(tab) = self.tabs.get_mut(index) else { return };
+        let id = tab.id;
+        let Some(files) = tab.files.as_mut() else { return };
+        let which = if side == 0 { sftp::Side::Local } else { sftp::Side::Remote };
+        let picked = files.selection(which);
+        let mut problem = None;
+        match (side, name) {
+            (2, "cancel") => files.cancel(),
+            (2, "remove") => files.remove(false),
+            (2, "clear") => files.remove(true),
+            (2, "retry") => files.retry(),
+            (2, _) => files.show_list(name.strip_prefix("list-").and_then(|n| n.parse().ok()).unwrap_or(0)),
+            (_, "transfer") => problem = files.transfer(which).err(),
+            (_, "refresh") => files.refresh(which),
+            (_, "up") => files.up(which),
+            (_, "rename") if picked.len() != 1 => problem = Some("Pick one file or folder to rename.".to_string()),
+            (_, "delete") if picked.is_empty() => problem = Some("Pick the files or folders to delete.".to_string()),
+            (_, "mkdir" | "rename") => {
+                let old = (name == "rename").then(|| picked[0].0.clone());
+                ui.set_name_title(if old.is_some() { "Rename" } else { "New Folder" }.into());
+                ui.set_name_label(if old.is_some() { "New name:" } else { "Folder name:" }.into());
+                ui.set_name_value(old.clone().unwrap_or_default().into());
+                self.files_naming = Some((id, which, old));
+                ui.set_dialog(DIALOG_NAME);
+            }
+            (_, "delete") => {
+                let place = if side == 0 { "this computer" } else { "the server" };
+                let what = match &picked[..] {
+                    [(n, false)] => format!("\"{n}\""),
+                    [(n, true)] => format!("the folder \"{n}\" and everything in it"),
+                    many => format!("{} items (folders with everything in them)", many.len()),
+                };
+                self.ask_confirm(ui, &format!("Delete {what} from {place}?"), Deletion::Files(id, which, picked));
+            }
+            (_, _) => {
+                if let Some(column) = name.strip_prefix("sort-").and_then(|n| n.parse().ok()) {
+                    files.sort_by(which, column);
+                }
+            }
+        }
+        if let Some(e) = problem {
+            self.notify(e);
+        }
     }
 
     fn rename_tab(&mut self, index: usize, ui: &MainWindow) {
@@ -3877,6 +3982,25 @@ impl App {
     }
 
     fn name_answer(&mut self, ok: bool, ui: &MainWindow) {
+        if let Some((id, side, old)) = self.files_naming.take() {
+            let name = ui.get_name_value().trim().to_string();
+            if ok && !name.is_empty() {
+                if !sftp::plain_name(&name) {
+                    // Keep the dialog open to correct the name.
+                    self.files_naming = Some((id, side, old));
+                    ui.set_name_title("A name, not a path".into());
+                    return;
+                }
+                if let Some(files) = self.tabs.iter_mut().find(|t| t.id == id).and_then(|t| t.files.as_mut()) {
+                    match old {
+                        Some(old) => files.rename(side, &old, &name),
+                        None => files.make_dir(side, &name),
+                    }
+                }
+            }
+            ui.set_dialog(DIALOG_NONE);
+            return;
+        }
         if let Some(old) = self.renaming_folder.take() {
             if ok {
                 match sessions::rename_folder(&mut self.store, &old, &ui.get_name_value()) {
@@ -5715,6 +5839,12 @@ impl App {
         let Some(tab) = self.tabs.get_mut(self.active).filter(|t| t.state == State::Connected) else {
             return self.notify("Drop files on a connected session to upload them.");
         };
+        if let Some(files) = tab.files.as_mut() {
+            if let Err(e) = files.upload(&[path.to_path_buf()]) {
+                self.notify(e);
+            }
+            return;
+        }
         if tab.target.sftp {
             tab.send(format!("put \"{}\"\r", path.display()).into_bytes());
             tab.dirty = true;
@@ -5765,6 +5895,7 @@ impl App {
     /// Put `files` through an SFTP tab on the active session's host: one already
     /// open, else a new one on the same connection (the puts wait for it).
     fn sftp_put(&mut self, files: &[PathBuf]) {
+        let files_list = files;
         let Some(t) = self.tabs.get(self.active).map(|t| t.target.clone()) else { return };
         let puts: String = files.iter().map(|f| format!("put \"{}\"\r", f.display())).collect();
         let open = self.tabs.iter().position(|o| {
@@ -5772,7 +5903,14 @@ impl App {
         });
         match open {
             Some(i) => {
-                self.tabs[i].send(puts.into_bytes());
+                match self.tabs[i].files.as_mut() {
+                    Some(files) => {
+                        if let Err(e) = files.upload(files_list) {
+                            self.notify(e);
+                        }
+                    }
+                    None => self.tabs[i].send(puts.into_bytes()),
+                }
                 self.select(i);
             }
             None => {
@@ -6834,6 +6972,24 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
     on!(on_global_options_ok, |app, ui| app.global_options_ok(&ui));
     on!(on_confirm_answer, |app, ui, yes| app.confirm_answer(yes, &ui));
     on!(on_name_answer, |app, ui, ok| app.name_answer(ok, &ui));
+    on!(on_files_click, |app, _ui, tab, side, row, ctrl, shift| {
+        if let Some(files) = app.tabs.get_mut(tab as usize).and_then(|t| t.files.as_mut()) {
+            files.click(side as usize, row.max(-1) as usize, ctrl, shift);
+        }
+    });
+    on!(on_files_open, |app, _ui, tab, side, row| {
+        let side = if side == 0 { sftp::Side::Local } else { sftp::Side::Remote };
+        if let Some(Err(e)) = app.tabs.get_mut(tab as usize).and_then(|t| t.files.as_mut()).map(|f| f.open(side, row as usize)) {
+            app.notify(e);
+        }
+    });
+    on!(on_files_go, |app, _ui, tab, side, text| {
+        let side = if side == 0 { sftp::Side::Local } else { sftp::Side::Remote };
+        if let Some(files) = app.tabs.get_mut(tab as usize).and_then(|t| t.files.as_mut()) {
+            files.go(side, text.trim().to_string());
+        }
+    });
+    on!(on_files_action, |app, ui, tab, side, name| app.files_action(tab as usize, side, &name, &ui));
 
     // Closing the window with live sessions asks first.
     {
@@ -6878,6 +7034,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         crate::terminal::set_user_schemes(&app.options.user_schemes);
         show_scheme_lists(&ui);
         ui.set_panes(ModelRc::from(app.pane_model.clone()));
+        ui.set_files_views(ModelRc::from(app.files_model.clone()));
         ui.set_show_toolbar(app.options.show_toolbar);
         ui.set_show_statusbar(app.options.show_statusbar);
         ui.set_show_menubar(app.options.show_menubar);

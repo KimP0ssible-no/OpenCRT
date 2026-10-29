@@ -6,6 +6,7 @@ mod app;
 mod cli;
 mod codec;
 mod config;
+mod filebrowser;
 mod forward;
 #[cfg(fuzzing)]
 pub mod fuzz;

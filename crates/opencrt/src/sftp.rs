@@ -333,7 +333,7 @@ impl Cli {
         let mut source = self.sftp.open(remote).await.with_context(|| format!("cannot open {remote}"))?;
         let size = source.metadata().await.ok().and_then(|m| m.size).unwrap_or(0);
         let mut target = tokio::fs::File::create(local).await.with_context(|| format!("cannot create {}", local.display()))?;
-        let total = copy(&mut source, &mut target, size, io).await?;
+        let total = copy_showing(&mut source, &mut target, size, io).await?;
         target.flush().await?;
         out(io, &format!("Downloaded {remote} to {} ({}).\n", local.display(), summary(total, started)));
         Ok(())
@@ -344,47 +344,361 @@ impl Cli {
         let mut source = tokio::fs::File::open(local).await.with_context(|| format!("cannot open {}", local.display()))?;
         let size = source.metadata().await.map(|m| m.len()).unwrap_or(0);
         let mut target = self.sftp.create(remote).await.with_context(|| format!("cannot create {remote}"))?;
-        let total = copy(&mut source, &mut target, size, io).await?;
+        let total = copy_showing(&mut source, &mut target, size, io).await?;
         target.shutdown().await?;
         out(io, &format!("Uploaded {} to {remote} ({}).\n", local.display(), summary(total, started)));
         Ok(())
     }
 }
 
-/// Copy everything, showing a progress line (rewritten in place) when it takes a while.
-async fn copy(
+/// `copy`, showing a progress line (rewritten in place) when it takes a while.
+async fn copy_showing(
     source: &mut (impl tokio::io::AsyncRead + Unpin),
     target: &mut (impl tokio::io::AsyncWrite + Unpin),
     size: u64,
     io: &Io,
 ) -> anyhow::Result<u64> {
-    const EVERY: std::time::Duration = std::time::Duration::from_millis(250);
     let started = Instant::now();
-    let mut next_report = started + EVERY;
     let mut shown = false;
+    let total = copy(source, target, |done| {
+        shown = true;
+        out(io, &format!("\r{}\x1b[K", progress(done, size, started.elapsed().as_secs_f64())));
+    })
+    .await?;
+    if shown {
+        // Clear the progress line for the summary.
+        out(io, "\r\x1b[K");
+    }
+    Ok(total)
+}
+
+/// Copy everything, telling `report` the bytes copied so far every quarter second.
+async fn copy(
+    source: &mut (impl tokio::io::AsyncRead + Unpin),
+    target: &mut (impl tokio::io::AsyncWrite + Unpin),
+    mut report: impl FnMut(u64),
+) -> anyhow::Result<u64> {
+    const EVERY: std::time::Duration = std::time::Duration::from_millis(250);
+    let mut next_report = Instant::now() + EVERY;
     let mut buf = vec![0u8; CHUNK];
     let mut total = 0u64;
     loop {
         let n = source.read(&mut buf).await?;
         if n == 0 {
-            if shown {
-                // Clear the progress line for the summary.
-                out(io, "\r\x1b[K");
-            }
             return Ok(total);
         }
         target.write_all(&buf[..n]).await?;
         total += n as u64;
         if Instant::now() >= next_report {
             next_report += EVERY;
-            shown = true;
-            out(io, &format!("\r{}\x1b[K", progress(total, size, started.elapsed().as_secs_f64())));
+            report(total);
+        }
+    }
+}
+
+// --- File browser tabs: a local and a remote file list; the app keeps the queue
+// and hands this side one job at a time. ---
+
+/// Which file list a request or listing is about.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Side {
+    Local,
+    Remote,
+}
+
+/// A file or folder in a listing.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Entry {
+    pub name: String,
+    pub dir: bool,
+    pub size: u64,
+    /// Seconds since 1970, if known.
+    pub modified: Option<i64>,
+    /// Remote only: `drwxr-xr-x` and `owner group`.
+    pub permissions: String,
+    pub owner: String,
+}
+
+/// Copy one file or folder; a folder's contents come back as new jobs.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Job {
+    pub id: u64,
+    pub upload: bool,
+    pub local: PathBuf,
+    pub remote: String,
+    pub dir: bool,
+    pub size: u64,
+}
+
+pub enum Request {
+    /// List a folder; "" is the login folder (remote) or the home folder (local;
+    /// on Windows the list of drives).
+    List(Side, String),
+    Start(Job),
+    /// Stop the running job.
+    Cancel,
+    MakeDir(Side, String),
+    /// Delete these paths; folders (`true`) go with everything in them.
+    Delete(Side, Vec<(String, bool)>),
+    Rename(Side, String, String),
+}
+
+pub enum Update {
+    /// A folder's full path and entries, or why it could not be listed.
+    Listing(Side, Result<(String, Vec<Entry>), String>),
+    /// Bytes copied so far by a job.
+    Progress(u64, u64),
+    /// A job ended; a folder job gives the jobs for what it holds (their ids are 0).
+    Finished(u64, Result<Vec<Job>, String>),
+    /// A make / delete / rename on this side ended.
+    Changed(Side, Result<(), String>),
+}
+
+pub type Requests = tokio::sync::mpsc::UnboundedSender<Request>;
+type RequestRx = tokio::sync::mpsc::UnboundedReceiver<Request>;
+
+/// Open a file browser tab to `host` (same host-key checks and login as SSH).
+pub fn browse(host: String, port: u16, creds: Credentials, known_hosts: Option<PathBuf>) -> (SshHandle, Requests) {
+    let creds = Credentials { forward_agent: false, x11_display: None, ..creds };
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    let handle = ssh::spawn(move |io| {
+        let creds = ssh::with_saved_password(creds, io);
+        ssh::runtime()?.block_on(async {
+            let session = ssh::open(&host, port, &creds, known_hosts, Default::default(), io).await?;
+            browse_on(&session, rx, io).await
+        })
+    });
+    (handle, tx)
+}
+
+/// A file browser tab on an existing logged-in connection (no second login).
+pub fn browse_shared(session: ssh::Shared) -> (SshHandle, Requests) {
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    let handle = ssh::spawn(move |io| {
+        ssh::runtime()?.block_on(async {
+            let result = browse_on(&session, rx, io).await;
+            ssh::settle().await;
+            result
+        })
+    });
+    (handle, tx)
+}
+
+async fn browse_on(session: &client::Handle<ssh::SshHandler>, mut requests: RequestRx, io: &mut Io) -> anyhow::Result<()> {
+    let channel = session.channel_open_session().await?;
+    channel.request_subsystem(true, "sftp").await?;
+    let sftp = std::sync::Arc::new(SftpSession::new(channel.into_stream()).await?);
+    // Listings use a raw session of their own: only its replies carry owner and group names.
+    let channel = session.channel_open_session().await?;
+    channel.request_subsystem(true, "sftp").await?;
+    let raw = russh_sftp::client::RawSftpSession::new(channel.into_stream());
+    raw.init().await?;
+    let _ = io.output.send(SshEvent::Connected);
+
+    let send = |update| {
+        let _ = io.output.send(SshEvent::Files(update));
+    };
+    let mut running: Option<tokio::task::JoinHandle<()>> = None;
+    // Ends when the tab goes (its sender is dropped).
+    while let Some(request) = requests.recv().await {
+        match request {
+            Request::List(Side::Local, dir) => send(Update::Listing(Side::Local, list_local(&dir).map_err(|e| format!("{e:#}")))),
+            Request::List(Side::Remote, dir) => {
+                send(Update::Listing(Side::Remote, list_remote(&raw, &sftp, &dir).await.map_err(|e| format!("{e:#}"))));
+            }
+            Request::Start(job) => {
+                let (sftp, output) = (sftp.clone(), io.output.clone());
+                running = Some(tokio::spawn(async move {
+                    let id = job.id;
+                    let result = run_job(&job, &sftp, |done| {
+                        let _ = output.send(SshEvent::Files(Update::Progress(id, done)));
+                    });
+                    let result = result.await.map_err(|e| format!("{e:#}"));
+                    let _ = output.send(SshEvent::Files(Update::Finished(id, result)));
+                }));
+            }
+            Request::Cancel => {
+                if let Some(job) = running.take() {
+                    job.abort();
+                }
+            }
+            Request::MakeDir(side, path) => {
+                let result = match side {
+                    Side::Local => std::fs::create_dir(&path).map_err(anyhow::Error::from),
+                    Side::Remote => sftp.create_dir(path).await.map_err(anyhow::Error::from),
+                };
+                send(Update::Changed(side, result.map_err(|e| format!("{e:#}"))));
+            }
+            Request::Rename(side, from, to) => {
+                let result = match side {
+                    Side::Local => std::fs::rename(&from, &to).map_err(anyhow::Error::from),
+                    Side::Remote => sftp.rename(from, to).await.map_err(anyhow::Error::from),
+                };
+                send(Update::Changed(side, result.map_err(|e| format!("{e:#}"))));
+            }
+            Request::Delete(side, paths) => {
+                let mut result = Ok(());
+                for (path, dir) in paths {
+                    result = match (side, dir) {
+                        (Side::Local, true) => std::fs::remove_dir_all(&path).map_err(anyhow::Error::from),
+                        (Side::Local, false) => std::fs::remove_file(&path).map_err(anyhow::Error::from),
+                        (Side::Remote, true) => remove_remote_dir(&sftp, path.clone()).await,
+                        (Side::Remote, false) => sftp.remove_file(path.as_str()).await.map_err(anyhow::Error::from),
+                    }
+                    .with_context(|| format!("cannot delete {path}"));
+                    if result.is_err() {
+                        break;
+                    }
+                }
+                send(Update::Changed(side, result.map_err(|e| format!("{e:#}"))));
+            }
+        }
+    }
+    if let Some(job) = running {
+        job.abort();
+    }
+    let _ = sftp.close().await;
+    Ok(())
+}
+
+/// `dir/name` for remote paths.
+pub fn remote_join(dir: &str, name: &str) -> String {
+    format!("{}/{name}", dir.trim_end_matches('/'))
+}
+
+/// A name from the server that is safe to use as one local file name (no
+/// `..`, separators, drive letters or control characters).
+pub fn plain_name(name: &str) -> bool {
+    !matches!(name, "" | "." | "..") && !name.contains(['/', '\\', '\0']) && !name.contains(char::is_control) && !(cfg!(windows) && name.contains(':'))
+}
+
+fn list_local(dir: &str) -> anyhow::Result<(String, Vec<Entry>)> {
+    let folder = |name: String| Entry { name, dir: true, size: 0, modified: None, permissions: String::new(), owner: String::new() };
+    if cfg!(windows) && dir.is_empty() {
+        let drives = ('A'..='Z').map(|c| format!("{c}:\\")).filter(|d| Path::new(d).exists()).map(folder).collect();
+        return Ok((String::new(), drives));
+    }
+    let path = match dir {
+        "" => std::env::home_dir().context("no home folder")?,
+        dir => std::path::absolute(dir)?,
+    };
+    let mut entries = Vec::new();
+    for entry in std::fs::read_dir(&path).with_context(|| format!("cannot list {}", path.display()))?.filter_map(Result::ok) {
+        // Through symlinks where they lead somewhere, else the link itself.
+        let Ok(meta) = entry.path().metadata().or_else(|_| entry.metadata()) else { continue };
+        let modified = meta.modified().ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map(|d| d.as_secs() as i64);
+        let dir = meta.is_dir();
+        entries.push(Entry { dir, size: if dir { 0 } else { meta.len() }, modified, ..folder(entry.file_name().to_string_lossy().into_owned()) });
+    }
+    Ok((path.to_string_lossy().into_owned(), entries))
+}
+
+async fn list_remote(raw: &russh_sftp::client::RawSftpSession, sftp: &SftpSession, dir: &str) -> anyhow::Result<(String, Vec<Entry>)> {
+    let dir = sftp.canonicalize(if dir.is_empty() { "." } else { dir }).await?;
+    let handle = raw.opendir(dir.as_str()).await?.handle;
+    let mut files = Vec::new();
+    let listed = loop {
+        match raw.readdir(handle.as_str()).await {
+            Ok(name) => files.extend(name.files),
+            Err(russh_sftp::client::error::Error::Status(s)) if s.status_code == russh_sftp::protocol::StatusCode::Eof => break Ok(()),
+            Err(e) => break Err(e),
+        }
+    };
+    let _ = raw.close(handle).await;
+    listed?;
+    let mut entries = Vec::new();
+    for f in files.into_iter().filter(|f| f.filename != "." && f.filename != "..") {
+        let a = &f.attrs;
+        // A symlink counts as a folder when it leads to one.
+        let dir_link = a.is_symlink() && sftp.metadata(remote_join(&dir, &f.filename)).await.is_ok_and(|m| m.is_dir());
+        let kind = if a.is_symlink() { 'l' } else if a.is_dir() { 'd' } else { '-' };
+        // `ls -l` style: permissions, links, owner, group, ...
+        let words: Vec<&str> = f.longname.split_whitespace().collect();
+        let owner = match words.get(2..4) {
+            Some([user, group]) => format!("{user} {group}"),
+            _ => format!("{} {}", a.uid.unwrap_or(0), a.gid.unwrap_or(0)),
+        };
+        entries.push(Entry {
+            dir: a.is_dir() || dir_link,
+            size: if a.is_dir() || dir_link { 0 } else { a.size.unwrap_or(0) },
+            modified: a.mtime.map(i64::from),
+            permissions: format!("{kind}{}", a.permissions()),
+            owner,
+            name: f.filename,
+        });
+    }
+    Ok((dir, entries))
+}
+
+async fn remove_remote_dir(sftp: &SftpSession, dir: String) -> anyhow::Result<()> {
+    for entry in sftp.read_dir(dir.as_str()).await? {
+        let path = remote_join(&dir, &entry.file_name());
+        // Symlinks are removed, never followed.
+        if entry.file_type().is_dir() {
+            Box::pin(remove_remote_dir(sftp, path)).await?;
+        } else {
+            sftp.remove_file(path).await?;
+        }
+    }
+    Ok(sftp.remove_dir(dir).await?)
+}
+
+async fn run_job(job: &Job, sftp: &SftpSession, report: impl FnMut(u64)) -> anyhow::Result<Vec<Job>> {
+    let child = |name: String, dir: bool, size: u64| Job {
+        id: 0,
+        upload: job.upload,
+        local: job.local.join(&name),
+        remote: remote_join(&job.remote, &name),
+        dir,
+        size,
+    };
+    match (job.dir, job.upload) {
+        (false, true) => {
+            let mut source = tokio::fs::File::open(&job.local).await.with_context(|| format!("cannot open {}", job.local.display()))?;
+            let mut target = sftp.create(job.remote.as_str()).await.with_context(|| format!("cannot create {}", job.remote))?;
+            copy(&mut source, &mut target, report).await?;
+            target.shutdown().await?;
+            Ok(Vec::new())
+        }
+        (false, false) => {
+            let mut source = sftp.open(job.remote.as_str()).await.with_context(|| format!("cannot open {}", job.remote))?;
+            let mut target = tokio::fs::File::create(&job.local).await.with_context(|| format!("cannot create {}", job.local.display()))?;
+            copy(&mut source, &mut target, report).await?;
+            target.flush().await?;
+            Ok(Vec::new())
+        }
+        (true, true) => {
+            if !sftp.try_exists(job.remote.as_str()).await? {
+                sftp.create_dir(job.remote.as_str()).await.with_context(|| format!("cannot create {}", job.remote))?;
+            }
+            let mut jobs = Vec::new();
+            for entry in std::fs::read_dir(&job.local)?.filter_map(Result::ok) {
+                // Symlinked folders are not followed (they could loop).
+                let Ok(kind) = entry.file_type() else { continue };
+                let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+                jobs.push(child(entry.file_name().to_string_lossy().into_owned(), kind.is_dir(), if kind.is_dir() { 0 } else { size }));
+            }
+            Ok(jobs)
+        }
+        (true, false) => {
+            std::fs::create_dir_all(&job.local).with_context(|| format!("cannot create {}", job.local.display()))?;
+            let mut jobs = Vec::new();
+            for entry in sftp.read_dir(job.remote.as_str()).await? {
+                let name = entry.file_name();
+                // Names come from the server: never let one leave the target folder.
+                if !plain_name(&name) {
+                    continue;
+                }
+                let dir = entry.file_type().is_dir();
+                jobs.push(child(name, dir, if dir { 0 } else { entry.metadata().len() }));
+            }
+            Ok(jobs)
         }
     }
 }
 
 /// `12.0 MB of 40.0 MB (30%), 5.1 MB/s`; the size is left out when unknown.
-fn progress(done: u64, size: u64, secs: f64) -> String {
+pub(crate) fn progress(done: u64, size: u64, secs: f64) -> String {
     let rate = human((done as f64 / secs.max(0.001)) as u64);
     match size {
         0 => format!("{}, {rate}/s", human(done)),
@@ -426,7 +740,7 @@ fn summary(bytes: u64, started: Instant) -> String {
     format!("{} in {secs:.1}s, {}/s", human(bytes), human((bytes as f64 / secs) as u64))
 }
 
-fn human(bytes: u64) -> String {
+pub(crate) fn human(bytes: u64) -> String {
     match bytes {
         b if b >= 1 << 30 => format!("{:.1} GB", b as f64 / (1u64 << 30) as f64),
         b if b >= 1 << 20 => format!("{:.1} MB", b as f64 / (1u64 << 20) as f64),
@@ -769,6 +1083,83 @@ mod tests {
         assert!(!files.contains_key("/home/b.txt"), "nothing runs after the failure");
         drop(files);
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// The next file browser update, answering login prompts on the way.
+    fn next_update(handle: &mut SshHandle) -> Update {
+        let deadline = Instant::now() + Duration::from_secs(10);
+        loop {
+            match handle.try_recv() {
+                Ok(SshEvent::UnknownHostKey(p)) => {
+                    let _ = p.reply.send(ssh::HostKeyDecision::AcceptOnce);
+                }
+                Ok(SshEvent::AuthPrompt(p)) => {
+                    let _ = p.reply.send(Some(vec!["pw".into()]));
+                }
+                Ok(SshEvent::Files(Update::Progress(..))) => {}
+                Ok(SshEvent::Files(update)) => return update,
+                Ok(SshEvent::Error(e)) => panic!("browser failed: {e}"),
+                Ok(_) => {}
+                Err(_) => std::thread::sleep(Duration::from_millis(10)),
+            }
+            assert!(Instant::now() < deadline, "no update");
+        }
+    }
+
+    #[test]
+    fn browser_lists_copies_and_deletes() {
+        let files: Files = Arc::default();
+        files.lock().unwrap().insert("/home/r.txt".into(), b"remote".to_vec());
+        let port = start_sftp_server(files.clone());
+        let dir = std::env::temp_dir().join(format!("opencrt-sftp-browse-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("up.txt"), b"local").unwrap();
+        let creds = Credentials { user: "u".into(), password: None, key_path: None, key_passphrase: None, jump: None, legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let (mut handle, requests) = browse("127.0.0.1".into(), port, creds, Some(dir.join("known_hosts")));
+        let job = |id, upload, local: PathBuf, remote: &str, dir| Job { id, upload, local, remote: remote.into(), dir, size: 0 };
+
+        requests.send(Request::List(Side::Remote, String::new())).unwrap();
+        let Update::Listing(Side::Remote, Ok((home, entries))) = next_update(&mut handle) else { panic!("no remote listing") };
+        assert_eq!(home, "/home");
+        assert_eq!(entries.iter().map(|e| (e.name.as_str(), e.size, e.dir)).collect::<Vec<_>>(), [("r.txt", 6, false)]);
+        assert!(entries[0].permissions.starts_with('-') && !entries[0].owner.is_empty(), "{entries:?}");
+        requests.send(Request::List(Side::Local, dir.display().to_string())).unwrap();
+        let Update::Listing(Side::Local, Ok((_, entries))) = next_update(&mut handle) else { panic!("no local listing") };
+        assert!(entries.iter().any(|e| e.name == "up.txt" && e.size == 5));
+
+        requests.send(Request::Start(job(1, true, dir.join("up.txt"), "/home/up.txt", false))).unwrap();
+        assert!(matches!(next_update(&mut handle), Update::Finished(1, Ok(_))));
+        assert_eq!(files.lock().unwrap().get("/home/up.txt").map(Vec::as_slice), Some(&b"local"[..]));
+        requests.send(Request::Start(job(2, false, dir.join("r.txt"), "/home/r.txt", false))).unwrap();
+        assert!(matches!(next_update(&mut handle), Update::Finished(2, Ok(_))));
+        assert_eq!(std::fs::read(dir.join("r.txt")).unwrap(), b"remote");
+
+        // A folder makes its local copy and hands back its contents as jobs;
+        // a name from the server that would leave the folder is dropped.
+        files.lock().unwrap().insert("/home/../evil.txt".into(), b"X".to_vec());
+        requests.send(Request::Start(job(3, false, dir.join("got"), "/home", true))).unwrap();
+        let Update::Finished(3, Ok(jobs)) = next_update(&mut handle) else { panic!("folder job failed") };
+        let mut names: Vec<_> = jobs.iter().map(|j| (j.remote.as_str(), j.local.clone())).collect();
+        names.sort();
+        assert_eq!(names, [("/home/r.txt", dir.join("got").join("r.txt")), ("/home/up.txt", dir.join("got").join("up.txt"))]);
+        assert!(dir.join("got").is_dir());
+
+        requests.send(Request::Start(job(4, false, dir.join("x"), "/home/missing", false))).unwrap();
+        let Update::Finished(4, Err(e)) = next_update(&mut handle) else { panic!("a missing file must fail") };
+        assert!(e.contains("cannot open"), "{e}");
+
+        requests.send(Request::Delete(Side::Remote, vec![("/home/up.txt".into(), false)])).unwrap();
+        assert!(matches!(next_update(&mut handle), Update::Changed(Side::Remote, Ok(()))));
+        assert!(!files.lock().unwrap().contains_key("/home/up.txt"));
+        drop(requests);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn plain_names_only() {
+        assert!(plain_name("a.txt") && plain_name("..a") && plain_name("Black.Box™"));
+        assert!(!plain_name("..") && !plain_name("") && !plain_name("a/b") && !plain_name("a\\b") && !plain_name("a\x1bb"));
     }
 
     #[test]

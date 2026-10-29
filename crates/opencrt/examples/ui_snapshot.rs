@@ -1,6 +1,6 @@
 //! Render the main window off-screen to a PNG-convertible PPM, for checking the
 //! look without opening a window: `cargo run --example ui_snapshot -- out.ppm dark main`.
-//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active.
+//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow.
 
 use std::rc::Rc;
 
@@ -25,7 +25,7 @@ fn model<T: Clone + 'static>(items: Vec<T>) -> ModelRc<T> {
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let [out, theme, scene] = [0, 1, 2].map(|i| args.get(i).cloned().unwrap_or_default());
-    let (width, height) = (1100, 720);
+    let (width, height) = if scene == "files" { (1300, 760) } else { (1100, 720) };
 
     let window = MinimalSoftwareWindow::new(RepaintBufferType::NewBuffer);
     slint::platform::set_platform(Box::new(Offscreen(window.clone()))).unwrap();
@@ -222,6 +222,58 @@ fn main() {
             ui.set_sessions_open(false);
             ui.set_scratch_open(true);
             ui.set_scratch_text("show version\nshow interfaces status\nshow ip route".into());
+        }
+        "files" | "files-narrow" => {
+            ui.set_sessions_open(scene == "files-narrow");
+            let file = |name: &str, size: &str, kind: &str, dir, selected| FileRow {
+                name: name.into(),
+                size: size.into(),
+                kind: kind.into(),
+                modified: "2026-10-29 13:55".into(),
+                permissions: if dir { "drwxr-xr-x" } else { "-rw-r--r--" }.into(),
+                owner: "apps apps".into(),
+                dir,
+                selected,
+            };
+            let up = FileRow { name: "..".into(), dir: true, ..Default::default() };
+            let job = |local: &str, upload, remote: &str, status: &str, progress| QueueRow {
+                local: local.into(),
+                upload,
+                remote: remote.into(),
+                size: "31.5 GB".into(),
+                status: status.into(),
+                progress,
+                selected: false,
+            };
+            ui.set_files_views(model(vec![FilesView {
+                tab: 0,
+                x: 0.0,
+                y: 0.0,
+                width: if scene == "files" { 1270.0 } else { 820.0 },
+                height: 590.0,
+                local_dir: "/home/ops/Downloads".into(),
+                remote_dir: "/mnt/SSD-RAIDZ/seeding".into(),
+                local_rows: model(vec![up.clone(), file("COD4", "", "Folder", true, false), file("notes.txt", "2.1 KB", "TXT file", false, false)]),
+                remote_rows: model(vec![
+                    up,
+                    file("backups", "", "Folder", true, false),
+                    file("ISOs", "", "Folder", true, false),
+                    file("debian-13.iso", "3.7 GB", "ISO file", false, true),
+                    file("Finding.Emily.2026.mkv", "31.5 GB", "MKV file", false, false),
+                ]),
+                local_status: "1 file and 1 folder. Total size: 2.1 KB".into(),
+                remote_status: "Selected 1 file. Total size: 3.7 GB".into(),
+                local_sort: 0,
+                remote_sort: 3,
+                queue: model(vec![
+                    job("/home/ops/Downloads/debian-13.iso", false, "/mnt/SSD-RAIDZ/seeding/debian-13.iso", "1.2 GB of 3.7 GB (32%), 98.1 MB/s", 0.32),
+                    job("/home/ops/Downloads/notes.txt", true, "/mnt/SSD-RAIDZ/seeding/notes.txt", "", -1.0),
+                ]),
+                list: 0,
+                waiting: 2,
+                failed: 1,
+                finished: 14,
+            }]));
         }
         "active" => {
             ui.set_sessions_open(false);

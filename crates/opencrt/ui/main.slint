@@ -50,6 +50,53 @@ export struct PromptField {
     echo: bool,
 }
 
+// File browser tabs: a row of the local or remote list.
+export struct FileRow {
+    name: string,
+    size: string,
+    kind: string,
+    modified: string,
+    permissions: string,
+    owner: string,
+    dir: bool,
+    selected: bool,
+}
+
+// A row of the transfer queue.
+export struct QueueRow {
+    local: string,
+    upload: bool,
+    remote: string,
+    size: string,
+    status: string,
+    // 0..1 while running, else -1.
+    progress: float,
+    selected: bool,
+}
+
+// A file browser tab on screen, drawn over its pane. Sorts are column * 2,
+// plus 1 for descending; `list` is the queue list shown (waiting, failed, finished).
+export struct FilesView {
+    tab: int,
+    x: length,
+    y: length,
+    width: length,
+    height: length,
+    local-dir: string,
+    remote-dir: string,
+    local-rows: [FileRow],
+    remote-rows: [FileRow],
+    local-status: string,
+    remote-status: string,
+    local-sort: int,
+    remote-sort: int,
+    queue: [QueueRow],
+    list: int,
+    waiting: int,
+    failed: int,
+    finished: int,
+}
+
 component ToolButton inherits Rectangle {
     in property <IconKind> icon;
     in property <bool> enabled: true;
@@ -324,6 +371,10 @@ component SessionManagerPanel inherits Rectangle {
                             if row.ssh: MenuItem {
                                 title: "Connect SFTP Tab";
                                 activated => { root.action("connect-sftp"); }
+                            }
+                            if row.ssh: MenuItem {
+                                title: "Connect SFTP GUI Tab";
+                                activated => { root.action("connect-sftp-gui"); }
                             }
                             MenuItem {
                                 title: "Properties...";
@@ -726,6 +777,10 @@ component SessionTab inherits Rectangle {
             if root.protocol == 0: MenuItem {
                 title: "Connect SFTP Tab";
                 activated => { root.action("sftp"); }
+            }
+            if root.protocol == 0: MenuItem {
+                title: "Connect SFTP GUI Tab";
+                activated => { root.action("sftp-gui"); }
             }
             MenuItem {
                 title: "Session Options...";
@@ -3295,6 +3350,485 @@ component AboutDialog inherits DialogFrame {
     }
 }
 
+// --- file browser tabs ---
+
+// A list column's title; click to sort by it (again to reverse).
+component ColumnHeader inherits Rectangle {
+    in property <string> text;
+    in property <int> column: -1;
+    in property <int> sort: -1;
+    in property <TextHorizontalAlignment> align: left;
+    callback sort-by(int);
+    background: touch.has-hover && root.column >= 0 ? Theme.hover-bg : transparent;
+    Text {
+        x: 6px;
+        width: parent.width - 20px;
+        height: parent.height;
+        text: root.text;
+        font-size: 12px;
+        color: Theme.text;
+        horizontal-alignment: root.align;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+    if root.column >= 0 && floor(root.sort / 2) == root.column: Path {
+        x: parent.width - 13px;
+        y: (parent.height - 4px) / 2;
+        width: 7px;
+        height: 4px;
+        commands: mod(root.sort, 2) == 1 ? "M 0 0 L 7 0 L 3.5 4 Z" : "M 0 4 L 7 4 L 3.5 0 Z";
+        fill: Theme.text-secondary;
+    }
+    Rectangle {
+        x: parent.width - 1px;
+        width: 1px;
+        background: Theme.border;
+    }
+    touch := TouchArea {
+        enabled: root.column >= 0;
+        clicked => { root.sort-by(root.column); }
+    }
+}
+
+// One side of a file browser: where it is, what is there, and a summary.
+component FileList inherits Rectangle {
+    in property <bool> remote;
+    in property <string> dir;
+    in property <[FileRow]> rows;
+    in property <string> status;
+    in property <int> sort;
+    callback go(string);
+    callback click(int, bool, bool);
+    callback open(int);
+    callback action(string);
+    // Narrow lists drop the remote-only columns first, then the type.
+    property <length> size-w: 78px;
+    property <length> kind-w: root.width >= 420px ? 80px : 0px;
+    property <length> time-w: 116px;
+    property <length> perm-w: root.remote && root.width >= 600px ? 82px : 0px;
+    property <length> owner-w: root.remote && root.width >= 600px ? 90px : 0px;
+    property <length> name-w: max(120px, list.visible-width - 4px - root.size-w - root.kind-w - root.time-w - root.perm-w - root.owner-w);
+    // Columns are placed by x, not laid out: their widths follow the list's.
+    property <length> size-x: root.name-w + 4px;
+    property <length> kind-x: root.size-x + root.size-w;
+    property <length> time-x: root.kind-x + root.kind-w;
+    property <length> perm-x: root.time-x + root.time-w;
+    property <length> owner-x: root.perm-x + root.perm-w;
+    background: Theme.panel-bg;
+    changed dir => { path.text = root.dir; }
+    menu := ContextMenuArea {
+        Menu {
+            MenuItem {
+                title: root.remote ? "Download" : "Upload";
+                activated => { root.action("transfer"); }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: "New Folder...";
+                activated => { root.action("mkdir"); }
+            }
+            MenuItem {
+                title: "Rename...";
+                activated => { root.action("rename"); }
+            }
+            MenuItem {
+                title: "Delete";
+                activated => { root.action("delete"); }
+            }
+            MenuSeparator { }
+            MenuItem {
+                title: "Refresh";
+                activated => { root.action("refresh"); }
+            }
+        }
+        VerticalLayout {
+            HorizontalLayout {
+                padding: 4px;
+                spacing: 6px;
+                FormLabel {
+                    text: root.remote ? "Remote site:" : "Local site:";
+                    font-size: 12px;
+                }
+                path := LineEdit {
+                    init => { self.text = root.dir; }
+                    accepted(text) => { root.go(text); }
+                }
+                Button {
+                    text: "Up";
+                    clicked => { root.action("up"); }
+                }
+            }
+            Rectangle {
+                height: 22px;
+                background: Theme.window-bg;
+                ColumnHeader {
+                    x: 0px;
+                    width: root.size-x;
+                    text: "Filename";
+                    column: 0;
+                    sort: root.sort;
+                    sort-by(c) => { root.action("sort-" + c); }
+                }
+                ColumnHeader {
+                    x: root.size-x;
+                    width: root.size-w;
+                    text: "Filesize";
+                    column: 1;
+                    sort: root.sort;
+                    align: right;
+                    sort-by(c) => { root.action("sort-" + c); }
+                }
+                if root.kind-w > 0: ColumnHeader {
+                    x: root.kind-x;
+                    width: root.kind-w;
+                    text: "Filetype";
+                    column: 2;
+                    sort: root.sort;
+                    sort-by(c) => { root.action("sort-" + c); }
+                }
+                ColumnHeader {
+                    x: root.time-x;
+                    width: root.time-w;
+                    text: "Last modified";
+                    column: 3;
+                    sort: root.sort;
+                    sort-by(c) => { root.action("sort-" + c); }
+                }
+                if root.perm-w > 0: ColumnHeader {
+                    x: root.perm-x;
+                    width: root.perm-w;
+                    text: "Permissions";
+                    column: 4;
+                    sort: root.sort;
+                    sort-by(c) => { root.action("sort-" + c); }
+                }
+                if root.owner-w > 0: ColumnHeader {
+                    x: root.owner-x;
+                    width: root.owner-w;
+                    text: "Owner/Group";
+                    column: 5;
+                    sort: root.sort;
+                    sort-by(c) => { root.action("sort-" + c); }
+                }
+            }
+            Rectangle {
+                vertical-stretch: 1;
+                // Right-click below the rows: the menu, with nothing picked.
+                TouchArea {
+                    pointer-event(event) => {
+                        if (event.kind == PointerEventKind.down) {
+                            root.click(-1, false, false);
+                            if (event.button == PointerEventButton.right) {
+                                menu.show({ x: self.absolute-position.x + self.mouse-x - menu.absolute-position.x, y: self.absolute-position.y + self.mouse-y - menu.absolute-position.y });
+                            }
+                        }
+                    }
+                }
+                list := ListView {
+                    for row[i] in root.rows: Rectangle {
+                        height: 20px;
+                        background: row.selected ? Theme.active-row-bg : touch.has-hover ? Theme.hover-bg : transparent;
+                        touch := TouchArea {
+                            double-clicked => { root.open(i); }
+                            pointer-event(event) => {
+                                if (event.kind == PointerEventKind.down && event.button == PointerEventButton.left) {
+                                    root.click(i, event.modifiers.control, event.modifiers.shift);
+                                } else if (event.kind == PointerEventKind.down && event.button == PointerEventButton.right) {
+                                    if (!row.selected) {
+                                        root.click(i, false, false);
+                                    }
+                                    menu.show({ x: self.absolute-position.x + self.mouse-x - menu.absolute-position.x, y: self.absolute-position.y + self.mouse-y - menu.absolute-position.y });
+                                }
+                            }
+                        }
+                        Icon {
+                            x: 4px;
+                            y: (parent.height - self.height) / 2;
+                            kind: row.dir ? IconKind.folder : IconKind.file;
+                        }
+                        TableCell {
+                            x: 24px;
+                            width: root.size-x - 28px;
+                            height: parent.height;
+                            text: row.name;
+                        }
+                        TableCell {
+                            x: root.size-x;
+                            width: root.size-w - 6px;
+                            height: parent.height;
+                            text: row.size;
+                            horizontal-alignment: right;
+                        }
+                        if root.kind-w > 0: TableCell {
+                            x: root.kind-x + 6px;
+                            width: root.kind-w - 10px;
+                            height: parent.height;
+                            text: row.kind;
+                        }
+                        TableCell {
+                            x: root.time-x + 6px;
+                            width: root.time-w - 10px;
+                            height: parent.height;
+                            text: row.modified;
+                        }
+                        if root.perm-w > 0: TableCell {
+                            x: root.perm-x + 6px;
+                            width: root.perm-w - 10px;
+                            height: parent.height;
+                            text: row.permissions;
+                        }
+                        if root.owner-w > 0: TableCell {
+                            x: root.owner-x + 6px;
+                            width: root.owner-w - 10px;
+                            height: parent.height;
+                            text: row.owner;
+                        }
+                    }
+                }
+            }
+            Rectangle {
+                height: 20px;
+                background: Theme.window-bg;
+                Text {
+                    x: 6px;
+                    width: parent.width - 12px;
+                    height: parent.height;
+                    text: root.status;
+                    font-size: 11px;
+                    color: Theme.text-secondary;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+            }
+        }
+    }
+}
+
+// The transfer queue: waiting (the running one first), failed and finished jobs.
+component TransferQueue inherits Rectangle {
+    in property <[QueueRow]> rows;
+    in property <int> list;
+    in property <int> waiting;
+    in property <int> failed;
+    in property <int> finished;
+    callback click(int, bool, bool);
+    callback action(string);
+    property <length> dir-w: 70px;
+    property <length> size-w: 78px;
+    property <length> status-w: 230px;
+    property <length> path-w: max(100px, (rows-view.visible-width - 4px - root.dir-w - root.size-w - root.status-w) / 2);
+    property <length> dir-x: root.path-w + 4px;
+    property <length> remote-x: root.dir-x + root.dir-w;
+    property <length> size-x: root.remote-x + root.path-w;
+    property <length> status-x: root.size-x + root.size-w;
+    background: Theme.panel-bg;
+    menu := ContextMenuArea {
+        Menu {
+            if root.list == 0: MenuItem {
+                title: "Cancel Transfer";
+                activated => { root.action("cancel"); }
+            }
+            if root.list == 1: MenuItem {
+                title: "Retry";
+                activated => { root.action("retry"); }
+            }
+            MenuItem {
+                title: "Remove";
+                activated => { root.action("remove"); }
+            }
+            MenuItem {
+                title: "Clear List";
+                activated => { root.action("clear"); }
+            }
+        }
+        VerticalLayout {
+            Rectangle {
+                height: 22px;
+                background: Theme.window-bg;
+                ColumnHeader {
+                    x: 0px;
+                    width: root.dir-x;
+                    text: "Local file";
+                }
+                ColumnHeader {
+                    x: root.dir-x;
+                    width: root.dir-w;
+                    text: "Direction";
+                }
+                ColumnHeader {
+                    x: root.remote-x;
+                    width: root.path-w;
+                    text: "Remote file";
+                }
+                ColumnHeader {
+                    x: root.size-x;
+                    width: root.size-w;
+                    text: "Size";
+                    align: right;
+                }
+                ColumnHeader {
+                    x: root.status-x;
+                    width: root.status-w;
+                    text: root.list == 1 ? "Reason" : "Status";
+                }
+            }
+            Rectangle {
+                vertical-stretch: 1;
+                TouchArea {
+                    pointer-event(event) => {
+                        if (event.kind == PointerEventKind.down) {
+                            root.click(-1, false, false);
+                            if (event.button == PointerEventButton.right) {
+                                menu.show({ x: self.absolute-position.x + self.mouse-x - menu.absolute-position.x, y: self.absolute-position.y + self.mouse-y - menu.absolute-position.y });
+                            }
+                        }
+                    }
+                }
+                rows-view := ListView {
+                    for row[i] in root.rows: Rectangle {
+                        height: 20px;
+                        background: row.selected ? Theme.active-row-bg : touch.has-hover ? Theme.hover-bg : transparent;
+                        if row.progress >= 0: Rectangle {
+                            x: root.status-x;
+                            width: root.status-w * row.progress;
+                            background: Theme.accent.with-alpha(0.25);
+                        }
+                        touch := TouchArea {
+                            pointer-event(event) => {
+                                if (event.kind == PointerEventKind.down && event.button == PointerEventButton.left) {
+                                    root.click(i, event.modifiers.control, event.modifiers.shift);
+                                } else if (event.kind == PointerEventKind.down && event.button == PointerEventButton.right) {
+                                    if (!row.selected) {
+                                        root.click(i, false, false);
+                                    }
+                                    menu.show({ x: self.absolute-position.x + self.mouse-x - menu.absolute-position.x, y: self.absolute-position.y + self.mouse-y - menu.absolute-position.y });
+                                }
+                            }
+                        }
+                        TableCell {
+                            x: 6px;
+                            width: root.dir-x - 10px;
+                            height: parent.height;
+                            text: row.local;
+                        }
+                        TableCell {
+                            x: root.dir-x;
+                            width: root.dir-w;
+                            height: parent.height;
+                            text: row.upload ? "-->" : "<--";
+                            horizontal-alignment: center;
+                        }
+                        TableCell {
+                            x: root.remote-x + 6px;
+                            width: root.path-w - 10px;
+                            height: parent.height;
+                            text: row.remote;
+                        }
+                        TableCell {
+                            x: root.size-x;
+                            width: root.size-w - 6px;
+                            height: parent.height;
+                            text: row.size;
+                            horizontal-alignment: right;
+                        }
+                        TableCell {
+                            x: root.status-x + 6px;
+                            width: root.status-w - 10px;
+                            height: parent.height;
+                            text: row.status;
+                            color: root.list == 1 ? Theme.status-error : Theme.text;
+                        }
+                    }
+                }
+            }
+            HorizontalLayout {
+                height: 26px;
+                padding: 2px;
+                spacing: 2px;
+                alignment: start;
+                for name[k] in ["Queued files (" + root.waiting + ")", "Failed transfers (" + root.failed + ")", "Successful transfers (" + root.finished + ")"]: Rectangle {
+                    width: label.preferred-width + 20px;
+                    border-width: 1px;
+                    border-color: k == root.list ? Theme.border-strong : Theme.border;
+                    background: k == root.list ? Theme.tab-active-bg : tab-touch.has-hover ? Theme.hover-bg : Theme.tab-inactive-bg;
+                    label := Text {
+                        text: name;
+                        font-size: 12px;
+                        font-weight: k == root.list ? 600 : 400;
+                        color: Theme.text;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                    tab-touch := TouchArea {
+                        clicked => { root.action("list-" + k); }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// A file browser tab: local and remote lists side by side, the queue below.
+component FilesBrowser inherits Rectangle {
+    in property <FilesView> view;
+    // `side`: 0 local, 1 remote, 2 the queue.
+    callback click(int, int, bool, bool);
+    callback open(int, int);
+    callback go(int, string);
+    callback action(int, string);
+    background: Theme.window-bg;
+    // Keeps pointer events off the terminal underneath.
+    TouchArea { }
+    VerticalLayout {
+        HorizontalLayout {
+            vertical-stretch: 3;
+            FileList {
+                width: (root.width - 1px) / 2;
+                remote: false;
+                dir: root.view.local-dir;
+                rows: root.view.local-rows;
+                status: root.view.local-status;
+                sort: root.view.local-sort;
+                go(text) => { root.go(0, text); }
+                click(row, ctrl, shift) => { root.click(0, row, ctrl, shift); }
+                open(row) => { root.open(0, row); }
+                action(name) => { root.action(0, name); }
+            }
+            Rectangle {
+                width: 1px;
+                background: Theme.border-strong;
+            }
+            FileList {
+                width: (root.width - 1px) / 2;
+                remote: true;
+                dir: root.view.remote-dir;
+                rows: root.view.remote-rows;
+                status: root.view.remote-status;
+                sort: root.view.remote-sort;
+                go(text) => { root.go(1, text); }
+                click(row, ctrl, shift) => { root.click(1, row, ctrl, shift); }
+                open(row) => { root.open(1, row); }
+                action(name) => { root.action(1, name); }
+            }
+        }
+        Rectangle {
+            height: 1px;
+            background: Theme.border-strong;
+        }
+        TransferQueue {
+            vertical-stretch: 2;
+            min-height: 120px;
+            rows: root.view.queue;
+            list: root.view.list;
+            waiting: root.view.waiting;
+            failed: root.view.failed;
+            finished: root.view.finished;
+            click(row, ctrl, shift) => { root.click(2, row, ctrl, shift); }
+            action(name) => { root.action(2, name); }
+        }
+    }
+}
+
 export component MainWindow inherits Window {
     title: root.window-title;
     icon: @image-url("opencrt.svg");
@@ -3314,6 +3848,12 @@ export component MainWindow inherits Window {
     in property <string> version;
     in property <string> settings-dir;
     in property <[PaneData]> panes;
+    // File browser tabs on screen, drawn over their panes.
+    in property <[FilesView]> files-views;
+    callback files-click(int, int, int, bool, bool);
+    callback files-open(int, int, int);
+    callback files-go(int, int, string);
+    callback files-action(int, int, string);
     in property <color> terminal-bg: black;
     in property <image> dock-label-sessions;
     in property <image> dock-label-active;
@@ -3992,6 +4532,11 @@ export component MainWindow inherits Window {
                 activated => { root.menu("sftp-tab"); }
             }
             MenuItem {
+                title: "Connect SFTP GUI Tab";
+                enabled: root.ssh-active;
+                activated => { root.menu("sftp-gui-tab"); }
+            }
+            MenuItem {
                 title: "Send ASCII File...";
                 enabled: root.session-live;
                 activated => { root.menu("send-ascii"); }
@@ -4582,6 +5127,17 @@ export component MainWindow inherits Window {
                             }
                         }
                     }
+                }
+                for v in root.files-views: FilesBrowser {
+                    x: v.x;
+                    y: v.y;
+                    width: v.width;
+                    height: v.height;
+                    view: v;
+                    click(side, row, ctrl, shift) => { root.files-click(v.tab, side, row, ctrl, shift); }
+                    open(side, row) => { root.files-open(v.tab, side, row); }
+                    go(side, text) => { root.files-go(v.tab, side, text); }
+                    action(side, name) => { root.files-action(v.tab, side, name); }
                 }
                 Rectangle {
                     background: #ffffff38;

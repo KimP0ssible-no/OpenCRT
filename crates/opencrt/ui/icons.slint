@@ -7,7 +7,7 @@ export enum IconKind {
     sessions, connect, quick-connect, connect-tab, reconnect, disconnect, copy, paste, find, print, options,
     connected, connecting, failed, sftp, local-shell, folder, folder-open, new-session, new-folder, properties,
     delete, chevron-right, chevron-down, session-ssh, session-telnet, session-serial, session-rdp, session-local,
-    script, lock,
+    script, lock, file,
 }
 
 // The tree icon for a protocol index (config::Protocol::ALL: SSH2, Telnet, Raw, Serial, Local, RDP).
@@ -71,6 +71,7 @@ export component Icon {
             : root.kind == IconKind.session-rdp ? @image-url("images/tree/session-rdp.svg")
             : root.kind == IconKind.script ? @image-url("images/toolbar/script-run.svg")
             : root.kind == IconKind.lock ? @image-url("images/tree/tab-lock.svg")
+            : root.kind == IconKind.file ? @image-url("images/tree/file.svg")
             : @image-url("images/tree/session-local.svg");
     }
 }

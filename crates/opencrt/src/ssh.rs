@@ -40,6 +40,8 @@ pub enum SshEvent {
     Session(Link),
     /// RDP tabs: the remote desktop's size or changed pixels.
     Screen(crate::rdp::Screen),
+    /// File browser tabs: listings and job progress.
+    Files(crate::sftp::Update),
     Data(Vec<u8>),
     Error(String),
     Closed,

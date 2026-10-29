@@ -121,7 +121,8 @@ in Options > Global Options > General.
   a Rhai script from what you type (passwords are asked for when it runs).
 - **Keys**: Tools > Create Public Key makes an Ed25519 key pair.
 - **File transfer**: SFTP tab (`sftp>` prompt with get/put/ls/cd, wildcards and
-  progress); Zmodem downloads start when the host runs `sz` (saved to
+  progress) or SFTP GUI tab (local and remote file lists side by side, with a
+  queue of waiting, failed and finished transfers; folders copy whole); Zmodem downloads start when the host runs `sz` (saved to
   Downloads or the folder set in Global Options), uploads via Transfer >
   Zmodem Upload or when the host runs `rz`; Xmodem and Ymodem send and
   receive; drop a file on a tab to upload it; a built-in TFTP server for

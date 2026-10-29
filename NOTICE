@@ -15,3 +15,10 @@ THIRD-PARTY-NOTICES.html (and THIRD-PARTY-NOTICES-RDP.html for the RDP helper).
 OpenCRT includes the IBM Plex Sans and IBM Plex Mono fonts, Copyright 2017
 IBM Corp., licensed under the SIL Open Font License 1.1 (see OFL.txt, from
 crates/opencrt/ui/fonts/OFL.txt).
+
+OpenCRT's built-in terminal colour schemes include colours from these openly
+licensed schemes: Solarized (Ethan Schoonover, MIT), Gruvbox (Pavel Pertsev,
+MIT), Tomorrow and Tomorrow Night (Chris Kempson, MIT), Dracula (Zeno Rocha,
+MIT), Nord (Arctic Ice Studio and Sven Greb, MIT), One Dark (GitHub Inc.,
+from the Atom editor, MIT), Catppuccin Mocha and Latte (Catppuccin, MIT),
+Tango (Tango Desktop Project, public domain) and Tokyo Night (enkia, MIT).

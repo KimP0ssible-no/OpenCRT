@@ -98,8 +98,9 @@ in Options > Global Options > General.
 - **Terminal**: xterm emulation (256 colours, truecolour, mouse reporting,
   bracketed paste), scrollback with Find, selection and copy (optionally copy
   on select, paste on right- or middle-click, ask before multi-line pastes),
-  ten colour schemes (OpenCRT Dark by default), IBM Plex Mono built in or a
-  system font, cursor shape, light and dark window themes that follow the
+  twenty colour schemes (OpenCRT Dark by default; Solarized, Gruvbox, Dracula,
+  Nord, Tomorrow, One Dark, Catppuccin, Tango, Tokyo Night and more), IBM Plex
+  Mono built in or a system font, cursor shape, light and dark window themes that follow the
   system, CJK text, bell as flash or sound, plain-text session
   logging with optional timestamps and dated file names that roll over at
   midnight (per session or File > Log Session), Send

@@ -43,10 +43,6 @@ pub enum Event {
     /// The same, but fully transparent pixels leave the surface as it is:
     /// ClearCodec need not draw all of its area.
     Partial { id: u16, at: Area, rgba: Vec<u8> },
-    /// Pixels for a surface that are not shown yet: a `Show` follows.
-    Hidden { id: u16, at: Area, rgba: Vec<u8> },
-    /// Show these areas of a surface as it is now.
-    Show { id: u16, areas: Vec<Area> },
     Fill { id: u16, rgba: [u8; 4], areas: Vec<Area> },
     Copy { from: u16, at: Area, to: u16, points: Vec<(u32, u32)> },
     ToCache { id: u16, at: Area, slot: u16 },
@@ -76,6 +72,8 @@ pub struct Handler {
     progressive: ProgressiveDecoder,
     /// Surface sizes, which Progressive tiles need.
     sizes: HashMap<u16, (u16, u16)>,
+    /// Progressive tiles decoded in the current frame, per surface: (x, y) -> RGBA.
+    frame_tiles: HashMap<u16, BTreeMap<(u32, u32), Pixels>>,
     /// Pictures per codec since `counted`, for the log every STATS_EVERY.
     counts: BTreeMap<String, u32>,
     counted: Instant,
@@ -95,6 +93,7 @@ impl Handler {
             failures: HashMap::new(),
             progressive: ProgressiveDecoder::new(),
             sizes: HashMap::new(),
+            frame_tiles: HashMap::new(),
             counts: BTreeMap::new(),
             counted: Instant::now(),
             dump: std::env::var_os("OPENCRT_RDP_DUMP").map(|d| (d.into(), 0)),
@@ -164,10 +163,12 @@ impl GraphicsPipelineHandler for Handler {
     fn on_reset_graphics(&mut self, width: u32, height: u32) {
         self.progressive.reset();
         self.sizes.clear();
+        self.frame_tiles.clear();
         self.send(Event::Reset(width, height));
     }
 
     fn on_frame_complete(&mut self, _frame_id: u32) {
+        self.frame_tiles.clear();
         self.send(Event::FrameEnd);
     }
 
@@ -178,6 +179,7 @@ impl GraphicsPipelineHandler for Handler {
 
     fn on_surface_deleted(&mut self, id: u16) {
         self.sizes.remove(&id);
+        self.frame_tiles.remove(&id);
         self.progressive.delete_context(id.into());
         self.send(Event::Deleted(id));
     }
@@ -218,21 +220,38 @@ impl GraphicsPipelineHandler for Handler {
         // context id for each picture (FreeRDP keys it by surface too).
         match self.progressive.decode_bitmap(id.into(), w, h, &pdu.bitmap_data) {
             Ok(tiles) => {
-                // Whole tiles go into the surface, but only the region's
-                // rectangles are shown: a later picture's rectangles may show
-                // parts of tiles sent before (as FreeRDP draws it).
-                for tile in tiles {
-                    let at = (u32::from(tile.x_idx) * 64, u32::from(tile.y_idx) * 64, 64, 64);
-                    self.saw("Progressive".into(), at);
-                    self.send(Event::Hidden { id, at, rgba: tile.pixels });
+                // As FreeRDP draws it: every tile decoded so far in this frame
+                // goes into the surface where this picture's rectangles cover
+                // it, and nowhere else (a later copy of the surface must not
+                // bring out parts of tiles that were never shown).
+                for tile in &tiles {
+                    self.saw("Progressive".into(), (u32::from(tile.x_idx) * 64, u32::from(tile.y_idx) * 64, 64, 64));
                 }
-                let areas = decode_progressive_stream(&pdu.bitmap_data)
+                let known = self.frame_tiles.entry(id).or_default();
+                for tile in tiles {
+                    let at = (u32::from(tile.x_idx) * 64, u32::from(tile.y_idx) * 64);
+                    known.insert(at, Pixels { width: 64, height: 64, rgba: tile.pixels });
+                }
+                let areas: Vec<Area> = decode_progressive_stream(&pdu.bitmap_data)
                     .unwrap_or_default()
                     .iter()
                     .filter_map(|b| if let ProgressiveBlock::Region(r) = b { Some(r) } else { None })
                     .flat_map(|r| r.rects.iter().map(|r| (r.x.into(), r.y.into(), r.width.into(), r.height.into())))
                     .collect();
-                self.send(Event::Show { id, areas });
+                let mut parts = Vec::new();
+                for (&(tx, ty), tile) in known.iter() {
+                    for &(x, y, w, h) in &areas {
+                        let (left, top) = (x.max(tx), y.max(ty));
+                        let (right, bottom) = ((x + w).min(tx + 64), (y + h).min(ty + 64));
+                        if left < right && top < bottom {
+                            let part = tile.cut((left - tx, top - ty, right - left, bottom - top));
+                            parts.push(Event::Pixels { id, at: (left, top, part.width, part.height), rgba: part.rgba });
+                        }
+                    }
+                }
+                for part in parts {
+                    self.send(part);
+                }
             }
             Err(e) => self.failed("Progressive", format!("{} bytes: {e}", pdu.bitmap_data.len())),
         }
@@ -469,18 +488,6 @@ impl Canvas {
                 }
                 None => false,
             },
-            Event::Hidden { id, at, rgba } => {
-                if let Some(layer) = self.layers.get_mut(&id) {
-                    layer.pixels.paste(&Pixels { width: at.2, height: at.3, rgba }, (0, 0), (at.0, at.1), (at.2, at.3));
-                }
-                false
-            }
-            Event::Show { id, areas } => {
-                for at in &areas {
-                    self.show(id, *at);
-                }
-                !areas.is_empty()
-            }
             Event::Partial { id, at, rgba } => match self.layers.get_mut(&id) {
                 Some(layer) => {
                     layer.pixels.over(&Pixels { width: at.2, height: at.3, rgba }, (at.0, at.1));
@@ -970,10 +977,29 @@ mod tests {
             if context_id == 7 {
                 assert!(near(px(&canvas, 30, 10), [255, 0, 0]), "first picture: {:?}", px(&canvas, 30, 10));
                 assert_eq!(px(&canvas, 30, 50), [0, 0, 0, 0], "outside the first picture's rectangle");
+                // Not in the surface either: a copy of it must bring nothing out.
+                canvas.apply(Event::Copy { from: 1, at: (0, 32, 64, 32), to: 1, points: vec![(64, 32)] });
+                assert_eq!(px(&canvas, 94, 50), [0, 0, 0, 0], "a copy of what the first picture did not show");
             }
         }
         assert!(near(px(&canvas, 30, 50), [255, 0, 0]), "first tile, shown by the second picture: {:?}", px(&canvas, 30, 50));
         assert!(near(px(&canvas, 100, 30), [0, 0, 255]), "second tile: {:?}", px(&canvas, 100, 30));
+
+        // A new frame: its pictures' rectangles show only that frame's tiles.
+        handler.on_frame_complete(1);
+        canvas.apply(Event::Fill { id: 1, rgba: [0, 255, 0, 255], areas: vec![(0, 0, 64, 64)] });
+        handler.on_wire_to_surface2(&WireToSurface2Pdu {
+            surface_id: 1,
+            codec_id: Codec2Type::RemoteFxProgressive,
+            codec_context_id: 9,
+            pixel_format: PixelFormat::XRgb,
+            bitmap_data: stream(false, 1, &blue, vec![rect(0, 0, 128, 64)]),
+        });
+        while let Ok(event) = received.try_recv() {
+            canvas.apply(event);
+        }
+        assert_eq!(px(&canvas, 30, 10), [0, 255, 0, 255], "the last frame's tile is not drawn again");
+        assert!(near(px(&canvas, 100, 30), [0, 0, 255]), "this frame's tile: {:?}", px(&canvas, 100, 30));
     }
 
     /// Not a test: decodes $REPLAY_DIR/*.clear in order and compares each with

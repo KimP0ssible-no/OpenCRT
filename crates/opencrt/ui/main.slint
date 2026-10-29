@@ -3075,11 +3075,18 @@ component GlobalOptionsDialog inherits DialogFrame {
 
 component ConfirmDialog inherits DialogFrame {
     in property <string> message;
+    // A tick box under the message, when it has a label.
+    in property <string> option;
+    in-out property <bool> checked;
     callback answer(bool);
     dialog-width: 400px;
     Text {
         text: root.message;
         wrap: word-wrap;
+    }
+    if root.option != "": CheckBox {
+        text: root.option;
+        checked <=> root.checked;
     }
     DialogButtons {
         Button {
@@ -4134,6 +4141,8 @@ export component MainWindow inherits Window {
     in-out property <int> go-scheme;
     in property <string> go-error;
     in property <string> confirm-message;
+    in property <string> confirm-option;
+    in-out property <bool> confirm-checked;
     in property <string> name-title;
     in property <string> name-label;
     in-out property <string> name-value;
@@ -5621,6 +5630,8 @@ export component MainWindow inherits Window {
     if root.dialog == 7: ConfirmDialog {
         title: "OpenCRT";
         message: root.confirm-message;
+        option: root.confirm-option;
+        checked <=> root.confirm-checked;
         answer(yes) => { root.confirm-answer(yes); }
     }
     if root.dialog == 19: ScriptEditor {

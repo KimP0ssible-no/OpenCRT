@@ -3071,6 +3071,8 @@ impl App {
             })
         {
             self.ask_confirm(ui, &format!("{target} already exists. Overwrite it?"), Deletion::Overwrite(tab, job));
+            ui.set_confirm_option("Do the same for the rest of the queue".into());
+            ui.set_confirm_checked(false);
         }
         if ui.get_dialog() == DIALOG_NONE
             && let Some(text) = self.pending_paste.take()
@@ -3884,6 +3886,7 @@ impl App {
     fn ask_confirm(&mut self, ui: &MainWindow, message: &str, action: Deletion) {
         self.confirm = Some(action);
         ui.set_confirm_message(message.into());
+        ui.set_confirm_option(SharedString::new());
         ui.set_dialog(DIALOG_CONFIRM);
     }
 
@@ -3925,7 +3928,7 @@ impl App {
             Some(Deletion::Restart) => self.notify("The new configuration folder is used from the next start."),
             Some(Deletion::Overwrite(id, job)) => {
                 if let Some(files) = self.tabs.iter_mut().find(|t| t.id == id).and_then(|t| t.files.as_mut()) {
-                    files.answer(job, yes);
+                    files.answer(job, yes, ui.get_confirm_checked());
                 }
             }
             Some(Deletion::Files(id, side, names)) if yes => {

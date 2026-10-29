@@ -94,6 +94,9 @@ pub struct Browser {
     /// The head job's target exists: the queue waits for overwrite or not
     /// (and whether the app has asked yet).
     asking: Option<(u64, bool)>,
+    /// "Do the same for the rest of the queue": overwrite or not without asking,
+    /// until the queue runs empty.
+    overwrite_all: Option<bool>,
     next_id: u64,
     /// The queue list on show.
     shown: usize,
@@ -257,6 +260,9 @@ impl Browser {
                 }
                 self.running = None;
                 self.asking = Some((id, false));
+                if let Some(overwrite) = self.overwrite_all {
+                    self.answer(id, overwrite, false);
+                }
             }
             Update::Changed(side, result) => {
                 if let Err(e) = result {
@@ -278,8 +284,12 @@ impl Browser {
         if self.running.is_some() || self.asking.is_some() || self.requests.is_none() {
             return;
         }
+        if self.queues[WAITING].is_empty() {
+            self.overwrite_all = None;
+        }
         if let Some(item) = self.queues[WAITING].first_mut() {
             item.done = 0;
+            item.job.overwrite |= self.overwrite_all == Some(true);
             self.running = Some((item.job.id, Instant::now()));
             let job = item.job.clone();
             self.request(Request::Start(job));
@@ -425,12 +435,16 @@ impl Browser {
         Some((*id, target))
     }
 
-    /// The answer to `question`: overwrite, or set the job aside as failed.
-    pub fn answer(&mut self, id: u64, overwrite: bool) {
+    /// The answer to `question`: overwrite, or set the job aside as failed; with
+    /// `rest`, the same for the rest of the queue.
+    pub fn answer(&mut self, id: u64, overwrite: bool, rest: bool) {
         if self.asking.is_none_or(|(a, _)| a != id) || self.queues[WAITING].first().is_none_or(|i| i.job.id != id) {
             return;
         }
         self.asking = None;
+        if rest {
+            self.overwrite_all = Some(overwrite);
+        }
         if overwrite {
             self.queues[WAITING][0].job.overwrite = true;
         } else {
@@ -684,7 +698,7 @@ mod tests {
         assert!(started(&mut rx).is_empty());
         assert_eq!(b.question(), Some((a.id, "/tmp/a".to_string())));
         assert_eq!(b.question(), None);
-        b.answer(a.id, true);
+        b.answer(a.id, true, false);
         b.pump();
         let again = started(&mut rx);
         assert_eq!((again[0].id, again[0].overwrite), (a.id, true));
@@ -694,11 +708,50 @@ mod tests {
         let bj = started(&mut rx).remove(0);
         b.apply(Update::Exists(bj.id));
         b.question();
-        b.answer(bj.id, false);
+        b.answer(bj.id, false, false);
         assert_eq!(b.queues[FAILED][0].error, "Not overwritten: the file exists");
         assert!(b.queues[WAITING].is_empty());
         // Retry asks again rather than overwriting.
         b.retry();
         assert!(!b.queues[WAITING][0].job.overwrite);
+    }
+
+    #[test]
+    fn one_answer_can_cover_the_rest_of_the_queue() {
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let mut b = Browser::new();
+        b.attach(tx);
+        b.apply(Update::Listing(Side::Local, Ok(("/tmp".into(), vec![]))));
+        let files = ["a", "b", "c"].map(|n| entry(n, false, 1)).to_vec();
+        b.apply(Update::Listing(Side::Remote, Ok(("/srv".into(), files))));
+        let mut next = |b: &mut Browser| {
+            b.pump();
+            std::iter::from_fn(|| rx.try_recv().ok()).find_map(|r| if let Request::Start(j) = r { Some(j) } else { None })
+        };
+        b.click(1, 1, false, false);
+        b.click(1, 3, false, true);
+        b.transfer(Side::Remote).unwrap();
+        // No, for the rest: later clashes are set aside without a question.
+        let a = next(&mut b).unwrap();
+        b.apply(Update::Exists(a.id));
+        b.question();
+        b.answer(a.id, false, true);
+        let bj = next(&mut b).unwrap();
+        assert!(!bj.overwrite);
+        b.apply(Update::Exists(bj.id));
+        assert_eq!(b.question(), None);
+        assert_eq!(b.queues[FAILED].len(), 2);
+        let c = next(&mut b).unwrap();
+        b.apply(Update::Finished(c.id, Ok(vec![])));
+        // The queue ran empty: the next batch asks again; Yes for the rest
+        // starts the later jobs with overwrite on.
+        assert_eq!(next(&mut b), None);
+        b.retry();
+        let a = next(&mut b).unwrap();
+        assert!(!a.overwrite);
+        b.apply(Update::Exists(a.id));
+        assert!(b.question().is_some());
+        b.answer(a.id, true, true);
+        assert!(next(&mut b).unwrap().overwrite);
     }
 }

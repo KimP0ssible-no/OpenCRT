@@ -1,6 +1,6 @@
 //! Render the main window off-screen to a PNG-convertible PPM, for checking the
 //! look without opening a window: `cargo run --example ui_snapshot -- out.ppm dark main`.
-//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow.
+//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite.
 
 use std::rc::Rc;
 
@@ -212,6 +212,11 @@ fn main() {
             ui.set_drop_message("Send firmware.bin with:".into());
             ui.set_drop_sftp(true);
             ui.set_dialog(18);
+        }
+        "overwrite" => {
+            ui.set_confirm_message("/mnt/SSD-RAIDZ/seeding/debian-13.iso already exists. Overwrite it?".into());
+            ui.set_confirm_option("Do the same for the rest of the queue".into());
+            ui.set_dialog(7);
         }
         "paste" => {
             ui.set_paste_message("These 3 lines will be pasted. Change them first if needed.".into());

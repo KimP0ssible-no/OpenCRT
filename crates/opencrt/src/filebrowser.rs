@@ -696,7 +696,7 @@ mod tests {
         // Nothing else starts until the user answers, and the app asks once.
         b.pump();
         assert!(started(&mut rx).is_empty());
-        assert_eq!(b.question(), Some((a.id, "/tmp/a".to_string())));
+        assert_eq!(b.question(), Some((a.id, Path::new("/tmp").join("a").to_string_lossy().into_owned())));
         assert_eq!(b.question(), None);
         b.answer(a.id, true, false);
         b.pump();

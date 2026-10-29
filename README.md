@@ -27,13 +27,43 @@ files are signed as the [Code signing policy](#code-signing-policy) describes):
 | RHEL / Rocky / Alma / Fedora / SUSE | `opencrt-<version>-1.x86_64.rpm` |
 | Arch Linux | `opencrt-<version>-1-x86_64.pkg.tar.zst` |
 
-On Linux, the [OpenCRT package repositories](https://kimp0ssible-no.github.io/OpenCRT/)
-(apt, dnf, zypper and pacman, signed) keep OpenCRT up to date with the rest of
-the system: set one up once, as that page shows. Downloaded packages install
-the same way but do not update.
-
 The Linux packages need nothing beyond glibc 2.28 (RHEL 8, Debian 10, Ubuntu
 20.04 and newer). `SHA256SUMS` lists the checksum of every file.
+
+### Linux package repositories
+On Linux, add the signed OpenCRT repository for your distribution once, and
+OpenCRT then updates with the rest of the system (a downloaded package installs
+the same way but does not update). The setup for each distribution is at
+**[kimp0ssible-no.github.io/OpenCRT](https://kimp0ssible-no.github.io/OpenCRT/)**;
+the packages are signed with key `4CDBBCAD19D8BFC8FB62281A3576977C76DF7C33`.
+
+Debian, Ubuntu:
+```
+sudo install -d /etc/apt/keyrings
+curl -fsSL https://kimp0ssible-no.github.io/OpenCRT/opencrt.asc | sudo tee /etc/apt/keyrings/opencrt.asc > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/opencrt.asc] https://kimp0ssible-no.github.io/OpenCRT/apt stable main" | sudo tee /etc/apt/sources.list.d/opencrt.list
+sudo apt update && sudo apt install opencrt
+```
+
+Fedora, RHEL, Rocky, Alma:
+```
+sudo curl -fsSL -o /etc/yum.repos.d/opencrt.repo https://kimp0ssible-no.github.io/OpenCRT/rpm/opencrt.repo
+sudo dnf install opencrt
+```
+
+openSUSE:
+```
+sudo zypper addrepo https://kimp0ssible-no.github.io/OpenCRT/rpm/opencrt.repo
+sudo zypper install opencrt
+```
+
+Arch Linux:
+```
+curl -fsSL https://kimp0ssible-no.github.io/OpenCRT/opencrt.asc | sudo pacman-key --add -
+sudo pacman-key --lsign-key 4CDBBCAD19D8BFC8FB62281A3576977C76DF7C33
+printf '\n[opencrt]\nServer = https://kimp0ssible-no.github.io/OpenCRT/arch\n' | sudo tee -a /etc/pacman.conf
+sudo pacman -Syu opencrt
+```
 
 ### Verifying a download
 `SHA256SUMS` is signed with the OpenCRT release key

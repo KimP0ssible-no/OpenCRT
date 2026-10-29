@@ -428,6 +428,8 @@ pub struct Job {
     pub remote: String,
     pub dir: bool,
     pub size: u64,
+    /// Replace the target file if it exists (else the worker asks first).
+    pub overwrite: bool,
 }
 
 pub enum Request {
@@ -450,6 +452,8 @@ pub enum Update {
     Progress(u64, u64),
     /// A job ended; a folder job gives the jobs for what it holds (their ids are 0).
     Finished(u64, Result<Vec<Job>, String>),
+    /// A file job stopped before copying: its target exists and `overwrite` is off.
+    Exists(u64),
     /// A make / delete / rename on this side ended.
     Changed(Side, Result<(), String>),
 }
@@ -510,6 +514,10 @@ async fn browse_on(session: &client::Handle<ssh::SshHandler>, mut requests: Requ
                 let (sftp, output) = (sftp.clone(), io.output.clone());
                 running = Some(tokio::spawn(async move {
                     let id = job.id;
+                    if !job.dir && !job.overwrite && target_exists(&job, &sftp).await {
+                        let _ = output.send(SshEvent::Files(Update::Exists(id)));
+                        return;
+                    }
                     let result = run_job(&job, &sftp, |done| {
                         let _ = output.send(SshEvent::Files(Update::Progress(id, done)));
                     });
@@ -643,6 +651,13 @@ async fn remove_remote_dir(sftp: &SftpSession, dir: String) -> anyhow::Result<()
     Ok(sftp.remove_dir(dir).await?)
 }
 
+async fn target_exists(job: &Job, sftp: &SftpSession) -> bool {
+    match job.upload {
+        true => sftp.try_exists(job.remote.as_str()).await.unwrap_or(false),
+        false => job.local.exists(),
+    }
+}
+
 async fn run_job(job: &Job, sftp: &SftpSession, report: impl FnMut(u64)) -> anyhow::Result<Vec<Job>> {
     let child = |name: String, dir: bool, size: u64| Job {
         id: 0,
@@ -651,6 +666,7 @@ async fn run_job(job: &Job, sftp: &SftpSession, report: impl FnMut(u64)) -> anyh
         remote: remote_join(&job.remote, &name),
         dir,
         size,
+        overwrite: false,
     };
     match (job.dir, job.upload) {
         (false, true) => {
@@ -1117,7 +1133,7 @@ mod tests {
         std::fs::write(dir.join("up.txt"), b"local").unwrap();
         let creds = Credentials { user: "u".into(), password: None, key_path: None, key_passphrase: None, jump: None, legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
         let (mut handle, requests) = browse("127.0.0.1".into(), port, creds, Some(dir.join("known_hosts")));
-        let job = |id, upload, local: PathBuf, remote: &str, dir| Job { id, upload, local, remote: remote.into(), dir, size: 0 };
+        let job = |id, upload, local: PathBuf, remote: &str, dir| Job { id, upload, local, remote: remote.into(), dir, size: 0, overwrite: false };
 
         requests.send(Request::List(Side::Remote, String::new())).unwrap();
         let Update::Listing(Side::Remote, Ok((home, entries))) = next_update(&mut handle) else { panic!("no remote listing") };
@@ -1134,6 +1150,16 @@ mod tests {
         requests.send(Request::Start(job(2, false, dir.join("r.txt"), "/home/r.txt", false))).unwrap();
         assert!(matches!(next_update(&mut handle), Update::Finished(2, Ok(_))));
         assert_eq!(std::fs::read(dir.join("r.txt")).unwrap(), b"remote");
+        // An existing target is left alone until the job says to overwrite it.
+        std::fs::write(dir.join("up.txt"), b"newer").unwrap();
+        requests.send(Request::Start(job(5, true, dir.join("up.txt"), "/home/up.txt", false))).unwrap();
+        assert!(matches!(next_update(&mut handle), Update::Exists(5)));
+        assert_eq!(files.lock().unwrap().get("/home/up.txt").map(Vec::as_slice), Some(&b"local"[..]));
+        requests.send(Request::Start(job(6, false, dir.join("r.txt"), "/home/r.txt", false))).unwrap();
+        assert!(matches!(next_update(&mut handle), Update::Exists(6)));
+        requests.send(Request::Start(Job { overwrite: true, ..job(7, true, dir.join("up.txt"), "/home/up.txt", false) })).unwrap();
+        assert!(matches!(next_update(&mut handle), Update::Finished(7, Ok(_))));
+        assert_eq!(files.lock().unwrap().get("/home/up.txt").map(Vec::as_slice), Some(&b"newer"[..]));
 
         // A folder makes its local copy and hands back its contents as jobs;
         // a name from the server that would leave the folder is dropped.

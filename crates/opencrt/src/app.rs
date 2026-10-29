@@ -82,6 +82,8 @@ enum Deletion {
     Restart,
     /// Delete files or folders in a file browser tab (by tab id).
     Files(u64, sftp::Side, Vec<(String, bool)>),
+    /// Overwrite the existing target of a file browser tab's job (tab id, job id).
+    Overwrite(u64, u64),
 }
 
 /// A list of saved commands: the Button Bar's, or the Command Manager's.
@@ -3063,6 +3065,14 @@ impl App {
             ui.set_view_full_screen(!ui.get_view_full_screen());
         }
         if ui.get_dialog() == DIALOG_NONE
+            && let Some((tab, job, target)) = self.tabs.iter_mut().find_map(|t| {
+                let id = t.id;
+                t.files.as_mut()?.question().map(|(job, target)| (id, job, target))
+            })
+        {
+            self.ask_confirm(ui, &format!("{target} already exists. Overwrite it?"), Deletion::Overwrite(tab, job));
+        }
+        if ui.get_dialog() == DIALOG_NONE
             && let Some(text) = self.pending_paste.take()
         {
             let target = if self.send_to_all { " into every connected tab" } else { "" };
@@ -3913,6 +3923,11 @@ impl App {
             Some(Deletion::Update) if yes => return self.install_update(ui),
             Some(Deletion::Restart) if yes => self.restart(),
             Some(Deletion::Restart) => self.notify("The new configuration folder is used from the next start."),
+            Some(Deletion::Overwrite(id, job)) => {
+                if let Some(files) = self.tabs.iter_mut().find(|t| t.id == id).and_then(|t| t.files.as_mut()) {
+                    files.answer(job, yes);
+                }
+            }
             Some(Deletion::Files(id, side, names)) if yes => {
                 if let Some(files) = self.tabs.iter_mut().find(|t| t.id == id).and_then(|t| t.files.as_mut()) {
                     files.delete(side, &names);

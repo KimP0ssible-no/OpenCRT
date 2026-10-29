@@ -91,6 +91,9 @@ pub struct Browser {
     queues: [Vec<Item>; 3],
     /// The job at the head of the waiting list was started at this time.
     running: Option<(u64, Instant)>,
+    /// The head job's target exists: the queue waits for overwrite or not
+    /// (and whether the app has asked yet).
+    asking: Option<(u64, bool)>,
     next_id: u64,
     /// The queue list on show.
     shown: usize,
@@ -248,6 +251,13 @@ impl Browser {
                     self.refresh(Side::Remote);
                 }
             }
+            Update::Exists(id) => {
+                if self.running.is_none_or(|(r, _)| r != id) {
+                    return;
+                }
+                self.running = None;
+                self.asking = Some((id, false));
+            }
             Update::Changed(side, result) => {
                 if let Err(e) = result {
                     self.list(side).error = Some(e);
@@ -265,7 +275,7 @@ impl Browser {
 
     /// Start the next job when nothing is running.
     pub fn pump(&mut self) {
-        if self.running.is_some() || self.requests.is_none() {
+        if self.running.is_some() || self.asking.is_some() || self.requests.is_none() {
             return;
         }
         if let Some(item) = self.queues[WAITING].first_mut() {
@@ -332,7 +342,7 @@ impl Browser {
                 skipped.push(e.name.clone());
                 continue;
             }
-            let job = Job { id: 0, upload: from == Side::Local, local: Path::new(&local.dir).join(&e.name), remote: remote.path(Side::Remote, &e.name), dir: e.dir, size: e.size };
+            let job = Job { id: 0, upload: from == Side::Local, local: Path::new(&local.dir).join(&e.name), remote: remote.path(Side::Remote, &e.name), dir: e.dir, size: e.size, overwrite: false };
             jobs.push(job);
         }
         for job in jobs {
@@ -357,7 +367,7 @@ impl Browser {
             .filter_map(|p| {
                 let name = p.file_name()?.to_string_lossy().into_owned();
                 let meta = p.metadata().ok()?;
-                Some(Job { id: 0, upload: true, local: p.clone(), remote: remote.path(Side::Remote, &name), dir: meta.is_dir(), size: meta.len() })
+                Some(Job { id: 0, upload: true, local: p.clone(), remote: remote.path(Side::Remote, &name), dir: meta.is_dir(), size: meta.len(), overwrite: false })
             })
             .collect();
         for job in jobs {
@@ -406,10 +416,39 @@ impl Browser {
         self.dirty = true;
     }
 
-    /// Stop the running job; it goes to the failed list.
+    /// The target to ask about (job id, path), once per job that found it exists.
+    pub fn question(&mut self) -> Option<(u64, String)> {
+        let (id, asked) = self.asking.as_mut().filter(|(_, asked)| !*asked)?;
+        *asked = true;
+        let job = &self.queues[WAITING].first().filter(|i| i.job.id == *id)?.job;
+        let target = if job.upload { job.remote.clone() } else { job.local.to_string_lossy().into_owned() };
+        Some((*id, target))
+    }
+
+    /// The answer to `question`: overwrite, or set the job aside as failed.
+    pub fn answer(&mut self, id: u64, overwrite: bool) {
+        if self.asking.is_none_or(|(a, _)| a != id) || self.queues[WAITING].first().is_none_or(|i| i.job.id != id) {
+            return;
+        }
+        self.asking = None;
+        if overwrite {
+            self.queues[WAITING][0].job.overwrite = true;
+        } else {
+            let mut item = self.queues[WAITING].remove(0);
+            (item.error, item.selected) = ("Not overwritten: the file exists".into(), false);
+            self.queues[FAILED].push(item);
+        }
+        self.dirty = true;
+    }
+
+    /// Stop the running job (or the one waiting on an answer); it goes to the failed list.
     pub fn cancel(&mut self) {
-        if self.running.take().is_some() {
+        let asking = self.asking.take().is_some();
+        let running = self.running.take().is_some();
+        if running {
             self.request(Request::Cancel);
+        }
+        if running || asking {
             let mut item = self.queues[WAITING].remove(0);
             item.error = "Cancelled".into();
             item.selected = false;
@@ -420,7 +459,7 @@ impl Browser {
 
     /// Remove the selected rows of the list on show (all of them with `all`).
     pub fn remove(&mut self, all: bool) {
-        let running = self.running.is_some() && self.shown == WAITING && self.queues[WAITING].first().is_some_and(|i| all || i.selected);
+        let running = (self.running.is_some() || self.asking.is_some()) && self.shown == WAITING && self.queues[WAITING].first().is_some_and(|i| all || i.selected);
         if running {
             self.cancel();
             self.queues[FAILED].pop();
@@ -436,7 +475,7 @@ impl Browser {
         let (again, kept): (Vec<Item>, Vec<Item>) = std::mem::take(failed).into_iter().partition(|i| !any || i.selected);
         self.queues[FAILED] = kept;
         for mut item in again {
-            (item.error, item.done, item.selected) = (String::new(), 0, false);
+            (item.error, item.done, item.selected, item.job.overwrite) = (String::new(), 0, false, false);
             self.queues[WAITING].push(item);
         }
         self.dirty = true;
@@ -524,6 +563,7 @@ impl Browser {
         let status = match self.shown {
             FAILED => item.error.clone(),
             FINISHED => "Done".into(),
+            _ if i == 0 && self.asking.is_some() => "The file exists: overwrite?".into(),
             _ if running => {
                 let secs = self.running.map_or(0.0, |(_, s)| s.elapsed().as_secs_f64());
                 sftp::progress(item.done, item.job.size, secs)
@@ -606,7 +646,7 @@ mod tests {
             .collect();
         assert_eq!(started.len(), 1, "one job at a time");
         assert_eq!((started[0].remote.as_str(), started[0].local.as_path(), started[0].dir), ("/srv/d", Path::new("/tmp/d"), true));
-        let inner = Job { id: 0, upload: false, local: "/tmp/d/g".into(), remote: "/srv/d/g".into(), dir: false, size: 2 };
+        let inner = Job { id: 0, upload: false, local: "/tmp/d/g".into(), remote: "/srv/d/g".into(), dir: false, size: 2, overwrite: false };
         b.apply(Update::Finished(started[0].id, Ok(vec![inner])));
         // The folder's contents run before the next job queued.
         let order: Vec<&str> = b.queues[WAITING].iter().map(|i| i.job.remote.as_str()).collect();
@@ -621,5 +661,44 @@ mod tests {
         b.cancel();
         assert_eq!(b.queues[FAILED][0].error, "Cancelled");
         assert_eq!(b.queues[FINISHED].len(), 1);
+    }
+
+    #[test]
+    fn an_existing_target_waits_for_an_answer() {
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let mut b = Browser::new();
+        b.attach(tx);
+        b.apply(Update::Listing(Side::Local, Ok(("/tmp".into(), vec![]))));
+        b.apply(Update::Listing(Side::Remote, Ok(("/srv".into(), vec![entry("a", false, 1), entry("b", false, 1)]))));
+        b.click(1, 1, false, false);
+        b.click(1, 2, false, true);
+        b.transfer(Side::Remote).unwrap();
+        let started = |rx: &mut tokio::sync::mpsc::UnboundedReceiver<Request>| {
+            std::iter::from_fn(|| rx.try_recv().ok()).filter_map(|r| if let Request::Start(j) = r { Some(j) } else { None }).collect::<Vec<_>>()
+        };
+        b.pump();
+        let a = started(&mut rx).remove(0);
+        b.apply(Update::Exists(a.id));
+        // Nothing else starts until the user answers, and the app asks once.
+        b.pump();
+        assert!(started(&mut rx).is_empty());
+        assert_eq!(b.question(), Some((a.id, "/tmp/a".to_string())));
+        assert_eq!(b.question(), None);
+        b.answer(a.id, true);
+        b.pump();
+        let again = started(&mut rx);
+        assert_eq!((again[0].id, again[0].overwrite), (a.id, true));
+        b.apply(Update::Finished(a.id, Ok(vec![])));
+        // No: the job is set aside, and the queue moves on.
+        b.pump();
+        let bj = started(&mut rx).remove(0);
+        b.apply(Update::Exists(bj.id));
+        b.question();
+        b.answer(bj.id, false);
+        assert_eq!(b.queues[FAILED][0].error, "Not overwritten: the file exists");
+        assert!(b.queues[WAITING].is_empty());
+        // Retry asks again rather than overwriting.
+        b.retry();
+        assert!(!b.queues[WAITING][0].job.overwrite);
     }
 }

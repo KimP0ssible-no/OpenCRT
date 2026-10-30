@@ -1111,7 +1111,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("a.txt"), b"hello").unwrap();
-        let creds = Credentials { user: "u".into(), password: None, key_path: None, key_passphrase: None, jump: None, legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: None, key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
         let lines = ["# upload", "put a.txt", "get missing.txt", "put a.txt b.txt"].map(String::from).to_vec();
         let mut handle = connect_with("127.0.0.1".into(), port, creds, Some(dir.join("known_hosts")), Commands::Batch(lines, dir.clone()));
         let deadline = Instant::now() + Duration::from_secs(10);
@@ -1167,7 +1167,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("up.txt"), b"local").unwrap();
-        let creds = Credentials { user: "u".into(), password: None, key_path: None, key_passphrase: None, jump: None, legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: None, key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
         let (mut handle, requests) = browse("127.0.0.1".into(), port, creds, Some(dir.join("known_hosts")));
         let job = |id, upload, local: PathBuf, remote: &str, dir| Job { id, upload, local, remote: remote.into(), dir, size: 0, overwrite: false };
 
@@ -1250,7 +1250,7 @@ mod tests {
         let payload: Vec<u8> = (0..200_000u32).map(|i| (i % 251) as u8).collect();
         std::fs::write(dir.join("up.bin"), &payload).unwrap();
 
-        let creds = Credentials { user: "u".into(), password: None, key_path: None, key_passphrase: None, jump: None, legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: None, key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
         let known_hosts = dir.join("known_hosts");
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(known_hosts));
         let banner = until_prompt(&mut handle);

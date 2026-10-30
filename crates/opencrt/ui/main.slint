@@ -1740,7 +1740,7 @@ component SessionOptionsDialog inherits DialogFrame {
                         label: "Jump host:";
                         LineEdit {
                             text <=> root.jump-host;
-                            placeholder-text: root.protocol == 5 ? "optional SSH host to tunnel through, [user@]host[:port]" : "optional, [user@]host[:port] to connect through";
+                            placeholder-text: root.protocol == 5 ? "optional SSH hosts to tunnel through: [user@]host[:port] or a saved session, comma-separated" : "optional hosts to go through: [user@]host[:port] or a saved session, comma-separated";
                             accepted => { root.ok(); }
                         }
                     }

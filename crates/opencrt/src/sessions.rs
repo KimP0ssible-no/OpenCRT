@@ -149,6 +149,27 @@ pub fn apply_changes(before: &Session, after: &Session, target: &mut Session) ->
     Ok(())
 }
 
+/// Quick Open: the sessions (indexes) holding every word of `query` in their
+/// name, folder, host or user. Best first: those whose name holds every
+/// word, then by how recently they were opened (`recent`: paths, newest first),
+/// then by name. Every session when `query` is blank.
+pub fn quick_matches(store: &SessionStore, recent: &[String], query: &str) -> Vec<usize> {
+    let words: Vec<String> = query.split_whitespace().map(str::to_lowercase).collect();
+    let has_all = |text: String| words.iter().all(|w| text.contains(w.as_str()));
+    let mut found: Vec<usize> = (0..store.sessions.len())
+        .filter(|&i| {
+            let s = &store.sessions[i];
+            has_all(format!("{} {} {} {}", s.name, s.folder, s.host, s.user).to_lowercase())
+        })
+        .collect();
+    found.sort_by_cached_key(|&i| {
+        let s = &store.sessions[i];
+        let recency = recent.iter().position(|p| *p == s.path()).unwrap_or(usize::MAX);
+        (words.is_empty() || !has_all(s.name.to_lowercase()), recency, s.name.to_lowercase())
+    });
+    found
+}
+
 /// Fields of a CSV or TSV line (tab, semicolon or comma separated; quotes as in RFC 4180).
 fn split_delimited(line: &str, sep: char) -> Vec<String> {
     let (mut fields, mut field, mut quoted) = (Vec::new(), String::new(), false);
@@ -538,6 +559,21 @@ mod tests {
         assert_eq!(moved, vec![("Lab/db".to_string(), "Prod/db (2)".to_string())]);
         assert_eq!(store.sessions[1].host, "h2");
         assert_eq!(store.sessions.len(), 4);
+    }
+
+    #[test]
+    fn quick_open_finds_by_any_field_name_matches_first() {
+        let mut store = SessionStore::default();
+        for (folder, name, host, user) in [("Prod", "db1", "10.0.0.5", ""), ("Lab", "web", "db-proxy", ""), ("Prod", "edge", "r1", "oslo")] {
+            store.sessions.push(Session { user: user.into(), ..session(folder, name, host) });
+        }
+        let names = |found: Vec<usize>| found.iter().map(|&i| store.sessions[i].name.clone()).collect::<Vec<_>>();
+        // A name match beats a host match; every word must match somewhere.
+        assert_eq!(names(quick_matches(&store, &[], "db")), ["db1", "web"]);
+        assert_eq!(names(quick_matches(&store, &[], "prod oslo")), ["edge"]);
+        assert!(quick_matches(&store, &[], "nothing").is_empty());
+        // Blank: everything, the recently opened first.
+        assert_eq!(names(quick_matches(&store, &["Prod/edge".into()], " ")), ["edge", "db1", "web"]);
     }
 
     #[test]

@@ -2351,7 +2351,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             password: Some("p".into()),
             key_path: None,
             key_passphrase: None,
-            jump: None,
+            jump: Vec::new(),
             legacy: false,
             forward_agent: false,
             x11_display: None,

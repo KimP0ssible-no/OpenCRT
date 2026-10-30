@@ -632,6 +632,34 @@ pub(crate) async fn settle() {
     tokio::time::sleep(std::time::Duration::from_millis(200)).await;
 }
 
+/// A session's port forwards on a connection of their own, with no shell. The
+/// tab lists them; they run until it closes or disconnects, or the connection drops.
+pub fn tunnels(host: String, port: u16, creds: Credentials, known_hosts: Option<PathBuf>, forwards: Vec<Forward>) -> SshHandle {
+    let creds = Credentials { forward_agent: false, x11_display: None, ..creds };
+    spawn(move |io| {
+        let creds = with_saved_password(creds, io);
+        runtime()?.block_on(async {
+            let remote = RemoteTargets::default();
+            let session = Arc::new(open(&host, port, &creds, known_hosts, remote.clone(), io).await?);
+            let _ = io.output.send(SshEvent::Connected);
+            let list: String = forwards.iter().filter(|f| f.enabled).map(|f| format!("  {f}\r\n")).collect();
+            let text = format!("Port forwarding through {host}, with no shell; disconnect or close this tab to stop:\r\n{list}");
+            let _ = io.output.send(SshEvent::Data(text.into_bytes()));
+            forward::start(&session, &forwards, &remote, &io.output).await;
+            loop {
+                tokio::select! {
+                    input = io.input.recv() => if input.is_none() { break },
+                    () = tokio::time::sleep(std::time::Duration::from_secs(1)) => if session.is_closed() {
+                        anyhow::bail!("the connection to {host} was lost");
+                    },
+                }
+            }
+            let _ = session.disconnect(russh::Disconnect::ByApplication, "", "English").await;
+            Ok(())
+        })
+    })
+}
+
 async fn run_session(
     host: &str,
     port: u16,
@@ -2301,6 +2329,57 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
         prompt.reply.send(Some(vec!["p".into()])).unwrap();
         let SshEvent::Data(echo) = next_event(&mut handle) else { panic!("expected the echo through the tunnel") };
         assert_eq!(echo, b"ping");
+    }
+
+    #[test]
+    fn tunnels_run_without_a_shell() {
+        let (server_port, _) = start_server(&[MethodKind::Password]);
+        let path = temp_known_hosts("tunnels");
+        let echo = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let echo_port = echo.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            let (mut s, _) = echo.accept().unwrap();
+            let mut buf = [0u8; 4];
+            std::io::Read::read_exact(&mut s, &mut buf).unwrap();
+            std::io::Write::write_all(&mut s, &buf).unwrap();
+        });
+        // A free port to listen on.
+        let local = std::net::TcpListener::bind("127.0.0.1:0").unwrap().local_addr().unwrap().port();
+        let forward = Forward::parse(&format!("L {local} 127.0.0.1:{echo_port}")).unwrap();
+        let creds = Credentials {
+            user: "u".into(),
+            password: Some("p".into()),
+            key_path: None,
+            key_passphrase: None,
+            jump: None,
+            legacy: false,
+            forward_agent: false,
+            x11_display: None,
+            proxy: None,
+            compression: false,
+            saved: None,
+            cert_path: None,
+        };
+        let mut handle = tunnels("127.0.0.1".into(), server_port, creds, Some(path), vec![forward]);
+        let SshEvent::UnknownHostKey(prompt) = next_event(&mut handle) else { panic!("expected the host key") };
+        prompt.reply.send(HostKeyDecision::AcceptOnce).unwrap();
+        assert!(matches!(next_event(&mut handle), SshEvent::Connected));
+        let SshEvent::Data(list) = next_event(&mut handle) else { panic!("expected the list of tunnels") };
+        assert!(String::from_utf8_lossy(&list).contains(&local.to_string()));
+        // The forward works with no shell open.
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        let mut tcp = loop {
+            match std::net::TcpStream::connect(("127.0.0.1", local)) {
+                Ok(tcp) => break tcp,
+                Err(e) if std::time::Instant::now() > deadline => panic!("no listener: {e}"),
+                Err(_) => std::thread::sleep(std::time::Duration::from_millis(20)),
+            }
+        };
+        tcp.set_read_timeout(Some(std::time::Duration::from_secs(5))).unwrap();
+        std::io::Write::write_all(&mut tcp, b"tun!").unwrap();
+        let mut buf = [0u8; 4];
+        std::io::Read::read_exact(&mut tcp, &mut buf).unwrap();
+        assert_eq!(&buf, b"tun!");
     }
 
     #[test]

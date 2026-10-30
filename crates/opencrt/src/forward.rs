@@ -88,6 +88,20 @@ impl Forward {
         Ok(Forward { kind, port: port(listen)?, host, host_port, ..Default::default() })
     }
 
+    /// Where a browser reaches a local forward on this machine (https for
+    /// ports 443 and 8443); None for remote and SOCKS forwards.
+    pub fn browser_address(&self) -> Option<String> {
+        if self.kind != ForwardKind::Local {
+            return None;
+        }
+        let host = match self.bind.as_str() {
+            "" | "0.0.0.0" | "::" => "127.0.0.1",
+            bind => bind,
+        };
+        let scheme = if matches!(self.host_port, 443 | 8443) { "https" } else { "http" };
+        Some(format!("{scheme}://{host}:{}/", self.port))
+    }
+
     /// What is wrong with this forward, for the properties dialog.
     pub fn problem(&self) -> Option<&'static str> {
         if self.port == 0 {
@@ -401,6 +415,15 @@ pub(crate) async fn socks_reply<S: AsyncWrite + Unpin>(stream: &mut S, version: 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn local_forwards_open_in_a_browser() {
+        let addr = |line: &str| Forward::parse(line).unwrap().browser_address();
+        assert_eq!(addr("L 8080 web:80").as_deref(), Some("http://127.0.0.1:8080/"));
+        assert_eq!(addr("L 9443 portal:443").as_deref(), Some("https://127.0.0.1:9443/"));
+        assert_eq!(addr("D 1080"), None);
+        assert_eq!(addr("R 9000 me:22"), None);
+    }
 
     #[test]
     fn parses_and_prints_rules() {

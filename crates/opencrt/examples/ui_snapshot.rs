@@ -50,6 +50,7 @@ fn main() {
         picked: scene == "active" && title != "Local Shell",
         hidden: false,
         index: 0,
+        tunnels: false,
     };
     ui.set_tabs(model(vec![tab("ops@core-sw1", 1, 0, true), tab("web1.example.com", 0, 0, false), tab("Local Shell", 2, 1, true)]));
     ui.set_group_count(if grouped { 2 } else { 1 });

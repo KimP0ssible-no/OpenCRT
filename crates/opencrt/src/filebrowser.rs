@@ -208,6 +208,26 @@ fn summary(files: usize, folders: usize, bytes: u64, selected: bool) -> String {
     format!("{lead}{what}. Total size: {}", sftp::human(bytes))
 }
 
+/// Where the shell of this SSH connection is, for hosts whose shell does not
+/// report it (Linux, via /proc): run on the shared connection, it climbs from
+/// itself to the connection's sshd process, then prints the folder of the
+/// child of that process which has a terminal: the shell.
+pub const SHELL_FOLDER: &str = r#"exec sh -c '
+p=$$
+while [ "$p" -gt 1 ]; do
+  read -r n < /proc/$p/comm || exit 0
+  case $n in sshd*) break;; esac
+  q=; while read -r k v; do [ "$k" = PPid: ] && q=$v && break; done 2>/dev/null < /proc/$p/status
+  p=${q:-1}
+done
+[ "$p" -gt 1 ] || exit 0
+for d in /proc/[0-9]*; do
+  q=; while read -r k v; do [ "$k" = PPid: ] && q=$v && break; done 2>/dev/null < $d/status
+  [ "$q" = "$p" ] || continue
+  case $(readlink $d/fd/0 2>/dev/null) in /dev/pts/*) readlink $d/cwd && exit 0;; esac
+done
+'"#;
+
 /// A folder only this user can open (the copies may hold secrets).
 fn private_dir(dir: &Path) -> std::io::Result<()> {
     let mut builder = std::fs::DirBuilder::new();
@@ -243,6 +263,11 @@ pub fn show<T: Clone + PartialEq + 'static>(model: &VecModel<T>, rows: Vec<T>) {
 impl Browser {
     pub fn new() -> Self {
         Self { dirty: true, follow: true, ..Default::default() }
+    }
+
+    /// Following its shell (opened from one, and not turned off).
+    pub fn following(&self) -> bool {
+        self.linked && self.follow
     }
 
     /// The linked shell is in `folder`: go there when it moved since last time.
@@ -890,6 +915,35 @@ mod tests {
         let dir = b.edit_dir.as_ref().unwrap().0.clone();
         drop(b);
         assert!(!dir.exists());
+    }
+
+    /// The look-up against a stand-in for an SSH connection: a process named
+    /// sshd-… with a shell child on a terminal, sitting in a folder.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn finds_the_shell_folder_under_sshd() {
+        let dir = std::env::temp_dir().join(format!("opencrt-shell-folder-{}", std::process::id()));
+        let folder = dir.join("Public folder");
+        std::fs::create_dir_all(&folder).unwrap();
+        let mock = dir.join("mock.py");
+        let script = format!(
+            "import ctypes, os, pty, subprocess, sys, time\n\
+             ctypes.CDLL(None).prctl(15, b'sshd-mock', 0, 0, 0)\n\
+             pid, fd = pty.fork()\n\
+             if pid == 0:\n    os.chdir({folder:?})\n    os.execvp('sleep', ['sleep', '5'])\n\
+             time.sleep(0.3)\n\
+             print(subprocess.run(['sh', '-c', sys.argv[1]], capture_output=True, text=True).stdout.strip())\n",
+            folder = folder.display().to_string()
+        );
+        std::fs::write(&mock, script).unwrap();
+        let Ok(out) = std::process::Command::new("python3").arg(&mock).arg(SHELL_FOLDER).output() else {
+            return; // no python3 here to build the stand-in
+        };
+        assert_eq!(String::from_utf8_lossy(&out.stdout).trim(), folder.display().to_string());
+        // With no sshd above it, it prints nothing (the list stays where it is).
+        let alone = std::process::Command::new("sh").arg("-c").arg(SHELL_FOLDER).output().unwrap();
+        assert!(alone.stdout.is_empty());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

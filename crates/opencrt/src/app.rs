@@ -578,6 +578,10 @@ struct Tab {
     /// (by id) whose folder it follows.
     files: Option<crate::filebrowser::Browser>,
     follows: Option<u64>,
+    /// Enter was last sent here (a following file browser looks up the
+    /// shell's folder soon after); and such a look-up under way.
+    enter_at: Option<Instant>,
+    folder_query: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
     /// RDP: the remote desktop picture, once the helper has reported its size.
     screen: Option<rdp::Desktop>,
     /// RDP: the desktop size to ask for (the tab's size in physical pixels).
@@ -715,6 +719,8 @@ impl Tab {
             id: NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
             files: (target.sftp && target.files).then(crate::filebrowser::Browser::new),
             follows: None,
+            enter_at: None,
+            folder_query: None,
             target,
             terminal,
             ssh: None,
@@ -1100,10 +1106,13 @@ impl Tab {
         }
     }
 
-    fn send(&self, bytes: Vec<u8>) {
+    fn send(&mut self, bytes: Vec<u8>) {
         if self.state == State::Connected
             && let Some(ssh) = self.ssh.as_ref()
         {
+            if bytes.contains(&b'\r') {
+                self.enter_at = Some(Instant::now());
+            }
             ssh.send_input(bytes);
         }
     }
@@ -2671,6 +2680,10 @@ impl App {
                         tab.follows = Some(shell);
                     }
                 }
+                // Look up where the shell is now, as after an Enter.
+                if let Some(shell) = self.tabs.get_mut(index).filter(|_| shell.is_some()) {
+                    shell.enter_at = Some(Instant::now());
+                }
             }
             "group-new" | "group-prev" | "group-next" => {
                 let group = self.tabs[index].group;
@@ -3367,13 +3380,40 @@ impl App {
                 }
             }
         }
-        // File browsers follow their shell's folder (when the shell reports it).
-        let folders: Vec<(u64, String)> = self.tabs.iter().filter_map(|t| Some((t.id, t.terminal.cwd.clone()?))).collect();
+        // File browsers follow their shell's folder: as the shell reports it
+        // (OSC 7), else looked up on the server soon after each Enter.
+        let now = Instant::now();
+        let shells: Vec<(u64, Option<String>, Option<ssh::Link>, bool)> = self
+            .tabs
+            .iter_mut()
+            .map(|t| {
+                let due = t.enter_at.is_some_and(|at| now.duration_since(at) >= FOLDER_LOOKUP_DELAY);
+                if due {
+                    t.enter_at = None;
+                }
+                (t.id, t.terminal.cwd.clone(), t.link.clone(), due)
+            })
+            .collect();
         for tab in &mut self.tabs {
-            if let (Some(shell), Some(files)) = (tab.follows, tab.files.as_mut())
-                && let Some((_, folder)) = folders.iter().find(|(id, _)| *id == shell)
-            {
+            let (Some(shell), Some(files)) = (tab.follows, tab.files.as_mut()) else { continue };
+            let Some((_, reported, link, due)) = shells.iter().find(|s| s.0 == shell) else { continue };
+            if let Some(folder) = reported {
                 files.follow_to(folder);
+                continue;
+            }
+            if let Some(result) = tab.folder_query.as_ref().and_then(|rx| rx.try_recv().ok()) {
+                tab.folder_query = None;
+                // Nothing (not Linux, no shell found) leaves the list where it is.
+                if let Some(folder) = result.ok().filter(|f| f.starts_with('/')) {
+                    files.follow_to(&folder);
+                }
+            }
+            if *due
+                && files.following()
+                && tab.folder_query.is_none()
+                && let Some(link) = link
+            {
+                tab.folder_query = Some(ssh::run_on(link.clone(), crate::filebrowser::SHELL_FOLDER));
             }
         }
         // Server load, read for the active tab only.
@@ -6817,6 +6857,10 @@ const UPDATE_RETRY: Duration = Duration::from_secs(60 * 60);
 fn update_due(enabled: bool, checking: bool, now: Instant, next: Instant) -> bool {
     enabled && !checking && now >= next
 }
+
+/// How long after an Enter a following file browser asks where the shell is
+/// (time for a `cd` to have happened).
+const FOLDER_LOOKUP_DELAY: Duration = Duration::from_millis(400);
 
 fn install_kind() -> update::InstallKind {
     std::env::current_exe().map_or(update::InstallKind::Manual, |exe| update::InstallKind::of(&exe))

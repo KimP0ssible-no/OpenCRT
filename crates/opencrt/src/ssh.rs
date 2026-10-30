@@ -487,6 +487,39 @@ pub(crate) async fn open(
 /// Login for the jump host: the same key file is offered, passwords are asked
 /// for separately, and the agent and X display are never forwarded to it (the
 /// handler would otherwise accept the jump host's unrequested channels).
+/// Log in to the jump host `spec` (`[user@]host[:port]`; `creds` for the key
+/// and the rest) and open a local port, on 127.0.0.1 only, that reaches
+/// `host:port` through it. The connection must be kept for as long as the
+/// port is used.
+pub(crate) async fn tunnel_through(
+    spec: &str,
+    creds: &Credentials,
+    known_hosts: Option<PathBuf>,
+    host: String,
+    port: u16,
+    io: &Io,
+) -> anyhow::Result<(u16, Shared)> {
+    let local_user = std::env::var("USER").or_else(|_| std::env::var("USERNAME")).unwrap_or_default();
+    let (user, jump_host, jump_port) = parse_jump(spec, &local_user).ok_or_else(|| anyhow!("the jump host must be [user@]host[:port], not {spec}"))?;
+    let session: Shared = Arc::new(open(&jump_host, jump_port, &jump_credentials(creds, user), known_hosts, Default::default(), io).await?);
+    let listener = tokio::net::TcpListener::bind(("127.0.0.1", 0)).await?;
+    let local = listener.local_addr()?.port();
+    let weak = Arc::downgrade(&session);
+    tokio::spawn(async move {
+        while let Ok((mut stream, _)) = listener.accept().await {
+            let Some(session) = weak.upgrade() else { break };
+            let host = host.clone();
+            tokio::spawn(async move {
+                if let Ok(channel) = session.channel_open_direct_tcpip(host, port.into(), "127.0.0.1", 0).await {
+                    let mut tunnel = channel.into_stream();
+                    let _ = tokio::io::copy_bidirectional(&mut stream, &mut tunnel).await;
+                }
+            });
+        }
+    });
+    Ok((local, session))
+}
+
 fn jump_credentials(creds: &Credentials, user: String) -> Credentials {
     Credentials { user, password: None, saved: None, jump: None, forward_agent: false, x11_display: None, ..creds.clone() }
 }
@@ -2200,6 +2233,54 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             panic!("expected echoed data");
         };
         assert_eq!(echo, b"through");
+    }
+
+    #[test]
+    fn a_local_port_reaches_a_host_through_a_jump_host() {
+        let (jump_port, _) = start_server(&[MethodKind::Password]);
+        let path = temp_known_hosts("tunnel");
+        // Stands in for an RDP server: echoes what it gets.
+        let target = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let target_port = target.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            let (mut s, _) = target.accept().unwrap();
+            let mut buf = [0u8; 4];
+            std::io::Read::read_exact(&mut s, &mut buf).unwrap();
+            std::io::Write::write_all(&mut s, &buf).unwrap();
+        });
+        let creds = Credentials {
+            user: "rdp-user".into(),
+            password: Some("not for the jump host".into()),
+            key_path: None,
+            key_passphrase: None,
+            jump: None,
+            legacy: false,
+            forward_agent: false,
+            x11_display: None,
+            proxy: None,
+            compression: false,
+            saved: None,
+            cert_path: None,
+        };
+        let spec = format!("u@127.0.0.1:{jump_port}");
+        let mut handle = spawn(move |io| {
+            runtime()?.block_on(async {
+                let (local, _session) = tunnel_through(&spec, &creds, Some(path), "127.0.0.1".into(), target_port, io).await?;
+                let mut tcp = tokio::net::TcpStream::connect(("127.0.0.1", local)).await?;
+                tokio::io::AsyncWriteExt::write_all(&mut tcp, b"ping").await?;
+                let mut buf = [0u8; 4];
+                tokio::io::AsyncReadExt::read_exact(&mut tcp, &mut buf).await?;
+                let _ = io.output.send(SshEvent::Data(buf.to_vec()));
+                Ok(())
+            })
+        });
+        let SshEvent::UnknownHostKey(prompt) = next_event(&mut handle) else { panic!("expected the jump host's key") };
+        prompt.reply.send(HostKeyDecision::AcceptOnce).unwrap();
+        // The target's password is not offered to the jump host: it asks.
+        let SshEvent::AuthPrompt(prompt) = next_event(&mut handle) else { panic!("expected the jump host's password prompt") };
+        prompt.reply.send(Some(vec!["p".into()])).unwrap();
+        let SshEvent::Data(echo) = next_event(&mut handle) else { panic!("expected the echo through the tunnel") };
+        assert_eq!(echo, b"ping");
     }
 
     #[test]

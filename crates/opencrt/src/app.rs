@@ -312,6 +312,8 @@ impl Target {
             h264: self.rdp_h264.unwrap_or(true),
             credential: self.credential.clone(),
             password: self.cached_password.as_ref().map(|s| s.0.clone()),
+            jump: self.jump.clone().map(|spec| (spec, self.credentials())),
+            tunnel: None,
         })
     }
 
@@ -319,7 +321,7 @@ impl Target {
     fn problem(&self) -> Option<&'static str> {
         match self.protocol {
             Protocol::Ssh2 | Protocol::Rlogin if self.user.is_empty() => Some("Enter a username."),
-            Protocol::Ssh2 if self.jump.as_deref().is_some_and(|j| ssh::parse_jump(j, "").is_none()) => {
+            Protocol::Ssh2 | Protocol::Rdp if self.jump.as_deref().is_some_and(|j| ssh::parse_jump(j, "").is_none()) => {
                 Some("Enter the jump host as [user@]host[:port].")
             }
             Protocol::Rdp if self.user.is_empty() => Some("Enter a username (user, DOMAIN\\user or user@domain)."),
@@ -1919,7 +1921,9 @@ impl App {
         terminal.set_word_delimiters(&self.options.word_delimiters);
         terminal.set_host_copy(self.options.host_clipboard);
         let mut tab = Tab::new(target, terminal);
-        if tab.target.protocol == Protocol::Ssh2 && tab.target.key_path.is_none() && !self.options.global_key.is_empty() {
+        // RDP through a jump host logs in to it with the same key as SSH sessions.
+        let ssh_login = tab.target.protocol == Protocol::Ssh2 || (tab.target.protocol == Protocol::Rdp && tab.target.jump.is_some());
+        if ssh_login && tab.target.key_path.is_none() && !self.options.global_key.is_empty() {
             tab.target.key_path = Some(config::expand_env(&self.options.global_key));
         }
         tab.download_dir = config::download_dir(&self.options.download_folder);

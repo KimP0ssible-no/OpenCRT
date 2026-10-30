@@ -1736,11 +1736,11 @@ component SessionOptionsDialog inherits DialogFrame {
                             accepted => { root.ok(); }
                         }
                     }
-                    if root.protocol == 0: FieldRow {
+                    if root.protocol == 0 || root.protocol == 5: FieldRow {
                         label: "Jump host:";
                         LineEdit {
                             text <=> root.jump-host;
-                            placeholder-text: "optional, [user@]host[:port] to connect through";
+                            placeholder-text: root.protocol == 5 ? "optional SSH host to tunnel through, [user@]host[:port]" : "optional, [user@]host[:port] to connect through";
                             accepted => { root.ok(); }
                         }
                     }

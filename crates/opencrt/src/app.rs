@@ -1994,6 +1994,18 @@ impl App {
         }
     }
 
+    /// Close every tab but `index`, asking first when some are connected.
+    fn close_others(&mut self, index: usize, ui: &MainWindow) {
+        let others: Vec<&Tab> = self.tabs.iter().enumerate().filter(|(i, _)| *i != index).map(|(_, t)| t).collect();
+        let ids: Vec<u64> = others.iter().filter(|t| t.lock.is_none()).map(|t| t.id).collect();
+        let connected = others.iter().filter(|t| t.lock.is_none() && t.state != State::Closed).count();
+        if connected > 0 && self.options.confirm_disconnect {
+            let message = format!("Close {} other tabs, {connected} of them connected?", ids.len());
+            return self.ask_confirm(ui, &message, Deletion::Tabs(ids));
+        }
+        self.remove_tabs(&ids, ui);
+    }
+
     /// Active Sessions: do `name` to the picked tabs.
     fn active_act(&mut self, name: &str, ui: &MainWindow) {
         let picked: Vec<usize> = self.tabs.iter().enumerate().filter(|(_, t)| self.picked_tabs.contains(&t.id)).map(|(i, _)| i).collect();
@@ -2573,6 +2585,13 @@ impl App {
                 let at = move_tab(&mut self.tabs, index, to, after);
                 self.active = self.tabs.iter().position(|t| t.id == active).unwrap_or(at);
                 self.select(at);
+            }
+            "rdp-cad" | "rdp-win" => {
+                if let Some(input) = &tab.rdp {
+                    for message in rdp::chord(if name == "rdp-cad" { rdp::CTRL_ALT_DEL } else { rdp::WINDOWS_KEY }) {
+                        let _ = input.send(message);
+                    }
+                }
             }
             "move-left" | "move-right"
                 if self.dialog_tab.is_none() && self.editing_tab.is_none() && self.renaming_tab.is_none() =>
@@ -6843,6 +6862,8 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         } else if name == "options" {
             app.select(index as usize);
             app.session_options_for_active(&ui);
+        } else if name == "close-others" {
+            app.close_others(index as usize, &ui);
         } else if let Some(id) = app.tabs.get(index as usize).map(|t| t.id).filter(|_| matches!(name.as_str(), "lock" | "lock-hide" | "unlock")) {
             match name.as_str() {
                 "unlock" => app.ask_lock(vec![id], LockStep::Unlock, &ui),

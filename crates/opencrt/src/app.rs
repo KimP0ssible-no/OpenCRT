@@ -1889,6 +1889,7 @@ impl App {
         terminal.set_scrollback(self.options.scrollback);
         terminal.set_cursor_shape(cursor_shape(self.options.cursor));
         terminal.set_word_delimiters(&self.options.word_delimiters);
+        terminal.set_host_copy(self.options.host_clipboard);
         let mut tab = Tab::new(target, terminal);
         if tab.target.protocol == Protocol::Ssh2 && tab.target.key_path.is_none() && !self.options.global_key.is_empty() {
             tab.target.key_path = Some(config::expand_env(&self.options.global_key));
@@ -3153,8 +3154,15 @@ impl App {
             self.link_credential(i, &name);
         }
         let on_screen: Vec<usize> = self.panes.iter().map(|p| p.tab).collect();
+        let mut host_copied = None;
         for (i, tab) in self.tabs.iter_mut().enumerate() {
             tab.poll();
+            if let Some(text) = tab.terminal.take_clipboard()
+                && let Some(clipboard) = self.clipboard.as_mut()
+                && clipboard.set_text(text.clone()).is_ok()
+            {
+                host_copied = Some((tab.title(), text.chars().count()));
+            }
             // Output in a tab out of sight marks it until it is looked at.
             if std::mem::take(&mut tab.fresh_output) && !on_screen.contains(&i) {
                 tab.unseen = true;
@@ -3192,6 +3200,9 @@ impl App {
                     None => tab.send(zmodem::CANCEL.to_vec()),
                 }
             }
+        }
+        if let Some((title, chars)) = host_copied {
+            self.notify(format!("{title} copied {chars} characters to the clipboard."));
         }
         self.raise_prompt(ui);
         if self.tabs.get_mut(self.active).is_some_and(|tab| std::mem::take(&mut tab.clip_check)) {
@@ -6126,6 +6137,7 @@ impl App {
         ui.set_go_drop(DROP_PROTOCOLS.iter().position(|p| *p == self.options.drop_protocol).unwrap_or(0) as i32);
         ui.set_go_paste_on_right(self.options.paste_on_right_click);
         ui.set_go_paste_on_middle(self.options.paste_on_middle_click);
+        ui.set_go_host_clipboard(self.options.host_clipboard);
         ui.set_go_confirm_paste(self.options.confirm_multiline_paste);
         let ms = |n: u32| if n == 0 { SharedString::new() } else { n.to_string().into() };
         ui.set_go_char_delay(ms(self.options.send_char_delay_ms));
@@ -6217,6 +6229,7 @@ impl App {
         self.options.copy_on_select = ui.get_go_copy_on_select();
         self.options.paste_on_right_click = ui.get_go_paste_on_right();
         self.options.paste_on_middle_click = ui.get_go_paste_on_middle();
+        self.options.host_clipboard = ui.get_go_host_clipboard();
         self.options.confirm_multiline_paste = ui.get_go_confirm_paste();
         self.options.send_char_delay_ms = ui.get_go_char_delay().trim().parse().unwrap_or(0).min(10_000);
         self.options.send_line_delay_ms = ui.get_go_line_delay().trim().parse().unwrap_or(0).min(60_000);
@@ -6252,6 +6265,7 @@ impl App {
             tab.terminal.set_cursor_shape(cursor_shape(self.options.cursor));
             tab.terminal.set_word_delimiters(&self.options.word_delimiters);
             tab.terminal.set_scrollback(scrollback);
+            tab.terminal.set_host_copy(self.options.host_clipboard);
             tab.download_dir = config::download_dir(&self.options.download_folder);
         }
         ui.set_paste_on_right(self.options.paste_on_right_click);

@@ -2689,6 +2689,7 @@ component GlobalOptionsDialog inherits DialogFrame {
     in-out property <int> drop-protocol;
     in-out property <bool> paste-on-right;
     in-out property <bool> paste-on-middle;
+    in-out property <bool> host-clipboard;
     in-out property <bool> confirm-paste;
     in-out property <string> char-delay;
     in-out property <string> line-delay;
@@ -2856,6 +2857,10 @@ component GlobalOptionsDialog inherits DialogFrame {
             if root.category == 2: CheckBox {
                 text: "Paste on middle-click";
                 checked <=> root.paste-on-middle;
+            }
+            if root.category == 2: CheckBox {
+                text: "Let programs on the host copy to the clipboard (OSC 52, e.g. tmux, vim)";
+                checked <=> root.host-clipboard;
             }
             if root.category == 2: CheckBox {
                 text: "Ask before pasting more than one line";
@@ -4117,6 +4122,7 @@ export component MainWindow inherits Window {
     callback se-act(string);
     in-out property <bool> go-paste-on-right;
     in-out property <bool> go-paste-on-middle;
+    in-out property <bool> go-host-clipboard;
     in-out property <int> go-category;
     in-out property <bool> go-confirm-paste;
     in-out property <string> go-char-delay;
@@ -5600,6 +5606,7 @@ export component MainWindow inherits Window {
         browse(field) => { root.browse(field); }
         paste-on-right <=> root.go-paste-on-right;
         paste-on-middle <=> root.go-paste-on-middle;
+        host-clipboard <=> root.go-host-clipboard;
         confirm-paste <=> root.go-confirm-paste;
         char-delay <=> root.go-char-delay;
         line-delay <=> root.go-line-delay;

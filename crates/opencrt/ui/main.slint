@@ -30,6 +30,8 @@ export struct TabData {
     state: int,
     // The saved session's tab colour; transparent for none.
     color: color,
+    // Only port forwards, with no shell.
+    tunnels: bool,
 }
 
 // A tab on screen: its image's place in the terminal area. Tiles (`titled`)
@@ -393,6 +395,10 @@ component SessionManagerPanel inherits Rectangle {
                                 title: "Connect SFTP GUI Tab";
                                 activated => { root.action("connect-sftp-gui"); }
                             }
+                            if row.ssh: MenuItem {
+                                title: "Start Port Forwarding (no shell)";
+                                activated => { root.action("start-tunnels"); }
+                            }
                             MenuItem {
                                 title: "Properties...";
                                 enabled: !row.folder;
@@ -755,6 +761,7 @@ component SessionTab inherits Rectangle {
     in property <int> protocol;
     in property <int> state;
     in property <color> strip;
+    in property <bool> tunnels;
     // Shown in its group; `focused` is the one with the keyboard.
     in property <bool> active;
     in property <bool> focused;
@@ -806,6 +813,14 @@ component SessionTab inherits Rectangle {
             if root.protocol == 0: MenuItem {
                 title: "Connect SFTP GUI Tab";
                 activated => { root.action("sftp-gui"); }
+            }
+            if root.protocol == 0 && !root.tunnels: MenuItem {
+                title: "Start Port Forwarding (no shell)";
+                activated => { root.action("tunnels"); }
+            }
+            if root.tunnels: MenuItem {
+                title: "Open Local Forwards in Browser";
+                activated => { root.action("open-browser"); }
             }
             if root.protocol == 5 && root.state == 1: MenuItem {
                 title: "Send Ctrl+Alt+Del";
@@ -4091,6 +4106,8 @@ export component MainWindow inherits Window {
     in property <string> update-status;
     in property <bool> update-installable;
     in property <string> status-cipher;
+    // Tabs running only port forwards, connected.
+    in property <int> tunnel-count;
     in property <string> status-load;
     in property <string> status-pos;
     in property <string> status-size;
@@ -5165,6 +5182,7 @@ export component MainWindow inherits Window {
                             protocol: tab.protocol;
                             state: tab.state;
                             strip: tab.color;
+                            tunnels: tab.tunnels;
                             active: tab.shown;
                             focused: i == root.active-tab;
                             activity: tab.activity;
@@ -5609,6 +5627,13 @@ export component MainWindow inherits Window {
                 if root.status-load != "": StatusCell {
                     text: root.status-load;
                     min-cell-width: 220px;
+                }
+                if root.tunnel-count > 0: StatusCell {
+                    text: root.tunnel-count == 1 ? "1 tunnel tab" : root.tunnel-count + " tunnel tabs";
+                    TouchArea {
+                        mouse-cursor: pointer;
+                        clicked => { root.menu("next-tunnel"); }
+                    }
                 }
                 StatusCell {
                     text: root.status-cipher;

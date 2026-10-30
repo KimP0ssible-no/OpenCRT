@@ -22,3 +22,13 @@ MIT), Tomorrow and Tomorrow Night (Chris Kempson, MIT), Dracula (Zeno Rocha,
 MIT), Nord (Arctic Ice Studio and Sven Greb, MIT), One Dark (GitHub Inc.,
 from the Atom editor, MIT), Catppuccin Mocha and Latte (Catppuccin, MIT),
 Tango (Tango Desktop Project, public domain) and Tokyo Night (enkia, MIT).
+
+OpenCRT includes Symbols Nerd Font Mono from Nerd Fonts 3.5.1
+(https://github.com/ryanoasis/nerd-fonts), Copyright (c) 2014 Ryan L McIntyre,
+under the MIT License, used to draw prompt icons. Its icon sets keep their own
+licences: Codicons (Microsoft, CC BY 4.0), Devicons (MIT), Hack extra glyphs
+(Source Foundry, MIT), Font Awesome 6.5.1 (Fonticons, CC BY 4.0), Font Awesome
+Extension (MIT), Font Logos (unlicensed), Material Design Icons (Apache 2.0),
+Octicons (GitHub, MIT), Seti UI (MIT), Pomicons (SIL OFL 1.1), Powerline Extra
+Symbols (MIT), Powerline Symbols (MIT), Power Symbols IEC (MIT) and Weather
+Icons (SIL OFL 1.1).

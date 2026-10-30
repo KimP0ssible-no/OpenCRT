@@ -23,6 +23,8 @@ pub struct Renderer {
     /// Searched in order for glyphs the main font lacks (CJK, symbols). Loaded on
     /// the first missing glyph: CJK fonts are large and slow to parse.
     fallbacks: Option<Vec<Font>>,
+    /// The bundled prompt icons, searched first; loaded with the fallbacks.
+    symbols: Option<Font>,
     px: f32,
     pub cell_w: usize,
     pub cell_h: usize,
@@ -160,6 +162,7 @@ impl Renderer {
             regular,
             bold,
             fallbacks: None,
+            symbols: None,
             keywords: HashMap::new(),
             adhoc: Vec::new(),
             find: None,
@@ -215,18 +218,29 @@ impl Renderer {
 
     fn glyph(&mut self, c: char, bold: bool) -> &Glyph {
         let px = self.px;
+        let (cw, ch, ascent) = (self.cell_w, self.cell_h, self.ascent);
+        if let Some(coverage) = powerline(c, cw, ch) {
+            let metrics = Metrics { ymin: ascent - ch as i32, width: cw, height: ch, advance_width: cw as f32, ..Default::default() };
+            return self.cache.entry((c, bold)).or_insert(Glyph { metrics, coverage });
+        }
         let in_regular = self.regular.lookup_glyph_index(c) != 0;
         if !in_regular && self.fallbacks.is_none() && !self.cache.contains_key(&(c, bold)) {
+            self.symbols = Font::from_bytes(NERD_SYMBOLS, FontSettings::default()).ok();
             self.fallbacks = Some(FALLBACKS.iter().filter_map(|name| load_first(&[name])).collect());
         }
-        let font = if in_regular {
+        let cell = self.cell_w as f32;
+        let (font, px) = if in_regular {
             match &self.bold {
-                Some(b) if bold => b,
-                _ => &self.regular,
+                Some(b) if bold => (b, px),
+                _ => (&self.regular, px),
             }
+        } else if let Some(symbols) = self.symbols.as_ref().filter(|f| f.lookup_glyph_index(c) != 0) {
+            // Its icons are an em wide: shrink them into one cell.
+            let advance = symbols.metrics(c, px).advance_width;
+            (symbols, if advance > cell { px * cell / advance } else { px })
         } else {
             let fallbacks = self.fallbacks.as_deref().unwrap_or_default();
-            fallbacks.iter().find(|f| f.lookup_glyph_index(c) != 0).unwrap_or(&self.regular)
+            (fallbacks.iter().find(|f| f.lookup_glyph_index(c) != 0).unwrap_or(&self.regular), px)
         };
         self.cache.entry((c, bold)).or_insert_with(|| {
             let (metrics, coverage) = font.rasterize(c, px);
@@ -489,6 +503,35 @@ fn font_path(name: &str) -> PathBuf {
     windir.join("Fonts").join(name)
 }
 
+/// Powerline's separators drawn to fill the cell exactly, so coloured prompt
+/// segments join up: solid triangles (E0B0 right, E0B2 left) and their thin
+/// outlines (E0B1, E0B3). Coverage rows of `w`; None for other characters.
+fn powerline(c: char, w: usize, h: usize) -> Option<Vec<u8>> {
+    let (solid, right) = match c {
+        '\u{e0b0}' => (true, true),
+        '\u{e0b1}' => (false, true),
+        '\u{e0b2}' => (true, false),
+        '\u{e0b3}' => (false, false),
+        _ => return None,
+    };
+    let mut out = vec![0u8; w * h];
+    for y in 0..h {
+        // How far the triangle reaches across this row, from its flat side.
+        let reach = w as f32 * (1.0 - ((y as f32 + 0.5) / h as f32 * 2.0 - 1.0).abs());
+        for x in 0..w {
+            let from_flat = if right { x as f32 + 0.5 } else { w as f32 - x as f32 - 0.5 };
+            let a = if solid { reach - from_flat + 0.5 } else { 1.0 - (reach - from_flat).abs() };
+            out[y * w + x] = (a.clamp(0.0, 1.0) * 255.0) as u8;
+        }
+    }
+    Some(out)
+}
+
+/// Prompt icons (powerlevel10k, Starship, oh-my-zsh) without a Nerd Font installed:
+/// Nerd Fonts' Symbols Nerd Font Mono 3.5.1, searched before the system fallbacks
+/// (MIT, with each icon set's licence listed in NOTICE).
+const NERD_SYMBOLS: &[u8] = include_bytes!("../ui/fonts/SymbolsNerdFontMono-Regular.ttf");
+
 /// The default terminal font, built into OpenCRT (SIL OFL 1.1, see ui/fonts/OFL.txt).
 const BUILT_IN_FONT: &str = "IBM Plex Mono";
 
@@ -539,6 +582,30 @@ mod tests {
             r.set_font(font);
             assert!(r.cell_w > 1 && r.cell_h > 1, "{font}");
             assert!(r.glyph('M', false).metrics.width > 0, "{font}");
+        }
+    }
+
+    #[test]
+    fn powerline_separators_fill_the_cell() {
+        let right = powerline('\u{e0b0}', 10, 20).unwrap();
+        let row = |cov: &[u8], y: usize| cov[y * 10..(y + 1) * 10].to_vec();
+        // Full across the middle row, nearly nothing at the top; the left one mirrors it.
+        assert!(row(&right, 10)[..9].iter().all(|&a| a > 200));
+        assert!(row(&right, 0)[1..].iter().all(|&a| a == 0));
+        let left = powerline('\u{e0b2}', 10, 20).unwrap();
+        assert_eq!(row(&left, 4), row(&right, 4).into_iter().rev().collect::<Vec<_>>());
+        assert!(powerline('a', 10, 20).is_none());
+    }
+
+    #[test]
+    fn prompt_icons_draw_without_a_nerd_font() {
+        let Ok(mut r) = Renderer::new(BUILT_IN_FONT, 16.0) else { return };
+        // Powerline's branch symbol and Font Awesome's folder, both private-use characters.
+        for icon in ['\u{e0a0}', '\u{f07b}'] {
+            assert_eq!(r.regular.lookup_glyph_index(icon), 0, "the terminal font itself lacks {icon:?}");
+            let (width, cell) = (r.glyph(icon, false).metrics.width, r.cell_w);
+            assert!(width > 0, "{icon:?} draws from the bundled symbols");
+            assert!(width <= cell + 1, "{icon:?} fits its cell: {width} px in {cell} px");
         }
     }
 

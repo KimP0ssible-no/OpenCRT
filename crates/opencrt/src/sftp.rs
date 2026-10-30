@@ -658,6 +658,31 @@ async fn target_exists(job: &Job, sftp: &SftpSession) -> bool {
     }
 }
 
+/// `dir/name.part`: where a download is written until it is complete.
+fn part_path(local: &Path) -> PathBuf {
+    let mut name = local.file_name().unwrap_or_default().to_os_string();
+    name.push(".part");
+    local.with_file_name(name)
+}
+
+/// A partial download, deleted when dropped (a failed or cancelled job)
+/// unless `keep` says it became the real file.
+struct Partial(Option<PathBuf>);
+
+impl Partial {
+    fn keep(mut self) {
+        self.0 = None;
+    }
+}
+
+impl Drop for Partial {
+    fn drop(&mut self) {
+        if let Some(path) = self.0.take() {
+            let _ = std::fs::remove_file(path);
+        }
+    }
+}
+
 async fn run_job(job: &Job, sftp: &SftpSession, report: impl FnMut(u64)) -> anyhow::Result<Vec<Job>> {
     let child = |name: String, dir: bool, size: u64| Job {
         id: 0,
@@ -678,9 +703,20 @@ async fn run_job(job: &Job, sftp: &SftpSession, report: impl FnMut(u64)) -> anyh
         }
         (false, false) => {
             let mut source = sftp.open(job.remote.as_str()).await.with_context(|| format!("cannot open {}", job.remote))?;
-            let mut target = tokio::fs::File::create(&job.local).await.with_context(|| format!("cannot create {}", job.local.display()))?;
+            // Written beside the target as `name.part` and renamed only when whole,
+            // so a cut-off download never passes for the real file.
+            let part = Partial(Some(part_path(&job.local)));
+            let path = part.0.as_deref().unwrap_or(&job.local);
+            let mut target = tokio::fs::File::create(path).await.with_context(|| format!("cannot create {}", path.display()))?;
             copy(&mut source, &mut target, report).await?;
             target.flush().await?;
+            let target = target.into_std().await;
+            if let Some(mtime) = source.metadata().await.ok().and_then(|m| m.mtime) {
+                let _ = target.set_modified(std::time::UNIX_EPOCH + std::time::Duration::from_secs(mtime.into()));
+            }
+            drop(target);
+            std::fs::rename(path, &job.local).with_context(|| format!("cannot rename {} to {}", path.display(), job.local.display()))?;
+            part.keep();
             Ok(Vec::new())
         }
         (true, true) => {
@@ -1150,6 +1186,7 @@ mod tests {
         requests.send(Request::Start(job(2, false, dir.join("r.txt"), "/home/r.txt", false))).unwrap();
         assert!(matches!(next_update(&mut handle), Update::Finished(2, Ok(_))));
         assert_eq!(std::fs::read(dir.join("r.txt")).unwrap(), b"remote");
+        assert!(!dir.join("r.txt.part").exists(), "the partial file became the real one");
         // An existing target is left alone until the job says to overwrite it.
         std::fs::write(dir.join("up.txt"), b"newer").unwrap();
         requests.send(Request::Start(job(5, true, dir.join("up.txt"), "/home/up.txt", false))).unwrap();
@@ -1179,6 +1216,21 @@ mod tests {
         assert!(matches!(next_update(&mut handle), Update::Changed(Side::Remote, Ok(()))));
         assert!(!files.lock().unwrap().contains_key("/home/up.txt"));
         drop(requests);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn partial_downloads_go_unless_kept() {
+        let dir = std::env::temp_dir().join(format!("opencrt-part-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let part = part_path(&dir.join("a.iso"));
+        assert_eq!(part, dir.join("a.iso.part"));
+        std::fs::write(&part, b"half").unwrap();
+        drop(Partial(Some(part.clone())));
+        assert!(!part.exists(), "a failed or cancelled download leaves nothing behind");
+        std::fs::write(&part, b"whole").unwrap();
+        Partial(Some(part.clone())).keep();
+        assert!(part.exists());
         std::fs::remove_dir_all(&dir).unwrap();
     }
 

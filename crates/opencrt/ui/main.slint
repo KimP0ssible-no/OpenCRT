@@ -90,6 +90,10 @@ export struct FilesView {
     remote-status: string,
     local-sort: int,
     remote-sort: int,
+    local-filter: string,
+    remote-filter: string,
+    local-hidden: bool,
+    remote-hidden: bool,
     queue: [QueueRow],
     list: int,
     waiting: int,
@@ -3404,10 +3408,13 @@ component FileList inherits Rectangle {
     in property <[FileRow]> rows;
     in property <string> status;
     in property <int> sort;
+    in property <string> filter;
+    in property <bool> hidden;
     callback go(string);
     callback click(int, bool, bool);
     callback open(int);
     callback action(string);
+    callback filter-edited(string);
     // Narrow lists drop the remote-only columns first, then the type.
     property <length> size-w: 78px;
     property <length> kind-w: root.width >= 420px ? 80px : 0px;
@@ -3423,6 +3430,11 @@ component FileList inherits Rectangle {
     property <length> owner-x: root.perm-x + root.perm-w;
     background: Theme.panel-bg;
     changed dir => { path.text = root.dir; }
+    changed filter => {
+        if filter-edit.text != root.filter {
+            filter-edit.text = root.filter;
+        }
+    }
     menu := ContextMenuArea {
         Menu {
             MenuItem {
@@ -3441,6 +3453,10 @@ component FileList inherits Rectangle {
             MenuItem {
                 title: "Delete";
                 activated => { root.action("delete"); }
+            }
+            MenuItem {
+                title: "Copy Path";
+                activated => { root.action("copy-path"); }
             }
             MenuSeparator { }
             MenuItem {
@@ -3594,17 +3610,31 @@ component FileList inherits Rectangle {
                 }
             }
             Rectangle {
-                height: 20px;
+                height: 30px;
                 background: Theme.window-bg;
-                Text {
-                    x: 6px;
-                    width: parent.width - 12px;
-                    height: parent.height;
-                    text: root.status;
-                    font-size: 11px;
-                    color: Theme.text-secondary;
-                    vertical-alignment: center;
-                    overflow: elide;
+                HorizontalLayout {
+                    padding-left: 6px;
+                    padding-right: 4px;
+                    spacing: 6px;
+                    Text {
+                        horizontal-stretch: 1;
+                        text: root.status;
+                        font-size: 11px;
+                        color: Theme.text-secondary;
+                        vertical-alignment: center;
+                        overflow: elide;
+                    }
+                    filter-edit := LineEdit {
+                        width: 130px;
+                        placeholder-text: "Filter";
+                        init => { self.text = root.filter; }
+                        edited(text) => { root.filter-edited(text); }
+                    }
+                    CheckBox {
+                        text: "Hidden";
+                        checked: root.hidden;
+                        toggled => { root.action(self.checked ? "hidden-on" : "hidden-off"); }
+                    }
                 }
             }
         }
@@ -3783,6 +3813,7 @@ component FilesBrowser inherits Rectangle {
     callback open(int, int);
     callback go(int, string);
     callback action(int, string);
+    callback filter(int, string);
     background: Theme.window-bg;
     // Keeps pointer events off the terminal underneath.
     TouchArea { }
@@ -3796,6 +3827,9 @@ component FilesBrowser inherits Rectangle {
                 rows: root.view.local-rows;
                 status: root.view.local-status;
                 sort: root.view.local-sort;
+                filter: root.view.local-filter;
+                hidden: root.view.local-hidden;
+                filter-edited(text) => { root.filter(0, text); }
                 go(text) => { root.go(0, text); }
                 click(row, ctrl, shift) => { root.click(0, row, ctrl, shift); }
                 open(row) => { root.open(0, row); }
@@ -3812,6 +3846,9 @@ component FilesBrowser inherits Rectangle {
                 rows: root.view.remote-rows;
                 status: root.view.remote-status;
                 sort: root.view.remote-sort;
+                filter: root.view.remote-filter;
+                hidden: root.view.remote-hidden;
+                filter-edited(text) => { root.filter(1, text); }
                 go(text) => { root.go(1, text); }
                 click(row, ctrl, shift) => { root.click(1, row, ctrl, shift); }
                 open(row) => { root.open(1, row); }
@@ -3861,6 +3898,7 @@ export component MainWindow inherits Window {
     callback files-open(int, int, int);
     callback files-go(int, int, string);
     callback files-action(int, int, string);
+    callback files-filter(int, int, string);
     in property <color> terminal-bg: black;
     in property <image> dock-label-sessions;
     in property <image> dock-label-active;
@@ -5147,6 +5185,7 @@ export component MainWindow inherits Window {
                     open(side, row) => { root.files-open(v.tab, side, row); }
                     go(side, text) => { root.files-go(v.tab, side, text); }
                     action(side, name) => { root.files-action(v.tab, side, name); }
+                    filter(side, text) => { root.files-filter(v.tab, side, text); }
                 }
                 Rectangle {
                     background: #ffffff38;

@@ -3959,6 +3959,17 @@ impl App {
             (_, "transfer") => problem = files.transfer(which).err(),
             (_, "refresh") => files.refresh(which),
             (_, "up") => files.up(which),
+            (_, "hidden-on" | "hidden-off") => files.show_hidden(which, name == "hidden-on"),
+            (_, "copy-path") => {
+                let paths = files.paths(which);
+                match self.clipboard.as_mut() {
+                    _ if paths.is_empty() => problem = Some("Pick the files or folders whose paths to copy.".to_string()),
+                    Some(clipboard) => {
+                        let _ = clipboard.set_text(paths.join("\n"));
+                    }
+                    None => problem = Some("The clipboard is not available.".to_string()),
+                }
+            }
             (_, "rename") if picked.len() != 1 => problem = Some("Pick one file or folder to rename.".to_string()),
             (_, "delete") if picked.is_empty() => problem = Some("Pick the files or folders to delete.".to_string()),
             (_, "mkdir" | "rename") => {
@@ -7008,6 +7019,12 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         }
     });
     on!(on_files_action, |app, ui, tab, side, name| app.files_action(tab as usize, side, &name, &ui));
+    on!(on_files_filter, |app, _ui, tab, side, text| {
+        let side = if side == 0 { sftp::Side::Local } else { sftp::Side::Remote };
+        if let Some(files) = app.tabs.get_mut(tab as usize).and_then(|t| t.files.as_mut()) {
+            files.filter(side, text.to_string());
+        }
+    });
 
     // Closing the window with live sessions asks first.
     {

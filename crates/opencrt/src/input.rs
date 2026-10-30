@@ -473,9 +473,23 @@ pub fn mouse_report(code: u8, col: usize, row: usize, pressed: bool, sgr: bool) 
     Some(vec![0x1b, b'[', b'M', code + 32, x, y])
 }
 
+/// Ctrl+Shift+T (Command+T on macOS) opens Quick Open.
+pub fn is_quick_open(text: &str, mods: Mods, cmd: bool) -> bool {
+    text.eq_ignore_ascii_case("t") && !mods.alt && if cmd { !mods.shift } else { mods.ctrl && mods.shift }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn quick_open_key() {
+        let m = |ctrl, shift| Mods { ctrl, alt: false, shift };
+        assert!(is_quick_open("T", m(true, true), false));
+        assert!(!is_quick_open("t", m(true, false), false), "Ctrl+T stays with the shell");
+        assert!(is_quick_open("t", m(false, false), true));
+        assert!(!is_quick_open("T", m(false, true), true));
+    }
 
     #[test]
     fn pacing_by_character_line_and_prompt() {

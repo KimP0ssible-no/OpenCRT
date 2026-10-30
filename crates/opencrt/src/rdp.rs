@@ -462,9 +462,30 @@ pub fn scancode(key: KeyCode) -> Option<(u8, bool)> {
     Some((code, false))
 }
 
+/// Ctrl+Alt+Del and the Windows key, as set-1 scancodes (extended: E0-prefixed).
+pub const CTRL_ALT_DEL: &[(u8, bool)] = &[(0x1d, false), (0x38, false), (0x53, true)];
+pub const WINDOWS_KEY: &[(u8, bool)] = &[(0x5b, true)];
+
+/// A key combination pressed and let go: every key down in order, then up in reverse.
+pub fn chord(keys: &[(u8, bool)]) -> Vec<ToHelper> {
+    let down = keys.iter().map(|&(scancode, extended)| ToHelper::Key { scancode, extended, down: true });
+    let up = keys.iter().rev().map(|&(scancode, extended)| ToHelper::Key { scancode, extended, down: false });
+    down.chain(up).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn chords_press_in_order_and_release_in_reverse() {
+        let keys = |c: Vec<ToHelper>| c.into_iter().map(|m| match m {
+            ToHelper::Key { scancode, down, .. } => (scancode, down),
+            _ => panic!("only keys"),
+        }).collect::<Vec<_>>();
+        assert_eq!(keys(chord(CTRL_ALT_DEL)), [(0x1d, true), (0x38, true), (0x53, true), (0x53, false), (0x38, false), (0x1d, false)]);
+        assert_eq!(keys(chord(WINDOWS_KEY)), [(0x5b, true), (0x5b, false)]);
+    }
 
     #[test]
     fn keys_have_their_pc_scancodes() {

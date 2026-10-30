@@ -804,6 +804,14 @@ component SessionTab inherits Rectangle {
                 title: "Connect SFTP GUI Tab";
                 activated => { root.action("sftp-gui"); }
             }
+            if root.protocol == 5 && root.state == 1: MenuItem {
+                title: "Send Ctrl+Alt+Del";
+                activated => { root.action("rdp-cad"); }
+            }
+            if root.protocol == 5 && root.state == 1: MenuItem {
+                title: "Send Windows Key";
+                activated => { root.action("rdp-win"); }
+            }
             MenuItem {
                 title: "Session Options...";
                 activated => { root.action("options"); }
@@ -847,6 +855,10 @@ component SessionTab inherits Rectangle {
             MenuItem {
                 title: "Close";
                 activated => { root.close(); }
+            }
+            MenuItem {
+                title: "Close Other Tabs";
+                activated => { root.action("close-others"); }
             }
         }
         touch := TouchArea {

@@ -3491,6 +3491,10 @@ component FileList inherits Rectangle {
                 title: root.remote ? "Download" : "Upload";
                 activated => { root.action("transfer"); }
             }
+            if root.remote: MenuItem {
+                title: "Edit (opens here, uploads on save)";
+                activated => { root.action("edit"); }
+            }
             MenuSeparator { }
             MenuItem {
                 title: "New Folder...";

@@ -104,6 +104,7 @@ const DIALOG_SCHEMES: i32 = 16;
 const DIALOG_PASTE: i32 = 17;
 const DIALOG_DROP: i32 = 18;
 const DIALOG_SCRIPT_EDITOR: i32 = 19;
+const DIALOG_QUICK_OPEN: i32 = 20;
 /// File > Auto Print collects at most this much output.
 const AUTO_PRINT_LIMIT: usize = 4 << 20;
 /// How dropped files are sent (Global Options > File Transfer); "" asks.
@@ -1573,6 +1574,10 @@ struct App {
     send_to_all: bool,
     /// Alt+Enter was pressed: flip View > Full Screen on the next tick.
     toggle_full_screen: bool,
+    /// Quick Open asked for from the keyboard; and its rows: a saved session
+    /// (index), or None for the typed address.
+    want_quick_open: bool,
+    quick: Vec<Option<usize>>,
     /// Repaint the whole window at the next tick: Windows cleared it while it
     /// was minimised or hidden, and Slint only repaints what changed.
     repaint_all: bool,
@@ -1814,6 +1819,8 @@ impl App {
             notice: None,
             send_to_all: false,
             toggle_full_screen: false,
+            want_quick_open: false,
+            quick: Vec::new(),
             repaint_all: false,
             last_beep: None,
             key_map,
@@ -2463,6 +2470,7 @@ impl App {
             "clone" => self.tab_action(active, "clone"),
             "sftp-tab" => self.tab_action(active, "sftp"),
             "sftp-gui-tab" => self.tab_action(active, "sftp-gui"),
+            "quick-open" => self.quick_open(ui),
             "close-tab" => self.close_tab(active, ui),
             "exit" => {
                 if self.may_exit(ui) {
@@ -2624,6 +2632,10 @@ impl App {
         // Slint reports macOS Command as `control` and the Control key as `meta`.
         let (cmd, ctrl) = if cfg!(target_os = "macos") { (control, meta) } else { (false, control) };
         let mods = Mods { ctrl, alt, shift };
+        if input::is_quick_open(text, mods, cmd) {
+            self.want_quick_open = true;
+            return true;
+        }
         // Mapped keys (the session's map first, then the global one) do their action instead.
         if let Some(name) = input::key_name(text, mods)
             && self.tabs.get(self.active).is_none_or(|t| t.transfer.is_none() && t.lock.is_none())
@@ -3087,6 +3099,9 @@ impl App {
             }
         }
         self.send_to_all = ui.get_send_to_all();
+        if std::mem::take(&mut self.want_quick_open) && ui.get_dialog() == DIALOG_NONE {
+            self.quick_open(ui);
+        }
         if std::mem::take(&mut self.toggle_full_screen) {
             ui.set_view_full_screen(!ui.get_view_full_screen());
         }
@@ -3668,26 +3683,94 @@ impl App {
         ui.invoke_focus_terminal();
     }
 
-    fn connect_bar(&mut self, text: &str, ui: &MainWindow) {
-        let Some((user, host, port)) = parse_target(text) else {
-            return;
-        };
-        // SSH2 to the typed host, with the default session's other settings
-        // (its user too, when none was typed).
+    /// SSH2 to a typed `[user@]host[:port]`, with the default session's other
+    /// settings (its user too, when none was typed).
+    fn typed_target(&self, text: &str) -> Option<Target> {
+        let (user, host, port) = parse_target(text)?;
         let defaults = Target::from_session(&self.store.default_session, &self.options.credentials);
-        let target = Target {
-            protocol: Protocol::Ssh2,
-            user: user.unwrap_or(defaults.user.clone()),
-            host,
-            port: port.unwrap_or(22),
-            forwards: Vec::new(),
-            ..defaults
+        Some(Target { protocol: Protocol::Ssh2, user: user.unwrap_or(defaults.user.clone()), host, port: port.unwrap_or(22), forwards: Vec::new(), ..defaults })
+    }
+
+    fn connect_bar(&mut self, text: &str, ui: &MainWindow) {
+        let Some(target) = self.typed_target(text) else {
+            return;
         };
         if target.user.is_empty() {
             show_quick_connect(ui, &target);
         } else {
             self.open_tab(target, None);
             ui.invoke_focus_terminal();
+        }
+    }
+
+    // --- Quick Open ---
+
+    fn quick_open(&mut self, ui: &MainWindow) {
+        ui.set_quick_query(SharedString::new());
+        self.quick_search("", ui);
+        ui.set_dialog(DIALOG_QUICK_OPEN);
+    }
+
+    /// The saved sessions matching `query`, then the typed address (first when
+    /// nothing matches).
+    fn quick_search(&mut self, query: &str, ui: &MainWindow) {
+        let mut rows: Vec<Option<usize>> = sessions::quick_matches(&self.store, &self.options.recent_sessions, query).into_iter().map(Some).collect();
+        rows.truncate(50);
+        if !query.trim().is_empty() && self.typed_target(query.trim()).is_some() {
+            rows.push(None);
+        }
+        let shown: Vec<crate::QuickRow> = rows
+            .iter()
+            .map(|row| match row {
+                Some(i) => {
+                    let s = &self.store.sessions[*i];
+                    let at = if s.user.is_empty() { s.host.clone() } else { format!("{}@{}", s.user, s.host) };
+                    let detail = [s.folder.as_str(), at.as_str()].iter().filter(|t| !t.is_empty()).copied().collect::<Vec<_>>().join("  ·  ");
+                    crate::QuickRow { label: s.name.clone().into(), detail: detail.into(), protocol: s.protocol.index() as i32, typed: false }
+                }
+                None => crate::QuickRow {
+                    label: format!("Connect to {}", query.trim()).into(),
+                    detail: "SSH2 (Shift+Enter: SFTP GUI tab)".into(),
+                    protocol: 0,
+                    typed: true,
+                },
+            })
+            .collect();
+        self.quick = rows;
+        ui.set_quick_rows(ModelRc::new(VecModel::from(shown)));
+        ui.set_quick_selected(0);
+    }
+
+    /// Open the picked row (`files`: as an SFTP GUI tab); a negative row closes Quick Open.
+    fn quick_answer(&mut self, row: i32, files: bool, ui: &MainWindow) {
+        let picked = usize::try_from(row).ok().and_then(|r| self.quick.get(r).copied());
+        ui.set_dialog(DIALOG_NONE);
+        ui.invoke_focus_terminal();
+        let Some(picked) = picked else { return };
+        match picked {
+            Some(i) if files => {
+                let session = self.store.sessions[i].clone();
+                if session.protocol != Protocol::Ssh2 {
+                    return self.notify("SFTP needs an SSH2 session.");
+                }
+                let target = Target { sftp: true, files: true, ..Target::from_session(&session, &self.options.credentials) };
+                self.open_tab(target, None);
+                if let Some(tab) = self.tabs.last_mut() {
+                    tab.color = session.tab_color.clone();
+                }
+                push_recent(&mut self.options.recent_sessions, session.path());
+                self.save_options();
+            }
+            Some(i) => self.open_session(i),
+            None => {
+                let Some(target) = self.typed_target(ui.get_quick_query().trim()) else { return };
+                let target = Target { sftp: files, files, ..target };
+                if target.user.is_empty() {
+                    show_quick_connect(ui, &target);
+                } else {
+                    self.open_tab(target, None);
+                }
+            }
         }
     }
 
@@ -6914,6 +6997,8 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
     });
     on!(on_action, |app, ui, name| app.action(&name, &ui));
     on!(on_connect_bar, |app, ui, text| app.connect_bar(&text, &ui));
+    on!(on_quick_edited, |app, ui, text| app.quick_search(&text, &ui));
+    on!(on_quick_answer, |app, ui, row, files| app.quick_answer(row, files, &ui));
     on!(on_hostkey_answer, |app, ui, choice| app.answer_host_key(choice, &ui));
     on!(on_auth_answer, |app, ui, ok| app.answer_auth(ok, &ui));
     on!(on_quick_connect, |app, ui| app.quick_connect(&ui));

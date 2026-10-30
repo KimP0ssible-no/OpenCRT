@@ -50,6 +50,14 @@ export struct PromptField {
     echo: bool,
 }
 
+// A Quick Open row: a saved session, or (typed) the address being typed.
+export struct QuickRow {
+    label: string,
+    detail: string,
+    protocol: int,
+    typed: bool,
+}
+
 // File browser tabs: a row of the local or remote list.
 export struct FileRow {
     name: string,
@@ -3898,6 +3906,91 @@ component FilesBrowser inherits Rectangle {
     }
 }
 
+// Quick Open: type to find a saved session, or an address to connect to.
+component QuickOpenDialog inherits DialogFrame {
+    in property <[QuickRow]> rows;
+    in-out property <int> selected;
+    in-out property <string> query;
+    callback edited(string);
+    // Row (-1 to close), and whether to open it as an SFTP GUI tab.
+    callback answer(int, bool);
+    property <length> row-h: 36px;
+    dialog-width: 560px;
+    title: "Quick Open";
+    // Keys are taken before the search box sees them, so it keeps the focus.
+    FocusScope {
+        capture-key-pressed(event) => {
+            if (event.text == Key.UpArrow || event.text == Key.DownArrow) {
+                root.selected = max(0, min(root.rows.length - 1, root.selected + (event.text == Key.UpArrow ? -1 : 1)));
+                if (root.selected * root.row-h + list.content-y < 0) {
+                    list.content-y = -root.selected * root.row-h;
+                }
+                if ((root.selected + 1) * root.row-h + list.content-y > list.visible-height) {
+                    list.content-y = list.visible-height - (root.selected + 1) * root.row-h;
+                }
+                return accept;
+            }
+            if (event.text == Key.Return) {
+                root.answer(root.rows.length > 0 ? root.selected : -1, event.modifiers.shift);
+                return accept;
+            }
+            if (event.text == Key.Escape) {
+                root.answer(-1, false);
+                return accept;
+            }
+            return reject;
+        }
+        VerticalLayout {
+            spacing: 8px;
+            LineEdit {
+                text <=> root.query;
+                placeholder-text: "Search saved sessions, or type user@host";
+                edited(text) => { root.edited(text); }
+                init => { self.focus(); }
+            }
+            list := ListView {
+                height: 8 * root.row-h;
+                for row[i] in root.rows: Rectangle {
+                    height: root.row-h;
+                    background: i == root.selected ? Theme.active-row-bg : touch.has-hover ? Theme.hover-bg : transparent;
+                    touch := TouchArea {
+                        clicked => { root.selected = i; }
+                        double-clicked => { root.answer(i, false); }
+                    }
+                    HorizontalLayout {
+                        padding-left: 8px;
+                        padding-right: 8px;
+                        spacing: 8px;
+                        Icon {
+                            y: (parent.height - self.height) / 2;
+                            kind: row.typed ? IconKind.quick-connect : Icons.protocol-icon(row.protocol);
+                        }
+                        VerticalLayout {
+                            alignment: center;
+                            Text {
+                                text: row.label;
+                                font-size: 13px;
+                                overflow: elide;
+                            }
+                            if row.detail != "": Text {
+                                text: row.detail;
+                                font-size: 11px;
+                                color: Theme.text-secondary;
+                                overflow: elide;
+                            }
+                        }
+                    }
+                }
+            }
+            Text {
+                text: root.rows.length == 0 ? "No saved session matches." : "Enter connects  ·  Shift+Enter opens an SFTP GUI tab  ·  Esc closes";
+                font-size: 11px;
+                color: Theme.text-secondary;
+            }
+        }
+    }
+}
+
 export component MainWindow inherits Window {
     title: root.window-title;
     icon: @image-url("opencrt.svg");
@@ -4277,6 +4370,12 @@ export component MainWindow inherits Window {
         }
     }
     callback connect-bar(string);
+    // Quick Open (dialog 20).
+    in property <[QuickRow]> quick-rows;
+    in-out property <int> quick-selected;
+    in-out property <string> quick-query;
+    callback quick-edited(string);
+    callback quick-answer(int, bool);
     // Words to highlight until the field is cleared (ad hoc, beside the saved keywords).
     callback adhoc-highlight(string);
     in property <string> paste-message;
@@ -4351,6 +4450,10 @@ export component MainWindow inherits Window {
             MenuItem {
                 title: "Quick Connect...";
                 activated => { root.menu("quick-connect"); }
+            }
+            MenuItem {
+                title: "Quick Open... (Ctrl+Shift+T)";
+                activated => { root.menu("quick-open"); }
             }
             MenuItem {
                 title: "Connect in Tab...";
@@ -5701,6 +5804,13 @@ export component MainWindow inherits Window {
         option: root.confirm-option;
         checked <=> root.confirm-checked;
         answer(yes) => { root.confirm-answer(yes); }
+    }
+    if root.dialog == 20: QuickOpenDialog {
+        rows: root.quick-rows;
+        selected <=> root.quick-selected;
+        query <=> root.quick-query;
+        edited(text) => { root.quick-edited(text); }
+        answer(row, files) => { root.quick-answer(row, files); }
     }
     if root.dialog == 19: ScriptEditor {
         title: root.se-title;

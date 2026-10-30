@@ -1,6 +1,6 @@
 //! Render the main window off-screen to a PNG-convertible PPM, for checking the
 //! look without opening a window: `cargo run --example ui_snapshot -- out.ppm dark main`.
-//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite.
+//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite, quick-open.
 
 use std::rc::Rc;
 
@@ -215,6 +215,17 @@ fn main() {
             ui.set_drop_message("Send firmware.bin with:".into());
             ui.set_drop_sftp(true);
             ui.set_dialog(18);
+        }
+        "quick-open" => {
+            let row = |label: &str, detail: &str, protocol, typed| QuickRow { label: label.into(), detail: detail.into(), protocol, typed };
+            ui.set_quick_query("core".into());
+            ui.set_quick_rows(model(vec![
+                row("core-sw1", "Network  ·  ops@core-sw1.example.net", 0, false),
+                row("core-rtr2", "Network  ·  10.20.0.2", 1, false),
+                row("Connect to core", "SSH2 (Shift+Enter: SFTP GUI tab)", 0, true),
+            ]));
+            ui.set_quick_selected(0);
+            ui.set_dialog(20);
         }
         "overwrite" => {
             ui.set_confirm_message("/mnt/SSD-RAIDZ/seeding/debian-13.iso already exists. Overwrite it?".into());

@@ -104,6 +104,11 @@ struct Item {
 
 #[derive(Default)]
 pub struct Browser {
+    /// Opened from a shell tab, whose folder the remote list can follow (on
+    /// unless turned off); the folder last followed to.
+    pub linked: bool,
+    follow: bool,
+    followed: Option<String>,
     requests: Option<Requests>,
     lists: [List; 2],
     queues: [Vec<Item>; 3],
@@ -237,7 +242,22 @@ pub fn show<T: Clone + PartialEq + 'static>(model: &VecModel<T>, rows: Vec<T>) {
 
 impl Browser {
     pub fn new() -> Self {
-        Self { dirty: true, ..Default::default() }
+        Self { dirty: true, follow: true, ..Default::default() }
+    }
+
+    /// The linked shell is in `folder`: go there when it moved since last time.
+    pub fn follow_to(&mut self, folder: &str) {
+        if self.linked && self.follow && self.requests.is_some() && self.followed.as_deref() != Some(folder) {
+            self.followed = Some(folder.to_string());
+            self.go(Side::Remote, folder.to_string());
+        }
+    }
+
+    pub fn set_follow(&mut self, follow: bool) {
+        self.follow = follow;
+        // Turned back on: catch up with the shell at once.
+        self.followed = None;
+        self.dirty = true;
     }
 
     fn list(&mut self, side: Side) -> &mut List {
@@ -715,6 +735,8 @@ impl Browser {
             remote_filter: remote.filter.clone().into(),
             local_hidden: local.hidden,
             remote_hidden: remote.hidden,
+            linked: self.linked,
+            follow: self.follow,
             queue: ModelRc::from(self.queue_model.clone()),
             list: self.shown as i32,
             waiting: self.queues[WAITING].len() as i32,
@@ -868,6 +890,31 @@ mod tests {
         let dir = b.edit_dir.as_ref().unwrap().0.clone();
         drop(b);
         assert!(!dir.exists());
+    }
+
+    #[test]
+    fn the_remote_list_follows_its_shell() {
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let mut b = Browser::new();
+        b.attach(tx);
+        let listed = |rx: &mut tokio::sync::mpsc::UnboundedReceiver<Request>| {
+            std::iter::from_fn(|| rx.try_recv().ok()).filter_map(|r| if let Request::List(Side::Remote, d) = r { Some(d) } else { None }).collect::<Vec<_>>()
+        };
+        listed(&mut rx);
+        // Not opened from a shell: nothing happens.
+        b.follow_to("/var/log");
+        assert!(listed(&mut rx).is_empty());
+        b.linked = true;
+        b.follow_to("/var/log");
+        b.follow_to("/var/log");
+        assert_eq!(listed(&mut rx), ["/var/log"], "once per change of folder");
+        b.set_follow(false);
+        b.follow_to("/etc");
+        assert!(listed(&mut rx).is_empty());
+        // Back on: catches up at once.
+        b.set_follow(true);
+        b.follow_to("/etc");
+        assert_eq!(listed(&mut rx), ["/etc"]);
     }
 
     #[test]

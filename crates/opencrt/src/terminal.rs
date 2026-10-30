@@ -326,6 +326,29 @@ pub fn scheme_named(name: &str) -> &'static Scheme {
     schemes().into_iter().find(|s| s.name == name).unwrap_or(&SCHEMES[0])
 }
 
+/// The folder in an OSC 7 address (`file://host/path`, `%xx` escapes undone).
+fn folder_of(url: &str) -> Option<String> {
+    let (_, rest) = url.split_once("://")?;
+    let path = &rest[rest.find('/')?..];
+    let bytes = path.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        let hex = bytes.get(i + 1..i + 3).and_then(|h| u8::from_str_radix(std::str::from_utf8(h).ok()?, 16).ok());
+        match (bytes[i], hex) {
+            (b'%', Some(byte)) => {
+                out.push(byte);
+                i += 3;
+            }
+            (byte, _) => {
+                out.push(byte);
+                i += 1;
+            }
+        }
+    }
+    String::from_utf8(out).ok()
+}
+
 /// `#rrggbb` as a colour.
 pub fn parse_hex(text: &str) -> Option<Rgb> {
     let hex = text.trim().strip_prefix('#').unwrap_or(text.trim());
@@ -420,6 +443,11 @@ pub struct Terminal {
     rows: usize,
     /// Title set by the host (OSC 0/2), if any.
     pub title: Option<String>,
+    /// The shell's current folder, as it reports it (OSC 7), if it does.
+    pub cwd: Option<String>,
+    /// An OSC sequence being read (it may span reads), and whether ESC came last.
+    osc: Option<Vec<u8>>,
+    esc: bool,
     pub scheme: &'static Scheme,
     scrollback: usize,
     /// Cursor shape unless the host picks one (DECSCUSR).
@@ -444,6 +472,9 @@ impl Terminal {
             cols,
             rows,
             title: None,
+            cwd: None,
+            osc: None,
+            esc: false,
             scheme: &SCHEMES[0],
             scrollback,
             cursor: CursorShape::Block,
@@ -493,12 +524,46 @@ impl Terminal {
     /// Feed raw bytes from the remote side into the terminal parser.
     /// Returns any reply bytes the terminal needs sent back to the host.
     pub fn feed(&mut self, bytes: &[u8]) -> Vec<u8> {
+        self.scan_osc(bytes);
         self.parser.advance(&mut self.term, bytes);
         let mut pending = self.listener.0.borrow_mut();
         if let Some(title) = pending.title.take() {
             self.title = title;
         }
         std::mem::take(&mut pending.reply)
+    }
+
+    /// Watch for OSC 7 (`ESC ] 7 ; file://host/path`, ended by BEL or ESC \\),
+    /// which the terminal engine ignores, to learn the shell's folder.
+    fn scan_osc(&mut self, bytes: &[u8]) {
+        for &b in bytes {
+            let esc = std::mem::replace(&mut self.esc, b == 0x1b);
+            let Some(buf) = self.osc.as_mut() else {
+                if esc && b == b']' {
+                    self.osc = Some(Vec::new());
+                }
+                continue;
+            };
+            match b {
+                0x07 => {}
+                b'\\' if esc => {}
+                0x1b => continue,
+                // Anything longer is not a folder: give up on it.
+                _ if buf.len() >= 4096 => {
+                    self.osc = None;
+                    continue;
+                }
+                _ => {
+                    buf.push(b);
+                    continue;
+                }
+            }
+            if let Some(url) = self.osc.take().as_deref().and_then(|o| o.strip_prefix(b"7;"))
+                && let Some(path) = folder_of(&String::from_utf8_lossy(url))
+            {
+                self.cwd = Some(path);
+            }
+        }
     }
 
     /// A new connection in this tab: drop the old session's screen into history
@@ -1097,6 +1162,22 @@ mod tests {
         t.set_host_copy(false);
         t.feed(b"\x1b]52;c;aGVsbG8=\x07");
         assert_eq!(t.take_clipboard(), None);
+    }
+
+    #[test]
+    fn the_shell_reports_its_folder() {
+        let mut t = Terminal::new(10, 2);
+        assert_eq!(t.cwd, None);
+        t.feed(b"\x1b]7;file://web1/home/me/my%20site\x07$ ");
+        assert_eq!(t.cwd.as_deref(), Some("/home/me/my site"));
+        // Split across reads, ended by ESC \.
+        t.feed(b"\x1b]7;file://web1/var/");
+        t.feed(b"log\x1b\\");
+        assert_eq!(t.cwd.as_deref(), Some("/var/log"));
+        // Other OSC sequences leave it alone.
+        t.feed(b"\x1b]0;title\x07");
+        assert_eq!(t.cwd.as_deref(), Some("/var/log"));
+        assert_eq!(t.title.as_deref(), Some("title"));
     }
 
     #[test]

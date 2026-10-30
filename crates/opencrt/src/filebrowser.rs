@@ -123,6 +123,39 @@ pub struct Browser {
     /// The lists or the queue need showing again; or just the running job's progress.
     dirty: bool,
     progressed: bool,
+    /// Remote files being edited in a local app: a private folder for their
+    /// copies, downloads that open when done (job ids), and the open copies.
+    edit_dir: Option<EditDir>,
+    opening: Vec<u64>,
+    editing: Vec<Editing>,
+    edits_checked: Option<Instant>,
+    /// Copies downloaded for editing, for the app to open.
+    to_open: Vec<std::path::PathBuf>,
+}
+
+/// A remote file's local copy, uploaded again whenever it is saved.
+struct Editing {
+    local: std::path::PathBuf,
+    remote: String,
+    modified: Option<std::time::SystemTime>,
+}
+
+/// The private folder of copies being edited, deleted with the tab.
+struct EditDir(std::path::PathBuf);
+
+impl Drop for EditDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+/// Opening a file of this type would run it rather than show it in an editor.
+fn runs_when_opened(name: &str) -> bool {
+    const RUN: &[&str] = &[
+        "exe", "com", "bat", "cmd", "scr", "pif", "cpl", "msi", "msc", "hta", "vbs", "vbe", "js", "jse", "wsf", "wsh", "lnk", "reg",
+        "jar", "app", "command", "terminal", "desktop", "appimage", "run",
+    ];
+    Path::new(name).extension().is_some_and(|e| RUN.iter().any(|r| e.eq_ignore_ascii_case(r)))
 }
 
 /// What a click does to a selection: Ctrl toggles, Shift extends from the
@@ -168,6 +201,27 @@ fn summary(files: usize, folders: usize, bytes: u64, selected: bool) -> String {
     };
     let lead = if selected { "Selected " } else { "" };
     format!("{lead}{what}. Total size: {}", sftp::human(bytes))
+}
+
+/// A folder only this user can open (the copies may hold secrets).
+fn private_dir(dir: &Path) -> std::io::Result<()> {
+    let mut builder = std::fs::DirBuilder::new();
+    builder.recursive(true);
+    #[cfg(unix)]
+    std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
+    builder.create(dir)
+}
+
+/// Open `path` in this computer's app for its type, without waiting.
+pub fn open_in_app(path: &Path) -> std::io::Result<()> {
+    let program = if cfg!(windows) {
+        "explorer"
+    } else if cfg!(target_os = "macos") {
+        "open"
+    } else {
+        "xdg-open"
+    };
+    std::process::Command::new(program).arg(path).spawn().map(drop)
 }
 
 pub fn show<T: Clone + PartialEq + 'static>(model: &VecModel<T>, rows: Vec<T>) {
@@ -259,6 +313,13 @@ impl Browser {
                 match result {
                     Ok(children) => {
                         item.done = item.job.size;
+                        if let Some(at) = self.opening.iter().position(|&o| o == id) {
+                            self.opening.remove(at);
+                            let local = item.job.local.clone();
+                            let modified = local.metadata().and_then(|m| m.modified()).ok();
+                            self.editing.push(Editing { local: local.clone(), remote: item.job.remote.clone(), modified });
+                            self.to_open.push(local);
+                        }
                         // A folder's contents go first, before the jobs queued after it.
                         let jobs: Vec<Item> = children.into_iter().map(|job| self.item(job)).collect();
                         self.queues[WAITING].splice(0..0, jobs);
@@ -301,6 +362,7 @@ impl Browser {
 
     /// Start the next job when nothing is running.
     pub fn pump(&mut self) {
+        self.upload_saved_edits();
         if self.running.is_some() || self.asking.is_some() || self.requests.is_none() {
             return;
         }
@@ -406,6 +468,71 @@ impl Browser {
         }
         self.dirty = true;
         Ok(())
+    }
+
+    /// Edit the selected remote file in this computer's app for it: download a
+    /// copy, open it, and upload it again each time it is saved.
+    pub fn edit(&mut self) -> Result<(), String> {
+        let picked: Vec<Entry> = self.lists[Side::Remote as usize].picked().cloned().collect();
+        let [entry] = &picked[..] else { return Err("Pick one remote file to edit.".into()) };
+        if entry.dir || !sftp::plain_name(&entry.name) {
+            return Err("Pick one remote file to edit.".into());
+        }
+        if runs_when_opened(&entry.name) {
+            return Err(format!("{} would run, not open in an editor: download it instead.", entry.name));
+        }
+        let dir = match &self.edit_dir {
+            Some(dir) => dir.0.clone(),
+            None => {
+                static FOLDERS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+                let n = FOLDERS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                let dir = std::env::temp_dir().join(format!("opencrt-edit-{}-{n}", std::process::id()));
+                private_dir(&dir).map_err(|e| format!("Cannot make {}: {e}", dir.display()))?;
+                self.edit_dir = Some(EditDir(dir.clone()));
+                dir
+            }
+        };
+        // A folder per edit, so two files of the same name do not clash.
+        let own = dir.join((self.next_id + 1).to_string());
+        std::fs::create_dir_all(&own).map_err(|e| format!("Cannot make {}: {e}", own.display()))?;
+        let remote = self.lists[Side::Remote as usize].path(Side::Remote, &entry.name);
+        let job = Job { id: 0, upload: false, local: own.join(&entry.name), remote, dir: false, size: entry.size, overwrite: true };
+        let item = self.item(job);
+        self.opening.push(item.job.id);
+        self.queues[WAITING].push(item);
+        self.dirty = true;
+        Ok(())
+    }
+
+    /// Copies downloaded for editing since the last call, for the app to open.
+    pub fn take_to_open(&mut self) -> Vec<std::path::PathBuf> {
+        std::mem::take(&mut self.to_open)
+    }
+
+    /// Once a second: queue an upload for each edited copy saved since.
+    fn upload_saved_edits(&mut self) {
+        if self.edits_checked.is_some_and(|t| t.elapsed() < std::time::Duration::from_secs(1)) {
+            return;
+        }
+        self.edits_checked = Some(Instant::now());
+        let mut jobs = Vec::new();
+        for e in &mut self.editing {
+            let Ok(meta) = e.local.metadata() else { continue };
+            let modified = meta.modified().ok();
+            if modified == e.modified {
+                continue;
+            }
+            e.modified = modified;
+            let waiting = self.queues[WAITING].iter().skip(1).any(|i| i.job.upload && i.job.remote == e.remote);
+            if !waiting {
+                jobs.push(Job { id: 0, upload: true, local: e.local.clone(), remote: e.remote.clone(), dir: false, size: meta.len(), overwrite: true });
+            }
+        }
+        for job in jobs {
+            let item = self.item(job);
+            self.queues[WAITING].push(item);
+            self.dirty = true;
+        }
     }
 
     /// The selected entries of `side`: (name, folder).
@@ -709,6 +836,38 @@ mod tests {
         assert_eq!(b.lists[1].filter, "note");
         b.apply(Update::Listing(Side::Remote, Ok(("/tmp".into(), list))));
         assert_eq!((b.lists[1].filter.as_str(), shown(&b).len()), ("", 3));
+    }
+
+    #[test]
+    fn edited_files_open_and_upload_when_saved() {
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let mut b = Browser::new();
+        b.attach(tx);
+        b.apply(Update::Listing(Side::Local, Ok(("/tmp".into(), vec![]))));
+        b.apply(Update::Listing(Side::Remote, Ok(("/etc".into(), vec![entry("hosts", false, 5), entry("setup.exe", false, 9)]))));
+        // Row 0 is `..`; programs are refused.
+        b.click(1, 2, false, false);
+        assert!(b.edit().unwrap_err().contains("would run"));
+        b.click(1, 1, false, false);
+        b.edit().unwrap();
+        b.pump();
+        let job = std::iter::from_fn(|| rx.try_recv().ok()).find_map(|r| if let Request::Start(j) = r { Some(j) } else { None }).unwrap();
+        assert_eq!((job.remote.as_str(), job.upload), ("/etc/hosts", false));
+        assert!(job.local.starts_with(&b.edit_dir.as_ref().unwrap().0));
+        // The download lands, opens, and a later save goes back up.
+        std::fs::write(&job.local, b"127.0.0.1 a").unwrap();
+        b.apply(Update::Finished(job.id, Ok(vec![])));
+        assert_eq!(b.take_to_open(), std::slice::from_ref(&job.local));
+        let file = std::fs::File::options().write(true).open(&job.local).unwrap();
+        file.set_modified(std::time::SystemTime::now() + std::time::Duration::from_secs(5)).unwrap();
+        b.edits_checked = None;
+        b.pump();
+        let up = std::iter::from_fn(|| rx.try_recv().ok()).find_map(|r| if let Request::Start(j) = r { Some(j) } else { None }).unwrap();
+        assert_eq!((up.remote.as_str(), up.upload, up.overwrite), ("/etc/hosts", true, true));
+        // The private folder goes with the tab.
+        let dir = b.edit_dir.as_ref().unwrap().0.clone();
+        drop(b);
+        assert!(!dir.exists());
     }
 
     #[test]

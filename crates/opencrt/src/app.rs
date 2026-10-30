@@ -3226,6 +3226,7 @@ impl App {
         }
         let on_screen: Vec<usize> = self.panes.iter().map(|p| p.tab).collect();
         let mut host_copied = None;
+        let mut open_failed = None;
         for (i, tab) in self.tabs.iter_mut().enumerate() {
             if on_screen.contains(&i) {
                 tab.connect_if_deferred();
@@ -3236,6 +3237,11 @@ impl App {
                 && clipboard.set_text(text.clone()).is_ok()
             {
                 host_copied = Some((tab.title(), text.chars().count()));
+            }
+            for path in tab.files.as_mut().map(|f| f.take_to_open()).unwrap_or_default() {
+                if let Err(e) = crate::filebrowser::open_in_app(&path) {
+                    open_failed = Some(format!("Cannot open {}: {e}", path.display()));
+                }
             }
             // Output in a tab out of sight marks it until it is looked at.
             if std::mem::take(&mut tab.fresh_output) && !on_screen.contains(&i) {
@@ -3300,6 +3306,9 @@ impl App {
         }
         if let Some((title, chars)) = host_copied {
             self.notify(format!("{title} copied {chars} characters to the clipboard."));
+        }
+        if let Some(e) = open_failed {
+            self.notify(e);
         }
         self.raise_prompt(ui);
         if self.tabs.get_mut(self.active).is_some_and(|tab| std::mem::take(&mut tab.clip_check)) {
@@ -4137,6 +4146,7 @@ impl App {
             (2, "retry") => files.retry(),
             (2, _) => files.show_list(name.strip_prefix("list-").and_then(|n| n.parse().ok()).unwrap_or(0)),
             (_, "transfer") => problem = files.transfer(which).err(),
+            (1, "edit") => problem = files.edit().err(),
             (_, "refresh") => files.refresh(which),
             (_, "up") => files.up(which),
             (_, "hidden-on" | "hidden-off") => files.show_hidden(which, name == "hidden-on"),

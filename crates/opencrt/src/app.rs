@@ -129,6 +129,8 @@ pub struct Target {
     pub sftp: bool,
     /// The SFTP tab shows file lists and a queue instead of an `sftp>` prompt.
     pub files: bool,
+    /// SSH2: only the session's port forwards, on a connection with no shell.
+    pub tunnels: bool,
     /// SSH2 port forwards started with the shell.
     pub forwards: Vec<Forward>,
     /// Jump hosts as typed (`a,b,c`: each `[user@]host[:port]` or a saved
@@ -198,6 +200,7 @@ impl Target {
                 .then(|| serial::Dial { init: s.modem_init.clone(), number: s.dial_number.clone() }),
             sftp: s.sftp && s.protocol == Protocol::Ssh2,
             files: false,
+            tunnels: false,
             tls: s.tls && s.protocol == Protocol::Telnet,
             // Rules are validated when the session is saved.
             forwards: s.forwards.iter().filter(|f| f.enabled).cloned().collect(),
@@ -229,6 +232,7 @@ impl Target {
         };
         match self.protocol {
             Protocol::Ssh2 if self.sftp => format!("sftp: {}@{host}", self.user),
+            Protocol::Ssh2 if self.tunnels => format!("tunnels: {}@{host}", self.user),
             Protocol::Ssh2 => format!("{}@{host}", self.user),
             Protocol::Telnet | Protocol::Raw => host,
             Protocol::Rlogin => format!("rlogin: {}@{host}", self.user),
@@ -275,7 +279,9 @@ impl Target {
         match self.protocol {
             Protocol::Ssh2 => {
                 let creds = self.credentials();
-                if self.sftp {
+                if self.tunnels {
+                    ssh::tunnels(self.host.clone(), self.port, creds, config::known_hosts(), self.forwards.clone())
+                } else if self.sftp {
                     sftp::connect(self.host.clone(), self.port, creds, config::known_hosts())
                 } else {
                     let forwards = self.forwards.clone();
@@ -1969,8 +1975,8 @@ impl App {
         // Ad-hoc connections (Quick Connect, connect bar, command line) take
         // the Default Session's settings.
         let settings = session.unwrap_or(&self.store.default_session);
-        if tab.target.sftp {
-            // No logon script, anti-idle or session log at an sftp> prompt.
+        if tab.target.sftp || tab.target.tunnels {
+            // No logon script, anti-idle or session log at an sftp> prompt or for tunnels.
             tab.color = settings.tab_color.clone();
         } else {
             tab.apply_session(settings);
@@ -2067,6 +2073,20 @@ impl App {
         } else {
             self.picked_tabs = [id].into();
             self.select(index);
+        }
+    }
+
+    /// A tab running only `target`'s port forwards (an SSH2 session with some).
+    fn start_tunnels(&mut self, target: Target, color: String) {
+        if target.protocol != Protocol::Ssh2 {
+            return self.notify("Port forwarding needs an SSH2 session.");
+        }
+        if !target.forwards.iter().any(|f| f.enabled) {
+            return self.notify("This session has no port forwards: add them in Session Options > Port Forwarding.");
+        }
+        self.open_tab(Target { sftp: false, files: false, tunnels: true, ..target }, None);
+        if let Some(tab) = self.tabs.last_mut() {
+            tab.color = color;
         }
     }
 
@@ -2525,6 +2545,12 @@ impl App {
             "clone" => self.tab_action(active, "clone"),
             "sftp-tab" => self.tab_action(active, "sftp"),
             "sftp-gui-tab" => self.tab_action(active, "sftp-gui"),
+            "next-tunnel" => {
+                let n = self.tabs.len();
+                if let Some(i) = (1..=n).map(|k| (active + k) % n).find(|&i| self.tabs[i].target.tunnels) {
+                    self.select(i);
+                }
+            }
             "quick-open" => self.quick_open(ui),
             "close-tab" => self.close_tab(active, ui),
             "exit" => {
@@ -2668,6 +2694,21 @@ impl App {
                 let at = move_tab(&mut self.tabs, index, to, after);
                 self.active = self.tabs.iter().position(|t| t.id == active).unwrap_or(at);
                 self.select(at);
+            }
+            "tunnels" => {
+                let (target, color) = (tab.target.clone(), tab.color.clone());
+                self.start_tunnels(target, color);
+            }
+            "open-browser" => {
+                let addresses: Vec<String> = tab.target.forwards.iter().filter(|f| f.enabled).filter_map(|f| f.browser_address()).collect();
+                if addresses.is_empty() {
+                    self.notify("No local port forward to open: SOCKS and remote forwards have no page.");
+                }
+                for address in addresses {
+                    if let Err(e) = webbrowser::open(&address) {
+                        self.notify(format!("Cannot open {address}: {e}"));
+                    }
+                }
             }
             "rdp-cad" | "rdp-win" => {
                 if let Some(input) = &tab.rdp {
@@ -3356,6 +3397,7 @@ impl App {
         if let Some(e) = open_failed {
             self.notify(e);
         }
+        ui.set_tunnel_count(self.tabs.iter().filter(|t| t.target.tunnels && t.state == State::Connected).count() as i32);
         self.raise_prompt(ui);
         if self.tabs.get_mut(self.active).is_some_and(|tab| std::mem::take(&mut tab.clip_check)) {
             self.rdp_offer_clipboard();
@@ -3648,6 +3690,7 @@ impl App {
                     State::Closed => 2,
                 },
                 color: tab_color(&t.color),
+                tunnels: t.target.tunnels,
             })
             .collect();
         if tabs != self.shown_tabs {
@@ -4050,6 +4093,12 @@ impl App {
                     self.open_session(i);
                     ui.invoke_focus_terminal();
                 }
+            }
+            ("start-tunnels", Some(Node::Session(i))) => {
+                let session = &self.store.sessions[i];
+                let target = Target { tunnels: true, ..Target::from_session(session, &self.options.credentials) };
+                let color = session.tab_color.clone();
+                self.start_tunnels(target, color);
             }
             ("connect-sftp" | "connect-sftp-gui", Some(Node::Session(i))) => {
                 let session = &self.store.sessions[i];
@@ -7006,7 +7055,7 @@ fn update_status(ui: &MainWindow, tab: &Tab) {
     }
     ui.set_status_cipher(if connected { protocol } else { String::new() }.into());
     ui.set_status_load(tab.load.as_ref().map(crate::load::Load::text).unwrap_or_default().into());
-    ui.set_ssh_active(tab.target.protocol == Protocol::Ssh2 && !tab.target.sftp);
+    ui.set_ssh_active(tab.target.protocol == Protocol::Ssh2 && !tab.target.sftp && !tab.target.tunnels);
     ui.set_status_pos(format!("{row}, {col}").into());
     ui.set_status_size(format!("{rows} Rows, {cols} Cols").into());
     ui.set_status_emulation("Xterm".into());

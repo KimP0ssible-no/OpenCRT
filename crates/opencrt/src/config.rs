@@ -484,6 +484,8 @@ pub struct Options {
     pub remember_secrets: bool,
     /// At start-up, reopen the saved sessions that were open at exit.
     pub reopen_sessions: bool,
+    /// Show the CPU, memory, disk and network of a Linux host over SSH in the status bar.
+    pub server_load: bool,
     /// Saved sessions (paths) open when OpenCRT last exited.
     pub open_sessions: Vec<String>,
     /// The tab group of each of `open_sessions`.
@@ -757,6 +759,7 @@ impl Default for Options {
             auto_reconnect: false,
             remember_secrets: false,
             reopen_sessions: false,
+            server_load: true,
             open_sessions: Vec::new(),
             open_groups: Vec::new(),
             cursor: Cursor::Block,

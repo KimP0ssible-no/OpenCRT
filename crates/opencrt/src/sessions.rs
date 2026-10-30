@@ -150,7 +150,7 @@ pub fn apply_changes(before: &Session, after: &Session, target: &mut Session) ->
 }
 
 /// Quick Open: the sessions (indexes) holding every word of `query` in their
-/// name, folder, host or user. Best first: those whose name holds every
+/// name, folder, host, user or notes. Best first: those whose name holds every
 /// word, then by how recently they were opened (`recent`: paths, newest first),
 /// then by name. Every session when `query` is blank.
 pub fn quick_matches(store: &SessionStore, recent: &[String], query: &str) -> Vec<usize> {
@@ -159,7 +159,7 @@ pub fn quick_matches(store: &SessionStore, recent: &[String], query: &str) -> Ve
     let mut found: Vec<usize> = (0..store.sessions.len())
         .filter(|&i| {
             let s = &store.sessions[i];
-            has_all(format!("{} {} {} {}", s.name, s.folder, s.host, s.user).to_lowercase())
+            has_all(format!("{} {} {} {} {}", s.name, s.folder, s.host, s.user, s.notes).to_lowercase())
         })
         .collect();
     found.sort_by_cached_key(|&i| {
@@ -564,8 +564,8 @@ mod tests {
     #[test]
     fn quick_open_finds_by_any_field_name_matches_first() {
         let mut store = SessionStore::default();
-        for (folder, name, host, user) in [("Prod", "db1", "10.0.0.5", ""), ("Lab", "web", "db-proxy", ""), ("Prod", "edge", "r1", "oslo")] {
-            store.sessions.push(Session { user: user.into(), ..session(folder, name, host) });
+        for (folder, name, host, notes) in [("Prod", "db1", "10.0.0.5", ""), ("Lab", "web", "db-proxy", ""), ("Prod", "edge", "r1", "Oslo dc")] {
+            store.sessions.push(Session { notes: notes.into(), ..session(folder, name, host) });
         }
         let names = |found: Vec<usize>| found.iter().map(|&i| store.sessions[i].name.clone()).collect::<Vec<_>>();
         // A name match beats a host match; every word must match somewhere.

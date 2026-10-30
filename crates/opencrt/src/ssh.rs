@@ -363,6 +363,35 @@ pub fn authorize_command(line: &str) -> Option<String> {
     ))
 }
 
+/// Run `command` on the host behind `link` (a channel of its own, with no
+/// terminal) and send back what it prints. The thread holds only the
+/// channel, never the connection itself.
+pub fn run_on(link: Link, command: &'static str) -> std::sync::mpsc::Receiver<Result<String, String>> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let result = (|| {
+            runtime().map_err(|e| e.to_string())?.block_on(async {
+                let session = link.upgrade().ok_or("the connection is closed")?;
+                let mut channel = session.channel_open_session().await.map_err(|e| e.to_string())?;
+                drop(session);
+                channel.exec(true, command).await.map_err(|e| e.to_string())?;
+                let mut output = Vec::new();
+                let wait = std::time::Duration::from_secs(10);
+                while let Ok(Some(message)) = tokio::time::timeout(wait, channel.wait()).await {
+                    match message {
+                        russh::ChannelMsg::Data { data } => output.extend_from_slice(&data),
+                        russh::ChannelMsg::Eof | russh::ChannelMsg::Close => break,
+                        _ => {}
+                    }
+                }
+                Ok(String::from_utf8_lossy(&output).trim().to_string())
+            })
+        })();
+        let _ = tx.send(result);
+    });
+    rx
+}
+
 /// Public Key Assistant: add `line` to the account's authorized_keys over
 /// the logged-in connection. Answers true when added, false when present.
 pub fn upload_public_key(session: Shared, line: String) -> std::sync::mpsc::Receiver<Result<bool, String>> {

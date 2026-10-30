@@ -166,7 +166,7 @@ fn credentials(login: &Login) -> Credentials {
         password: None,
         key_path: login.key.clone(),
         key_passphrase: None,
-        jump: None,
+        jump: Vec::new(),
         legacy: false,
         forward_agent: false,
         x11_display: None,

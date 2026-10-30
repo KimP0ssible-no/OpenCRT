@@ -131,8 +131,10 @@ pub struct Target {
     pub files: bool,
     /// SSH2 port forwards started with the shell.
     pub forwards: Vec<Forward>,
-    /// SSH2 jump host, `[user@]host[:port]`.
+    /// Jump hosts as typed (`a,b,c`: each `[user@]host[:port]` or a saved
+    /// session), and as resolved when the tab opens.
     pub jump: Option<String>,
+    pub hops: Vec<ssh::Hop>,
     /// Terminal type for SSH2 and Telnet; empty for the default.
     pub term: String,
     /// SSH2: also offer old algorithms for legacy devices.
@@ -200,6 +202,7 @@ impl Target {
             // Rules are validated when the session is saved.
             forwards: s.forwards.iter().filter(|f| f.enabled).cloned().collect(),
             jump: (!s.jump_host.is_empty()).then(|| s.jump_host.clone()),
+            hops: Vec::new(),
             command: s.remote_command.clone(),
             pre_connect: s.pre_connect.clone(),
             term: if s.terminal_type.is_empty() { s.emulation.term().to_string() } else { s.terminal_type.clone() },
@@ -253,7 +256,7 @@ impl Target {
             password: self.cached_password.as_ref().map(|s| s.0.clone()),
             key_path: self.key_path.clone(),
             key_passphrase: self.cached_passphrase.as_ref().map(|s| s.0.clone()),
-            jump: self.jump.clone(),
+            jump: self.hops.clone(),
             legacy: self.legacy,
             compression: self.compression,
             forward_agent: self.forward_agent,
@@ -312,7 +315,7 @@ impl Target {
             h264: self.rdp_h264.unwrap_or(true),
             credential: self.credential.clone(),
             password: self.cached_password.as_ref().map(|s| s.0.clone()),
-            jump: self.jump.clone().map(|spec| (spec, self.credentials())),
+            jump: (!self.hops.is_empty()).then(|| self.credentials()),
             tunnel: None,
         })
     }
@@ -321,8 +324,8 @@ impl Target {
     fn problem(&self) -> Option<&'static str> {
         match self.protocol {
             Protocol::Ssh2 | Protocol::Rlogin if self.user.is_empty() => Some("Enter a username."),
-            Protocol::Ssh2 | Protocol::Rdp if self.jump.as_deref().is_some_and(|j| ssh::parse_jump(j, "").is_none()) => {
-                Some("Enter the jump host as [user@]host[:port].")
+            Protocol::Ssh2 | Protocol::Rdp if self.jump.as_deref().is_some_and(|j| j.split(',').any(|hop| hop.trim().is_empty())) => {
+                Some("Enter jump hosts as [user@]host[:port] or saved session names, separated by commas.")
             }
             Protocol::Rdp if self.user.is_empty() => Some("Enter a username (user, DOMAIN\\user or user@domain)."),
             Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin if self.host.is_empty() => {
@@ -469,6 +472,23 @@ pub fn parse_args(args: &[String]) -> Option<Target> {
 
 /// `/S session`: the saved session to open, found by its path (`Folder/name`)
 /// or, failing that, its name alone; matching ignores case.
+/// The jump hosts in `spec` (`a,b,c`): each a saved SSH2 session, by path or
+/// name, with its own user, key and credential; or `[user@]host[:port]`.
+fn resolve_hops(spec: &str, default_user: &str, store: &SessionStore, credentials: &[Credential]) -> Vec<ssh::Hop> {
+    let hop = |item: &str| {
+        let saved = store.sessions.iter().find(|s| s.protocol == Protocol::Ssh2 && (s.path().eq_ignore_ascii_case(item) || s.name.eq_ignore_ascii_case(item)));
+        match saved.map(|s| Target::from_session(s, credentials)) {
+            Some(t) => {
+                let user = if t.user.is_empty() { default_user.to_string() } else { t.user };
+                ssh::Hop { host: t.host, port: t.port, user, key_path: t.key_path, saved: t.credential }
+            }
+            // Not a session nor a valid address: tried as a host name, so the error names it.
+            None => ssh::Hop::parse(item, default_user).unwrap_or(ssh::Hop { host: item.into(), port: 22, user: default_user.into(), ..Default::default() }),
+        }
+    };
+    spec.split(',').map(str::trim).filter(|item| !item.is_empty()).map(hop).collect()
+}
+
 fn session_arg<'a>(args: &[String], store: &'a SessionStore) -> Option<Result<&'a Session, String>> {
     let at = args.iter().position(|a| a.eq_ignore_ascii_case("/S"))?;
     let name = args.get(at + 1).map(String::as_str).unwrap_or_default();
@@ -1931,6 +1951,14 @@ impl App {
         let mut tab = Tab::new(target, terminal);
         // RDP through a jump host logs in to it with the same key as SSH sessions.
         let ssh_login = tab.target.protocol == Protocol::Ssh2 || (tab.target.protocol == Protocol::Rdp && tab.target.jump.is_some());
+        if let Some(spec) = tab.target.jump.clone() {
+            // An RDP user is a Windows one: jump hosts default to this computer's.
+            let default_user = match tab.target.protocol {
+                Protocol::Rdp => std::env::var("USER").or_else(|_| std::env::var("USERNAME")).unwrap_or_default(),
+                _ => tab.target.user.clone(),
+            };
+            tab.target.hops = resolve_hops(&spec, &default_user, &self.store, &self.options.credentials);
+        }
         if ssh_login && tab.target.key_path.is_none() && !self.options.global_key.is_empty() {
             tab.target.key_path = Some(config::expand_env(&self.options.global_key));
         }
@@ -7713,6 +7741,18 @@ mod tests {
         assert_eq!(move_tab(&mut tabs, 3, 1, true), 2);
         assert_eq!(order(&tabs), [3, 0, 1, 2]);
         assert_eq!(group_count(&tabs), 1);
+    }
+
+    #[test]
+    fn jump_chains_mix_saved_sessions_and_addresses() {
+        let bastion = Session { name: "Bastion".into(), folder: "Edge".into(), host: "b.example.net".into(), port: 2200, user: "ops".into(), key_path: "~/.ssh/edge".into(), credential: "edge".into(), ..Default::default() };
+        let store = SessionStore { sessions: vec![bastion], ..Default::default() };
+        let credentials = [Credential { name: "edge".into(), user: String::new() }];
+        let hops = resolve_hops("edge/bastion, me@10.0.0.9:22, inner", "u", &store, &credentials);
+        assert_eq!((hops[0].host.as_str(), hops[0].port, hops[0].user.as_str(), hops[0].saved.as_deref()), ("b.example.net", 2200, "ops", Some("edge")));
+        assert!(hops[0].key_path.as_deref().is_some_and(|k| k.ends_with("edge")));
+        assert_eq!((hops[1].user.as_str(), hops[1].host.as_str()), ("me", "10.0.0.9"));
+        assert_eq!((hops[2].user.as_str(), hops[2].host.as_str(), hops[2].port), ("u", "inner", 22));
     }
 
     #[test]

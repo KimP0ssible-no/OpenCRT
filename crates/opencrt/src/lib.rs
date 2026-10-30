@@ -13,6 +13,7 @@ pub mod fuzz;
 mod input;
 mod instance;
 mod kermit;
+mod load;
 mod local;
 mod log;
 #[cfg(test)]

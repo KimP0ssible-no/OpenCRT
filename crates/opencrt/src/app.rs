@@ -540,6 +540,10 @@ struct Tab {
     color: String,
     /// SSH2 shell: its logged-in connection, so an SFTP tab can share it.
     link: Option<ssh::Link>,
+    /// The host's load while this is the active tab; whether the host cannot report it.
+    load_watch: Option<crate::load::Watch>,
+    load: Option<crate::load::Load>,
+    load_unsupported: bool,
     /// Connect over this connection instead of logging in (used once).
     via: Option<ssh::Shared>,
     /// RDP: keyboard and mouse input to the helper, while connected.
@@ -697,6 +701,9 @@ impl Tab {
             pre_connect: None,
             pre_connect_done: false,
             deferred: false,
+            load_watch: None,
+            load: None,
+            load_unsupported: false,
             group: 0,
             shown_at: 0,
             status: String::new(),
@@ -1163,6 +1170,7 @@ impl Tab {
 
     fn connect(&mut self) {
         self.deferred = false;
+        (self.load_watch, self.load, self.load_unsupported) = (None, None, false);
         // The session's pre-connect command runs first; `poll` comes back here.
         // (Not for a tab riding on another tab's connection: nothing to set up.)
         if !self.target.pre_connect.is_empty() && self.via.is_none() && !std::mem::take(&mut self.pre_connect_done) {
@@ -3264,6 +3272,29 @@ impl App {
                 match picked {
                     Some(path) => tab.start_upload(&path),
                     None => tab.send(zmodem::CANCEL.to_vec()),
+                }
+            }
+        }
+        // Server load, read for the active tab only.
+        for (i, tab) in self.tabs.iter_mut().enumerate() {
+            let wanted = i == self.active
+                && self.options.server_load
+                && tab.state == State::Connected
+                && tab.target.protocol == Protocol::Ssh2
+                && !tab.target.sftp
+                && !tab.load_unsupported;
+            match (&tab.link, wanted) {
+                (Some(link), true) if tab.load_watch.is_none() => tab.load_watch = Some(crate::load::watch(link.clone())),
+                (_, false) => (tab.load_watch, tab.load) = (None, None),
+                _ => {}
+            }
+            loop {
+                match tab.load_watch.as_ref().map(|w| w.loads.try_recv()) {
+                    Some(Ok(load)) => tab.load = Some(load),
+                    Some(Err(std::sync::mpsc::TryRecvError::Disconnected)) => {
+                        (tab.load_watch, tab.load, tab.load_unsupported) = (None, None, true);
+                    }
+                    _ => break,
                 }
             }
         }
@@ -6298,6 +6329,7 @@ impl App {
         ui.set_go_auto_reconnect(self.options.auto_reconnect);
         ui.set_go_remember_secrets(self.options.remember_secrets);
         ui.set_go_reopen(self.options.reopen_sessions);
+        ui.set_go_server_load(self.options.server_load);
         ui.set_go_menubar(self.options.show_menubar);
         ui.set_go_connect_bar(self.options.show_connect_bar);
         ui.set_go_confirm_disconnect(self.options.confirm_disconnect);
@@ -6398,6 +6430,7 @@ impl App {
             }
         }
         self.options.reopen_sessions = ui.get_go_reopen();
+        self.options.server_load = ui.get_go_server_load();
         self.options.show_menubar = ui.get_go_menubar();
         self.options.show_connect_bar = ui.get_go_connect_bar();
         self.options.confirm_disconnect = ui.get_go_confirm_disconnect();
@@ -6915,6 +6948,7 @@ fn update_status(ui: &MainWindow, tab: &Tab) {
         protocol = format!("{protocol}: {}", tab.cipher);
     }
     ui.set_status_cipher(if connected { protocol } else { String::new() }.into());
+    ui.set_status_load(tab.load.as_ref().map(crate::load::Load::text).unwrap_or_default().into());
     ui.set_ssh_active(tab.target.protocol == Protocol::Ssh2 && !tab.target.sftp);
     ui.set_status_pos(format!("{row}, {col}").into());
     ui.set_status_size(format!("{rows} Rows, {cols} Cols").into());
@@ -6957,7 +6991,7 @@ fn lock_keys() -> Option<(bool, bool)> {
 fn update_status_empty(ui: &MainWindow) {
     ui.set_terminal_bg(slint::Color::from_rgb_u8(0, 0, 0));
     ui.set_status_text("Ready".into());
-    for set in [MainWindow::set_status_cipher, MainWindow::set_status_pos, MainWindow::set_status_size, MainWindow::set_status_emulation] {
+    for set in [MainWindow::set_status_cipher, MainWindow::set_status_load, MainWindow::set_status_pos, MainWindow::set_status_size, MainWindow::set_status_emulation] {
         set(ui, SharedString::new());
     }
     ui.set_scroll_history(0);

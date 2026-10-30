@@ -2742,6 +2742,7 @@ component GlobalOptionsDialog inherits DialogFrame {
     in-out property <bool> auto-reconnect;
     in-out property <bool> remember-secrets;
     in-out property <bool> reopen;
+    in-out property <bool> server-load;
     in-out property <bool> menubar;
     in-out property <bool> connect-bar;
     in-out property <bool> confirm-disconnect;
@@ -2805,6 +2806,10 @@ component GlobalOptionsDialog inherits DialogFrame {
             if root.category == 0: CheckBox {
                 text: "Show connect bar";
                 checked <=> root.connect-bar;
+            }
+            if root.category == 0: CheckBox {
+                text: "Show the server's load in the status bar (Linux hosts over SSH)";
+                checked <=> root.server-load;
             }
             if root.category == 0: CheckBox {
                 text: "Ask before closing a connected tab or exiting";
@@ -4069,6 +4074,7 @@ export component MainWindow inherits Window {
     in property <string> update-status;
     in property <bool> update-installable;
     in property <string> status-cipher;
+    in property <string> status-load;
     in property <string> status-pos;
     in property <string> status-size;
     in property <string> status-emulation;
@@ -4296,6 +4302,7 @@ export component MainWindow inherits Window {
     in-out property <bool> go-auto-reconnect;
     in-out property <bool> go-remember-secrets;
     in-out property <bool> go-reopen;
+    in-out property <bool> go-server-load;
     in-out property <bool> go-menubar;
     in-out property <bool> go-connect-bar;
     in-out property <bool> go-confirm-disconnect;
@@ -5582,6 +5589,10 @@ export component MainWindow inherits Window {
                         }
                     }
                 }
+                if root.status-load != "": StatusCell {
+                    text: root.status-load;
+                    min-cell-width: 220px;
+                }
                 StatusCell {
                     text: root.status-cipher;
                     min-cell-width: 120px;
@@ -5791,6 +5802,7 @@ export component MainWindow inherits Window {
         auto-reconnect <=> root.go-auto-reconnect;
         remember-secrets <=> root.go-remember-secrets;
         reopen <=> root.go-reopen;
+        server-load <=> root.go-server-load;
         menubar <=> root.go-menubar;
         connect-bar <=> root.go-connect-bar;
         confirm-disconnect <=> root.go-confirm-disconnect;

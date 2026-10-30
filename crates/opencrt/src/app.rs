@@ -3398,6 +3398,10 @@ impl App {
                 .iter()
                 .map(|r| SessionRow {
                     label: r.label.clone().into(),
+                    note: match r.node {
+                        Node::Session(i) => self.store.sessions[i].notes.lines().next().unwrap_or_default().trim().into(),
+                        Node::Folder(_) => Default::default(),
+                    },
                     depth: r.depth as i32,
                     folder: matches!(r.node, Node::Folder(_)),
                     expanded: r.expanded,
@@ -4125,6 +4129,7 @@ impl App {
         ui.set_so_logon_text(session.logon_actions.clone().into());
         ui.set_so_jump(session.jump_host.clone().into());
         ui.set_so_command(session.remote_command.clone().into());
+        ui.set_so_notes(session.notes.clone().into());
         ui.set_so_pre_connect(session.pre_connect.clone().into());
         ui.set_so_proxy(session.proxy.clone().into());
         ui.set_so_tab_color(TAB_COLORS.iter().position(|(n, _)| *n == session.tab_color).map_or(0, |i| i as i32 + 1));
@@ -4214,6 +4219,7 @@ impl App {
             logon_actions: ui.get_so_logon_text().trim().to_string(),
             jump_host: ui.get_so_jump().trim().to_string(),
             remote_command: ui.get_so_command().trim().to_string(),
+            notes: ui.get_so_notes().trim().to_string(),
             pre_connect: ui.get_so_pre_connect().trim().to_string(),
             proxy: ui.get_so_proxy().trim().to_string(),
             tab_color: usize::try_from(ui.get_so_tab_color() - 1)

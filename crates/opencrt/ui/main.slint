@@ -205,6 +205,8 @@ export struct ForwardRow {
 
 export struct SessionRow {
     label: string,
+    // A session's notes, first line.
+    note: string,
     depth: int,
     folder: bool,
     expanded: bool,
@@ -470,6 +472,14 @@ component SessionManagerPanel inherits Rectangle {
                                 vertical-alignment: center;
                                 overflow: elide;
                                 font-size: 12px;
+                            }
+                            if row.note != "": Text {
+                                text: row.note;
+                                horizontal-stretch: 1;
+                                vertical-alignment: center;
+                                overflow: elide;
+                                font-size: 11px;
+                                color: Theme.text-secondary;
                             }
                         }
                     }
@@ -1546,6 +1556,7 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <string> logon-text;
     in-out property <string> jump-host;
     in-out property <string> remote-command;
+    in-out property <string> notes;
     in-out property <bool> sftp;
     in-out property <string> dial-number;
     in-out property <string> modem-init;
@@ -1746,6 +1757,15 @@ component SessionOptionsDialog inherits DialogFrame {
                             text <=> root.proxy;
                             placeholder-text: "optional: a firewall name (Options > Firewalls) or socks5:// socks4:// http://host[:port]";
                             accepted => { root.ok(); }
+                        }
+                    }
+                    FieldRow {
+                        label: "Notes:";
+                        TextEdit {
+                            height: 60px;
+                            text <=> root.notes;
+                            wrap: word-wrap;
+                            placeholder-text: "optional; the first line shows in the Session Manager";
                         }
                     }
                 }
@@ -4011,6 +4031,7 @@ export component MainWindow inherits Window {
     in-out property <string> so-logon-text;
     in-out property <string> so-jump;
     in-out property <string> so-command;
+    in-out property <string> so-notes;
     in-out property <string> so-pre-connect;
     in-out property <string> so-proxy;
     in property <bool> so-template;
@@ -5505,6 +5526,7 @@ export component MainWindow inherits Window {
         logon-text <=> root.so-logon-text;
         jump-host <=> root.so-jump;
         remote-command <=> root.so-command;
+        notes <=> root.so-notes;
         sftp <=> root.so-sftp;
         dial-number <=> root.so-dial-number;
         modem-init <=> root.so-modem-init;

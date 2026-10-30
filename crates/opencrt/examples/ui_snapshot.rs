@@ -56,6 +56,8 @@ fn main() {
     ui.set_active_tab(0);
     let row = |label: &str, depth, folder, protocol| SessionRow {
         label: label.into(),
+        // Shows a session's notes beside its name.
+        note: if label == "core-sw1" { "Rack 3, Oslo" } else { "" }.into(),
         depth,
         folder,
         expanded: folder,
@@ -80,6 +82,7 @@ fn main() {
     match scene.as_str() {
         "session-options" | "connection" | "forwards" | "terminal" | "log-options" | "remote-desktop" => {
             ui.set_so_name("core-sw1".into());
+            ui.set_so_notes("Rack 3, Oslo\nAsk ops before rebooting".into());
             ui.set_so_host("core-sw1.example.net".into());
             ui.set_so_port("22".into());
             ui.set_so_user("ops".into());

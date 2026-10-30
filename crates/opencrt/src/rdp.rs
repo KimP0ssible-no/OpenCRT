@@ -94,9 +94,9 @@ pub struct Settings {
     pub credential: Option<String>,
     /// A password remembered from an earlier login this run.
     pub password: Option<String>,
-    /// Reach the server through this SSH jump host (`[user@]host[:port]`),
-    /// logging in with these credentials' key or agent.
-    pub jump: Option<(String, ssh::Credentials)>,
+    /// Reach the server through SSH jump hosts: these credentials' `jump`
+    /// hops, logged in with their keys, saved passwords or the agent.
+    pub jump: Option<ssh::Credentials>,
     /// The local port of that tunnel, set once it is open (None to start
     /// with): the helper connects there.
     pub tunnel: Option<u16>,
@@ -131,8 +131,8 @@ pub fn connect(settings: Settings) -> (SshHandle, Input) {
             let mut settings = settings;
             // The jump host's connection stays up for as long as the desktop.
             let _jump = match settings.jump.take() {
-                Some((spec, creds)) => {
-                    let (port, session) = ssh::tunnel_through(&spec, &creds, crate::config::known_hosts(), settings.host.clone(), settings.port, io).await?;
+                Some(creds) => {
+                    let (port, session) = ssh::tunnel_through(&creds, crate::config::known_hosts(), settings.host.clone(), settings.port, io).await?;
                     settings.tunnel = Some(port);
                     Some(session)
                 }

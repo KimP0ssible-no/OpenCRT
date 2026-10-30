@@ -90,8 +90,8 @@ pub struct Credentials {
     pub password: Option<String>,
     pub key_path: Option<String>,
     pub key_passphrase: Option<String>,
-    /// Connect through this host first: `[user@]host[:port]`.
-    pub jump: Option<String>,
+    /// Connect through these hosts first, in order (empty for none).
+    pub jump: Vec<Hop>,
     /// Also offer old algorithms (SHA-1 key exchange and MACs, CBC ciphers)
     /// that some older devices still require.
     pub legacy: bool,
@@ -200,6 +200,31 @@ pub fn parse_jump(spec: &str, default_user: &str) -> Option<(String, String, u16
     };
     let ok = !host.is_empty() && !host.contains(char::is_whitespace);
     ok.then(|| (user.to_string(), host.to_string(), port))
+}
+
+/// A jump host: where, as whom, and its own key or saved credential (else
+/// the session's key, and its password asked for).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Hop {
+    pub host: String,
+    pub port: u16,
+    pub user: String,
+    pub key_path: Option<String>,
+    pub saved: Option<String>,
+}
+
+impl Hop {
+    /// `[user@]host[:port]`, the user defaulting to `default_user`.
+    pub fn parse(spec: &str, default_user: &str) -> Option<Hop> {
+        let (user, host, port) = parse_jump(spec, default_user)?;
+        Some(Hop { host, port, user, ..Default::default() })
+    }
+}
+
+/// A chain `a,b,c` as `ssh -J` takes it; None if any hop is not `[user@]host[:port]`.
+#[cfg(test)]
+pub fn parse_hops(spec: &str, default_user: &str) -> Option<Vec<Hop>> {
+    spec.split(',').map(|hop| Hop::parse(hop, default_user)).collect()
 }
 
 /// Handle to a running SSH session.
@@ -469,39 +494,49 @@ pub(crate) async fn open(
     io: &Io,
 ) -> anyhow::Result<client::Handle<SshHandler>> {
     let known_hosts = known_hosts.ok_or_else(|| anyhow!("cannot locate the configuration directory for known_hosts"))?;
-    let gateway = match creds.jump.as_deref() {
-        Some(spec) => {
-            let (user, jump_host, jump_port) =
-                parse_jump(spec, &creds.user).ok_or_else(|| anyhow!("invalid jump host: {spec}"))?;
-            let jump_creds = jump_credentials(creds, user);
-            let gateway = login(&jump_host, jump_port, None, &jump_creds, &known_hosts, RemoteTargets::default(), io)
-                .await
-                .with_context(|| format!("jump host {jump_host}"))?;
-            Some(gateway)
-        }
-        None => None,
-    };
+    let gateway = through_hops(creds, &known_hosts, io).await?;
     login(host, port, gateway, creds, &known_hosts, remote, io).await
 }
 
-/// Login for the jump host: the same key file is offered, passwords are asked
-/// for separately, and the agent and X display are never forwarded to it (the
-/// handler would otherwise accept the jump host's unrequested channels).
-/// Log in to the jump host `spec` (`[user@]host[:port]`; `creds` for the key
-/// and the rest) and open a local port, on 127.0.0.1 only, that reaches
-/// `host:port` through it. The connection must be kept for as long as the
-/// port is used.
+/// Log in to each of `creds.jump` in turn, each through the one before (the
+/// first through the session's proxy, if any); the last one's connection.
+/// Each hop is offered its own key (else the session's) and saved password;
+/// the agent and X display are never forwarded to one (its handler would
+/// otherwise accept the jump host's unrequested channels).
+async fn through_hops(creds: &Credentials, known_hosts: &Path, io: &Io) -> anyhow::Result<Option<client::Handle<SshHandler>>> {
+    let mut gateway = None;
+    for hop in &creds.jump {
+        let hop_creds = Credentials {
+            user: hop.user.clone(),
+            password: None,
+            key_path: hop.key_path.clone().or_else(|| creds.key_path.clone()),
+            saved: hop.saved.clone(),
+            jump: Vec::new(),
+            forward_agent: false,
+            x11_display: None,
+            ..creds.clone()
+        };
+        let hop_creds = with_saved_password(hop_creds, io);
+        let session = login(&hop.host, hop.port, gateway, &hop_creds, known_hosts, RemoteTargets::default(), io)
+            .await
+            .with_context(|| format!("jump host {}", hop.host))?;
+        gateway = Some(session);
+    }
+    Ok(gateway)
+}
+
+/// Log in through `creds.jump` (at least one hop) and open a local port, on
+/// 127.0.0.1 only, that reaches `host:port` through the last one. The
+/// connection must be kept for as long as the port is used.
 pub(crate) async fn tunnel_through(
-    spec: &str,
     creds: &Credentials,
     known_hosts: Option<PathBuf>,
     host: String,
     port: u16,
     io: &Io,
 ) -> anyhow::Result<(u16, Shared)> {
-    let local_user = std::env::var("USER").or_else(|_| std::env::var("USERNAME")).unwrap_or_default();
-    let (user, jump_host, jump_port) = parse_jump(spec, &local_user).ok_or_else(|| anyhow!("the jump host must be [user@]host[:port], not {spec}"))?;
-    let session: Shared = Arc::new(open(&jump_host, jump_port, &jump_credentials(creds, user), known_hosts, Default::default(), io).await?);
+    let known_hosts = known_hosts.ok_or_else(|| anyhow!("cannot locate the configuration directory for known_hosts"))?;
+    let session: Shared = Arc::new(through_hops(creds, &known_hosts, io).await?.ok_or_else(|| anyhow!("no jump host given"))?);
     let listener = tokio::net::TcpListener::bind(("127.0.0.1", 0)).await?;
     let local = listener.local_addr()?.port();
     let weak = Arc::downgrade(&session);
@@ -518,10 +553,6 @@ pub(crate) async fn tunnel_through(
         }
     });
     Ok((local, session))
-}
-
-fn jump_credentials(creds: &Credentials, user: String) -> Credentials {
-    Credentials { user, password: None, saved: None, jump: None, forward_agent: false, x11_display: None, ..creds.clone() }
 }
 
 /// Connect (directly, or through `via`'s direct-tcpip channel), check the
@@ -1670,7 +1701,7 @@ mod tests {
             password: password.map(String::from),
             key_path: None,
             key_passphrase: None,
-            jump: None,
+            jump: Vec::new(),
             legacy: false,
             forward_agent: false,
             x11_display: None,
@@ -1815,7 +1846,7 @@ Nv7Px2ZPXZJghtsQ==
         assert_eq!(authorize_command("ssh-ed25519 AAAA' ; rm -rf ~ '"), None);
 
         let (port, _) = start_server(&[MethodKind::Password]);
-        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: None, legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("upload")), Pty::new("", 80, 24), Vec::new());
         accept_host_key_once(&mut handle);
         let deadline = Instant::now() + Duration::from_secs(5);
@@ -1835,7 +1866,7 @@ Nv7Px2ZPXZJghtsQ==
     fn uploads_a_public_key_over_the_publickey_subsystem() {
         let line = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGdumaQ0RDmJ8SRLmH8LlAm4xLtUzrVfgJpJWPEo3AQe me@host";
         let (port, _) = start_server(&[MethodKind::Password]);
-        let creds = Credentials { user: "pk".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: None, legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "pk".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("upload-pk")), Pty::new("", 80, 24), Vec::new());
         accept_host_key_once(&mut handle);
         let deadline = Instant::now() + Duration::from_secs(5);
@@ -1917,7 +1948,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
     #[test]
     fn runs_a_remote_command_instead_of_the_shell() {
         let (port, _) = start_server(&[MethodKind::Password]);
-        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: None, legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
         let pty = Pty::new("", 80, 24).with_command(" top -b ");
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("exec")), pty, Vec::new());
         accept_host_key_once(&mut handle);
@@ -1947,7 +1978,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
         std::fs::write(&cert_file, cert.to_openssh().unwrap()).unwrap();
 
         let (port, _) = start_server(&[MethodKind::PublicKey]);
-        let creds = Credentials { user: "u".into(), password: None, key_path: Some(key_file.display().to_string()), key_passphrase: None, jump: None, legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: None, key_path: Some(key_file.display().to_string()), key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("cert-kh")), Pty::new("", 80, 24), Vec::new());
         accept_host_key_once(&mut handle);
         assert!(matches!(next_event(&mut handle), SshEvent::Connected));
@@ -1966,7 +1997,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             password: None,
             key_path: Some(key_file.to_string_lossy().into_owned()),
             key_passphrase: Some("wrong".into()),
-            jump: None,
+            jump: Vec::new(),
             legacy: false,
             forward_agent: false,
             x11_display: None,
@@ -2006,7 +2037,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             password: Some("p".into()),
             key_path: None,
             key_passphrase: None,
-            jump: None,
+            jump: Vec::new(),
             legacy: false,
             forward_agent: true,
             x11_display: None,
@@ -2051,7 +2082,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             password: Some("p".into()),
             key_path: None,
             key_passphrase: None,
-            jump: None,
+            jump: Vec::new(),
             legacy: false,
             forward_agent: false,
             x11_display: Some(format!("127.0.0.1:{}", echo - 6000)),
@@ -2089,7 +2120,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
                 password: Some("p".into()),
                 key_path: None,
                 key_passphrase: None,
-                jump: None,
+                jump: Vec::new(),
                 legacy,
                 forward_agent: false,
                 x11_display: None,
@@ -2128,7 +2159,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
                 password: Some("p".into()),
                 key_path: None,
                 key_passphrase: None,
-                jump: None,
+                jump: Vec::new(),
                 legacy: false,
                 forward_agent: false,
                 x11_display: None,
@@ -2167,29 +2198,16 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
         assert_eq!(jump("ops@"), None);
         assert_eq!(jump("two words"), None);
 
-        // The jump host gets the key file but never the agent or X display.
-        let creds = Credentials {
-            user: "me".into(),
-            password: Some("pw".into()),
-            key_path: Some("id".into()),
-            key_passphrase: None,
-            jump: Some("bastion".into()),
-            legacy: false,
-            forward_agent: true,
-            x11_display: Some(":0".into()),
-            proxy: None,
-            compression: false,
-            saved: None,
-            cert_path: None,
-        };
-        let j = jump_credentials(&creds, "ops".into());
-        assert_eq!((j.user.as_str(), j.key_path.as_deref()), ("ops", Some("id")));
-        assert!(j.password.is_none() && j.jump.is_none() && !j.forward_agent && j.x11_display.is_none());
+        // Chains as `ssh -J` takes them; every hop must be valid.
+        let hop = |host: &str, port, user: &str| Hop { host: host.into(), port, user: user.into(), ..Default::default() };
+        assert_eq!(parse_hops("ops@bastion:2200, inner", "me"), Some(vec![hop("bastion", 2200, "ops"), hop("inner", 22, "me")]));
+        assert_eq!(parse_hops("a,,b", "me"), None);
     }
 
     #[test]
     fn connects_through_a_jump_host() {
         let (jump_port, _) = start_server(&[MethodKind::Password]);
+        let (inner_port, _) = start_server(&[MethodKind::Password]);
         let (target_port, _) = start_server(&[MethodKind::Password]);
         let path = temp_known_hosts("jump");
         let creds = Credentials {
@@ -2197,7 +2215,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             password: Some("p".into()),
             key_path: None,
             key_passphrase: None,
-            jump: Some(format!("u@127.0.0.1:{jump_port}")),
+            jump: parse_hops(&format!("u@127.0.0.1:{jump_port},u@127.0.0.1:{inner_port}"), "u").unwrap(),
             legacy: false,
             forward_agent: false,
             x11_display: None,
@@ -2208,16 +2226,18 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
         };
         let mut handle = connect("127.0.0.1".into(), target_port, creds, Some(path), Pty::new("", 80, 24), Vec::new());
 
-        // The jump host is checked and logged in to first; its password is asked for.
-        let SshEvent::UnknownHostKey(prompt) = next_event(&mut handle) else {
-            panic!("expected the jump host's key");
-        };
-        assert_eq!(prompt.port, jump_port);
-        prompt.reply.send(HostKeyDecision::AcceptOnce).unwrap();
-        let SshEvent::AuthPrompt(prompt) = next_event(&mut handle) else {
-            panic!("expected the jump host's password prompt");
-        };
-        prompt.reply.send(Some(vec!["p".into()])).unwrap();
+        // Each jump host in turn is checked and logged in to; its password is asked for.
+        for port in [jump_port, inner_port] {
+            let SshEvent::UnknownHostKey(prompt) = next_event(&mut handle) else {
+                panic!("expected jump host {port}'s key");
+            };
+            assert_eq!(prompt.port, port);
+            prompt.reply.send(HostKeyDecision::AcceptOnce).unwrap();
+            let SshEvent::AuthPrompt(prompt) = next_event(&mut handle) else {
+                panic!("expected jump host {port}'s password prompt");
+            };
+            prompt.reply.send(Some(vec!["p".into()])).unwrap();
+        }
 
         // Then the target, reached through the tunnel, with the stored password.
         let prompt = match next_event(&mut handle) {
@@ -2253,7 +2273,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             password: Some("not for the jump host".into()),
             key_path: None,
             key_passphrase: None,
-            jump: None,
+            jump: Vec::new(),
             legacy: false,
             forward_agent: false,
             x11_display: None,
@@ -2262,10 +2282,10 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             saved: None,
             cert_path: None,
         };
-        let spec = format!("u@127.0.0.1:{jump_port}");
+        let creds = Credentials { jump: parse_hops(&format!("u@127.0.0.1:{jump_port}"), "x").unwrap(), ..creds };
         let mut handle = spawn(move |io| {
             runtime()?.block_on(async {
-                let (local, _session) = tunnel_through(&spec, &creds, Some(path), "127.0.0.1".into(), target_port, io).await?;
+                let (local, _session) = tunnel_through(&creds, Some(path), "127.0.0.1".into(), target_port, io).await?;
                 let mut tcp = tokio::net::TcpStream::connect(("127.0.0.1", local)).await?;
                 tokio::io::AsyncWriteExt::write_all(&mut tcp, b"ping").await?;
                 let mut buf = [0u8; 4];
@@ -2292,7 +2312,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             password: Some("p".into()),
             key_path: None,
             key_passphrase: None,
-            jump: None,
+            jump: Vec::new(),
             legacy: false,
             forward_agent: false,
             x11_display: None,
@@ -2359,7 +2379,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             password: Some("p".into()),
             key_path: None,
             key_passphrase: None,
-            jump: None,
+            jump: Vec::new(),
             legacy: false,
             forward_agent: false,
             x11_display: None,
@@ -2383,7 +2403,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
     fn closing_a_forwarding_session_releases_its_port() {
         let (port, _) = start_server(&[MethodKind::Password]);
         let local = free_port();
-        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: None, legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
         let forwards = vec![Forward::parse(&format!("L {local} 127.0.0.1:9")).unwrap()];
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("fwd-close")), Pty::new("", 80, 24), forwards);
         accept_host_key_once(&mut handle);
@@ -2405,7 +2425,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
         let echo = start_echo();
         let (local, socks) = (free_port(), free_port());
         let path = temp_known_hosts("forward");
-        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: None, legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
         let forwards = vec![
             Forward::parse(&format!("L {local} 127.0.0.1:{echo}")).unwrap(),
             Forward::parse(&format!("D {socks}")).unwrap(),
@@ -2443,7 +2463,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
         let echo = start_echo();
         let remote = free_port();
         let path = temp_known_hosts("rforward");
-        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: None, legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
         let forwards = vec![Forward::parse(&format!("R {remote} 127.0.0.1:{echo}")).unwrap()];
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(path), Pty::new("", 80, 24), forwards);
         accept_host_key_once(&mut handle);
@@ -2504,7 +2524,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             password: None,
             key_path: None,
             key_passphrase: None,
-            jump: None,
+            jump: Vec::new(),
             legacy: false,
             forward_agent: false,
             x11_display: None,

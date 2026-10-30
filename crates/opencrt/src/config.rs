@@ -249,6 +249,8 @@ pub struct Session {
     pub jump_host: String,
     /// SSH2: run this instead of the login shell; empty for the shell.
     pub remote_command: String,
+    /// Free text about the session; its first line shows in the Session Manager.
+    pub notes: String,
     /// A local command run (and waited for) before each connect, e.g. port
     /// knocking; empty for none.
     pub pre_connect: String,
@@ -347,6 +349,7 @@ impl Default for Session {
             logon_actions: String::new(),
             jump_host: String::new(),
             remote_command: String::new(),
+            notes: String::new(),
             pre_connect: String::new(),
             backspace_ctrl_h: false,
             emulation: Default::default(),

@@ -55,7 +55,7 @@ pub fn all_folders(store: &SessionStore) -> BTreeSet<String> {
 pub fn rows(store: &SessionStore, expanded: &HashSet<String>, filter: &str) -> Vec<Row> {
     let filter = filter.trim().to_lowercase();
     let matches = |s: &Session| {
-        filter.is_empty() || s.name.to_lowercase().contains(&filter) || s.host.to_lowercase().contains(&filter)
+        filter.is_empty() || [&s.name, &s.host, &s.notes].iter().any(|t| t.to_lowercase().contains(&filter))
     };
     let folders = all_folders(store);
     let mut out = Vec::new();
@@ -189,6 +189,7 @@ pub fn from_delimited(text: &str, base: &Session) -> Result<(Vec<Session>, Vec<S
             "folder" | "path" | "group" => "folder",
             "key" | "key_file" | "identity" | "identity_file" | "private_key" => "key",
             "emulation" | "terminal" => "emulation",
+            "notes" | "note" | "description" | "comment" | "comments" => "notes",
             _ => return None,
         })
     };
@@ -198,7 +199,7 @@ pub fn from_delimited(text: &str, base: &Session) -> Result<(Vec<Session>, Vec<S
     let ignored = columns.iter().filter(|c| field(c).is_none()).cloned().collect();
     let mut out = Vec::new();
     for (n, line) in lines.enumerate() {
-        let mut session = Session { name: String::new(), folder: String::new(), ..base.clone() };
+        let mut session = Session { name: String::new(), folder: String::new(), notes: String::new(), ..base.clone() };
         let mut port = None;
         for (column, value) in columns.iter().zip(split_delimited(line, sep)) {
             match field(column) {
@@ -208,6 +209,7 @@ pub fn from_delimited(text: &str, base: &Session) -> Result<(Vec<Session>, Vec<S
                 Some("user") => session.user = value,
                 Some("folder") => session.folder = normalize_folder(&value),
                 Some("key") => session.key_path = value,
+                Some("notes") => session.notes = value,
                 Some("port") => port = Some(value.parse::<u16>().map_err(|_| format!("Line {}: bad port \"{value}\".", n + 2))?),
                 Some("protocol") => {
                     session.protocol = match value.to_lowercase().as_str() {
@@ -457,6 +459,7 @@ pub fn from_securecrt(text: &str, folder: &str, name: &str, config_dir: &str, gl
         // Only when SecureCRT has it switched on: a stale command must not run.
         pre_connect: if dword("Use Shell Command") == Some(1) { text("Local Shell Command Pre-connect V2").into() } else { String::new() },
         encoding: crate::codec::label_for(text("Output Transformer Name")).unwrap_or_default().to_string(),
+        notes: lists.get("Description").map(|lines| lines.join("\n").trim().to_string()).unwrap_or_default(),
         ..Default::default()
     };
     if protocol == Protocol::Ssh2 {
@@ -544,7 +547,8 @@ mod tests {
                    web,10.0.0.1,ssh2,,Prod/Web,\"a, \"\"quoted\"\" note\"\n\
                    ,switch1,telnet,2323,,\n";
         let (sessions, ignored) = from_delimited(csv, &base).unwrap();
-        assert_eq!(ignored, vec!["notes".to_string()]);
+        assert!(ignored.is_empty(), "{ignored:?}");
+        assert_eq!(sessions[0].notes, "a, \"quoted\" note");
         assert_eq!((sessions[0].path().as_str(), sessions[0].port, sessions[0].user.as_str()), ("Prod/Web/web", 22, "ops"));
         assert_eq!((sessions[1].name.as_str(), sessions[1].protocol, sessions[1].port), ("switch1", Protocol::Telnet, 2323));
 
@@ -660,7 +664,7 @@ Match host foo
 S:\"Protocol Name\"=SSH2\r\nS:\"Hostname\"=10.0.0.5\r\nD:\"[SSH2] Port\"=00000016\r\nD:\"Port\"=00000017\r\n\
 D:\"Use Global Public Key\"=00000000\r\nS:\"Identity Filename V2\"=${VDS_CONFIG_PATH}\\SSHKeys\\id.pub\r\n\
 D:\"Enable Agent Forwarding\"=00000002\r\nD:\"Forward X11\"=00000001\r\nS:\"Emulation\"=VT100\r\n\
-S:\"Color Scheme\"=Solarized Dark\r\nZ:\"Port Forward Table V3\"=00000003\r\n 1|db|127.0.0.1,3306|1|10.0.0.9|3306||\r\n\
+S:\"Color Scheme\"=Solarized Dark\r\nZ:\"Description\"=00000002\r\n Rack 3, Oslo\r\n Ask ops before rebooting\r\nZ:\"Port Forward Table V3\"=00000003\r\n 1|db|127.0.0.1,3306|1|10.0.0.9|3306||\r\n\
 \x201|web|8080|0||80||\r\n 1|bad|x|0||80||\r\nZ:\"Reverse Forward Table V3\"=00000000\r\n";
         let s = from_securecrt(ssh, "SecureCRT/Lab", "web1", "C:\\crt", "C:\\crt\\global").unwrap();
         assert_eq!((s.path().as_str(), s.host.as_str(), s.port, s.user.as_str()), ("SecureCRT/Lab/web1", "10.0.0.5", 22, "ops"));
@@ -668,6 +672,7 @@ S:\"Color Scheme\"=Solarized Dark\r\nZ:\"Port Forward Table V3\"=00000003\r\n 1|
         let forwards: Vec<_> = s.forwards.iter().map(|f| (f.name.as_str(), f.bind.as_str(), f.port, f.host.as_str(), f.host_port)).collect();
         assert_eq!(forwards, [("db", "127.0.0.1", 3306, "10.0.0.9", 3306), ("web", "", 8080, "", 80)]);
         assert_eq!((s.forward_agent, s.forward_x11, s.emulation, s.scheme.as_str()), (false, true, crate::input::Emulation::Vt100, "Solarized dark"));
+        assert_eq!(s.notes, "Rack 3, Oslo\nAsk ops before rebooting");
 
         let global = "S:\"Protocol Name\"=SSH2\nS:\"Hostname\"=h\nD:\"Use Global Public Key\"=00000001\nS:\"SSH2 Authentications V2\"=publickey,password\n";
         assert_eq!(from_securecrt(global, "", "g", "C:\\crt", "C:\\crt\\global").unwrap().key_path, "C:\\crt\\global");

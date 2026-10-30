@@ -243,12 +243,14 @@ If OpenCRT ever stops unexpectedly, `crash.log` in the same folder records why.
   (installers and releases).
 
 ## Code signing policy
-Free code signing provided by [SignPath.io](https://about.signpath.io),
-certificate by [SignPath Foundation](https://signpath.org). (Applied for in
-October 2026; until it is granted, Windows releases are unsigned.)
+Windows releases are to be signed with a [Certum](https://www.certum.eu)
+Open Source Code Signing certificate, issued to the project's maintainer. The
+certificate has been applied for and paid for; until it is activated, Windows
+builds are unsigned.
 
 Only Windows files built from this repository's source by its GitHub Actions
-release workflow are signed, and every signing request is approved by hand.
+release workflow will be signed, and every release that signs them is
+approved by hand.
 
 | Role | Members |
 | --- | --- |

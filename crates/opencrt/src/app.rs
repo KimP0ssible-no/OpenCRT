@@ -503,6 +503,8 @@ struct Tab {
     /// finished (so the next `connect` goes ahead).
     pre_connect: Option<std::sync::mpsc::Receiver<Result<(), String>>>,
     pre_connect_done: bool,
+    /// Reopened at start-up: connects the first time it is on screen.
+    deferred: bool,
     /// Tab group (0 is the leftmost); each group shows its most recently
     /// selected tab (`shown_at`).
     group: usize,
@@ -691,6 +693,7 @@ impl Tab {
             secrets_ready: Vec::new(),
             pre_connect: None,
             pre_connect_done: false,
+            deferred: false,
             group: 0,
             shown_at: 0,
             status: String::new(),
@@ -1141,7 +1144,22 @@ impl Tab {
         self.connect();
     }
 
+    /// Wait to connect until the tab is first shown (see `connect_if_deferred`).
+    fn defer(&mut self) {
+        self.deferred = true;
+        self.state = State::Closed;
+        self.status = "Connects when shown".into();
+        self.dirty = true;
+    }
+
+    fn connect_if_deferred(&mut self) {
+        if self.deferred {
+            self.connect();
+        }
+    }
+
     fn connect(&mut self) {
+        self.deferred = false;
         // The session's pre-connect command runs first; `poll` comes back here.
         // (Not for a tab riding on another tab's connection: nothing to set up.)
         if !self.target.pre_connect.is_empty() && self.via.is_none() && !std::mem::take(&mut self.pre_connect_done) {
@@ -1526,6 +1544,8 @@ struct App {
     /// The firewall open in its editor (None for a new one).
     editing_firewall: Option<usize>,
     confirm: Option<Deletion>,
+    /// Tabs opened now wait to connect until they are first shown.
+    defer_connect: bool,
     /// A file browser tab's New Folder (no old name) or Rename, by tab id.
     files_naming: Option<(u64, sftp::Side, Option<String>)>,
     files_model: Rc<VecModel<crate::FilesView>>,
@@ -1778,6 +1798,7 @@ impl App {
             editing_credential: None,
             editing_firewall: None,
             confirm: None,
+            defer_connect: false,
             files_naming: None,
             files_model: Rc::new(VecModel::default()),
             new_folder_parent: None,
@@ -1909,7 +1930,11 @@ impl App {
         tab.via = via;
         tab.group = self.tabs.get(self.active).map_or(0, |t| t.group);
         remember(&mut tab.target, &self.secrets);
-        tab.connect();
+        if self.defer_connect {
+            tab.defer();
+        } else {
+            tab.connect();
+        }
         self.tabs.push(tab);
         self.select(self.tabs.len() - 1);
     }
@@ -3156,6 +3181,9 @@ impl App {
         let on_screen: Vec<usize> = self.panes.iter().map(|p| p.tab).collect();
         let mut host_copied = None;
         for (i, tab) in self.tabs.iter_mut().enumerate() {
+            if on_screen.contains(&i) {
+                tab.connect_if_deferred();
+            }
             tab.poll();
             if let Some(text) = tab.terminal.take_clipboard()
                 && let Some(clipboard) = self.clipboard.as_mut()
@@ -7142,6 +7170,8 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
                     .filter_map(|(i, p)| Some((app.store.sessions.iter().find(|s| s.path() == *p)?.clone(), groups.get(i).copied().unwrap_or(0))))
                     .collect();
                 app.pixels = (1000, 600);
+                // Each connects when first shown, so a start does not raise every login at once.
+                app.defer_connect = true;
                 for (session, group) in sessions {
                     let target = Target::from_session(&session, &app.options.credentials);
                     app.open_tab(target, Some(&session));
@@ -7150,6 +7180,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
                     }
                 }
                 compact_groups(&mut app.tabs);
+                app.defer_connect = false;
             }
             () => {}
         }
@@ -7229,6 +7260,21 @@ mod tests {
 
     fn args(list: &[&str]) -> Vec<String> {
         list.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn reopened_tabs_connect_when_first_shown() {
+        // Nothing listens on port 1: the connect fails later, which is fine here.
+        let target = Target { protocol: Protocol::Raw, host: "127.0.0.1".into(), port: 1, ..Default::default() };
+        let mut tab = Tab::new(target, Terminal::new(80, 24));
+        tab.defer();
+        assert!(tab.ssh.is_none() && tab.state == State::Closed && tab.deferred);
+        tab.connect_if_deferred();
+        assert!(tab.ssh.is_some() && tab.state == State::Connecting && !tab.deferred);
+        // Shown again: no second connect.
+        tab.state = State::Connected;
+        tab.connect_if_deferred();
+        assert!(tab.state == State::Connected);
     }
 
     #[test]

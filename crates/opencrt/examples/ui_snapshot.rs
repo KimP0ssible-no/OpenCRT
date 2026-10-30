@@ -288,6 +288,8 @@ fn main() {
                 remote_filter: "iso".into(),
                 local_hidden: false,
                 remote_hidden: true,
+                linked: true,
+                follow: true,
                 queue: model(vec![
                     job("/home/ops/Downloads/debian-13.iso", false, "/mnt/SSD-RAIDZ/seeding/debian-13.iso", "1.2 GB of 3.7 GB (32%), 98.1 MB/s", 0.32),
                     job("/home/ops/Downloads/notes.txt", true, "/mnt/SSD-RAIDZ/seeding/notes.txt", "", -1.0),

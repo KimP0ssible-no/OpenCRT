@@ -94,6 +94,12 @@ pub struct Settings {
     pub credential: Option<String>,
     /// A password remembered from an earlier login this run.
     pub password: Option<String>,
+    /// Reach the server through this SSH jump host (`[user@]host[:port]`),
+    /// logging in with these credentials' key or agent.
+    pub jump: Option<(String, ssh::Credentials)>,
+    /// The local port of that tunnel, set once it is open (None to start
+    /// with): the helper connects there.
+    pub tunnel: Option<u16>,
 }
 
 /// Split `DOMAIN\user` into (user, domain); other forms (including `user@domain`,
@@ -121,7 +127,19 @@ pub fn connect(settings: Settings) -> (SshHandle, Input) {
     let (input_tx, input_rx) = unbounded_channel();
     let handle = ssh::spawn(move |io| {
         let saved = settings.password.clone().or_else(|| settings.credential.as_deref().and_then(|name| ssh::saved_password(name, io)));
-        ssh::runtime()?.block_on(run(settings, saved, input_rx, io))
+        ssh::runtime()?.block_on(async {
+            let mut settings = settings;
+            // The jump host's connection stays up for as long as the desktop.
+            let _jump = match settings.jump.take() {
+                Some((spec, creds)) => {
+                    let (port, session) = ssh::tunnel_through(&spec, &creds, crate::config::known_hosts(), settings.host.clone(), settings.port, io).await?;
+                    settings.tunnel = Some(port);
+                    Some(session)
+                }
+                None => None,
+            };
+            run(settings, saved, input_rx, io).await
+        })
     });
     (handle, input_tx)
 }
@@ -267,9 +285,15 @@ async fn attempt(
     });
 
     let (user, domain) = split_user(&settings.user);
+    // Through a jump host the helper connects to the tunnel; certificates are
+    // still checked against the server's own name and port.
+    let (host, port) = match settings.tunnel {
+        Some(local) => ("127.0.0.1".to_string(), local),
+        None => (settings.host.clone(), settings.port),
+    };
     let connect = ToHelper::Connect {
-        host: settings.host.clone(),
-        port: settings.port,
+        host,
+        port,
         user,
         domain,
         password,

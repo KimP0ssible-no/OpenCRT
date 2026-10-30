@@ -1538,6 +1538,9 @@ struct App {
     keygen: Option<(PathBuf, std::sync::mpsc::Receiver<Result<String, String>>)>,
     /// A look for a new release: (asked for from the menu, the latest tag).
     update_check: Option<(bool, std::sync::mpsc::Receiver<Result<String, String>>)>,
+    /// When the automatic update check runs next: at start-up, then a day
+    /// after each check that worked (an hour after one that failed).
+    next_update_check: Instant,
     /// The new version being downloaded (and on macOS put in place): what to start.
     update_install: Option<(update::InstallKind, std::sync::mpsc::Receiver<Result<PathBuf, String>>)>,
     /// Public keys being added to servers' authorized_keys: (host, result).
@@ -1821,6 +1824,7 @@ impl App {
             uploads: Vec::new(),
             keygen: None,
             update_check: None,
+            next_update_check: Instant::now(),
             update_install: None,
             shown_tabs: Vec::new(),
             shown_recent: Vec::new(),
@@ -3256,6 +3260,10 @@ impl App {
             self.show_buttons(ui);
         }
         self.keygen_done(ui);
+        if update_due(self.options.check_updates, self.update_check.is_some(), Instant::now(), self.next_update_check) {
+            self.next_update_check = Instant::now() + UPDATE_RETRY;
+            self.check_updates(ui, false);
+        }
         self.update_done(ui);
         self.install_done(ui);
         let finished: Vec<(String, Result<bool, String>)> = {
@@ -5462,6 +5470,7 @@ impl App {
         let current = env!("CARGO_PKG_VERSION");
         let status = match result {
             Ok(tag) => {
+                self.next_update_check = Instant::now() + UPDATE_EVERY;
                 self.options.last_update_check = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
                 self.save_options();
                 if update::is_newer(&tag, current) {
@@ -6800,6 +6809,15 @@ const PRE_CONNECT_LIMIT: Duration = Duration::from_secs(60);
 
 /// Run `line` through the system shell on a thread; Ok once it exits
 /// successfully, Err if it fails, cannot start or outlasts `limit` (then it is killed).
+/// The automatic update check: a day apart, or an hour after one that failed.
+const UPDATE_EVERY: Duration = Duration::from_secs(24 * 60 * 60);
+const UPDATE_RETRY: Duration = Duration::from_secs(60 * 60);
+
+/// Time for the automatic update check: turned on, none running, and its time come.
+fn update_due(enabled: bool, checking: bool, now: Instant, next: Instant) -> bool {
+    enabled && !checking && now >= next
+}
+
 fn install_kind() -> update::InstallKind {
     std::env::current_exe().map_or(update::InstallKind::Manual, |exe| update::InstallKind::of(&exe))
 }
@@ -7405,10 +7423,6 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         if let Ok(exe) = std::env::current_exe() {
             update::clean_up(&exe);
         }
-        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
-        if app.options.check_updates && now.saturating_sub(app.options.last_update_check) >= 24 * 60 * 60 {
-            app.check_updates(&ui, false);
-        }
     }
 
     {
@@ -7821,6 +7835,18 @@ mod tests {
         assert!(hops[0].key_path.as_deref().is_some_and(|k| k.ends_with("edge")));
         assert_eq!((hops[1].user.as_str(), hops[1].host.as_str()), ("me", "10.0.0.9"));
         assert_eq!((hops[2].user.as_str(), hops[2].host.as_str(), hops[2].port), ("u", "inner", 22));
+    }
+
+    #[test]
+    fn updates_are_checked_at_start_and_then_daily() {
+        let start = Instant::now();
+        // The first tick after start-up checks (the next check starts at "now").
+        assert!(update_due(true, false, start, start));
+        assert!(!update_due(false, false, start, start), "turned off");
+        assert!(!update_due(true, true, start, start), "one already running");
+        // A check that worked waits a day, even in a session left running.
+        assert!(!update_due(true, false, start + Duration::from_secs(3600), start + UPDATE_EVERY));
+        assert!(update_due(true, false, start + UPDATE_EVERY, start + UPDATE_EVERY));
     }
 
     #[test]

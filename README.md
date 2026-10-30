@@ -77,11 +77,11 @@ gh attestation verify <file> --repo KimP0ssible-no/OpenCRT
 ```
 
 ### New versions
-Once a day at start-up OpenCRT asks GitHub which release is the newest (one
-request to `github.com/KimP0ssible-no/OpenCRT/releases/latest`, nothing about
-you or your sessions is sent) and says so in the status bar when there is a
-newer one. Help > Check for Updates asks at any time; turn the daily check off
-in Options > Global Options > General.
+At start-up, and once a day while it runs, OpenCRT asks GitHub which release
+is the newest (one request to `github.com/KimP0ssible-no/OpenCRT/releases/latest`,
+nothing about you or your sessions is sent) and says so in the status bar when
+there is a newer one. Help > Check for Updates asks at any time; turn the
+automatic check off in Options > Global Options > General.
 
 ## Features
 - **Protocols**: SSH2 (password, keyboard-interactive, public key incl. PuTTY
@@ -263,7 +263,7 @@ merged.
 ### Privacy policy
 This program will not transfer any information to other networked systems
 unless specifically requested by the user or the person installing or
-operating it. The one exception is the daily update check described under
+operating it. The one exception is the update check described under
 [New versions](#new-versions): a single request to GitHub that sends nothing
 about you or your sessions, and that Options > Global Options > General turns
 off. GitHub handles that request under the

@@ -568,8 +568,10 @@ struct Tab {
     via: Option<ssh::Shared>,
     /// RDP: keyboard and mouse input to the helper, while connected.
     rdp: Option<rdp::Input>,
-    /// File browser tabs: the lists and the transfer queue.
+    /// File browser tabs: the lists and the transfer queue; the shell tab
+    /// (by id) whose folder it follows.
     files: Option<crate::filebrowser::Browser>,
+    follows: Option<u64>,
     /// RDP: the remote desktop picture, once the helper has reported its size.
     screen: Option<rdp::Desktop>,
     /// RDP: the desktop size to ask for (the tab's size in physical pixels).
@@ -706,6 +708,7 @@ impl Tab {
         Self {
             id: NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
             files: (target.sftp && target.files).then(crate::filebrowser::Browser::new),
+            follows: None,
             target,
             terminal,
             ssh: None,
@@ -2627,10 +2630,16 @@ impl App {
                 let via = tab.link.as_ref().and_then(|l| l.upgrade()).filter(|s| !s.is_closed());
                 // A shared connection reports no cipher of its own.
                 let (color, cipher) = (tab.color.clone(), via.as_ref().map(|_| tab.cipher.clone()));
+                let shell = (!tab.target.sftp).then_some(tab.id);
                 self.open_tab_via(target, None, via);
                 if let Some(tab) = self.tabs.last_mut() {
                     tab.color = color;
                     tab.cipher = cipher.unwrap_or_default();
+                    // A file browser follows the folder of the shell it came from.
+                    if let (Some(files), Some(shell)) = (tab.files.as_mut(), shell) {
+                        files.linked = true;
+                        tab.follows = Some(shell);
+                    }
                 }
             }
             "group-new" | "group-prev" | "group-next" => {
@@ -3307,6 +3316,15 @@ impl App {
                     Some(path) => tab.start_upload(&path),
                     None => tab.send(zmodem::CANCEL.to_vec()),
                 }
+            }
+        }
+        // File browsers follow their shell's folder (when the shell reports it).
+        let folders: Vec<(u64, String)> = self.tabs.iter().filter_map(|t| Some((t.id, t.terminal.cwd.clone()?))).collect();
+        for tab in &mut self.tabs {
+            if let (Some(shell), Some(files)) = (tab.follows, tab.files.as_mut())
+                && let Some((_, folder)) = folders.iter().find(|(id, _)| *id == shell)
+            {
+                files.follow_to(folder);
             }
         }
         // Server load, read for the active tab only.
@@ -4178,6 +4196,7 @@ impl App {
             (_, "refresh") => files.refresh(which),
             (_, "up") => files.up(which),
             (_, "hidden-on" | "hidden-off") => files.show_hidden(which, name == "hidden-on"),
+            (_, "follow-on" | "follow-off") => files.set_follow(name == "follow-on"),
             (_, "copy-path") => {
                 let paths = files.paths(which);
                 match self.clipboard.as_mut() {

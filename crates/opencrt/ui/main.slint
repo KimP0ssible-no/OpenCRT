@@ -102,6 +102,9 @@ export struct FilesView {
     remote-filter: string,
     local-hidden: bool,
     remote-hidden: bool,
+    // Opened from a shell tab; the remote list follows its folder.
+    linked: bool,
+    follow: bool,
     queue: [QueueRow],
     list: int,
     waiting: int,
@@ -3460,6 +3463,9 @@ component FileList inherits Rectangle {
     in property <int> sort;
     in property <string> filter;
     in property <bool> hidden;
+    // Remote list of a tab opened from a shell: offer to follow its folder.
+    in property <bool> can-follow;
+    in property <bool> follow;
     callback go(string);
     callback click(int, bool, bool);
     callback open(int);
@@ -3679,7 +3685,7 @@ component FileList inherits Rectangle {
                         overflow: elide;
                     }
                     filter-edit := LineEdit {
-                        width: 130px;
+                        width: 110px;
                         placeholder-text: "Filter";
                         init => { self.text = root.filter; }
                         edited(text) => { root.filter-edited(text); }
@@ -3688,6 +3694,11 @@ component FileList inherits Rectangle {
                         text: "Hidden";
                         checked: root.hidden;
                         toggled => { root.action(self.checked ? "hidden-on" : "hidden-off"); }
+                    }
+                    if root.can-follow: CheckBox {
+                        text: "Follow shell";
+                        checked: root.follow;
+                        toggled => { root.action(self.checked ? "follow-on" : "follow-off"); }
                     }
                 }
             }
@@ -3903,6 +3914,8 @@ component FilesBrowser inherits Rectangle {
                 filter: root.view.remote-filter;
                 hidden: root.view.remote-hidden;
                 filter-edited(text) => { root.filter(1, text); }
+                can-follow: root.view.linked;
+                follow: root.view.follow;
                 go(text) => { root.go(1, text); }
                 click(row, ctrl, shift) => { root.click(1, row, ctrl, shift); }
                 open(row) => { root.open(1, row); }

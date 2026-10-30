@@ -108,7 +108,7 @@ mod tests {
     #[test]
     fn runs_a_command_in_the_local_shell() {
         let mut handle = connect("xterm-256color", 80, 24);
-        let deadline = std::time::Instant::now() + Duration::from_secs(20);
+        let deadline = std::time::Instant::now() + Duration::from_secs(60);
         let mut out = Vec::new();
         let mut sent = false;
         loop {

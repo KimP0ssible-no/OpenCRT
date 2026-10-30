@@ -432,7 +432,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           {
-            echo "Windows files are signed as the [Code signing policy](https://github.com/$GITHUB_REPOSITORY#code-signing-policy) describes."
+            echo "Windows files are not signed yet: the certificate is on order, see the [Code signing policy](https://github.com/$GITHUB_REPOSITORY#code-signing-policy)."
             echo
             echo "## What's changed"
             echo

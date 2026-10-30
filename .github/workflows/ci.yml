@@ -425,13 +425,22 @@ jobs:
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: release/*
+      # The notes say what changed in plain words: the body of the tagged
+      # "Version X.Y.Z" commit, its wrapped lines joined, trailers dropped.
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          {
+            echo "Windows files are signed as the [Code signing policy](https://github.com/$GITHUB_REPOSITORY#code-signing-policy) describes."
+            echo
+            echo "## What's changed"
+            echo
+            git log -1 --format=%b "$GITHUB_SHA" | grep -viE '^(co-authored-by|signed-off-by):' | perl -0pe 's/\s+\z/\n/; s/(?<!\n)\n(?![\n*-]|\z)/ /g'
+          } > notes.md
+          cat notes.md
           cd release
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "OpenCRT ${GITHUB_REF_NAME#v}" \
-            --notes "Windows files are signed as the [Code signing policy](https://github.com/$GITHUB_REPOSITORY#code-signing-policy) describes." --generate-notes *
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "OpenCRT ${GITHUB_REF_NAME#v}" --notes-file ../notes.md *
       # apt / dnf / zypper / pacman repositories of the three latest releases
       # (this one included), signed with the REPO_GPG_KEY secret; the pages
       # job publishes them.

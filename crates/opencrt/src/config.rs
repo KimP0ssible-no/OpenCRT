@@ -463,6 +463,8 @@ pub struct Options {
     pub paste_on_right_click: bool,
     /// Middle-click pastes.
     pub paste_on_middle_click: bool,
+    /// Programs on the host may copy text to the clipboard (OSC 52).
+    pub host_clipboard: bool,
     /// Ask before pasting more than one line.
     pub confirm_multiline_paste: bool,
     /// Paste and Send ASCII File pacing: a pause after each character and
@@ -743,6 +745,7 @@ impl Default for Options {
             print_margin_mm: 0,
             paste_on_right_click: false,
             paste_on_middle_click: true,
+            host_clipboard: true,
             confirm_multiline_paste: false,
             send_char_delay_ms: 0,
             send_line_delay_ms: 0,

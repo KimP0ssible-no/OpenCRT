@@ -10,7 +10,7 @@ use alacritty_terminal::selection::{Selection, SelectionType};
 use alacritty_terminal::term::search::RegexSearch;
 use alacritty_terminal::term::cell::Flags;
 use alacritty_terminal::term::color::Colors;
-use alacritty_terminal::term::{Config, Term, TermMode};
+use alacritty_terminal::term::{Config, Osc52, Term, TermMode};
 pub use alacritty_terminal::vte::ansi::CursorShape;
 use alacritty_terminal::vte::ansi::{Color, CursorStyle, NamedColor, Processor};
 
@@ -389,6 +389,8 @@ struct Pending {
     /// `Some(None)` means the title was reset.
     title: Option<Option<String>>,
     bell: bool,
+    /// Text the host asked to put on the clipboard (OSC 52).
+    clipboard: Option<String>,
 }
 
 #[derive(Clone, Default)]
@@ -402,6 +404,9 @@ impl EventListener for Listener {
             Event::Title(title) => pending.title = Some(Some(title)),
             Event::ResetTitle => pending.title = Some(None),
             Event::Bell => pending.bell = true,
+            // Only stores reach here: reads (ClipboardLoad) are refused by the
+            // terminal's Osc52 setting, so a host can never see the clipboard.
+            Event::ClipboardStore(_, text) => pending.clipboard = Some(text),
             _ => {}
         }
     }
@@ -421,6 +426,8 @@ pub struct Terminal {
     cursor: CursorShape,
     /// Characters that end a double-clicked word; None for the built-in set.
     delimiters: Option<String>,
+    /// The host may set the clipboard (OSC 52).
+    host_copy: bool,
 }
 
 impl Terminal {
@@ -441,6 +448,7 @@ impl Terminal {
             scrollback,
             cursor: CursorShape::Block,
             delimiters: None,
+            host_copy: true,
         }
     }
 
@@ -448,7 +456,19 @@ impl Terminal {
         let default_cursor_style = CursorStyle { shape: self.cursor, blinking: false };
         let defaults = Config::default();
         let semantic_escape_chars = self.delimiters.clone().unwrap_or(defaults.semantic_escape_chars.clone());
-        self.term.set_options(Config { scrolling_history: self.scrollback, default_cursor_style, semantic_escape_chars, ..defaults });
+        let osc52 = if self.host_copy { Osc52::OnlyCopy } else { Osc52::Disabled };
+        self.term.set_options(Config { scrolling_history: self.scrollback, default_cursor_style, semantic_escape_chars, osc52, ..defaults });
+    }
+
+    /// Let the host put text on the clipboard (OSC 52); it can never read it.
+    pub fn set_host_copy(&mut self, allow: bool) {
+        self.host_copy = allow;
+        self.apply_options();
+    }
+
+    /// Text the host put on the clipboard since the last call.
+    pub fn take_clipboard(&mut self) -> Option<String> {
+        self.listener.0.borrow_mut().clipboard.take()
     }
 
     /// Characters that end a word for double-click selection; empty for the
@@ -1064,6 +1084,19 @@ mod tests {
         assert!(t.find("(x)", false, false));
         assert_eq!(t.selection_text().as_deref(), Some("(x)"));
         assert!(!t.find("missing", false, false));
+    }
+
+    #[test]
+    fn the_host_can_set_the_clipboard_but_never_read_it() {
+        let mut t = Terminal::new(10, 2);
+        // OSC 52 with base64 "hello"; then a read request, which gets no reply.
+        assert!(t.feed(b"\x1b]52;c;aGVsbG8=\x07").is_empty());
+        assert_eq!(t.take_clipboard().as_deref(), Some("hello"));
+        assert!(t.feed(b"\x1b]52;c;?\x07").is_empty());
+        assert_eq!(t.take_clipboard(), None);
+        t.set_host_copy(false);
+        t.feed(b"\x1b]52;c;aGVsbG8=\x07");
+        assert_eq!(t.take_clipboard(), None);
     }
 
     #[test]

@@ -28,8 +28,13 @@ const FINISHED: usize = 2;
 struct List {
     /// "" before the first listing (and for the drive list on Windows).
     dir: String,
+    /// Everything listed, and what is shown of it (sorted).
+    all: Vec<Entry>,
     entries: Vec<Entry>,
     selected: Vec<bool>,
+    /// Show names starting with `.`; only names containing `filter` (any case).
+    hidden: bool,
+    filter: String,
     /// Column * 2, plus 1 for descending.
     sort: i32,
     anchor: usize,
@@ -70,6 +75,19 @@ impl List {
             // Folders stay above files either way.
             b.dir.cmp(&a.dir).then(if descending { by.reverse() } else { by })
         });
+    }
+
+    /// Rebuild what is shown from the listing, `keep` still selected.
+    fn show(&mut self, keep: &[String]) {
+        let filter = self.filter.to_lowercase();
+        let shown = |e: &&Entry| (self.hidden || !e.name.starts_with('.')) && e.name.to_lowercase().contains(&filter);
+        self.entries = self.all.iter().filter(shown).cloned().collect();
+        self.sort();
+        self.selected = self.entries.iter().map(|e| keep.contains(&e.name)).collect();
+    }
+
+    fn picked_names(&self) -> Vec<String> {
+        self.picked().map(|e| e.name.clone()).collect()
     }
 
     fn picked(&self) -> impl Iterator<Item = &Entry> {
@@ -213,11 +231,13 @@ impl Browser {
         match update {
             Update::Listing(side, Ok((dir, entries))) => {
                 let list = self.list(side);
-                // A refresh keeps what was selected.
-                let keep: Vec<String> = if list.dir == dir { list.picked().map(|e| e.name.clone()).collect() } else { Vec::new() };
-                (list.dir, list.entries, list.error) = (dir, entries, None);
-                list.sort();
-                list.selected = list.entries.iter().map(|e| keep.contains(&e.name)).collect();
+                // A refresh keeps what was selected and the filter; another folder starts afresh.
+                let keep = if list.dir == dir { list.picked_names() } else { Vec::new() };
+                if list.dir != dir {
+                    list.filter.clear();
+                }
+                (list.dir, list.all, list.error) = (dir, entries, None);
+                list.show(&keep);
             }
             Update::Listing(side, Err(e)) => self.list(side).error = Some(e),
             // Progress shows without redrawing the lists.
@@ -414,10 +434,31 @@ impl Browser {
         let list = self.list(side);
         // The same column again turns the order round.
         list.sort = if list.sort / 2 == column { list.sort ^ 1 } else { column * 2 };
-        let keep: Vec<String> = list.picked().map(|e| e.name.clone()).collect();
-        list.sort();
-        list.selected = list.entries.iter().map(|e| keep.contains(&e.name)).collect();
+        let keep = list.picked_names();
+        list.show(&keep);
         self.dirty = true;
+    }
+
+    pub fn show_hidden(&mut self, side: Side, hidden: bool) {
+        let list = self.list(side);
+        let keep = list.picked_names();
+        list.hidden = hidden;
+        list.show(&keep);
+        self.dirty = true;
+    }
+
+    pub fn filter(&mut self, side: Side, text: String) {
+        let list = self.list(side);
+        let keep = list.picked_names();
+        list.filter = text;
+        list.show(&keep);
+        self.dirty = true;
+    }
+
+    /// Full paths of the selected entries of `side`.
+    pub fn paths(&self, side: Side) -> Vec<String> {
+        let list = &self.lists[side as usize];
+        list.picked().map(|e| list.path(side, &e.name)).collect()
     }
 
     pub fn show_list(&mut self, list: usize) {
@@ -521,6 +562,9 @@ impl Browser {
             if let Some(e) = &list.error {
                 return e.clone();
             }
+            if list.entries.is_empty() && !list.all.is_empty() {
+                return "Nothing to show: the filter or Show hidden files hides it all.".into();
+            }
             let picked: Vec<&Entry> = list.picked().collect();
             let (shown, selected): (Vec<&Entry>, bool) = if picked.is_empty() { (list.entries.iter().collect(), false) } else { (picked, true) };
             let folders = shown.iter().filter(|e| e.dir).count();
@@ -540,6 +584,10 @@ impl Browser {
             remote_status: status(remote).into(),
             local_sort: local.sort,
             remote_sort: remote.sort,
+            local_filter: local.filter.clone().into(),
+            remote_filter: remote.filter.clone().into(),
+            local_hidden: local.hidden,
+            remote_hidden: remote.hidden,
             queue: ModelRc::from(self.queue_model.clone()),
             list: self.shown as i32,
             waiting: self.queues[WAITING].len() as i32,
@@ -639,11 +687,37 @@ mod tests {
     }
 
     #[test]
+    fn hidden_files_and_the_filter() {
+        let (tx, _rx) = tokio::sync::mpsc::unbounded_channel();
+        let mut b = Browser::new();
+        b.attach(tx);
+        let list = vec![entry(".bashrc", false, 1), entry("notes.txt", false, 1), entry("Notebook", true, 0)];
+        b.apply(Update::Listing(Side::Remote, Ok(("/home/me".into(), list.clone()))));
+        let shown = |b: &Browser| b.lists[1].entries.iter().map(|e| e.name.clone()).collect::<Vec<_>>();
+        assert_eq!(shown(&b), ["Notebook", "notes.txt"]);
+        // Row 0 is `..`; the selection survives filtering that keeps it.
+        b.click(1, 2, false, false);
+        b.filter(Side::Remote, "TXT".into());
+        assert_eq!(shown(&b), ["notes.txt"]);
+        assert_eq!(b.paths(Side::Remote), ["/home/me/notes.txt"]);
+        b.show_hidden(Side::Remote, true);
+        b.filter(Side::Remote, "".into());
+        assert_eq!(shown(&b), ["Notebook", ".bashrc", "notes.txt"]);
+        // A refresh keeps the filter; another folder clears it.
+        b.filter(Side::Remote, "note".into());
+        b.apply(Update::Listing(Side::Remote, Ok(("/home/me".into(), list.clone()))));
+        assert_eq!(b.lists[1].filter, "note");
+        b.apply(Update::Listing(Side::Remote, Ok(("/tmp".into(), list))));
+        assert_eq!((b.lists[1].filter.as_str(), shown(&b).len()), ("", 3));
+    }
+
+    #[test]
     fn queue_runs_in_order_and_expands_folders() {
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
         let mut b = Browser::new();
         b.attach(tx);
         b.apply(Update::Listing(Side::Local, Ok(("/tmp".into(), vec![]))));
+        b.show_hidden(Side::Remote, true);
         b.apply(Update::Listing(Side::Remote, Ok(("/srv".into(), vec![entry("d", true, 0), entry("../x", false, 1), entry("f", false, 4)]))));
         // Row 0 is `..`; pick everything below it.
         b.click(1, 1, false, false);

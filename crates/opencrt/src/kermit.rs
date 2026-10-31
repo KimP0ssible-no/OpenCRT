@@ -128,10 +128,16 @@ fn decode(data: &[u8], qctl: u8) -> Vec<u8> {
     out
 }
 
-fn encode(bytes: &[u8]) -> Vec<u8> {
+/// `bytes` encoded, cut short to fit `room`.
+fn encode(bytes: &[u8], room: usize) -> Vec<u8> {
     let mut out = Vec::new();
     for &b in bytes {
+        let at = out.len();
         encode_byte(b, &mut out);
+        if out.len() > room {
+            out.truncate(at);
+            break;
+        }
     }
     out
 }
@@ -251,7 +257,7 @@ impl Sender {
             SendState::Init => {
                 self.peer = Peer::from_params(ack);
                 self.state = SendState::File;
-                self.send(b'F', &encode(self.name.as_bytes()), now)
+                self.send(b'F', &encode(self.name.as_bytes(), self.peer.maxl as usize - 3), now)
             }
             SendState::File | SendState::Data => {
                 self.sent += std::mem::take(&mut self.in_flight);
@@ -421,7 +427,7 @@ impl Receiver {
                             }
                         }
                         Err(e) => {
-                            reply.extend(packet(self.expected, b'E', &encode(e.as_bytes()), self.peer.eol));
+                            reply.extend(packet(self.expected, b'E', &encode(e.as_bytes(), self.peer.maxl as usize - 3), self.peer.eol));
                             return Progress::Failed(e);
                         }
                     }
@@ -452,7 +458,7 @@ mod tests {
 
     #[test]
     fn packets_round_trip_and_reject_damage() {
-        let data = encode(b"a#\x01\x7f\x81\xa3z");
+        let data = encode(b"a#\x01\x7f\x81\xa3z", usize::MAX);
         assert_eq!(data, b"a###A#?#\xc1#\xa3z");
         assert_eq!(decode(&data, QCTL), b"a#\x01\x7f\x81\xa3z");
         let mut buf = b"noise".to_vec();
@@ -466,6 +472,21 @@ mod tests {
         assert_eq!((peer.maxl, peer.eol, peer.qctl), (MAXL, b'\r', QCTL));
         // Fields the peer leaves out take the protocol defaults.
         assert_eq!(Peer::from_params(b"").maxl, 80);
+        // Text longer than a packet is cut short, never mid-prefix.
+        assert_eq!(encode(b"ab\x01", 3), b"ab");
+    }
+
+    #[test]
+    fn a_long_error_from_the_sender_is_answered_in_one_valid_packet() {
+        let dir = std::env::temp_dir().join(format!("opencrt-kermit-err-{}", std::process::id()));
+        let now = Instant::now();
+        let (mut receiver, _) = Receiver::new(dir, now);
+        let mut reply = Vec::new();
+        let progress = receiver.feed(&packet(0, b'E', &[b'#'; 91], b'\r'), now, &mut reply);
+        assert!(matches!(progress, Progress::Failed(_)));
+        let p = take_packet(&mut reply).unwrap().unwrap();
+        assert_eq!(p.kind, b'E');
+        assert!(p.data.len() <= MAXL as usize - 3);
     }
 
     #[test]

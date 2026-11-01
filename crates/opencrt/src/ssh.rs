@@ -1524,9 +1524,9 @@ mod tests {
             Ok(if user == "u" && signed && cert.valid_principals().iter().any(|p| p == "u") { Auth::Accept } else { Auth::reject() })
         }
 
-        async fn auth_publickey(&mut self, user: &str, key: &PublicKey) -> Result<Auth, Self::Error> {
+        async fn auth_publickey(&mut self, user: &str, key: server::VerifiedPublicKey<'_>) -> Result<Auth, Self::Error> {
             let allowed = keys::parse_public_key_base64(ENCRYPTED_KEY_PUB).unwrap();
-            Ok(if user == "u" && *key == allowed { Auth::Accept } else { Auth::reject() })
+            Ok(if user == "u" && *key.public_key == allowed { Auth::Accept } else { Auth::reject() })
         }
 
         async fn auth_keyboard_interactive<'a>(

@@ -151,7 +151,7 @@ pub struct Target {
     pub proxy: Option<String>,
     /// SSH2: saved credential whose password is tried first.
     pub credential: Option<String>,
-    /// SSH2: run this instead of the login shell; empty for the shell.
+    /// SSH2 and Local: run this instead of the login shell; empty for the shell.
     pub command: String,
     /// Local command run before connecting; empty for none.
     pub pre_connect: String,
@@ -239,6 +239,7 @@ impl Target {
             Protocol::Rdp if self.user.is_empty() => format!("rdp: {host}"),
             Protocol::Rdp => format!("rdp: {}@{host}", self.user),
             Protocol::Serial => format!("{} {}", self.serial_port, self.baud),
+            Protocol::Local if !self.command.is_empty() => self.command.clone(),
             Protocol::Local => "Local Shell".into(),
         }
     }
@@ -301,7 +302,7 @@ impl Target {
             }
             Protocol::Serial if serial::is_vm_console(&self.serial_port) => telnet::connect_console(self.serial_port.clone()),
             Protocol::Serial => serial::connect(self.serial_port.clone(), self.baud, self.serial_line, self.dial.clone()),
-            Protocol::Local => local::connect(&ssh::Pty::new(&self.term, cols, rows).term, cols, rows),
+            Protocol::Local => local::connect(&self.command, &ssh::Pty::new(&self.term, cols, rows).term, cols, rows),
             // Tab::connect starts RDP itself (it needs the input sender and pixel size).
             Protocol::Rdp => self.rdp((1024, 768)).0,
         }
@@ -2349,6 +2350,10 @@ impl App {
                 self.save_options();
             }
             "local-shell" => self.open_tab(Target { protocol: Protocol::Local, ..Default::default() }, None),
+            "local-cmd" | "local-powershell" => {
+                let command = if name == "local-cmd" { "cmd.exe" } else { "powershell.exe" };
+                self.open_tab(Target { protocol: Protocol::Local, command: command.into(), ..Default::default() }, None);
+            }
             "quick-connect" => {
                 let target = (self.tabs.get(active).map(|t| t.target.clone()))
                     .unwrap_or_else(|| Target::from_session(&self.store.default_session, &self.options.credentials));
@@ -7431,6 +7436,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_panes(ModelRc::from(app.pane_model.clone()));
         ui.set_files_views(ModelRc::from(app.files_model.clone()));
         ui.set_show_toolbar(app.options.show_toolbar);
+        ui.set_windows(cfg!(windows));
         ui.set_show_statusbar(app.options.show_statusbar);
         ui.set_show_menubar(app.options.show_menubar);
         ui.set_show_connect_bar(app.options.show_connect_bar);

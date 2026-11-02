@@ -124,7 +124,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@nightly
+      # nightly-2026-11-01 cannot build zbus (E0391, an async drop query
+      # cycle); back to @nightly once a newer nightly builds it.
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-10-31
       - if: matrix.crate == 'opencrt'
         run: sudo apt-get update && sudo apt-get install -y libfontconfig-dev
       # Shared with security.yml's nightly fuzzing; a new nightly starts afresh.

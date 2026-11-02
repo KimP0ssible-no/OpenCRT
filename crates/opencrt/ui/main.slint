@@ -4116,6 +4116,8 @@ export component MainWindow inherits Window {
     in property <bool> caps-on;
     in property <bool> num-on;
     in-out property <bool> show-toolbar: true;
+    // The local-shell button offers PowerShell or Command Prompt.
+    in property <bool> windows;
     in-out property <bool> show-statusbar: true;
     in-out property <bool> show-menubar: true;
     in-out property <bool> show-connect-bar: true;
@@ -4979,7 +4981,26 @@ export component MainWindow inherits Window {
                 ToolButton {
                     icon-size: 20px;
                     icon: IconKind.local-shell;
-                    clicked => { root.action("local-shell"); }
+                    clicked => {
+                        if root.windows {
+                            shell-menu.show({ x: 0, y: self.height });
+                        } else {
+                            root.action("local-shell");
+                        }
+                    }
+                    shell-menu := ContextMenuArea {
+                        enabled: root.windows;
+                        Menu {
+                            MenuItem {
+                                title: "PowerShell";
+                                activated => { root.action("local-powershell"); }
+                            }
+                            MenuItem {
+                                title: "Command Prompt (classic)";
+                                activated => { root.action("local-cmd"); }
+                            }
+                        }
+                    }
                 }
                 ToolButton {
                     icon-size: 20px;

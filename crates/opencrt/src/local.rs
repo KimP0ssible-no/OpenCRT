@@ -23,12 +23,14 @@ fn shell_env(term: &str) -> std::collections::HashMap<String, String> {
     [("TERM", term), ("COLORTERM", "truecolor")].into_iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
 }
 
-/// Start the user's shell (PowerShell on Windows, `$SHELL` elsewhere) in their
-/// home folder, as a `term` terminal.
-pub fn connect(term: &str, cols: u32, rows: u32) -> SshHandle {
+/// Start `program`, or with none the user's shell (PowerShell on Windows,
+/// `$SHELL` elsewhere), in their home folder, as a `term` terminal.
+pub fn connect(program: &str, term: &str, cols: u32, rows: u32) -> SshHandle {
     let env = shell_env(term);
+    let shell = (!program.is_empty()).then(|| tty::Shell::new(program.to_string(), Vec::new()));
     ssh::spawn(move |io| {
-        let options = Options { drain_on_exit: true, working_directory: std::env::home_dir(), env, ..Options::default() };
+        let mut options = Options { drain_on_exit: true, working_directory: std::env::home_dir(), env, ..Options::default() };
+        options.shell = shell;
         let mut pty = tty::new(&options, window(cols, rows), 0)?;
         let _ = io.output.send(SshEvent::Connected);
         let mut buf = vec![0u8; 16 * 1024];
@@ -107,8 +109,17 @@ mod tests {
 
     #[test]
     fn runs_a_command_in_the_local_shell() {
-        let mut handle = connect("xterm-256color", 80, 24);
-        let deadline = std::time::Instant::now() + Duration::from_secs(20);
+        echoes_a_command("");
+    }
+
+    #[test]
+    fn runs_a_command_in_a_chosen_shell() {
+        echoes_a_command(if cfg!(windows) { "cmd.exe" } else { "sh" });
+    }
+
+    fn echoes_a_command(program: &str) {
+        let mut handle = connect(program, "xterm-256color", 80, 24);
+        let deadline = std::time::Instant::now() + Duration::from_secs(60);
         let mut out = Vec::new();
         let mut sent = false;
         loop {
@@ -123,7 +134,7 @@ mod tests {
                 Ok(_) => {}
                 Err(_) => std::thread::sleep(Duration::from_millis(20)),
             }
-            // PowerShell prints "opencrt-$((6*7))" literally; POSIX shells print 42.
+            // PowerShell and cmd print "opencrt-$((6*7))" literally; POSIX shells print 42.
             let text = String::from_utf8_lossy(&out);
             if text.contains("opencrt-42") || text.matches("opencrt-$((6*7))").count() >= 2 {
                 break;
@@ -135,7 +146,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn the_shell_gets_the_terminal_type() {
-        let mut handle = connect("xterm-256color", 80, 24);
+        let mut handle = connect("", "xterm-256color", 80, 24);
         let deadline = std::time::Instant::now() + Duration::from_secs(20);
         let mut out = Vec::new();
         loop {

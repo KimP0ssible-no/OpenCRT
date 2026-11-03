@@ -1,5 +1,6 @@
 //! Terminal emulation backed by `alacritty_terminal`; exposes resolved cells for rendering.
 
+use std::borrow::Cow;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -435,6 +436,78 @@ impl EventListener for Listener {
     }
 }
 
+/// vte 0.15 overflows a shift (a panic with overflow checks on) parsing an OSC
+/// 4/10/11/12 colour of `#` and 51+ bytes, so such a colour is cut to 48 bytes
+/// and an `x` that makes it invalid. Tracks vte's OSC string state: it skips
+/// C0 bytes, ends on BEL, CAN, SUB or ESC, and splits parameters on `;`.
+#[derive(Default)]
+struct ColourGuard {
+    esc: bool,
+    osc: Option<Osc>,
+}
+
+#[derive(Clone, Copy)]
+enum Osc {
+    /// The OSC number so far.
+    Number(u32),
+    /// Not a colour OSC.
+    Other,
+    /// A colour OSC, at a parameter's first byte.
+    Start,
+    /// Bytes after a parameter's leading `#`.
+    Hash(usize),
+    Plain,
+}
+
+impl ColourGuard {
+    fn filter<'a>(&mut self, bytes: &'a [u8]) -> Cow<'a, [u8]> {
+        let mut out: Option<Vec<u8>> = None;
+        for (i, &b) in bytes.iter().enumerate() {
+            let kept = self.step(b);
+            match &mut out {
+                Some(out) => out.extend(kept),
+                None if kept != Some(b) => out = Some([&bytes[..i], kept.as_slice()].concat()),
+                None => {}
+            }
+        }
+        out.map_or(Cow::Borrowed(bytes), Cow::Owned)
+    }
+
+    fn step(&mut self, b: u8) -> Option<u8> {
+        let esc = self.esc;
+        self.esc = match b {
+            0x1b => true,
+            0x18 | 0x1a => false,
+            0x00..=0x1f | 0x7f => esc,
+            _ => false,
+        };
+        if esc && b == b']' {
+            self.osc = Some(Osc::Number(0));
+            return Some(b);
+        }
+        let Some(osc) = self.osc else { return Some(b) };
+        self.osc = match (osc, b) {
+            (_, 0x07 | 0x18 | 0x1a | 0x1b) => None,
+            (_, 0x00..=0x1f) => Some(osc),
+            (Osc::Number(n), b';') => Some(if matches!(n, 4 | 10..=12) { Osc::Start } else { Osc::Other }),
+            (Osc::Number(n), b'0'..=b'9') => Some(Osc::Number(n.saturating_mul(10).saturating_add(u32::from(b - b'0')))),
+            (Osc::Number(_) | Osc::Other, _) => Some(Osc::Other),
+            (_, b';') => Some(Osc::Start),
+            (Osc::Start, b'#') => Some(Osc::Hash(0)),
+            (Osc::Hash(n), _) => {
+                self.osc = Some(Osc::Hash(n + 1));
+                return match n {
+                    ..48 => Some(b),
+                    48 => Some(b'x'),
+                    _ => None,
+                };
+            }
+            _ => Some(Osc::Plain),
+        };
+        Some(b)
+    }
+}
+
 pub struct Terminal {
     term: Term<Listener>,
     listener: Listener,
@@ -448,6 +521,7 @@ pub struct Terminal {
     /// An OSC sequence being read (it may span reads), and whether ESC came last.
     osc: Option<Vec<u8>>,
     esc: bool,
+    colour_guard: ColourGuard,
     pub scheme: &'static Scheme,
     scrollback: usize,
     /// Cursor shape unless the host picks one (DECSCUSR).
@@ -475,6 +549,7 @@ impl Terminal {
             cwd: None,
             osc: None,
             esc: false,
+            colour_guard: ColourGuard::default(),
             scheme: &SCHEMES[0],
             scrollback,
             cursor: CursorShape::Block,
@@ -524,8 +599,9 @@ impl Terminal {
     /// Feed raw bytes from the remote side into the terminal parser.
     /// Returns any reply bytes the terminal needs sent back to the host.
     pub fn feed(&mut self, bytes: &[u8]) -> Vec<u8> {
-        self.scan_osc(bytes);
-        self.parser.advance(&mut self.term, bytes);
+        let bytes = self.colour_guard.filter(bytes);
+        self.scan_osc(&bytes);
+        self.parser.advance(&mut self.term, &bytes);
         let mut pending = self.listener.0.borrow_mut();
         if let Some(title) = pending.title.take() {
             self.title = title;
@@ -1251,5 +1327,20 @@ mod tests {
 
         let (fg, back) = cell_colors(red, bg, Flags::INVERSE, colors, classic);
         assert_eq!((fg, back), (DEFAULT_BG, ANSI16[1]));
+    }
+
+    #[test]
+    fn overlong_osc_colour_is_refused() {
+        let mut t = Terminal::new(10, 2);
+        t.feed(format!("\x1b]10;#{}\x07", "0".repeat(60)).as_bytes());
+        // Split across reads, with C0 bytes the parser skips inside the colour.
+        t.feed(b"\x1b]4;1;#");
+        t.feed("0\x01".repeat(60).as_bytes());
+        t.feed(b"\x1b\\");
+        assert_eq!(t.term.colors()[NamedColor::Foreground], None);
+        assert_eq!(t.term.colors()[1], None);
+
+        t.feed(b"\x1b]10;#102030\x07");
+        assert_eq!(t.term.colors()[NamedColor::Foreground], Some(alacritty_terminal::vte::ansi::Rgb { r: 0x10, g: 0x20, b: 0x30 }));
     }
 }

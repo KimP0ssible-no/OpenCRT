@@ -1,5 +1,5 @@
 //! Render the main window off-screen to a PNG-convertible PPM, for checking the
-//! look without opening a window: `cargo run --example ui_snapshot -- out.ppm dark main`.
+//! look without opening a window: `cargo run --example ui_snapshot -- out.ppm dark main [font size]`.
 //! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite, quick-open.
 
 use std::rc::Rc;
@@ -32,6 +32,9 @@ fn main() {
     window.set_size(PhysicalSize::new(width, height));
     let ui = MainWindow::new().unwrap();
     ui.set_theme_mode(if theme == "dark" { 2 } else { 1 });
+    if let Some(size) = args.get(3).and_then(|s| s.parse::<f32>().ok()) {
+        ui.global::<Theme>().set_ui_scale(size / 12.0);
+    }
     ui.set_version("0.1.0".into());
     ui.set_settings_dir("~/.config/opencrt".into());
     ui.set_terminal_bg(Color::from_rgb_u8(0x0a, 0x0d, 0x1f));

@@ -5,6 +5,10 @@
 import { Palette } from "std-widgets.slint";
 
 export global Theme {
+    // Interface font size / 12px (Global Options > General); text and the boxes
+    // that hold it grow with it.
+    in-out property <float> ui-scale: 1;
+
     // Back on "System" after a forced choice the scheme reads unknown and the
     // style follows the system itself; its dark background tells which.
     out property <bool> dark: Palette.color-scheme == ColorScheme.dark

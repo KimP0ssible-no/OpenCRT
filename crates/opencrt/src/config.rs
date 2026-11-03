@@ -496,6 +496,8 @@ pub struct Options {
     pub bell: Bell,
     /// Light or dark window chrome, or whatever the system uses.
     pub theme: UiTheme,
+    /// Menus, tabs, dialogs and other window text, in logical pixels.
+    pub ui_font_size: f32,
     /// Show the menu bar (when hidden, the terminal's right-click menu brings it back).
     pub show_menubar: bool,
     /// Show the connect bar in the toolbar.
@@ -719,6 +721,13 @@ pub struct BarButton {
     pub bar: String,
 }
 
+impl Options {
+    /// The interface font size against the 12px the window was laid out for.
+    pub fn ui_scale(&self) -> f32 {
+        self.ui_font_size / 12.0
+    }
+}
+
 impl Default for Options {
     fn default() -> Self {
         Self {
@@ -765,6 +774,8 @@ impl Default for Options {
             cursor: Cursor::Block,
             bell: Bell::Visual,
             theme: UiTheme::System,
+            // macOS menus use 13 points.
+            ui_font_size: if cfg!(target_os = "macos") { 13.0 } else { 12.0 },
             buttons: Vec::new(),
             commands: Vec::new(),
             credentials: Vec::new(),
@@ -992,6 +1003,9 @@ mod tests {
         assert_eq!(toml::from_str::<Options>(&toml::to_string(&with_snapshot).unwrap()).unwrap(), with_snapshot);
         // Files from before the dock was resizable keep the old width.
         assert_eq!(toml::from_str::<Options>("show_toolbar = true\n").unwrap().dock_width, 240.0);
+        let old = toml::from_str::<Options>("show_toolbar = true\n").unwrap();
+        assert_eq!(old.ui_font_size, Options::default().ui_font_size);
+        assert_eq!(toml::from_str::<Options>("ui_font_size = 15.0\n").unwrap().ui_scale(), 1.25);
     }
 
     #[test]

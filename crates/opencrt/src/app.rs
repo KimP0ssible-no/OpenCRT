@@ -1695,9 +1695,6 @@ struct Pane {
     zoom: [f32; 2],
 }
 
-/// Height of a tile's title bar, in logical pixels.
-const TILE_TITLE: f32 = 18.0;
-
 /// Tile `n` panes over a `w` x `h` area: up to 4 side by side (`columns`) or
 /// stacked, more in a near-square grid whose last row shares out its width.
 /// Each tile is `[x, y, width, height]`.
@@ -2974,6 +2971,15 @@ impl App {
         true
     }
 
+    /// The dock's vertical tab labels, for the window's scale and the interface font size.
+    fn draw_dock_labels(&self, ui: &MainWindow) {
+        let px = 11.0 * self.scale * self.options.ui_scale();
+        ui.set_dock_label_sessions(dock_label("Session Manager", px));
+        ui.set_dock_label_active(dock_label("Active Sessions", px));
+        ui.set_dock_label_commands(dock_label("Command Manager", px));
+        ui.set_dock_label_scratch(dock_label("Scratchpad", px));
+    }
+
     /// The panes to show in a `w` x `h` terminal area.
     fn layout_panes(&self, (w, h): (f32, f32)) -> Vec<Pane> {
         let full = [0.0, 0.0, w, h];
@@ -2989,7 +2995,9 @@ impl App {
                 .into_iter()
                 .enumerate()
                 .map(|(tab, t)| {
-                    let image = [t[0] + 1.0, t[1] + TILE_TITLE, (t[2] - 2.0).max(1.0), (t[3] - TILE_TITLE - 1.0).max(1.0)];
+                    // The title bar, 17px at the default interface font size, and its top border.
+                    let title = 1.0 + 17.0 * self.options.ui_scale();
+                    let image = [t[0] + 1.0, t[1] + title, (t[2] - 2.0).max(1.0), (t[3] - title - 1.0).max(1.0)];
                     Pane { tab, tile: t, image, zoom: [1.0; 2] }
                 })
                 .collect(),
@@ -3501,10 +3509,7 @@ impl App {
         if scale != self.scale {
             self.scale = scale;
             self.renderer.set_px((self.options.font_size * scale).round());
-            ui.set_dock_label_sessions(dock_label("Session Manager", scale));
-            ui.set_dock_label_active(dock_label("Active Sessions", scale));
-            ui.set_dock_label_commands(dock_label("Command Manager", scale));
-            ui.set_dock_label_scratch(dock_label("Scratchpad", scale));
+            self.draw_dock_labels(ui);
         }
         let area = (ui.get_term_width(), ui.get_term_height());
         self.panes = self.layout_panes(area);
@@ -6500,6 +6505,7 @@ impl App {
         ui.set_go_cursor(config::Cursor::ALL.iter().position(|c| *c == self.options.cursor).unwrap_or(0) as i32);
         ui.set_go_bell(config::Bell::ALL.iter().position(|b| *b == self.options.bell).unwrap_or(0) as i32);
         ui.set_go_theme(self.options.theme.index());
+        ui.set_go_ui_font_size(self.options.ui_font_size.to_string().into());
         ui.set_go_keywords(self.options.keywords.join("\n").into());
         ui.set_go_key_map(self.options.key_map.join("\n").into());
         ui.set_go_scheme(schemes().iter().position(|s| s.name == self.options.scheme).unwrap_or(0) as i32);
@@ -6519,9 +6525,10 @@ impl App {
         };
         let recent_count = ui.get_go_recent_count().trim().parse::<usize>().ok().filter(|v| *v <= RECENT_MAX);
         let warn_count = ui.get_go_warn_count().trim().parse::<usize>().ok().filter(|v| *v <= 1000);
-        let (Some(recent_count), Some(warn_count)) = (recent_count, warn_count) else {
+        let ui_font_size = ui.get_go_ui_font_size().trim().parse::<f32>().ok().filter(|v| (9.0..=20.0).contains(v));
+        let (Some(recent_count), Some(warn_count), Some(ui_font_size)) = (recent_count, warn_count, ui_font_size) else {
             return ui.set_go_error(
-                format!("General: recent sessions must be 0 to {RECENT_MAX}, and the Connect All warning 0 to 1000.").into(),
+                format!("General: recent sessions must be 0 to {RECENT_MAX}, the Connect All warning 0 to 1000, and the interface font size 9 to 20.").into(),
             );
         };
         let global_key = ui.get_go_global_key().trim().to_string();
@@ -6604,6 +6611,9 @@ impl App {
         self.options.bell = config::Bell::ALL.get(ui.get_go_bell().max(0) as usize).copied().unwrap_or_default();
         self.options.theme = config::UiTheme::ALL.get(ui.get_go_theme().max(0) as usize).copied().unwrap_or_default();
         ui.set_theme_mode(self.options.theme.index());
+        self.options.ui_font_size = ui_font_size;
+        ui.global::<crate::Theme>().set_ui_scale(self.options.ui_scale());
+        self.draw_dock_labels(ui);
         self.options.word_delimiters = ui.get_go_word_delimiters().to_string();
         for tab in &mut self.tabs {
             tab.terminal.set_cursor_shape(cursor_shape(self.options.cursor));
@@ -7020,8 +7030,8 @@ fn session_from_target(target: &Target, name: String, template: &Session) -> Ses
 }
 
 /// A vertical dock-tab caption rendered for the current display scale.
-fn dock_label(text: &str, scale: f32) -> Image {
-    match render::vertical_label(text, (11.0 * scale).round(), [0x30, 0x30, 0x30]) {
+fn dock_label(text: &str, px: f32) -> Image {
+    match render::vertical_label(text, px.round(), [0x30, 0x30, 0x30]) {
         Some((w, h, rgba)) => Image::from_rgba8(SharedPixelBuffer::clone_from_slice(&rgba, w as u32, h as u32)),
         None => Image::default(),
     }
@@ -7441,6 +7451,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_show_menubar(app.options.show_menubar);
         ui.set_show_connect_bar(app.options.show_connect_bar);
         ui.set_theme_mode(app.options.theme.index());
+        ui.global::<crate::Theme>().set_ui_scale(app.options.ui_scale());
         crate::proxy::set_firewalls(&app.options.firewalls);
         app.show_snapshots(&ui);
         if app.options.agent_load_keys {

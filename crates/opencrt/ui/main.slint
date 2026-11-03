@@ -159,7 +159,7 @@ component CompactInput inherits Rectangle {
     public function focus-input() {
         input.focus();
     }
-    height: 20px;
+    height: 20px * Theme.ui-scale;
     background: Theme.input-bg;
     border-width: 1px;
     border-color: input.has-focus ? Theme.focus-ring : Theme.border-strong;
@@ -170,7 +170,7 @@ component CompactInput inherits Rectangle {
         text: root.placeholder;
         color: Theme.text-disabled;
         vertical-alignment: center;
-        font-size: 11px;
+        font-size: 11px * Theme.ui-scale;
     }
     input := TextInput {
         x: 5px;
@@ -178,7 +178,7 @@ component CompactInput inherits Rectangle {
         height: parent.height;
         single-line: true;
         vertical-alignment: center;
-        font-size: 12px;
+        font-size: 12px * Theme.ui-scale;
         edited => { root.edited(self.text); }
         accepted => {
             root.submitted(self.text);
@@ -237,7 +237,7 @@ export struct SessionRow {
 
 component PanelHeader inherits Rectangle {
     in property <string> title;
-    height: 26px;
+    height: 26px * Theme.ui-scale;
     background: Theme.toolbar-bg;
     Rectangle {
         y: parent.height - 1px;
@@ -281,7 +281,7 @@ component SessionManagerPanel inherits Rectangle {
                 spacing: 0px;
                 Text {
                     text: "Session Manager";
-                    font-size: 11px;
+                    font-size: 11px * Theme.ui-scale;
                     vertical-alignment: center;
                     horizontal-stretch: 1;
                 }
@@ -311,7 +311,7 @@ component SessionManagerPanel inherits Rectangle {
             }
         }
         Rectangle {
-            height: 28px;
+            height: 28px * Theme.ui-scale;
             CompactInput {
                 x: 4px;
                 width: parent.width - 8px;
@@ -328,7 +328,7 @@ component SessionManagerPanel inherits Rectangle {
                 text: "No saved sessions. Use the New Session button, or tick \"Save session\" in Quick Connect.";
                 wrap: word-wrap;
                 color: Theme.text-secondary;
-                font-size: 11px;
+                font-size: 11px * Theme.ui-scale;
             }
         }
         // Keyboard: Up/Down select, Enter connects or opens a folder,
@@ -375,7 +375,7 @@ component SessionManagerPanel inherits Rectangle {
             }
             session-list := ListView {
                 for row[i] in root.rows: Rectangle {
-                    height: 21px;
+                    height: 21px * Theme.ui-scale;
                     background: i == root.selected || row.picked ? Theme.active-row-bg : row-touch.has-hover ? Theme.hover-bg : transparent;
                     row-menu := ContextMenuArea {
                         Menu {
@@ -492,14 +492,14 @@ component SessionManagerPanel inherits Rectangle {
                                 text: row.label;
                                 vertical-alignment: center;
                                 overflow: elide;
-                                font-size: 12px;
+                                font-size: 12px * Theme.ui-scale;
                             }
                             if row.note != "": Text {
                                 text: row.note;
                                 horizontal-stretch: 1;
                                 vertical-alignment: center;
                                 overflow: elide;
-                                font-size: 11px;
+                                font-size: 11px * Theme.ui-scale;
                                 color: Theme.text-secondary;
                             }
                         }
@@ -525,7 +525,7 @@ component ActiveSessionsPanel inherits Rectangle {
                 x: 6px;
                 height: parent.height;
                 text: "Active Sessions";
-                font-size: 11px;
+                font-size: 11px * Theme.ui-scale;
                 vertical-alignment: center;
             }
         }
@@ -538,7 +538,7 @@ component ActiveSessionsPanel inherits Rectangle {
         }
         ListView {
             for tab in root.tabs: Rectangle {
-                height: 21px;
+                height: 21px * Theme.ui-scale;
                 background: tab.picked ? Theme.active-row-bg : tab.index == root.active-tab ? Theme.hover-bg : touch.has-hover ? Theme.hover-bg : transparent;
                 row-menu := ContextMenuArea {
                     Menu {
@@ -589,7 +589,7 @@ component ActiveSessionsPanel inherits Rectangle {
                         text: tab.title;
                         vertical-alignment: center;
                         overflow: elide;
-                        font-size: 12px;
+                        font-size: 12px * Theme.ui-scale;
                     }
                 }
             }
@@ -618,7 +618,7 @@ component CommandManagerPanel inherits Rectangle {
                 padding-top: 1px;
                 Text {
                     text: "Command Manager";
-                    font-size: 11px;
+                    font-size: 11px * Theme.ui-scale;
                     vertical-alignment: center;
                     horizontal-stretch: 1;
                 }
@@ -656,7 +656,7 @@ component CommandManagerPanel inherits Rectangle {
                 text: "No commands (or none match). Use the New button to save a command, then double-click it to send it.";
                 wrap: word-wrap;
                 color: Theme.text-secondary;
-                font-size: 11px;
+                font-size: 11px * Theme.ui-scale;
             }
         }
         ListView {
@@ -689,7 +689,7 @@ component CommandManagerPanel inherits Rectangle {
                             text: row.label;
                             vertical-alignment: center;
                             horizontal-stretch: 1;
-                            font-size: 12px;
+                            font-size: 12px * Theme.ui-scale;
                             overflow: elide;
                         }
                     }
@@ -740,12 +740,12 @@ component CommandManagerPanel inherits Rectangle {
                             Text {
                                 text: row.label;
                                 overflow: elide;
-                                font-size: 12px;
+                                font-size: 12px * Theme.ui-scale;
                             }
                             Text {
                                 text: row.text;
                                 overflow: elide;
-                                font-size: 11px;
+                                font-size: 11px * Theme.ui-scale;
                                 color: Theme.text-secondary;
                             }
                         }
@@ -782,10 +782,10 @@ component SessionTab inherits Rectangle {
     in property <length> drag-x: -1px;
     out property <int> drop-side: touch.dragged || self.drag-x < self.absolute-position.x || self.drag-x >= self.absolute-position.x + self.width + 1px ? 0
         : self.drag-x < self.absolute-position.x + self.width / 2 ? -1 : 1;
-    height: 24px;
+    height: 24px * Theme.ui-scale;
     // Sized to the title; squeezed (title elided) when many tabs are open.
     preferred-width: min(240px, max(100px, label.preferred-width + 52px));
-    min-width: 64px;
+    min-width: 64px * Theme.ui-scale;
     max-width: self.preferred-width;
     background: root.active ? Theme.tab-active-bg : touch.has-hover ? Theme.hover-bg : Theme.tab-inactive-bg;
     border-width: 1px;
@@ -931,7 +931,7 @@ component SessionTab inherits Rectangle {
                 text: root.title;
                 vertical-alignment: center;
                 overflow: elide;
-                font-size: 12px;
+                font-size: 12px * Theme.ui-scale;
                 font-weight: root.activity ? 600 : 400;
                 color: root.active || root.activity ? Theme.text : Theme.text-secondary;
             }
@@ -955,7 +955,7 @@ component SessionTab inherits Rectangle {
                     background: close-touch.has-hover ? Theme.border-strong : transparent;
                     Text {
                         text: "×";
-                        font-size: 13px;
+                        font-size: 13px * Theme.ui-scale;
                         color: close-touch.has-hover ? Theme.text : Theme.text-secondary;
                         horizontal-alignment: center;
                         vertical-alignment: center;
@@ -1003,7 +1003,7 @@ component ScratchpadPanel inherits Rectangle {
                 x: 6px;
                 height: parent.height;
                 text: "Scratchpad";
-                font-size: 11px;
+                font-size: 11px * Theme.ui-scale;
                 vertical-alignment: center;
             }
         }
@@ -1012,7 +1012,7 @@ component ScratchpadPanel inherits Rectangle {
             spacing: 6px;
             Text {
                 text: "Send to";
-                font-size: 11px;
+                font-size: 11px * Theme.ui-scale;
                 vertical-alignment: center;
             }
             ComboBox {
@@ -1024,7 +1024,7 @@ component ScratchpadPanel inherits Rectangle {
             vertical-stretch: 1;
             text <=> root.text;
             font-family: "IBM Plex Mono";
-            font-size: 12px;
+            font-size: 12px * Theme.ui-scale;
             placeholder-text: "Commands to send, one per line";
         }
         HorizontalLayout {
@@ -1059,7 +1059,7 @@ component DockTab inherits Rectangle {
     in property <image> label;
     in property <bool> active;
     callback clicked;
-    width: 20px;
+    width: 20px * Theme.ui-scale;
     height: label-image.height + 16px;
     background: root.active ? Theme.panel-bg : touch.has-hover ? Theme.hover-bg : Theme.sidebar-bg;
     border-width: 1px;
@@ -1119,7 +1119,7 @@ component BarButtonView inherits Rectangle {
     callback clicked();
     callback edit();
     callback remove();
-    height: 22px;
+    height: 22px * Theme.ui-scale;
     width: max(44px, caption.preferred-width + 18px);
     border-radius: 3px;
     border-width: 1px;
@@ -1148,7 +1148,7 @@ component BarButtonView inherits Rectangle {
             x: 9px;
             height: parent.height;
             text: root.label;
-            font-size: 11px;
+            font-size: 11px * Theme.ui-scale;
             vertical-alignment: center;
         }
     }
@@ -1180,7 +1180,7 @@ component StatusCell inherits Rectangle {
         x: 7px;
         height: parent.height;
         text: root.text;
-        font-size: 11px;
+        font-size: 11px * Theme.ui-scale;
         color: root.dim ? Theme.text-disabled : Theme.text;
         vertical-alignment: center;
     }
@@ -1189,7 +1189,7 @@ component StatusCell inherits Rectangle {
 // Full-window dimmer plus a centred dialog box; children form the dialog body.
 component DialogFrame inherits Rectangle {
     in property <string> title;
-    in property <length> dialog-width: 440px;
+    in property <length> dialog-width: 440px * Theme.ui-scale;
     x: 0px;
     y: 0px;
     width: 100%;
@@ -1212,14 +1212,14 @@ component DialogFrame inherits Rectangle {
         drop-shadow-color: #00000055;
         body := VerticalLayout {
             Rectangle {
-                height: 32px;
+                height: 32px * Theme.ui-scale;
                 background: Theme.window-bg;
                 border-radius: 6px;
                 Text {
                     x: 14px;
                     height: parent.height;
                     text: root.title;
-                    font-size: 13px;
+                    font-size: 13px * Theme.ui-scale;
                     font-weight: 600;
                     vertical-alignment: center;
                 }
@@ -1254,7 +1254,7 @@ component HostKeyDialog inherits DialogFrame {
     // 0 accept and save, 1 accept once, 2 cancel
     callback answer(int);
     title: "New Host Key";
-    dialog-width: 520px;
+    dialog-width: 520px * Theme.ui-scale;
     Text {
         text: "OpenCRT has no stored host key for " + root.host + ". Before accepting it, confirm the fingerprint below with the server's administrator.";
         wrap: word-wrap;
@@ -1301,7 +1301,7 @@ component AuthDialog inherits DialogFrame {
     in-out property <int> credential;
     in property <string> error;
     callback answer(bool);
-    dialog-width: 460px;
+    dialog-width: 460px * Theme.ui-scale;
     if root.instructions != "": Text {
         text: root.instructions;
         wrap: word-wrap;
@@ -1309,7 +1309,7 @@ component AuthDialog inherits DialogFrame {
     if root.credentials.length > 1: HorizontalLayout {
         spacing: 10px;
         Text {
-            width: 150px;
+            width: 150px * Theme.ui-scale;
             text: "Use credential:";
             vertical-alignment: center;
         }
@@ -1321,7 +1321,7 @@ component AuthDialog inherits DialogFrame {
     for field[i] in root.credential == 0 ? root.fields : []: HorizontalLayout {
         spacing: 10px;
         Text {
-            width: 150px;
+            width: 150px * Theme.ui-scale;
             text: field.label;
             vertical-alignment: center;
             overflow: elide;
@@ -1368,14 +1368,14 @@ component FormLabel inherits Text {
 component TableCell inherits Text {
     vertical-alignment: center;
     overflow: elide;
-    font-size: 12px;
+    font-size: 12px * Theme.ui-scale;
 }
 
 component FieldRow inherits HorizontalLayout {
     in property <string> label;
     spacing: 10px;
     FormLabel {
-        width: 120px;
+        width: 120px * Theme.ui-scale;
         text: root.label;
     }
     @children
@@ -1531,7 +1531,7 @@ component QuickConnectDialog inherits DialogFrame {
     // Which field to fill from a file dialog: "qc-key".
     callback browse(string);
     title: "Quick Connect";
-    dialog-width: 460px;
+    dialog-width: 460px * Theme.ui-scale;
     ConnectionFields {
         protocol <=> root.protocol;
         host <=> root.host;
@@ -1556,7 +1556,7 @@ component QuickConnectDialog inherits DialogFrame {
     if root.protocol == 0: Text {
         text: "Passwords and passphrases are asked for when the server needs them.";
         color: Theme.text-secondary;
-        font-size: 11px;
+        font-size: 11px * Theme.ui-scale;
         wrap: word-wrap;
     }
     if root.error != "": Text {
@@ -1669,12 +1669,12 @@ component SessionOptionsDialog inherits DialogFrame {
         }
     }
     title: root.many > 1 ? "Session Options (\{root.many} sessions)" : "Session Options";
-    dialog-width: 640px;
+    dialog-width: 640px * Theme.ui-scale;
     HorizontalLayout {
         spacing: 14px;
-        height: 330px;
+        height: 330px * Theme.ui-scale;
         Rectangle {
-            width: 150px;
+            width: 150px * Theme.ui-scale;
             background: Theme.input-bg;
             border-width: 1px;
             border-color: Theme.border;
@@ -1804,7 +1804,7 @@ component SessionOptionsDialog inherits DialogFrame {
                     FieldRow {
                         label: "Notes:";
                         TextEdit {
-                            height: 60px;
+                            height: 60px * Theme.ui-scale;
                             text <=> root.notes;
                             wrap: word-wrap;
                             placeholder-text: "optional; the first line shows in the Session Manager";
@@ -1826,7 +1826,7 @@ component SessionOptionsDialog inherits DialogFrame {
                         text: "No saved credentials yet. Tick \"Save password\" when you are asked for the password, or create one in Tools > Credentials Manager.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
-                        font-size: 11px;
+                        font-size: 11px * Theme.ui-scale;
                     }
                     if root.credential > 0: Text {
                         text: root.protocol == 1
@@ -1834,7 +1834,7 @@ component SessionOptionsDialog inherits DialogFrame {
                             : "The username (if the credential has one) and the saved password come from this credential. Manage credentials in Tools > Credentials Manager.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
-                        font-size: 11px;
+                        font-size: 11px * Theme.ui-scale;
                     }
                     FieldRow {
                         label: "Private key file:";
@@ -1879,7 +1879,7 @@ component SessionOptionsDialog inherits DialogFrame {
                         text: "Order tried: public key (the key file if set, otherwise keys in a running SSH agent such as Pageant), then keyboard-interactive or password. Passwords are only saved in a credential, in the system keychain; otherwise you are asked for them when needed.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
-                        font-size: 11px;
+                        font-size: 11px * Theme.ui-scale;
                     }
                 }
                 if root.category == 2: GridLayout {
@@ -1905,13 +1905,13 @@ component SessionOptionsDialog inherits DialogFrame {
                             spacing: 6px;
                             alignment: start;
                             LineEdit {
-                                width: 72px;
+                                width: 72px * Theme.ui-scale;
                                 text <=> root.columns;
                                 placeholder-text: "cols";
                             }
                             FormLabel { text: "×"; }
                             LineEdit {
-                                width: 72px;
+                                width: 72px * Theme.ui-scale;
                                 text <=> root.rows;
                                 placeholder-text: "rows";
                             }
@@ -2036,7 +2036,7 @@ component SessionOptionsDialog inherits DialogFrame {
                         text: "Session output is appended as plain text while connected. %S expands to the session name, %H to the hostname, %Y %M %D to the date and %h %m %s to the time (of connecting, in the file name; of writing, in the texts above). A log named with the date starts a new file at midnight.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
-                        font-size: 11px;
+                        font-size: 11px * Theme.ui-scale;
                     }
                 }
                 if root.category == 8: VerticalLayout {
@@ -2074,7 +2074,7 @@ component SessionOptionsDialog inherits DialogFrame {
                         text: "Blank: the remote desktop follows the tab's size. A fixed size (in pixels) stays the same whatever the window does: shown whole, scaled down when the tab is smaller, or with Scale to window stretched to fill the tab.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
-                        font-size: 11px;
+                        font-size: 11px * Theme.ui-scale;
                     }
                     HorizontalLayout {
                         spacing: 8px;
@@ -2089,7 +2089,7 @@ component SessionOptionsDialog inherits DialogFrame {
                         text: "The less the server draws, the less it sends: leaving out the wallpaper and animations makes the desktop noticeably quicker over the internet or a VPN.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
-                        font-size: 11px;
+                        font-size: 11px * Theme.ui-scale;
                     }
                     CheckBox {
                         text: "Use H.264 when the server offers it (much faster; turn off if the desktop stays black)";
@@ -2118,7 +2118,7 @@ component SessionOptionsDialog inherits DialogFrame {
                         text: "The folder appears on the remote computer as a drive (under This PC), named after the folder: copy files to and from it there. The remote computer can read, change and delete everything in it.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
-                        font-size: 11px;
+                        font-size: 11px * Theme.ui-scale;
                     }
                 }
                 if root.category == 7: VerticalLayout {
@@ -2129,14 +2129,14 @@ component SessionOptionsDialog inherits DialogFrame {
                     }
                     TextEdit {
                         text <=> root.key-map;
-                        height: 170px;
-                        font-size: 12px;
+                        height: 170px * Theme.ui-scale;
+                        font-size: 12px * Theme.ui-scale;
                     }
                     Text {
                         text: "Key = what it does. Keys: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, Enter, Escape, Space or a character, with Ctrl+ Alt+ Shift+ (characters need Ctrl or Alt). Text is sent (\\r is Enter); or script: file, menu: command, run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
-                        font-size: 11px;
+                        font-size: 11px * Theme.ui-scale;
                     }
                 }
                 if root.category == 6: VerticalLayout {
@@ -2157,14 +2157,14 @@ component SessionOptionsDialog inherits DialogFrame {
                     }
                     TextEdit {
                         text <=> root.logon-text;
-                        height: 120px;
-                        font-size: 12px;
+                        height: 120px * Theme.ui-scale;
+                        font-size: 12px * Theme.ui-scale;
                     }
                     Text {
                         text: "Runs each time the session connects. A .rhai file runs as a Rhai script (see the README). Otherwise one command per line: wait <text> (for the host to print it), send <text> (\\r is Enter), sleep <ms>, timeout <s> (for later waits; default 30), # comment.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
-                        font-size: 11px;
+                        font-size: 11px * Theme.ui-scale;
                     }
                 }
                 if root.category == 5: VerticalLayout {
@@ -2178,34 +2178,34 @@ component SessionOptionsDialog inherits DialogFrame {
                         text: "Uses $DISPLAY, else display 0 on this machine. The X server must accept clients without its own cookie (e.g. VcXsrv with access control disabled).";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
-                        font-size: 11px;
+                        font-size: 11px * Theme.ui-scale;
                     }
                     Text {
                         text: "Port forwards (SSH2 only):";
                     }
                     Rectangle {
-                        height: 150px;
+                        height: 150px * Theme.ui-scale;
                         background: Theme.input-bg;
                         border-width: 1px;
                         border-color: Theme.border;
                         VerticalLayout {
                             padding: 1px;
                             Rectangle {
-                                height: 22px;
+                                height: 22px * Theme.ui-scale;
                                 background: Theme.toolbar-bg;
                                 HorizontalLayout {
                                     padding-left: 6px;
                                     spacing: 6px;
-                                    TableCell { text: "Name"; width: 96px; color: Theme.text-secondary; }
-                                    TableCell { text: "Type"; width: 48px; color: Theme.text-secondary; }
-                                    TableCell { text: "Listen"; width: 96px; color: Theme.text-secondary; }
-                                    TableCell { text: "Destination"; horizontal-stretch: 1; preferred-width: 10px; color: Theme.text-secondary; }
-                                    TableCell { text: "Application"; width: 70px; color: Theme.text-secondary; }
+                                    TableCell { text: "Name"; width: 96px * Theme.ui-scale; color: Theme.text-secondary; }
+                                    TableCell { text: "Type"; width: 48px * Theme.ui-scale; color: Theme.text-secondary; }
+                                    TableCell { text: "Listen"; width: 96px * Theme.ui-scale; color: Theme.text-secondary; }
+                                    TableCell { text: "Destination"; horizontal-stretch: 1; preferred-width: 10px * Theme.ui-scale; color: Theme.text-secondary; }
+                                    TableCell { text: "Application"; width: 70px * Theme.ui-scale; color: Theme.text-secondary; }
                                 }
                             }
                             ListView {
                                 for row[i] in root.forward-rows: Rectangle {
-                                    height: 21px;
+                                    height: 21px * Theme.ui-scale;
                                     background: i == root.forward-selected ? Theme.active-row-bg : row-touch.has-hover ? Theme.hover-bg : transparent;
                                     row-touch := TouchArea {
                                         clicked => { root.forward-selected = i; }
@@ -2217,11 +2217,11 @@ component SessionOptionsDialog inherits DialogFrame {
                                     HorizontalLayout {
                                         padding-left: 6px;
                                         spacing: 6px;
-                                        TableCell { text: row.name; width: 96px; color: row.enabled ? Theme.text : Theme.text-disabled; }
-                                        TableCell { text: row.kind; width: 48px; color: row.enabled ? Theme.text : Theme.text-disabled; }
-                                        TableCell { text: row.listen; width: 96px; color: row.enabled ? Theme.text : Theme.text-disabled; }
-                                        TableCell { text: row.dest; horizontal-stretch: 1; preferred-width: 10px; color: row.enabled ? Theme.text : Theme.text-disabled; }
-                                        TableCell { text: row.app; width: 70px; color: row.enabled ? Theme.text : Theme.text-disabled; }
+                                        TableCell { text: row.name; width: 96px * Theme.ui-scale; color: row.enabled ? Theme.text : Theme.text-disabled; }
+                                        TableCell { text: row.kind; width: 48px * Theme.ui-scale; color: row.enabled ? Theme.text : Theme.text-disabled; }
+                                        TableCell { text: row.listen; width: 96px * Theme.ui-scale; color: row.enabled ? Theme.text : Theme.text-disabled; }
+                                        TableCell { text: row.dest; horizontal-stretch: 1; preferred-width: 10px * Theme.ui-scale; color: row.enabled ? Theme.text : Theme.text-disabled; }
+                                        TableCell { text: row.app; width: 70px * Theme.ui-scale; color: row.enabled ? Theme.text : Theme.text-disabled; }
                                     }
                                 }
                             }
@@ -2287,7 +2287,7 @@ component ForwardDialog inherits DialogFrame {
     callback cancel();
     callback browse(string);
     title: "Port Forward Properties";
-    dialog-width: 500px;
+    dialog-width: 500px * Theme.ui-scale;
     FieldRow {
         label: "Name:";
         LineEdit {
@@ -2355,7 +2355,7 @@ component ForwardDialog inherits DialogFrame {
         text: "Optionally start a program on this machine once the port is listening.";
         wrap: word-wrap;
         color: Theme.text-secondary;
-        font-size: 11px;
+        font-size: 11px * Theme.ui-scale;
     }
     if root.kind != 1: FieldRow {
         label: "Application:";
@@ -2408,7 +2408,7 @@ component CredentialDialog inherits DialogFrame {
     callback ok();
     callback cancel();
     title: "Credential";
-    dialog-width: 460px;
+    dialog-width: 460px * Theme.ui-scale;
     FieldRow {
         label: "Name:";
         LineEdit {
@@ -2447,7 +2447,7 @@ component CredentialDialog inherits DialogFrame {
         text: "The password is stored in the system keychain, never in OpenCRT's files.";
         wrap: word-wrap;
         color: Theme.text-secondary;
-        font-size: 11px;
+        font-size: 11px * Theme.ui-scale;
     }
     if root.error != "": Text {
         text: root.error;
@@ -2474,7 +2474,7 @@ component ScriptDialog inherits DialogFrame {
     in property <bool> secret;
     in-out property <string> value;
     callback answer(bool);
-    dialog-width: 440px;
+    dialog-width: 440px * Theme.ui-scale;
     Text {
         text: root.text;
         wrap: word-wrap;
@@ -2512,7 +2512,7 @@ component FirewallDialog inherits DialogFrame {
     callback ok();
     callback cancel();
     title: "Firewall";
-    dialog-width: 500px;
+    dialog-width: 500px * Theme.ui-scale;
     FieldRow {
         label: "Name:";
         LineEdit {
@@ -2563,7 +2563,7 @@ component FirewallDialog inherits DialogFrame {
         text: "%h and %p become the destination host and port." + (root.kind == 3 ? " \\r is Enter." : " The session talks over the command's input and output.");
         wrap: word-wrap;
         color: Theme.text-secondary;
-        font-size: 11px;
+        font-size: 11px * Theme.ui-scale;
     }
     if root.error != "": Text {
         text: root.error;
@@ -2600,7 +2600,7 @@ component ColourField inherits HorizontalLayout {
         background: root.swatch;
     }
     LineEdit {
-        width: 84px;
+        width: 84px * Theme.ui-scale;
         text <=> root.value;
         enabled: root.editable;
         placeholder-text: root.placeholder;
@@ -2628,18 +2628,18 @@ component SchemesDialog inherits DialogFrame {
     callback save();
     callback close();
     title: "Colour Schemes";
-    dialog-width: 760px;
+    dialog-width: 760px * Theme.ui-scale;
     HorizontalLayout {
         spacing: 14px;
-        height: 400px;
+        height: 400px * Theme.ui-scale;
         Rectangle {
-            width: 190px;
+            width: 190px * Theme.ui-scale;
             background: Theme.input-bg;
             border-width: 1px;
             border-color: Theme.border;
             ListView {
                 for name[i] in root.names: Rectangle {
-                    height: 22px;
+                    height: 22px * Theme.ui-scale;
                     background: i == root.selected ? Theme.active-row-bg : sc-touch.has-hover ? Theme.hover-bg : transparent;
                     sc-touch := TouchArea {
                         clicked => { root.pick(i); }
@@ -2697,7 +2697,7 @@ component SchemesDialog inherits DialogFrame {
             Text {
                 text: root.editable ? "Colours are #rrggbb. Cursor and selection may be left blank." : "Built-in schemes cannot be changed: New makes an editable copy.";
                 color: Theme.text-secondary;
-                font-size: 11px;
+                font-size: 11px * Theme.ui-scale;
                 wrap: word-wrap;
             }
             if root.error != "": Text {
@@ -2771,6 +2771,7 @@ component GlobalOptionsDialog inherits DialogFrame {
     in-out property <int> cursor-index;
     in-out property <int> bell-index;
     in-out property <int> theme-index;
+    in-out property <string> ui-font-size;
     in-out property <int> scheme-index;
     in property <[string]> scheme-names;
     in property <string> error;
@@ -2779,12 +2780,12 @@ component GlobalOptionsDialog inherits DialogFrame {
     callback browse(string);
     in-out property <int> category;
     title: "Global Options";
-    dialog-width: 600px;
+    dialog-width: 600px * Theme.ui-scale;
     HorizontalLayout {
         spacing: 14px;
-        height: 290px;
+        height: 330px * Theme.ui-scale;
         Rectangle {
-            width: 130px;
+            width: 130px * Theme.ui-scale;
             background: Theme.input-bg;
             border-width: 1px;
             border-color: Theme.border;
@@ -2792,7 +2793,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                 padding: 2px;
                 alignment: start;
                 for page[i] in ["General", "Terminal", "Mouse", "Connection", "Highlighting", "Keyboard", "File Transfer", "Printing"]: Rectangle {
-                    height: 24px;
+                    height: 24px * Theme.ui-scale;
                     background: i == root.category ? Theme.active-row-bg : page-touch.has-hover ? Theme.hover-bg : transparent;
                     Text {
                         x: 8px;
@@ -2841,6 +2842,13 @@ component GlobalOptionsDialog inherits DialogFrame {
                 spacing-horizontal: 12px;
                 spacing-vertical: 8px;
                 Row {
+                    FormLabel { text: "Interface font size:"; }
+                    LineEdit {
+                        text <=> root.ui-font-size;
+                        placeholder-text: "9 to 20";
+                    }
+                }
+                Row {
                     FormLabel { text: "Recent sessions in the File menu:"; }
                     LineEdit {
                         text <=> root.recent-count;
@@ -2871,7 +2879,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                 text: "Used from the next start. Your settings are copied there if it has none yet.";
                 wrap: word-wrap;
                 color: Theme.text-secondary;
-                font-size: 11px;
+                font-size: 11px * Theme.ui-scale;
             }
             if root.category == 1: GridLayout {
                 spacing-horizontal: 12px;
@@ -2938,7 +2946,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                 spacing: 12px;
                 FormLabel { text: "Send delays (ms):"; }
                 LineEdit {
-                    width: 70px;
+                    width: 70px * Theme.ui-scale;
                     text <=> root.char-delay;
                     placeholder-text: "0";
                 }
@@ -2947,7 +2955,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                     vertical-alignment: center;
                 }
                 LineEdit {
-                    width: 70px;
+                    width: 70px * Theme.ui-scale;
                     text <=> root.line-delay;
                     placeholder-text: "0";
                 }
@@ -3016,7 +3024,7 @@ component GlobalOptionsDialog inherits DialogFrame {
             if root.category == 3: Text {
                 text: "Keepalive applies to sessions opened from now on.";
                 color: Theme.text-secondary;
-                font-size: 11px;
+                font-size: 11px * Theme.ui-scale;
             }
             if root.category == 6: HorizontalLayout {
                 spacing: 12px;
@@ -3055,7 +3063,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                 text: "Zmodem and Ymodem downloads are saved here, and TFTP clients such as routers can fetch files from it or upload into it. Existing files are never overwritten.";
                 wrap: word-wrap;
                 color: Theme.text-secondary;
-                font-size: 11px;
+                font-size: 11px * Theme.ui-scale;
             }
             if root.category == 7: HorizontalLayout {
                 spacing: 12px;
@@ -3069,7 +3077,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                 spacing: 12px;
                 FormLabel { text: "Font size (points):"; }
                 LineEdit {
-                    width: 70px;
+                    width: 70px * Theme.ui-scale;
                     text <=> root.print-font;
                     placeholder-text: "default";
                 }
@@ -3078,7 +3086,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                     vertical-alignment: center;
                 }
                 LineEdit {
-                    width: 70px;
+                    width: 70px * Theme.ui-scale;
                     text <=> root.print-margin;
                     placeholder-text: "default";
                 }
@@ -3087,7 +3095,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                 text: "File > Print Screen, Print Selection and Auto Print, and printing asked for by the host (CSI 5i / 4i), go to this printer. On Windows they print through Notepad, which uses its own font and margins.";
                 wrap: word-wrap;
                 color: Theme.text-secondary;
-                font-size: 11px;
+                font-size: 11px * Theme.ui-scale;
             }
             if root.category == 4: Text {
                 text: "Highlight keywords, one per line, any case: a word or a /regular expression/. Add = red, orange, green, blue or purple for a colour other than amber, and \"line\" to mark the whole line (error = red line). A [name] line starts a named set that a session can choose (Session Options > Appearance) in place of the Default set: the lines above the first [name].";
@@ -3095,8 +3103,8 @@ component GlobalOptionsDialog inherits DialogFrame {
             }
             if root.category == 4: TextEdit {
                 text <=> root.keywords;
-                height: 160px;
-                font-size: 12px;
+                height: 160px * Theme.ui-scale;
+                font-size: 12px * Theme.ui-scale;
             }
             if root.category == 5: HorizontalLayout {
                 spacing: 8px;
@@ -3116,14 +3124,14 @@ component GlobalOptionsDialog inherits DialogFrame {
             }
             if root.category == 5: TextEdit {
                 text <=> root.key-map;
-                height: 140px;
-                font-size: 12px;
+                height: 140px * Theme.ui-scale;
+                font-size: 12px * Theme.ui-scale;
             }
             if root.category == 5: Text {
                 text: "Key = what it does, e.g. F5 = show running-config\\r, Ctrl+K = menu: clear-screen, Alt+F1 = run: wireshark. Keys: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, Enter, Escape, Space or a character (with Ctrl or Alt), plus Ctrl+ Alt+ Shift+. Text is sent (\\r is Enter); or script: file, menu: command, run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop. Sessions can add their own (Session Options > Keyboard).";
                 wrap: word-wrap;
                 color: Theme.text-secondary;
-                font-size: 11px;
+                font-size: 11px * Theme.ui-scale;
             }
         }
     }
@@ -3151,7 +3159,7 @@ component ConfirmDialog inherits DialogFrame {
     in property <string> option;
     in-out property <bool> checked;
     callback answer(bool);
-    dialog-width: 400px;
+    dialog-width: 400px * Theme.ui-scale;
     Text {
         text: root.message;
         wrap: word-wrap;
@@ -3177,7 +3185,7 @@ component NameDialog inherits DialogFrame {
     in property <string> label;
     in-out property <string> value;
     callback answer(bool);
-    dialog-width: 400px;
+    dialog-width: 400px * Theme.ui-scale;
     HorizontalLayout {
         spacing: 10px;
         FormLabel { text: root.label; }
@@ -3206,16 +3214,16 @@ component PasteDialog inherits DialogFrame {
     in-out property <string> value;
     callback answer(bool);
     title: "Paste";
-    dialog-width: 560px;
+    dialog-width: 560px * Theme.ui-scale;
     Text {
         text: root.message;
         wrap: word-wrap;
     }
     TextEdit {
-        height: 240px;
+        height: 240px * Theme.ui-scale;
         text <=> root.value;
         font-family: "IBM Plex Mono";
-        font-size: 12px;
+        font-size: 12px * Theme.ui-scale;
     }
     DialogButtons {
         Button {
@@ -3237,7 +3245,7 @@ component DropDialog inherits DialogFrame {
     in-out property <bool> always;
     callback answer(string);
     title: "Send Files";
-    dialog-width: 520px;
+    dialog-width: 520px * Theme.ui-scale;
     Text {
         text: root.message;
         wrap: word-wrap;
@@ -3298,12 +3306,12 @@ component ScriptEditor inherits DialogFrame {
     in property <bool> can-run;
     // "open", "save", "save-as", "check", "run" or "close".
     callback act(string);
-    dialog-width: 800px;
+    dialog-width: 800px * Theme.ui-scale;
     TextEdit {
-        height: 440px;
+        height: 440px * Theme.ui-scale;
         text <=> root.text;
         font-family: "IBM Plex Mono";
-        font-size: 12px;
+        font-size: 12px * Theme.ui-scale;
         placeholder-text: "wait_for(\"login:\", 10);\nsend(\"admin\\r\");";
     }
     Text {
@@ -3355,7 +3363,7 @@ component AboutDialog inherits DialogFrame {
     callback release-notes();
     callback close();
     title: "About OpenCRT";
-    dialog-width: 520px;
+    dialog-width: 520px * Theme.ui-scale;
     HorizontalLayout {
         alignment: start;
         Image {
@@ -3444,7 +3452,7 @@ component ColumnHeader inherits Rectangle {
         width: parent.width - 20px;
         height: parent.height;
         text: root.text;
-        font-size: 12px;
+        font-size: 12px * Theme.ui-scale;
         color: Theme.text;
         horizontal-alignment: root.align;
         vertical-alignment: center;
@@ -3545,7 +3553,7 @@ component FileList inherits Rectangle {
                 spacing: 6px;
                 FormLabel {
                     text: root.remote ? "Remote site:" : "Local site:";
-                    font-size: 12px;
+                    font-size: 12px * Theme.ui-scale;
                 }
                 path := LineEdit {
                     init => { self.text = root.dir; }
@@ -3557,7 +3565,7 @@ component FileList inherits Rectangle {
                 }
             }
             Rectangle {
-                height: 22px;
+                height: 22px * Theme.ui-scale;
                 background: Theme.window-bg;
                 ColumnHeader {
                     x: 0px;
@@ -3624,7 +3632,7 @@ component FileList inherits Rectangle {
                 }
                 list := ListView {
                     for row[i] in root.rows: Rectangle {
-                        height: 20px;
+                        height: 20px * Theme.ui-scale;
                         background: row.selected ? Theme.active-row-bg : touch.has-hover ? Theme.hover-bg : transparent;
                         touch := TouchArea {
                             double-clicked => { root.open(i); }
@@ -3685,7 +3693,7 @@ component FileList inherits Rectangle {
                 }
             }
             Rectangle {
-                height: 30px;
+                height: 30px * Theme.ui-scale;
                 background: Theme.window-bg;
                 HorizontalLayout {
                     padding-left: 6px;
@@ -3694,13 +3702,13 @@ component FileList inherits Rectangle {
                     Text {
                         horizontal-stretch: 1;
                         text: root.status;
-                        font-size: 11px;
+                        font-size: 11px * Theme.ui-scale;
                         color: Theme.text-secondary;
                         vertical-alignment: center;
                         overflow: elide;
                     }
                     filter-edit := LineEdit {
-                        width: 110px;
+                        width: 110px * Theme.ui-scale;
                         placeholder-text: "Filter";
                         init => { self.text = root.filter; }
                         edited(text) => { root.filter-edited(text); }
@@ -3760,7 +3768,7 @@ component TransferQueue inherits Rectangle {
         }
         VerticalLayout {
             Rectangle {
-                height: 22px;
+                height: 22px * Theme.ui-scale;
                 background: Theme.window-bg;
                 ColumnHeader {
                     x: 0px;
@@ -3803,7 +3811,7 @@ component TransferQueue inherits Rectangle {
                 }
                 rows-view := ListView {
                     for row[i] in root.rows: Rectangle {
-                        height: 20px;
+                        height: 20px * Theme.ui-scale;
                         background: row.selected ? Theme.active-row-bg : touch.has-hover ? Theme.hover-bg : transparent;
                         if row.progress >= 0: Rectangle {
                             x: root.status-x;
@@ -3859,7 +3867,7 @@ component TransferQueue inherits Rectangle {
                 }
             }
             HorizontalLayout {
-                height: 26px;
+                height: 26px * Theme.ui-scale;
                 padding: 2px;
                 spacing: 2px;
                 alignment: start;
@@ -3870,7 +3878,7 @@ component TransferQueue inherits Rectangle {
                     background: k == root.list ? Theme.tab-active-bg : tab-touch.has-hover ? Theme.hover-bg : Theme.tab-inactive-bg;
                     label := Text {
                         text: name;
-                        font-size: 12px;
+                        font-size: 12px * Theme.ui-scale;
                         font-weight: k == root.list ? 600 : 400;
                         color: Theme.text;
                         horizontal-alignment: center;
@@ -3943,7 +3951,7 @@ component FilesBrowser inherits Rectangle {
         }
         TransferQueue {
             vertical-stretch: 2;
-            min-height: 120px;
+            min-height: 120px * Theme.ui-scale;
             rows: root.view.queue;
             list: root.view.list;
             waiting: root.view.waiting;
@@ -3964,7 +3972,7 @@ component QuickOpenDialog inherits DialogFrame {
     // Row (-1 to close), and whether to open it as an SFTP GUI tab.
     callback answer(int, bool);
     property <length> row-h: 36px;
-    dialog-width: 560px;
+    dialog-width: 560px * Theme.ui-scale;
     title: "Quick Open";
     // Keys are taken before the search box sees them, so it keeps the focus.
     FocusScope {
@@ -4018,12 +4026,12 @@ component QuickOpenDialog inherits DialogFrame {
                             alignment: center;
                             Text {
                                 text: row.label;
-                                font-size: 13px;
+                                font-size: 13px * Theme.ui-scale;
                                 overflow: elide;
                             }
                             if row.detail != "": Text {
                                 text: row.detail;
-                                font-size: 11px;
+                                font-size: 11px * Theme.ui-scale;
                                 color: Theme.text-secondary;
                                 overflow: elide;
                             }
@@ -4033,7 +4041,7 @@ component QuickOpenDialog inherits DialogFrame {
             }
             Text {
                 text: root.rows.length == 0 ? "No saved session matches." : "Enter connects  ·  Shift+Enter opens an SFTP GUI tab  ·  Esc closes";
-                font-size: 11px;
+                font-size: 11px * Theme.ui-scale;
                 color: Theme.text-secondary;
             }
         }
@@ -4052,7 +4060,7 @@ export component MainWindow inherits Window {
     in-out property <bool> repaint-all;
     background: root.repaint-all ? Theme.window-bg.with-alpha(0.996) : Theme.window-bg;
     default-font-family: "IBM Plex Sans";
-    default-font-size: 12px;
+    default-font-size: 12px * Theme.ui-scale;
 
     // --- state pushed from Rust ---
     in property <string> window-title: "OpenCRT";
@@ -4349,6 +4357,7 @@ export component MainWindow inherits Window {
     in-out property <int> go-cursor;
     in-out property <int> go-bell;
     in-out property <int> go-theme;
+    in-out property <string> go-ui-font-size;
     // Right-click in the terminal pastes instead of opening the menu.
     in property <bool> paste-on-right;
     in-out property <int> go-scheme;
@@ -4951,7 +4960,7 @@ export component MainWindow inherits Window {
     VerticalLayout {
         // --- toolbar ---
         if root.show-toolbar: Rectangle {
-            height: 30px;
+            height: 30px * Theme.ui-scale;
             background: Theme.toolbar-bg;
             Rectangle {
                 y: parent.height - 1px;
@@ -5016,7 +5025,7 @@ export component MainWindow inherits Window {
                 }
                 if root.show-connect-bar: ToolSeparator { }
                 if root.show-connect-bar: CompactInput {
-                    width: 170px;
+                    width: 170px * Theme.ui-scale;
                     placeholder: "Quick connect: user@host";
                     clear-on-submit: true;
                     submitted(text) => { root.connect-bar(text); }
@@ -5041,7 +5050,7 @@ export component MainWindow inherits Window {
                     clicked => { root.find-open = !root.find-open; }
                 }
                 CompactInput {
-                    width: 120px;
+                    width: 120px * Theme.ui-scale;
                     placeholder: "Highlight words";
                     edited(text) => { root.adhoc-highlight(text); }
                 }
@@ -5187,7 +5196,7 @@ export component MainWindow inherits Window {
                 property <length> drag-x: -1px;
                 property <int> drop: -1;
                 property <bool> after;
-                height: 27px;
+                height: 27px * Theme.ui-scale;
                 background: Theme.tabbar-bg;
                 // One strip per tab group, over its column of the terminal area.
                 for g in root.group-count: HorizontalLayout {
@@ -5263,7 +5272,7 @@ export component MainWindow inherits Window {
                         x: 1px;
                         y: 1px;
                         width: parent.width - 2px;
-                        height: 17px;
+                        height: 17px * Theme.ui-scale;
                         background: pane.active ? Theme.accent : Theme.border-strong;
                         Text {
                             x: 6px;
@@ -5271,7 +5280,7 @@ export component MainWindow inherits Window {
                             height: parent.height;
                             text: pane.title;
                             color: pane.active ? Theme.text-on-accent : Theme.text;
-                            font-size: 11px;
+                            font-size: 11px * Theme.ui-scale;
                             vertical-alignment: center;
                             overflow: elide;
                         }
@@ -5292,7 +5301,7 @@ export component MainWindow inherits Window {
                     Text {
                         text: "OpenCRT";
                         color: #d0d0d0;
-                        font-size: 28px;
+                        font-size: 28px * Theme.ui-scale;
                         horizontal-alignment: center;
                     }
                     Text {
@@ -5410,7 +5419,7 @@ export component MainWindow inherits Window {
 
         // --- button bar (View > Button Bar) ---
         if root.show-button-bar: Rectangle {
-            height: 28px;
+            height: 28px * Theme.ui-scale;
             background: Theme.toolbar-bg;
             Rectangle {
                 height: 1px;
@@ -5436,7 +5445,7 @@ export component MainWindow inherits Window {
                     background: add-touch.has-hover ? Theme.hover-bg : transparent;
                     Text {
                         text: "+";
-                        font-size: 14px;
+                        font-size: 14px * Theme.ui-scale;
                         color: Theme.text-secondary;
                         horizontal-alignment: center;
                         vertical-alignment: center;
@@ -5448,7 +5457,7 @@ export component MainWindow inherits Window {
                 if root.bar-buttons.length == 0: Text {
                     text: "Add a button that sends a command, e.g. show version\\r";
                     color: Theme.text-secondary;
-                    font-size: 11px;
+                    font-size: 11px * Theme.ui-scale;
                     vertical-alignment: center;
                 }
             }
@@ -5456,7 +5465,7 @@ export component MainWindow inherits Window {
 
         // --- hex view (View > Hex View) ---
         if root.hex-view: Rectangle {
-            height: 170px;
+            height: 170px * Theme.ui-scale;
             background: Theme.input-bg;
             // Keep the newest bytes in view.
             property <int> count: root.hex-lines.length;
@@ -5479,10 +5488,10 @@ export component MainWindow inherits Window {
                 height: parent.height - 1px;
                 for line in root.hex-lines: Text {
                     x: 8px;
-                    height: 17px;
+                    height: 17px * Theme.ui-scale;
                     text: line;
                     font-family: "IBM Plex Mono";
-                    font-size: 12px;
+                    font-size: 12px * Theme.ui-scale;
                     vertical-alignment: center;
                 }
             }
@@ -5490,7 +5499,7 @@ export component MainWindow inherits Window {
 
         // --- command window (View > Command Window): compose a line, Enter sends it ---
         if root.command-window: Rectangle {
-            height: 32px;
+            height: 32px * Theme.ui-scale;
             background: Theme.toolbar-bg;
             Rectangle {
                 height: 1px;
@@ -5508,7 +5517,7 @@ export component MainWindow inherits Window {
                 VerticalLayout {
                     alignment: center;
                     ComboBox {
-                        width: 130px;
+                        width: 130px * Theme.ui-scale;
                         model: ["the active tab", "all tabs", "tabs on screen"];
                         current-index <=> root.cw-target;
                     }
@@ -5532,7 +5541,7 @@ export component MainWindow inherits Window {
                     alignment: center;
                     // "History" first, then the lines sent; picking one fills the input.
                     ComboBox {
-                        width: 150px;
+                        width: 150px * Theme.ui-scale;
                         model: root.cw-history.length > 0 ? root.cw-history : ["History"];
                         enabled: root.cw-history.length > 1;
                         selected(value) => {
@@ -5552,7 +5561,7 @@ export component MainWindow inherits Window {
 
         // --- find bar (Edit > Find) ---
         if root.find-open: Rectangle {
-            height: 38px;
+            height: 38px * Theme.ui-scale;
             background: Theme.toolbar-bg;
             Rectangle {
                 height: 1px;
@@ -5571,7 +5580,7 @@ export component MainWindow inherits Window {
                 VerticalLayout {
                     alignment: center;
                     find-input := CompactInput {
-                        width: 240px;
+                        width: 240px * Theme.ui-scale;
                         placeholder: "text to find (Enter = next)";
                         submitted(text) => { root.find(text, match-case.checked, false); }
                         init => { self.focus-input(); }
@@ -5595,15 +5604,15 @@ export component MainWindow inherits Window {
                 }
             }
             Rectangle {
-                x: parent.width - 26px;
+                x: parent.width - self.width - 6px;
                 y: (parent.height - self.height) / 2;
-                width: 20px;
-                height: 20px;
+                width: 20px * Theme.ui-scale;
+                height: 20px * Theme.ui-scale;
                 border-radius: 3px;
                 background: find-close.has-hover ? Theme.border-strong : transparent;
                 Text {
                     text: "×";
-                    font-size: 14px;
+                    font-size: 14px * Theme.ui-scale;
                     horizontal-alignment: center;
                     vertical-alignment: center;
                 }
@@ -5618,7 +5627,7 @@ export component MainWindow inherits Window {
 
         // --- status bar ---
         if root.show-statusbar: Rectangle {
-            height: 22px;
+            height: 22px * Theme.ui-scale;
             background: Theme.toolbar-bg;
             Rectangle {
                 height: 1px;
@@ -5629,7 +5638,7 @@ export component MainWindow inherits Window {
                 padding-left: 6px;
                 Text {
                     text: root.status-text;
-                    font-size: 11px;
+                    font-size: 11px * Theme.ui-scale;
                     vertical-alignment: center;
                     horizontal-stretch: 1;
                     overflow: elide;
@@ -5876,6 +5885,7 @@ export component MainWindow inherits Window {
         cursor-index <=> root.go-cursor;
         bell-index <=> root.go-bell;
         theme-index <=> root.go-theme;
+        ui-font-size <=> root.go-ui-font-size;
         scheme-index <=> root.go-scheme;
         scheme-names: root.scheme-names;
         error: root.go-error;
@@ -5925,14 +5935,14 @@ export component MainWindow inherits Window {
     }
     if root.dialog == 11: DialogFrame {
         title: "Host Keys";
-        dialog-width: 640px;
+        dialog-width: 640px * Theme.ui-scale;
         Text {
             text: "Keys of the SSH servers you have accepted. Remove one when a server's key has changed for a known reason (for example after a reinstall); you are asked to accept the new key at the next connection.";
             wrap: word-wrap;
             color: Theme.text-secondary;
         }
         Rectangle {
-            height: 220px;
+            height: 220px * Theme.ui-scale;
             background: Theme.input-bg;
             border-width: 1px;
             border-color: Theme.border;
@@ -5944,7 +5954,7 @@ export component MainWindow inherits Window {
             }
             ListView {
                 for entry[i] in root.host-keys: Rectangle {
-                    height: 22px;
+                    height: 22px * Theme.ui-scale;
                     background: i == root.host-key-selected ? Theme.active-row-bg : row-touch.has-hover ? Theme.hover-bg : transparent;
                     row-touch := TouchArea {
                         clicked => { root.host-key-selected = i; }
@@ -5956,7 +5966,7 @@ export component MainWindow inherits Window {
                         text: entry;
                         vertical-alignment: center;
                         overflow: elide;
-                        font-size: 12px;
+                        font-size: 12px * Theme.ui-scale;
                     }
                 }
             }
@@ -5992,32 +6002,32 @@ export component MainWindow inherits Window {
     }
     if root.dialog == 12: DialogFrame {
         title: "Credentials Manager";
-        dialog-width: 520px;
+        dialog-width: 520px * Theme.ui-scale;
         Text {
             text: "Saved logins for SSH2, Telnet and RDP sessions. Pick one in Session Options > Authentication; its password is kept in the system keychain.";
             wrap: word-wrap;
             color: Theme.text-secondary;
         }
         Rectangle {
-            height: 200px;
+            height: 200px * Theme.ui-scale;
             background: Theme.input-bg;
             border-width: 1px;
             border-color: Theme.border;
             VerticalLayout {
                 padding: 1px;
                 Rectangle {
-                    height: 22px;
+                    height: 22px * Theme.ui-scale;
                     background: Theme.toolbar-bg;
                     HorizontalLayout {
                         padding-left: 6px;
                         spacing: 6px;
-                        TableCell { text: "Name"; width: 200px; color: Theme.text-secondary; }
-                        TableCell { text: "Username"; horizontal-stretch: 1; preferred-width: 10px; color: Theme.text-secondary; }
+                        TableCell { text: "Name"; width: 200px * Theme.ui-scale; color: Theme.text-secondary; }
+                        TableCell { text: "Username"; horizontal-stretch: 1; preferred-width: 10px * Theme.ui-scale; color: Theme.text-secondary; }
                     }
                 }
                 ListView {
                     for row[i] in root.credential-rows: Rectangle {
-                        height: 21px;
+                        height: 21px * Theme.ui-scale;
                         background: i == root.credential-selected ? Theme.active-row-bg : cred-touch.has-hover ? Theme.hover-bg : transparent;
                         cred-touch := TouchArea {
                             clicked => { root.credential-selected = i; }
@@ -6029,8 +6039,8 @@ export component MainWindow inherits Window {
                         HorizontalLayout {
                             padding-left: 6px;
                             spacing: 6px;
-                            TableCell { text: row.name; width: 200px; }
-                            TableCell { text: row.user == "" ? "(session's own)" : row.user; horizontal-stretch: 1; preferred-width: 10px; color: row.user == "" ? Theme.text-secondary : Theme.text; }
+                            TableCell { text: row.name; width: 200px * Theme.ui-scale; }
+                            TableCell { text: row.user == "" ? "(session's own)" : row.user; horizontal-stretch: 1; preferred-width: 10px * Theme.ui-scale; color: row.user == "" ? Theme.text-secondary : Theme.text; }
                         }
                     }
                 }
@@ -6063,32 +6073,32 @@ export component MainWindow inherits Window {
     }
     if root.dialog == 15: DialogFrame {
         title: "Firewalls";
-        dialog-width: 560px;
+        dialog-width: 560px * Theme.ui-scale;
         Text {
             text: "Proxies and gateways defined once and used by name: type a firewall's name into a session's Proxy field (Session Options > Connection).";
             wrap: word-wrap;
             color: Theme.text-secondary;
         }
         Rectangle {
-            height: 180px;
+            height: 180px * Theme.ui-scale;
             background: Theme.input-bg;
             border-width: 1px;
             border-color: Theme.border;
             VerticalLayout {
                 padding: 1px;
                 Rectangle {
-                    height: 22px;
+                    height: 22px * Theme.ui-scale;
                     background: Theme.toolbar-bg;
                     HorizontalLayout {
                         padding-left: 6px;
                         spacing: 6px;
-                        TableCell { text: "Name"; width: 180px; color: Theme.text-secondary; }
-                        TableCell { text: "Proxy"; horizontal-stretch: 1; preferred-width: 10px; color: Theme.text-secondary; }
+                        TableCell { text: "Name"; width: 180px * Theme.ui-scale; color: Theme.text-secondary; }
+                        TableCell { text: "Proxy"; horizontal-stretch: 1; preferred-width: 10px * Theme.ui-scale; color: Theme.text-secondary; }
                     }
                 }
                 ListView {
                     for row[i] in root.firewall-rows: Rectangle {
-                        height: 21px;
+                        height: 21px * Theme.ui-scale;
                         background: i == root.firewall-selected ? Theme.active-row-bg : fw-touch.has-hover ? Theme.hover-bg : transparent;
                         fw-touch := TouchArea {
                             clicked => { root.firewall-selected = i; }
@@ -6100,8 +6110,8 @@ export component MainWindow inherits Window {
                         HorizontalLayout {
                             padding-left: 6px;
                             spacing: 6px;
-                            TableCell { text: row.name; width: 180px; }
-                            TableCell { text: row.user; horizontal-stretch: 1; preferred-width: 10px; }
+                            TableCell { text: row.name; width: 180px * Theme.ui-scale; }
+                            TableCell { text: row.user; horizontal-stretch: 1; preferred-width: 10px * Theme.ui-scale; }
                         }
                     }
                 }
@@ -6177,14 +6187,14 @@ export component MainWindow inherits Window {
     }
     if root.dialog == 14: DialogFrame {
         title: "Agent Keys";
-        dialog-width: 600px;
+        dialog-width: 600px * Theme.ui-scale;
         Text {
             text: "Keys held by OpenCRT's own SSH agent. While it holds keys, sessions without a key file log in with them and forwarded agents use them; otherwise the system's agent is used. Keys stay in memory until OpenCRT closes.";
             wrap: word-wrap;
             color: Theme.text-secondary;
         }
         Rectangle {
-            height: 180px;
+            height: 180px * Theme.ui-scale;
             background: Theme.input-bg;
             border-width: 1px;
             border-color: Theme.border;
@@ -6196,7 +6206,7 @@ export component MainWindow inherits Window {
             }
             ListView {
                 for entry[i] in root.agent-rows: Rectangle {
-                    height: 22px;
+                    height: 22px * Theme.ui-scale;
                     background: i == root.agent-selected ? Theme.active-row-bg : agent-touch.has-hover ? Theme.hover-bg : transparent;
                     agent-touch := TouchArea {
                         clicked => { root.agent-selected = i; }
@@ -6208,7 +6218,7 @@ export component MainWindow inherits Window {
                         text: entry;
                         vertical-alignment: center;
                         overflow: elide;
-                        font-size: 12px;
+                        font-size: 12px * Theme.ui-scale;
                     }
                 }
             }
@@ -6246,7 +6256,7 @@ export component MainWindow inherits Window {
     }
     if root.dialog == 10: DialogFrame {
         title: "Create Public Key";
-        dialog-width: 500px;
+        dialog-width: 500px * Theme.ui-scale;
         Text {
             text: "Creates a key pair in OpenSSH format. Add the public key (copied to the clipboard when done) to ~/.ssh/authorized_keys on the server, or use Tools > Public Key Assistant.";
             wrap: word-wrap;
@@ -6319,7 +6329,7 @@ export component MainWindow inherits Window {
     }
     if root.dialog == 9: DialogFrame {
         title: root.bb-title;
-        dialog-width: 460px;
+        dialog-width: 460px * Theme.ui-scale;
         FieldRow {
             label: "Label:";
             LineEdit {
@@ -6369,7 +6379,7 @@ export component MainWindow inherits Window {
         if root.bb-kind == 0: Text {
             text: "\\r is Enter, \\n a line feed, \\t Tab, \\e Escape and \\\\ a backslash.";
             color: Theme.text-secondary;
-            font-size: 11px;
+            font-size: 11px * Theme.ui-scale;
         }
         if root.bb-error != "": Text {
             text: root.bb-error;

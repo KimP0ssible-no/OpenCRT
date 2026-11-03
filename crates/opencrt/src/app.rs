@@ -7512,16 +7512,18 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         let app = app.clone();
         let weak = ui.as_weak();
         timer.start(TimerMode::Repeated, POLL, move || {
-            if let Some(ui) = weak.upgrade() {
-                let mut app = app.borrow_mut();
-                while let Ok(args) = handed_over.try_recv() {
-                    app.open_args(&args, &ui);
-                    ui.window().set_minimized(false);
-                    use slint::winit_030::WinitWindowAccessor;
-                    ui.window().with_winit_window(|w| w.focus_window());
-                }
-                app.tick(&ui);
+            // A file dialog runs a nested event loop on macOS, so this can fire while
+            // the callback that opened it still holds the app: skip that tick.
+            let (Some(ui), Ok(mut app)) = (weak.upgrade(), app.try_borrow_mut()) else {
+                return;
+            };
+            while let Ok(args) = handed_over.try_recv() {
+                app.open_args(&args, &ui);
+                ui.window().set_minimized(false);
+                use slint::winit_030::WinitWindowAccessor;
+                ui.window().with_winit_window(|w| w.focus_window());
             }
+            app.tick(&ui);
         });
     }
     let scratch_file = config::dir().map(|d| d.join("scratchpad.txt"));

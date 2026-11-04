@@ -169,17 +169,16 @@ async fn handshake<S: AsyncRead + AsyncWrite + Unpin>(
     if offered.is_empty() || offered == [0] {
         bail!("the server refused the connection: {}", read_text(s).await?);
     }
-    let chosen = [NO_AUTH, VNC_AUTH].into_iter().find(|t| offered.contains(t)).ok_or_else(|| {
-        let list: Vec<String> = offered.iter().map(u8::to_string).collect();
-        anyhow!(
-            "the server offers no login OpenCRT supports (security types {}); turn on VNC password login on the server",
-            list.join(", ")
-        )
+    let chosen = [NO_AUTH, VNC_AUTH, TIGHT].into_iter().find(|t| offered.contains(t)).ok_or_else(|| {
+        let list: Vec<String> = offered.iter().map(|&t| security_name(t)).collect();
+        anyhow!("the server offers no login OpenCRT supports ({}); turn on VNC password login on the server", list.join(", "))
     })?;
     if minor >= 7 {
         s.write_u8(chosen).await?;
     }
-    if chosen == VNC_AUTH {
+    // TightVNC's own type carries one of the standard logins inside.
+    let auth = if chosen == TIGHT { tight_login(s).await? } else { chosen };
+    if auth == VNC_AUTH {
         let mut challenge = [0u8; 16];
         s.read_exact(&mut challenge).await?;
         let password = match password {
@@ -189,7 +188,7 @@ async fn handshake<S: AsyncRead + AsyncWrite + Unpin>(
         s.write_all(&vnc_response(&password, &challenge)).await?;
     }
     // 3.8 always reports the result; older versions only after a password.
-    if (minor >= 8 || chosen == VNC_AUTH) && s.read_u32().await? != 0 {
+    if (minor >= 8 || auth == VNC_AUTH) && s.read_u32().await? != 0 {
         let reason = if minor >= 8 { read_text(s).await? } else { String::new() };
         let reason = if reason.is_empty() { "authentication failed".to_string() } else { reason };
         return Err(Refused(reason).into());
@@ -200,12 +199,79 @@ async fn handshake<S: AsyncRead + AsyncWrite + Unpin>(
     let mut format = [0u8; 16];
     s.read_exact(&mut format).await?;
     let _name = read_text(s).await?;
-    let auth = if chosen == VNC_AUTH { "password" } else { "no password" };
+    if chosen == TIGHT {
+        // The server's extra messages and encodings, which are not used.
+        let (messages, client_messages, encodings, _pad) = (s.read_u16().await?, s.read_u16().await?, s.read_u16().await?, s.read_u16().await?);
+        let skip = (messages as u64 + client_messages as u64 + encodings as u64) * 16;
+        tokio::io::copy(&mut (&mut *s).take(skip), &mut tokio::io::sink()).await?;
+    }
+    let auth = if auth == VNC_AUTH { "password" } else { "no password" };
     Ok((format!("RFB 3.{minor}, {auth}"), Picture::new(width, height)?))
 }
 
 const NO_AUTH: u8 = 1;
 const VNC_AUTH: u8 = 2;
+const TIGHT: u8 = 16;
+
+/// A security type as the user may know it.
+fn security_name(kind: u8) -> String {
+    let name = match kind {
+        5 | 6 => "RealVNC RA2",
+        13 => "RealVNC RA2ne",
+        16 => "TightVNC",
+        18 => "TLS",
+        19 => "VeNCrypt (TLS)",
+        30 | 33 | 35 | 36 => "Apple",
+        _ => "",
+    };
+    if name.is_empty() { format!("security type {kind}") } else { format!("{name}, security type {kind}") }
+}
+
+/// Tight capabilities as (code, vendor and signature): the ones used here.
+const NO_TUNNEL: (i32, &[u8; 12]) = (0, b"TGHTNOTUNNEL");
+const TIGHT_NO_AUTH: (i32, &[u8; 12]) = (1, b"STDVNOAUTH__");
+const TIGHT_VNC_AUTH: (i32, &[u8; 12]) = (2, b"STDVVNCAUTH_");
+
+/// The Tight security type: no tunnel, then a login from its list. Returns
+/// the standard type the login continues as.
+async fn tight_login<S: AsyncRead + AsyncWrite + Unpin>(s: &mut S) -> anyhow::Result<u8> {
+    let tunnels = read_capabilities(s).await?;
+    if !tunnels.is_empty() {
+        if !tunnels.contains(&(NO_TUNNEL.0, *NO_TUNNEL.1)) {
+            bail!("the TightVNC server wants a tunnel OpenCRT does not support");
+        }
+        s.write_i32(NO_TUNNEL.0).await?;
+    }
+    let logins = read_capabilities(s).await?;
+    if logins.is_empty() {
+        return Ok(NO_AUTH);
+    }
+    let Some((code, _)) = [TIGHT_NO_AUTH, TIGHT_VNC_AUTH].into_iter().find(|(code, name)| logins.contains(&(*code, **name))) else {
+        let names: Vec<String> = logins.iter().map(|(_, name)| String::from_utf8_lossy(name).trim_end_matches('_').to_string()).collect();
+        bail!(
+            "the TightVNC server offers only logins OpenCRT does not support ({}); in TightVNC's Authentication settings tick \"Allow Legacy VNC passwords\" and set a legacy full-control password",
+            names.join(", ")
+        );
+    };
+    s.write_i32(code).await?;
+    Ok(code as u8)
+}
+
+/// A Tight capability list: a u32 count, then (code, vendor, signature) each.
+async fn read_capabilities<S: AsyncRead + Unpin>(s: &mut S) -> anyhow::Result<Vec<(i32, [u8; 12])>> {
+    let n = s.read_u32().await?;
+    if n > 64 {
+        bail!("the TightVNC server sent a broken capability list");
+    }
+    let mut list = Vec::new();
+    for _ in 0..n {
+        let code = s.read_i32().await?;
+        let mut name = [0u8; 12];
+        s.read_exact(&mut name).await?;
+        list.push((code, name));
+    }
+    Ok(list)
+}
 
 /// The version this client speaks to a server's `RFB xxx.yyy\n`: 3.8, 3.7 or 3.3.
 fn version_minor(greeting: &[u8; 12]) -> Option<u16> {
@@ -932,6 +998,53 @@ mod tests {
         assert!(matches!(next_event(&mut handle), SshEvent::Closed));
     }
 
+    /// A Tight capability list as a server sends it.
+    fn tight_list(caps: &[(i32, &[u8; 12])]) -> Vec<u8> {
+        let mut out = (caps.len() as u32).to_be_bytes().to_vec();
+        for (code, name) in caps {
+            out.extend(code.to_be_bytes());
+            out.extend(*name);
+        }
+        out
+    }
+
+    #[test]
+    fn tightvnc_login_with_a_legacy_password() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let server = std::thread::spawn(move || {
+            let (mut s, _) = listener.accept().unwrap();
+            s.write_all(b"RFB 003.008\n").unwrap();
+            read_n(&mut s, 12);
+            s.write_all(&[1, TIGHT]).unwrap();
+            assert_eq!(read_n(&mut s, 1), [TIGHT]);
+            s.write_all(&tight_list(&[NO_TUNNEL])).unwrap();
+            assert_eq!(read_n(&mut s, 4), 0i32.to_be_bytes(), "no tunnel");
+            s.write_all(&tight_list(&[(3, b"TGHTSRP6A___"), TIGHT_VNC_AUTH])).unwrap();
+            assert_eq!(read_n(&mut s, 4), 2i32.to_be_bytes(), "the VNC password login");
+            let challenge = [9u8; 16];
+            s.write_all(&challenge).unwrap();
+            assert_eq!(read_n(&mut s, 16), vnc_response("secret", &challenge));
+            s.write_all(&0u32.to_be_bytes()).unwrap();
+            read_n(&mut s, 1);
+            let mut init = vec![0, 4, 0, 2];
+            init.extend([32, 24, 0, 1, 0, 255, 0, 255, 0, 255, 16, 8, 0, 0, 0, 0]);
+            init.extend(1u32.to_be_bytes());
+            init.extend(b"t");
+            // Interaction capabilities: one server message, one encoding.
+            init.extend([0, 1, 0, 0, 0, 1, 0, 0]);
+            init.extend(tight_list(&[(150, b"TGHTCUS_EOCU"), (16, b"TRDVZRLE____")])[4..].iter());
+            s.write_all(&init).unwrap();
+            assert_eq!(read_n(&mut s, 40)[..2], [0, 0], "the session starts right after");
+        });
+        let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("secret".into()), jump: None, proxy: None };
+        let (mut handle, _input) = connect(settings);
+        assert!(matches!(next_event(&mut handle), SshEvent::Cipher(c) if c == "VNC, RFB 3.8, password, not encrypted"));
+        assert!(matches!(next_event(&mut handle), SshEvent::Screen(Screen::Size { width: 4, height: 2 })));
+        assert!(matches!(next_event(&mut handle), SshEvent::Connected));
+        server.join().unwrap();
+    }
+
     #[test]
     fn refused_logins_and_unsupported_servers() {
         let serve = |connections: usize, script: fn(&mut std::net::TcpStream)| {
@@ -954,7 +1067,18 @@ mod tests {
             read_n(s, 12);
             s.write_all(&[2, 30, 35]).unwrap();
         });
-        assert!(e.contains("security types 30, 35"), "{e}");
+        assert!(e.contains("Apple, security type 30, Apple, security type 35"), "{e}");
+        // TightVNC 4 with only its own passwords: say which setting to change.
+        let e = serve(1, |s| {
+            s.write_all(b"RFB 003.008\n").unwrap();
+            read_n(s, 12);
+            s.write_all(&[1, TIGHT]).unwrap();
+            read_n(s, 1);
+            s.write_all(&tight_list(&[])).unwrap();
+            s.write_all(&tight_list(&[(3, b"TGHTSRP6A___")])).unwrap();
+            read_n(s, 1);
+        });
+        assert!(e.contains("SRP6A") && e.contains("Allow Legacy VNC passwords"), "{e}");
         // A remembered password turned down: asked for again rather than failing.
         let e = serve(2, |s| {
             s.write_all(b"RFB 003.008\n").unwrap();

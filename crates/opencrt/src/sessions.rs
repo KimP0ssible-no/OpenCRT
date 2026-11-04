@@ -241,6 +241,7 @@ pub fn from_delimited(text: &str, base: &Session) -> Result<(Vec<Session>, Vec<S
                         "local" | "local shell" => Protocol::Local,
                         "rdp" => Protocol::Rdp,
                         "rlogin" => Protocol::Rlogin,
+                        "vnc" => Protocol::Vnc,
                         _ => return Err(format!("Line {}: unknown protocol \"{value}\".", n + 2)),
                     }
                 }

@@ -822,11 +822,11 @@ component SessionTab inherits Rectangle {
                 title: "Open Local Forwards in Browser";
                 activated => { root.action("open-browser"); }
             }
-            if root.protocol == 5 && root.state == 1: MenuItem {
+            if (root.protocol == 5 || root.protocol == 7) && root.state == 1: MenuItem {
                 title: "Send Ctrl+Alt+Del";
                 activated => { root.action("rdp-cad"); }
             }
-            if root.protocol == 5 && root.state == 1: MenuItem {
+            if (root.protocol == 5 || root.protocol == 7) && root.state == 1: MenuItem {
                 title: "Send Windows Key";
                 activated => { root.action("rdp-win"); }
             }
@@ -1404,12 +1404,12 @@ component ConnectionFields inherits VerticalLayout {
     FieldRow {
         label: "Protocol:";
         ComboBox {
-            model: ["SSH2", "Telnet", "Raw", "Serial", "Local Shell", "RDP", "RLogin"];
+            model: ["SSH2", "Telnet", "Raw", "Serial", "Local Shell", "RDP", "RLogin", "VNC"];
             current-index <=> root.protocol;
             selected => {
                 // Follow the protocol's default port unless one was typed.
-                if (root.port == "" || root.port == "22" || root.port == "23" || root.port == "3389" || root.port == "513") {
-                    root.port = root.protocol == 0 ? "22" : root.protocol == 5 ? "3389" : root.protocol == 6 ? "513" : "23";
+                if (root.port == "" || root.port == "22" || root.port == "23" || root.port == "3389" || root.port == "513" || root.port == "5900") {
+                    root.port = root.protocol == 0 ? "22" : root.protocol == 5 ? "3389" : root.protocol == 6 ? "513" : root.protocol == 7 ? "5900" : "23";
                 }
             }
         }
@@ -1433,7 +1433,8 @@ component ConnectionFields inherits VerticalLayout {
             accepted => { root.submit(); }
         }
     }
-    if root.protocol == 0 || root.protocol >= 5: FieldRow {
+    // VNC logs in with a password only.
+    if root.protocol == 0 || root.protocol == 5 || root.protocol == 6: FieldRow {
         label: "Username:";
         LineEdit {
             text <=> root.user;
@@ -1658,10 +1659,11 @@ component SessionOptionsDialog inherits DialogFrame {
     callback browse(string);
     // Editing this many sessions at once (only the changed options apply to all).
     in property <int> many;
-    // RDP has no terminal: its sessions skip the terminal pages (Terminal, Log
-    // File, Port Forwarding, Logon Script, Keyboard); others skip Remote Desktop.
+    // RDP and VNC have no terminal: their sessions skip the terminal pages
+    // (Terminal, Log File, Port Forwarding, Logon Script, Keyboard); others
+    // skip Remote Desktop.
     pure function page-applies(page: int) -> bool {
-        root.protocol == 5 ? page == 0 || page == 1 || page == 3 || page == 8 : page != 8
+        root.protocol == 5 || root.protocol == 7 ? page == 0 || page == 1 || page == 3 || page == 8 : page != 8
     }
     changed protocol => {
         if !root.page-applies(root.category) {
@@ -1754,11 +1756,11 @@ component SessionOptionsDialog inherits DialogFrame {
                             accepted => { root.ok(); }
                         }
                     }
-                    if root.protocol == 0 || root.protocol == 5: FieldRow {
+                    if root.protocol == 0 || root.protocol == 5 || root.protocol == 7: FieldRow {
                         label: "Jump host:";
                         LineEdit {
                             text <=> root.jump-host;
-                            placeholder-text: root.protocol == 5 ? "optional SSH hosts to tunnel through: [user@]host[:port] or a saved session, comma-separated" : "optional hosts to go through: [user@]host[:port] or a saved session, comma-separated";
+                            placeholder-text: root.protocol == 5 || root.protocol == 7 ? "optional SSH hosts to tunnel through: [user@]host[:port] or a saved session, comma-separated" : "optional hosts to go through: [user@]host[:port] or a saved session, comma-separated";
                             accepted => { root.ok(); }
                         }
                     }
@@ -1793,7 +1795,7 @@ component SessionOptionsDialog inherits DialogFrame {
                             checked <=> root.tls;
                         }
                     }
-                    if root.protocol <= 2 || root.protocol == 6: FieldRow {
+                    if root.protocol <= 2 || root.protocol == 6 || root.protocol == 7: FieldRow {
                         label: "Proxy:";
                         LineEdit {
                             text <=> root.proxy;
@@ -1818,8 +1820,8 @@ component SessionOptionsDialog inherits DialogFrame {
                         ComboBox {
                             model: root.credential-choices;
                             current-index <=> root.credential;
-                            // SSH2, Telnet and RDP (see config::Protocol::ALL).
-                            enabled: root.protocol == 0 || root.protocol == 1 || root.protocol == 5;
+                            // SSH2, Telnet, RDP and VNC (see config::Protocol::ALL).
+                            enabled: root.protocol == 0 || root.protocol == 1 || root.protocol == 5 || root.protocol == 7;
                         }
                     }
                     if root.credential-choices.length <= 1: Text {
@@ -2041,7 +2043,12 @@ component SessionOptionsDialog inherits DialogFrame {
                 }
                 if root.category == 8: VerticalLayout {
                     spacing: 8px;
-                    if root.protocol != 5: Text {
+                    if root.protocol == 7: Text {
+                        text: "A VNC desktop is the size the server sets: shown whole, scaled down when the tab is smaller, or with Scale to window stretched to fill the tab. The other settings here are for RDP sessions. VNC is not encrypted: set a jump host (Connection page) to tunnel it through SSH.";
+                        wrap: word-wrap;
+                        color: Theme.text-secondary;
+                    }
+                    if root.protocol != 5 && root.protocol != 7: Text {
                         text: "These settings are for RDP sessions.";
                         color: Theme.text-secondary;
                     }
@@ -2068,7 +2075,7 @@ component SessionOptionsDialog inherits DialogFrame {
                     CheckBox {
                         text: "Scale to window";
                         checked <=> root.rdp-scale;
-                        enabled: root.protocol == 5 && root.rdp-width != "" && root.rdp-height != "";
+                        enabled: root.protocol == 7 || (root.protocol == 5 && root.rdp-width != "" && root.rdp-height != "");
                     }
                     Text {
                         text: "Blank: the remote desktop follows the tab's size. A fixed size (in pixels) stays the same whatever the window does: shown whole, scaled down when the tab is smaller, or with Scale to window stretched to fill the tab.";
@@ -3392,7 +3399,7 @@ component AboutDialog inherits DialogFrame {
         spacing-vertical: 4px;
         Row {
             Text { text: "Protocols"; color: Theme.text-secondary; }
-            Text { text: "SSH2, SFTP, Telnet, RDP, serial, raw TCP, local shell"; wrap: word-wrap; }
+            Text { text: "SSH2, SFTP, Telnet, RDP, VNC, serial, raw TCP, local shell"; wrap: word-wrap; }
         }
         Row {
             Text { text: "Config"; color: Theme.text-secondary; }
@@ -6004,7 +6011,7 @@ export component MainWindow inherits Window {
         title: "Credentials Manager";
         dialog-width: 520px * Theme.ui-scale;
         Text {
-            text: "Saved logins for SSH2, Telnet and RDP sessions. Pick one in Session Options > Authentication; its password is kept in the system keychain.";
+            text: "Saved logins for SSH2, Telnet, RDP and VNC sessions. Pick one in Session Options > Authentication; its password is kept in the system keychain.";
             wrap: word-wrap;
             color: Theme.text-secondary;
         }

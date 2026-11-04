@@ -16,7 +16,7 @@ export global Icons {
         return protocol == 0 ? IconKind.session-ssh
             : protocol == 3 ? IconKind.session-serial
             : protocol == 4 ? IconKind.session-local
-            : protocol == 5 ? IconKind.session-rdp
+            : protocol == 5 || protocol == 7 ? IconKind.session-rdp
             : IconKind.session-telnet;
     }
 }

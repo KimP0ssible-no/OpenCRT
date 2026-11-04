@@ -49,3 +49,10 @@ path = "fuzz_targets/kermit.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "vnc"
+path = "fuzz_targets/vnc.rs"
+test = false
+doc = false
+bench = false

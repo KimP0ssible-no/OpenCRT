@@ -84,7 +84,7 @@ fn main() {
     ui.set_status_text("Connected".into());
 
     match scene.as_str() {
-        "session-options" | "connection" | "forwards" | "terminal" | "log-options" | "remote-desktop" => {
+        "session-options" | "connection" | "forwards" | "terminal" | "log-options" | "remote-desktop" | "vnc" | "vnc-desktop" => {
             ui.set_so_name("core-sw1".into());
             ui.set_so_notes("Rack 3, Oslo\nAsk ops before rebooting".into());
             ui.set_so_host("core-sw1.example.net".into());
@@ -95,9 +95,15 @@ fn main() {
                 "terminal" => 2,
                 "log-options" => 4,
                 "connection" => 0,
-                "remote-desktop" => 8,
+                "remote-desktop" | "vnc-desktop" => 8,
+                "vnc" => 0,
                 _ => 1,
             });
+            if scene.starts_with("vnc") {
+                ui.set_so_protocol(7);
+                ui.set_so_port("5900".into());
+                ui.set_so_jump("bastion.example.net".into());
+            }
             if scene == "remote-desktop" {
                 ui.set_so_protocol(5);
                 ui.set_so_rdp_width("1920".into());

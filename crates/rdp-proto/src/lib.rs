@@ -62,6 +62,9 @@ pub enum ToHelper {
     Clipboard(String),
     /// A picture on OpenCRT's clipboard (RGBA rows of `width`), offered likewise.
     ClipboardImage { width: u32, height: u32, rgba: Vec<u8> },
+    /// A key as an X11 keysym, for OpenCRT's VNC tabs (which share this
+    /// input channel); the RDP helper ignores it.
+    KeySym { keysym: u32, down: bool },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -216,6 +219,7 @@ impl ToHelper {
             ToHelper::ReleaseAll => (9, Body::default()),
             ToHelper::Clipboard(text) => (10, Body::default().str(text)),
             ToHelper::ClipboardImage { width, height, rgba } => (11, Body::default().u32(*width).u32(*height).bytes(rgba)),
+            ToHelper::KeySym { keysym, down } => (12, Body::default().u32(*keysym).u8(*down as u8)),
         };
         write_message(out, tag, body)
     }
@@ -253,6 +257,7 @@ impl ToHelper {
                 let (width, height, rgba) = f.image()?;
                 ToHelper::ClipboardImage { width, height, rgba }
             }
+            12 => ToHelper::KeySym { keysym: f.u32()?, down: f.u8()? != 0 },
             _ => return Err(invalid("unknown message")),
         };
         Ok(Some(message))
@@ -339,6 +344,7 @@ mod tests {
             ToHelper::ReleaseAll,
             ToHelper::Clipboard("zwölf\r\nlines".into()),
             ToHelper::ClipboardImage { width: 1, height: 2, rgba: vec![9; 8] },
+            ToHelper::KeySym { keysym: 0x0100_20ac, down: true },
         ];
         let mut wire = Vec::new();
         for m in &to {

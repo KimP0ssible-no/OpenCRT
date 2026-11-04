@@ -90,7 +90,9 @@ automatic check off in Options > Global Options > General.
   Telnet, RLogin, raw TCP, serial (COM / tty, modem dialling, VM consoles),
   local shell, and RDP (remote desktop
   in a tab that follows the tab's size, keyboard and mouse, clipboard text
-  both ways; NLA with user name and password).
+  both ways; NLA with user name and password), and VNC (RFB 3.3 to 3.8 with
+  no password or a VNC password, ZRLE; the desktop is shown whole or scaled
+  to the tab; VNC is not encrypted, so set a jump host to tunnel it over SSH).
 - **Security**: host keys checked against OpenCRT's own `known_hosts`; unknown
   keys are confirmed by the user, changed keys block the connection; saved keys
   can be reviewed and removed in Tools > Host Keys. RDP server certificates
@@ -211,6 +213,7 @@ cargo run --release -- /TELNET router                # also /RAW, /RLOGIN, /SERI
 cargo run --release -- /S "Prod/web1"                # open a saved session (path or name)
 cargo run --release -- /F E:\OpenCRT                 # keep all settings in this folder (portable)
 cargo run --release -- /RDP /L "DOMAIN\user" winhost  # remote desktop (needs the helper below)
+cargo run --release -- /VNC /P 5901 pi               # VNC desktop; also vnc://host:port
 cargo run --release -- ssh://me@host:2222            # also sftp:// and telnet:// links; /I keyfile
 cargo run --release -- /T /LOG web1.log /S web1      # new tab in the running window, logged to a file
 ```

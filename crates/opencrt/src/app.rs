@@ -16,7 +16,7 @@ use slint::{ComponentHandle, Image, Model, ModelRc, Rgb8Pixel, Rgba8Pixel, Share
 use crate::config::{self, Credential, FlowControl, Options, Parity, Protocol, SerialLine, Session, SessionStore};
 use crate::forward::{Forward, ForwardKind};
 use crate::rdp::ToHelper;
-use crate::{kermit, local, rdp, rhaiscript, script, serial, sftp, telnet, tftp, update, xymodem, zmodem};
+use crate::{kermit, local, rdp, rhaiscript, script, serial, sftp, telnet, tftp, update, vnc, xymodem, zmodem};
 use crate::input::{self, KeyAction, Mods};
 use crate::log::SessionLog;
 use crate::render::{self, FONT_PX, Renderer};
@@ -238,6 +238,8 @@ impl Target {
             Protocol::Rlogin => format!("rlogin: {}@{host}", self.user),
             Protocol::Rdp if self.user.is_empty() => format!("rdp: {host}"),
             Protocol::Rdp => format!("rdp: {}@{host}", self.user),
+            Protocol::Vnc if self.user.is_empty() => format!("vnc: {host}"),
+            Protocol::Vnc => format!("vnc: {}@{host}", self.user),
             Protocol::Serial => format!("{} {}", self.serial_port, self.baud),
             Protocol::Local if !self.command.is_empty() => self.command.clone(),
             Protocol::Local => "Local Shell".into(),
@@ -303,9 +305,24 @@ impl Target {
             Protocol::Serial if serial::is_vm_console(&self.serial_port) => telnet::connect_console(self.serial_port.clone()),
             Protocol::Serial => serial::connect(self.serial_port.clone(), self.baud, self.serial_line, self.dial.clone()),
             Protocol::Local => local::connect(&self.command, &ssh::Pty::new(&self.term, cols, rows).term, cols, rows),
-            // Tab::connect starts RDP itself (it needs the input sender and pixel size).
+            // Tab::connect starts RDP and VNC itself (it needs the input sender).
             Protocol::Rdp => self.rdp((1024, 768)).0,
+            Protocol::Vnc => self.vnc().0,
         }
+    }
+
+    /// Start a VNC connection.
+    fn vnc(&self) -> (SshHandle, rdp::Input) {
+        vnc::connect(vnc::Settings {
+            host: self.host.clone(),
+            port: self.port,
+            user: self.user.clone(),
+            credential: self.credential.clone(),
+            password: self.cached_password.as_ref().map(|s| s.0.clone()),
+            jump: (!self.hops.is_empty()).then(|| self.credentials()),
+            proxy: self.proxy.clone(),
+            speed: self.rdp_speed.unwrap_or(rdp::SPEED_BALANCED),
+        })
     }
 
     /// Start an RDP connection with a `size` desktop.
@@ -331,14 +348,14 @@ impl Target {
     fn problem(&self) -> Option<&'static str> {
         match self.protocol {
             Protocol::Ssh2 | Protocol::Rlogin if self.user.is_empty() => Some("Enter a username."),
-            Protocol::Ssh2 | Protocol::Rdp if self.jump.as_deref().is_some_and(|j| j.split(',').any(|hop| hop.trim().is_empty())) => {
+            Protocol::Ssh2 | Protocol::Rdp | Protocol::Vnc if self.jump.as_deref().is_some_and(|j| j.split(',').any(|hop| hop.trim().is_empty())) => {
                 Some("Enter jump hosts as [user@]host[:port] or saved session names, separated by commas.")
             }
             Protocol::Rdp if self.user.is_empty() => Some("Enter a username (user, DOMAIN\\user or user@domain)."),
-            Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin if self.host.is_empty() => {
+            Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin | Protocol::Vnc if self.host.is_empty() => {
                 Some("Enter a hostname.")
             }
-            Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin if self.port == 0 => {
+            Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin | Protocol::Vnc if self.port == 0 => {
                 Some("Enter a port between 1 and 65535.")
             }
             Protocol::Serial if self.serial_port.is_empty() => Some("Enter a serial port name, e.g. COM3."),
@@ -388,6 +405,7 @@ fn parse_url(url: &str) -> Option<(Protocol, bool, HostSpec)> {
         "sftp" => (Protocol::Ssh2, true),
         "telnet" => (Protocol::Telnet, false),
         "rlogin" => (Protocol::Rlogin, false),
+        "vnc" => (Protocol::Vnc, false),
         _ => return None,
     };
     let authority = rest.split(['/', '?', '#']).next()?;
@@ -436,6 +454,7 @@ pub fn parse_args(args: &[String]) -> Option<Target> {
             "/RAW" => target.protocol = Protocol::Raw,
             "/RLOGIN" => target.protocol = Protocol::Rlogin,
             "/RDP" => target.protocol = Protocol::Rdp,
+            "/VNC" => target.protocol = Protocol::Vnc,
             "/SERIAL" => {
                 target.protocol = Protocol::Serial;
                 target.serial_port = args.next().cloned().unwrap_or_default();
@@ -575,6 +594,8 @@ struct Tab {
     via: Option<ssh::Shared>,
     /// RDP: keyboard and mouse input to the helper, while connected.
     rdp: Option<rdp::Input>,
+    /// VNC: the keysym each held key went down as.
+    vnc_keys: Vec<(KeyCode, u32)>,
     /// File browser tabs: the lists and the transfer queue; the shell tab
     /// (by id) whose folder it follows.
     files: Option<crate::filebrowser::Browser>,
@@ -759,6 +780,7 @@ impl Tab {
             link: None,
             via: None,
             rdp: None,
+            vnc_keys: Vec::new(),
             screen: None,
             desktop: (1024, 768),
             desktop_changed: Instant::now(),
@@ -1242,6 +1264,11 @@ impl Tab {
             }
             None if self.target.protocol == Protocol::Rdp => {
                 let (handle, input) = self.target.rdp(self.rdp_fixed.unwrap_or(self.desktop));
+                self.rdp = Some(input);
+                handle
+            }
+            None if self.target.protocol == Protocol::Vnc => {
+                let (handle, input) = self.target.vnc();
                 self.rdp = Some(input);
                 handle
             }
@@ -1975,12 +2002,13 @@ impl App {
         terminal.set_word_delimiters(&self.options.word_delimiters);
         terminal.set_host_copy(self.options.host_clipboard);
         let mut tab = Tab::new(target, terminal);
-        // RDP through a jump host logs in to it with the same key as SSH sessions.
-        let ssh_login = tab.target.protocol == Protocol::Ssh2 || (tab.target.protocol == Protocol::Rdp && tab.target.jump.is_some());
+        // RDP or VNC through a jump host logs in to it with the same key as SSH sessions.
+        let desktop = matches!(tab.target.protocol, Protocol::Rdp | Protocol::Vnc);
+        let ssh_login = tab.target.protocol == Protocol::Ssh2 || (desktop && tab.target.jump.is_some());
         if let Some(spec) = tab.target.jump.clone() {
-            // An RDP user is a Windows one: jump hosts default to this computer's.
+            // An RDP user is a Windows one (and VNC has none): jump hosts default to this computer's.
             let default_user = match tab.target.protocol {
-                Protocol::Rdp => std::env::var("USER").or_else(|_| std::env::var("USERNAME")).unwrap_or_default(),
+                Protocol::Rdp | Protocol::Vnc => std::env::var("USER").or_else(|_| std::env::var("USERNAME")).unwrap_or_default(),
                 _ => tab.target.user.clone(),
             };
             tab.target.hops = resolve_hops(&spec, &default_user, &self.store, &self.options.credentials);
@@ -2737,7 +2765,12 @@ impl App {
             }
             "rdp-cad" | "rdp-win" => {
                 if let Some(input) = &tab.rdp {
-                    for message in rdp::chord(if name == "rdp-cad" { rdp::CTRL_ALT_DEL } else { rdp::WINDOWS_KEY }) {
+                    let cad = name == "rdp-cad";
+                    let keys = match tab.target.protocol {
+                        Protocol::Vnc => vnc::chord(if cad { vnc::CTRL_ALT_DEL } else { vnc::SUPER_KEY }),
+                        _ => rdp::chord(if cad { rdp::CTRL_ALT_DEL } else { rdp::WINDOWS_KEY }),
+                    };
+                    for message in keys {
                         let _ = input.send(message);
                     }
                 }
@@ -2923,12 +2956,12 @@ impl App {
         }
     }
 
-    /// RDP: physical keys go to the remote desktop while its tab has the
-    /// keyboard. True when the key was taken (Slint must not see it).
-    fn rdp_key(&self, event: &KeyEvent, ui: &MainWindow) -> bool {
-        let Some((input, _)) = self.rdp_input() else {
+    /// RDP and VNC: physical keys go to the remote desktop while its tab has
+    /// the keyboard. True when the key was taken (Slint must not see it).
+    fn rdp_key(&mut self, event: &KeyEvent, ui: &MainWindow) -> bool {
+        if self.rdp_input().is_none() {
             return false;
-        };
+        }
         let ours = ui.get_dialog() == 0 && ui.get_term_focused();
         let down = event.state == ElementState::Pressed;
         // Releases always go through, so no key stays held on the server.
@@ -2949,11 +2982,26 @@ impl App {
             )
         );
         // A held modifier's auto-repeat would only toggle it up and down.
-        if let PhysicalKey::Code(code) = event.physical_key
-            && let Some((scancode, extended)) = rdp::scancode(code)
-            && !(event.repeat && modifier)
-        {
-            let _ = input.send(ToHelper::Key { scancode, extended, down });
+        let PhysicalKey::Code(code) = event.physical_key else {
+            return ours;
+        };
+        let tab = &mut self.tabs[self.active];
+        let Some(input) = tab.rdp.as_ref().filter(|_| !(event.repeat && modifier)) else {
+            return ours;
+        };
+        let message = if tab.target.protocol == Protocol::Vnc {
+            // A key goes up as the keysym it went down as, whatever the modifiers did meanwhile.
+            let held = tab.vnc_keys.iter().position(|(c, _)| *c == code).map(|i| tab.vnc_keys.swap_remove(i).1);
+            let keysym = if down { vnc::keysym(code, &event.logical_key) } else { held };
+            if let Some(keysym) = keysym.filter(|_| down) {
+                tab.vnc_keys.push((code, keysym));
+            }
+            keysym.map(|keysym| ToHelper::KeySym { keysym, down })
+        } else {
+            rdp::scancode(code).map(|(scancode, extended)| ToHelper::Key { scancode, extended, down })
+        };
+        if let Some(message) = message {
+            let _ = input.send(message);
         }
         ours
     }
@@ -3542,8 +3590,10 @@ impl App {
             // A fixed size (session or 80/132-column switch) is drawn whole and
             // scaled to fit the pane.
             let fixed = tab.screen.is_none().then(|| tab.size_override()).flatten();
-            // An RDP session's fixed desktop: its own size, scaled down to fit but never up.
-            let rdp_fixed = tab.rdp_fixed.and(tab.screen.as_ref()).map(|d| (d.width as usize, d.height as usize));
+            // An RDP session's fixed desktop, or any VNC one (the server's size):
+            // its own size, scaled down to fit but never up.
+            let own_size = tab.rdp_fixed.is_some() || tab.target.protocol == Protocol::Vnc;
+            let rdp_fixed = tab.screen.as_ref().filter(|_| own_size).map(|d| (d.width as usize, d.height as usize));
             let pixels = match (fixed, rdp_fixed) {
                 (_, Some(size)) => size,
                 (Some((c, l)), None) => {
@@ -8072,6 +8122,9 @@ mod tests {
         assert!(parse_args(&args(&["sftp://h"])).unwrap().sftp);
         let t = parse_args(&args(&["rlogin://admin@sw1"])).unwrap();
         assert_eq!((t.protocol, t.user.as_str(), t.port), (Protocol::Rlogin, "admin", 513));
+        let t = parse_args(&args(&["vnc://pi"])).unwrap();
+        assert_eq!((t.protocol, t.port, t.label(), t.problem()), (Protocol::Vnc, 5900, "vnc: pi".into(), None), "no username needed");
+        assert_eq!(parse_args(&args(&["/VNC", "/P", "5901", "pi"])).unwrap().label(), "vnc: pi:5901");
         let t = parse_args(&args(&["/T", "/LOG", "x.log", "/I", "/k", "me@h"])).unwrap();
         assert_eq!((t.host.as_str(), t.key_path.as_deref()), ("h", Some("/k")));
         assert_eq!(parse_args(&args(&["gopher://h"])), None);

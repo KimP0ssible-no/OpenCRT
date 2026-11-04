@@ -268,15 +268,23 @@ async fn run(host: &str, port: u16, telnet: bool, tls: bool, pty: &ssh::Pty, pro
         }
     };
     if tls {
-        stream = tls_wrap(stream, host, port, io).await?;
+        stream = tls_wrap(stream, "telnet_known_certs", host, port, io).await?.0;
     }
     bridge(stream, telnet, false, pty, logon, io).await
 }
 
-/// TLS over `stream`. The server's certificate is trusted the way RDP's are:
-/// by its SHA-256 fingerprint, asked about the first time and kept in
-/// `telnet_known_certs` if the user says so (devices mostly have self-signed ones).
-async fn tls_wrap(stream: Box<dyn crate::proxy::Stream>, host: &str, port: u16, io: &Io) -> anyhow::Result<Box<dyn crate::proxy::Stream>> {
+/// TLS over `stream`; also returns the TLS version, e.g. "TLS 1.3". The
+/// server's certificate is trusted the way RDP's are: by its SHA-256
+/// fingerprint, asked about the first time and kept in the `store` file
+/// (e.g. `telnet_known_certs`) if the user says so (devices mostly have
+/// self-signed ones).
+pub(crate) async fn tls_wrap(
+    stream: Box<dyn crate::proxy::Stream>,
+    store: &str,
+    host: &str,
+    port: u16,
+    io: &Io,
+) -> anyhow::Result<(Box<dyn crate::proxy::Stream>, String)> {
     use std::sync::{Arc, Mutex};
     let provider = Arc::new(rustls::crypto::aws_lc_rs::default_provider());
     let seen = Arc::new(Mutex::new(None));
@@ -289,10 +297,14 @@ async fn tls_wrap(stream: Box<dyn crate::proxy::Stream>, host: &str, port: u16, 
     let name = rustls::pki_types::ServerName::try_from(host.to_string())?;
     let tls = tokio_rustls::TlsConnector::from(Arc::new(config)).connect(name, stream).await?;
     let der: Vec<u8> = seen.lock().map_err(|_| anyhow::anyhow!("TLS state lost"))?.take().ok_or_else(|| anyhow::anyhow!("the server sent no certificate"))?;
-    if !crate::rdp::trust("telnet_known_certs", host, port, &fingerprint(&der), "", io).await? {
+    if !crate::rdp::trust(store, host, port, &fingerprint(&der), "", io).await? {
         anyhow::bail!("the server's certificate was refused");
     }
-    Ok(Box::new(tls))
+    let version = match tls.get_ref().1.protocol_version() {
+        Some(rustls::ProtocolVersion::TLSv1_3) => "TLS 1.3",
+        _ => "TLS 1.2",
+    };
+    Ok((Box::new(tls), version.to_string()))
 }
 
 /// The SHA-256 fingerprint of a DER certificate, as `AB:CD:...`.

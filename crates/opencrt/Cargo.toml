@@ -95,6 +95,17 @@ tokio-rustls = { version = "0.26", default-features = false, features = ["aws_lc
 sha2 = "0.11"
 ureq = { version = "3.4.2", default-features = false, features = ["rustls-no-provider", "platform-verifier", "win-system-proxy"] }
 minisign-verify = "0.3.0"
+# VNC: the password challenge (DES, as RFB specifies) and ZRLE pictures (zlib);
+# both already in the lockfile (ssh-cipher, png).
+des = "0.9"
+flate2 = "1.1"
+# VNC Tight pictures sent as JPEG (already built for Slint, through image).
+zune-jpeg = "0.5"
+# VNC logins to a Mac's account (Apple's Diffie-Hellman: AES, MD5, big
+# numbers); all already in the lockfile (aes-gcm, russh, secret-service).
+aes = "0.9"
+md5 = "0.8"
+num-bigint = "0.4"
 # Settings repository: the HTTPS login header and this computer's name in
 # commits (both already in the lockfile).
 base64 = "0.22"

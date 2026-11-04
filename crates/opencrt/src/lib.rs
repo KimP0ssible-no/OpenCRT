@@ -22,6 +22,7 @@ mod memfs;
 mod print;
 mod proxy;
 mod rdp;
+mod vnc;
 mod render;
 mod rhaiscript;
 mod script;

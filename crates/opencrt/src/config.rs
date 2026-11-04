@@ -166,12 +166,14 @@ pub enum Protocol {
     /// Remote Desktop, through the opencrt-rdp helper.
     Rdp,
     Rlogin,
+    /// VNC (RFB) remote desktops.
+    Vnc,
 }
 
 impl Protocol {
     /// In the order shown in protocol pickers (the UI relies on these indexes).
-    pub const ALL: [Protocol; 7] =
-        [Protocol::Ssh2, Protocol::Telnet, Protocol::Raw, Protocol::Serial, Protocol::Local, Protocol::Rdp, Protocol::Rlogin];
+    pub const ALL: [Protocol; 8] =
+        [Protocol::Ssh2, Protocol::Telnet, Protocol::Raw, Protocol::Serial, Protocol::Local, Protocol::Rdp, Protocol::Rlogin, Protocol::Vnc];
 
     pub fn default_port(self) -> u16 {
         match self {
@@ -179,6 +181,7 @@ impl Protocol {
             Protocol::Telnet | Protocol::Raw => 23,
             Protocol::Rdp => 3389,
             Protocol::Rlogin => 513,
+            Protocol::Vnc => 5900,
             Protocol::Serial | Protocol::Local => 0,
         }
     }

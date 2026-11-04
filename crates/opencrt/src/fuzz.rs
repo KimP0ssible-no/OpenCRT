@@ -30,6 +30,11 @@ pub fn xymodem(data: &[u8]) {
     });
 }
 
+/// A VNC server's login, then its messages.
+pub fn vnc(data: &[u8]) {
+    crate::vnc::fuzz(data);
+}
+
 pub fn kermit(data: &[u8]) {
     in_dir(|dir| {
         let now = Instant::now();

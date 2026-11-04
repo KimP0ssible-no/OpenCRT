@@ -257,6 +257,8 @@ jobs:
           new=$(sed -n 1p tags); old=$(sed -n 2p tags)
           packaging/linux/test-repos.sh repo "pkgs/opencrt-${old#v}-1-x86_64.pkg.tar.zst" "${old#v}" "${new#v}"
 
+  # On a tag, Windows signs with the Certum certificate: its login is a secret
+  # of the "release" environment, so this job waits for approval there.
   package:
     needs: test
     strategy:
@@ -264,6 +266,9 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    environment: ${{ matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v') && 'release' || '' }}
+    env:
+      SIGN: ${{ matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v') }}
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -293,7 +298,7 @@ jobs:
             echo "$b.exe: $deps"
             ! echo "$deps" | grep -qE 'vcruntime|msvcp|ucrtbase|api-ms-win-crt'
           done
-      # SignPath signs a file only when its ProductName and ProductVersion match.
+      # Windows shows these in each file's properties.
       - name: Windows executables name OpenCRT and its version
         if: runner.os == 'Windows'
         run: |
@@ -303,11 +308,47 @@ jobs:
             "$b.exe: $($info.ProductName) $($info.ProductVersion)"
             if ($info.ProductName -ne 'OpenCRT' -or $info.ProductVersion -ne $v) { throw "$b.exe has the wrong version information" }
           }
+      # SimplySign Desktop logged in with the TOTP seed; the certificate's key
+      # never leaves Certum's cloud. Source reviewed at this commit.
+      - name: Certum SimplySign login
+        if: env.SIGN == 'true'
+        uses: jay0lee/certum-cloud-code-sign@a3324503499c49090869856eeeecfe95fb613d87 # v1
+        with:
+          username: ${{ secrets.CERTUM_USERNAME }}
+          totp_secret: ${{ secrets.CERTUM_TOTP_SECRET }}
+      - name: Sign the Windows executables
+        if: env.SIGN == 'true'
+        run: |
+          signtool sign /sha1 $env:CERTUM_CERT_THUMBPRINT /fd SHA256 /tr http://time.certum.pl /td SHA256 target\release\opencrt.exe target\release\opencrt-rdp.exe target\release\ocrt.exe
+          if ($LASTEXITCODE) { throw 'signtool failed' }
+      # Inno Setup signs the setup and the uninstaller it carries.
       - name: Windows installer
         if: runner.os == 'Windows'
         run: |
           choco install innosetup -y
-          iscc packaging\windows\opencrt.iss
+          if ($env:SIGN -eq 'true') {
+            iscc /DSign ('/Scertum=signtool sign /sha1 ' + $env:CERTUM_CERT_THUMBPRINT + ' /fd SHA256 /tr http://time.certum.pl /td SHA256 $f') packaging\windows\opencrt.iss
+          } else {
+            iscc packaging\windows\opencrt.iss
+          }
+          if ($LASTEXITCODE) { throw 'iscc failed' }
+      - name: Windows MSI (unattended / Group Policy installs)
+        if: runner.os == 'Windows'
+        run: |
+          choco install wixtoolset -y --no-progress
+          cargo install cargo-wix --locked
+          cargo wix -p opencrt --no-build --nocapture --bin-path "C:\Program Files (x86)\WiX Toolset v3.14\bin" -o target\wix\
+      - name: Sign the MSI, check every signature
+        if: env.SIGN == 'true'
+        run: |
+          signtool sign /sha1 $env:CERTUM_CERT_THUMBPRINT /fd SHA256 /tr http://time.certum.pl /td SHA256 (Get-Item target\wix\*.msi).FullName
+          if ($LASTEXITCODE) { throw 'signtool failed' }
+          signtool verify /pa target\release\opencrt.exe target\release\opencrt-rdp.exe target\release\ocrt.exe (Get-Item packaging\windows\Output\*.exe).FullName (Get-Item target\wix\*.msi).FullName
+          if ($LASTEXITCODE) { throw 'a Windows file is not signed' }
+      # Logged out before anything built here runs.
+      - name: Certum SimplySign logout
+        if: always() && env.SIGN == 'true'
+        uses: jay0lee/certum-cloud-code-sign/teardown@a3324503499c49090869856eeeecfe95fb613d87 # v1
       # What Update Now does: the latest release installed per user, then the
       # new setup run with the in-app switches. It must replace the program in
       # the same place, stay closed without /RELAUNCH=1 and start with it.
@@ -342,12 +383,6 @@ jobs:
           $running = Get-Process opencrt -ErrorAction SilentlyContinue
           if (-not $running) { throw 'OpenCRT did not start again after /RELAUNCH=1' }
           $running | Stop-Process
-      - name: Windows MSI (unattended / Group Policy installs)
-        if: runner.os == 'Windows'
-        run: |
-          choco install wixtoolset -y --no-progress
-          cargo install cargo-wix --locked
-          cargo wix -p opencrt --no-build --nocapture --bin-path "C:\Program Files (x86)\WiX Toolset v3.14\bin" -o target\wix\
       # One app for Apple silicon and Intel Macs: the runner builds arm64, so
       # build x86_64 too and join each program into a universal binary.
       - name: macOS app bundle and disk image (universal)
@@ -436,7 +471,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           {
-            echo "Windows files are not signed yet: the certificate is on order, see the [Code signing policy](https://github.com/$GITHUB_REPOSITORY#code-signing-policy)."
+            echo "Windows files are signed as the [Code signing policy](https://github.com/$GITHUB_REPOSITORY#code-signing-policy) describes."
             echo
             echo "## What's changed"
             echo

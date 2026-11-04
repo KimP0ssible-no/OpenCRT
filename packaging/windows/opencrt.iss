@@ -28,6 +28,11 @@ PrivilegesRequiredOverridesAllowed=dialog
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+; CI release builds: iscc /DSign "/Scertum=signtool sign ... $f" signs the
+; setup and its uninstaller.
+#ifdef Sign
+SignTool=certum
+#endif
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked

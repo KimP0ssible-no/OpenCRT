@@ -193,6 +193,10 @@ impl Git {
             (false, err) if err.contains("terminal prompts disabled") => {
                 bail!("the server refused the login: check the username and password or token")
             }
+            // GitHub and GitLab say this when the login works but cannot see a private repository.
+            (false, err) if err.contains("Repository not found") || err.contains("The project you were looking for could not be found") => {
+                bail!("the repository was not found, or this login has no access to it (an SSH key logs in as the account it was added to)")
+            }
             (false, err) => {
                 let lines: Vec<&str> = err.lines().map(str::trim).filter(|l| !l.is_empty() && !l.starts_with("hint:")).collect();
                 bail!("{}", lines.join(" "))

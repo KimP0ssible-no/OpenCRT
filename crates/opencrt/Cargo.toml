@@ -99,6 +99,8 @@ minisign-verify = "0.3.0"
 # both already in the lockfile (ssh-cipher, png).
 des = "0.9"
 flate2 = "1.1"
+# VNC Tight pictures sent as JPEG (already built for Slint, through image).
+zune-jpeg = "0.5"
 # Settings repository: the HTTPS login header and this computer's name in
 # commits (both already in the lockfile).
 base64 = "0.22"

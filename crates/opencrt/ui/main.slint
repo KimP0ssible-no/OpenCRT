@@ -2044,7 +2044,7 @@ component SessionOptionsDialog inherits DialogFrame {
                 if root.category == 8: VerticalLayout {
                     spacing: 8px;
                     if root.protocol == 7: Text {
-                        text: "A VNC desktop is the size the server sets: shown whole, scaled down when the tab is smaller, or with Scale to window stretched to fill the tab. The other settings here are for RDP sessions. VNC is not encrypted: set a jump host (Connection page) to tunnel it through SSH.";
+                        text: "A VNC desktop is the size the server sets: shown whole, scaled down when the tab is smaller, or with Scale to window stretched to fill the tab. Connection speed sets the picture quality; the other settings here are for RDP sessions. VNC is not encrypted: set a jump host (Connection page) to tunnel it through SSH.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
                     }
@@ -2087,13 +2087,17 @@ component SessionOptionsDialog inherits DialogFrame {
                         spacing: 8px;
                         FormLabel { text: "Connection speed:"; }
                         ComboBox {
-                            model: ["Best appearance (fast network)", "Balanced: no wallpaper or animations", "Fastest: no visual effects (slow links)"];
+                            model: root.protocol == 7
+                                ? ["Best quality: lossless (fast network)", "Balanced: photos and video as JPEG", "Fastest: lower JPEG quality (slow links)"]
+                                : ["Best appearance (fast network)", "Balanced: no wallpaper or animations", "Fastest: no visual effects (slow links)"];
                             current-index <=> root.rdp-speed;
-                            enabled: root.protocol == 5;
+                            enabled: root.protocol == 5 || root.protocol == 7;
                         }
                     }
                     Text {
-                        text: "The less the server draws, the less it sends: leaving out the wallpaper and animations makes the desktop noticeably quicker over the internet or a VPN.";
+                        text: root.protocol == 7
+                            ? "VNC servers with the Tight encoding (TightVNC, TigerVNC, x11vnc) send pictures and video as JPEG when this is Balanced or Fastest; text and flat areas stay exact. Others always send the exact picture."
+                            : "The less the server draws, the less it sends: leaving out the wallpaper and animations makes the desktop noticeably quicker over the internet or a VPN.";
                         wrap: word-wrap;
                         color: Theme.text-secondary;
                         font-size: 11px * Theme.ui-scale;

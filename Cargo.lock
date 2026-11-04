@@ -4139,6 +4139,7 @@ dependencies = [
  "ureq",
  "webbrowser",
  "windows-sys 0.61.2",
+ "zune-jpeg",
 ]
 
 [[package]]

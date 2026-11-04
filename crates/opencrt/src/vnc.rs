@@ -30,6 +30,8 @@ pub struct Settings {
     /// Reach the server through these SSH jump hosts.
     pub jump: Option<ssh::Credentials>,
     pub proxy: Option<String>,
+    /// Picture quality against bandwidth: `rdp::SPEED_*` (best is lossless).
+    pub speed: u8,
 }
 
 /// The server turned the password down.
@@ -112,7 +114,7 @@ async fn session(
     let (reader, mut writer) = tokio::io::split(stream);
     let (updates_tx, mut updates) = unbounded_channel();
     tokio::spawn(read_loop(reader, picture, output, updates_tx));
-    writer.write_all(&start_messages(width, height)).await?;
+    writer.write_all(&start_messages(width, height, settings.speed)).await?;
 
     let mut state = Pointer::default();
     let mut size = (width, height);
@@ -314,18 +316,29 @@ fn vnc_response(password: &str, challenge: &[u8; 16]) -> [u8; 16] {
     out
 }
 
-/// Encodings asked for, in order of preference: ZRLE, CopyRect, Raw, and
-/// the DesktopSize pseudo-encoding (the server's desktop changed size).
+/// Encodings asked for, in order of preference: Tight, ZRLE, CopyRect, Raw,
+/// and the DesktopSize pseudo-encoding (the server's desktop changed size).
+const TIGHT_PICTURES: i32 = 7;
 const ZRLE: i32 = 16;
 const COPY_RECT: i32 = 1;
 const RAW: i32 = 0;
 const DESKTOP_SIZE: i32 = -223;
+/// Pseudo-encodings for Tight: zlib level 0-9, and JPEG quality 0-9 (without
+/// one, Tight stays lossless).
+const COMPRESS_LEVEL: i32 = -256;
+const JPEG_QUALITY: i32 = -32;
 
 /// SetPixelFormat (32-bit true colour, bytes R G B x), SetEncodings and a
-/// first full update request.
-fn start_messages(width: u16, height: u16) -> Vec<u8> {
+/// first full update request. Balanced and fastest let Tight servers send
+/// photo-like areas (pictures, video) as JPEG; text and flat areas stay exact.
+fn start_messages(width: u16, height: u16, speed: u8) -> Vec<u8> {
     let mut out = vec![0, 0, 0, 0, 32, 24, 0, 1, 0, 255, 0, 255, 0, 255, 0, 8, 16, 0, 0, 0];
-    let encodings = [ZRLE, COPY_RECT, RAW, DESKTOP_SIZE];
+    let mut encodings = vec![TIGHT_PICTURES, ZRLE, COPY_RECT, RAW, DESKTOP_SIZE];
+    match speed {
+        opencrt_rdp_proto::SPEED_BEST => {}
+        opencrt_rdp_proto::SPEED_BALANCED => encodings.extend([COMPRESS_LEVEL + 6, JPEG_QUALITY + 8]),
+        _ => encodings.extend([COMPRESS_LEVEL + 9, JPEG_QUALITY + 4]),
+    }
     out.extend([2, 0]);
     out.extend((encodings.len() as u16).to_be_bytes());
     for e in encodings {
@@ -479,7 +492,7 @@ enum Message {
 /// Read server messages, keep `picture` up to date and pass changes to the
 /// tab; tell the session loop of each update, and of the end.
 async fn read_loop<R: AsyncRead + Unpin>(mut r: R, mut picture: Picture, output: UnboundedSender<SshEvent>, updates: UnboundedSender<anyhow::Result<Message>>) {
-    let mut zlib = Decompress::new(true);
+    let mut zlib = Streams::new();
     loop {
         match server_message(&mut r, &mut picture, &mut zlib, &output).await {
             Ok(Message::Other) => {}
@@ -499,7 +512,7 @@ async fn read_loop<R: AsyncRead + Unpin>(mut r: R, mut picture: Picture, output:
 async fn server_message<R: AsyncRead + Unpin>(
     r: &mut R,
     picture: &mut Picture,
-    zlib: &mut Decompress,
+    zlib: &mut Streams,
     output: &UnboundedSender<SshEvent>,
 ) -> anyhow::Result<Message> {
     let kind = match r.read_u8().await {
@@ -549,8 +562,13 @@ async fn server_message<R: AsyncRead + Unpin>(
                         }
                         let mut packed = vec![0u8; len];
                         r.read_exact(&mut packed).await?;
-                        let tiles = inflate(zlib, &packed, limit)?;
+                        let tiles = inflate(&mut zlib.zrle, &packed, limit)?;
                         picture.put(x, y, w, h, &zrle(&tiles, w_, h_)?);
+                    }
+                    TIGHT_PICTURES => {
+                        picture.check(x, y, w, h)?;
+                        let rgba = read_tight(r, &mut zlib.tight, w as usize, h as usize).await?;
+                        picture.put(x, y, w, h, &rgba);
                     }
                     other => bail!("the server sent an encoding it was not asked for ({other})"),
                 }
@@ -598,9 +616,142 @@ pub fn fuzz(data: &[u8]) {
         let Ok((_, mut picture)) = handshake(&mut stream, Some("pw".into()), async || Ok(String::new())).await else {
             return;
         };
-        let (mut zlib, (output, _events)) = (Decompress::new(true), unbounded_channel());
+        let (mut zlib, (output, _events)) = (Streams::new(), unbounded_channel());
         while let Ok(Message::Update(_) | Message::Other) = server_message(&mut stream, &mut picture, &mut zlib, &output).await {}
     });
+}
+
+/// A connection's zlib streams: ZRLE's one, and Tight's four.
+struct Streams {
+    zrle: Decompress,
+    tight: [Decompress; 4],
+}
+
+impl Streams {
+    fn new() -> Self {
+        Streams { zrle: Decompress::new(true), tight: std::array::from_fn(|_| Decompress::new(true)) }
+    }
+}
+
+/// Tight's 1 to 3 byte lengths: 7 bits per byte, low bits first, the top
+/// bit set when another byte follows (the third byte has 8).
+async fn compact_len<R: AsyncRead + Unpin>(r: &mut R) -> anyhow::Result<usize> {
+    let mut len = 0;
+    for shift in [0, 7] {
+        let b = r.read_u8().await? as usize;
+        len |= (b & 0x7f) << shift;
+        if b & 0x80 == 0 {
+            return Ok(len);
+        }
+    }
+    Ok(len | (r.read_u8().await? as usize) << 14)
+}
+
+/// A Tight rectangle (`w` x `h`) as RGBA: one colour, a JPEG, or pixels
+/// (as they are, from a palette, or as gradient differences) usually zlib
+/// compressed on one of four streams. Pixels are 3 bytes (R G B) here.
+async fn read_tight<R: AsyncRead + Unpin>(r: &mut R, streams: &mut [Decompress; 4], w: usize, h: usize) -> anyhow::Result<Vec<u8>> {
+    if w > 2048 {
+        bail!("Tight: rectangle wider than 2048 pixels");
+    }
+    let control = r.read_u8().await?;
+    for (i, stream) in streams.iter_mut().enumerate() {
+        if control & (1 << i) != 0 {
+            stream.reset(true);
+        }
+    }
+    let rgba = |p: &[u8]| [p[0], p[1], p[2], 255];
+    let (stream, filter) = match control >> 4 {
+        8 => {
+            let mut p = [0u8; 3];
+            r.read_exact(&mut p).await?;
+            return Ok(rgba(&p).repeat(w * h));
+        }
+        9 => {
+            let len = compact_len(r).await?;
+            let mut data = vec![0u8; len];
+            r.read_exact(&mut data).await?;
+            return jpeg(&data, w, h);
+        }
+        kind @ 0..=7 => (kind as usize & 3, if kind & 4 != 0 { r.read_u8().await? } else { 0 }),
+        other => bail!("Tight: unknown compression {other}"),
+    };
+    let mut palette = Vec::new();
+    if filter == 1 {
+        let mut colours = vec![0u8; (r.read_u8().await? as usize + 1) * 3];
+        r.read_exact(&mut colours).await?;
+        palette = colours.as_chunks::<3>().0.iter().map(|p| rgba(p)).collect();
+    }
+    let row = match filter {
+        0 | 2 => w * 3,
+        1 if palette.len() == 2 => w.div_ceil(8),
+        1 => w,
+        other => bail!("Tight: unknown filter {other}"),
+    };
+    let size = row * h;
+    // Under 12 bytes the data comes as it is, else zlib compressed.
+    let data = if size < 12 {
+        let mut data = vec![0u8; size];
+        r.read_exact(&mut data).await?;
+        data
+    } else {
+        let len = compact_len(r).await?;
+        if len > size + size / 8 + 1024 {
+            bail!("Tight: rectangle data too large");
+        }
+        let mut packed = vec![0u8; len];
+        r.read_exact(&mut packed).await?;
+        let data = inflate(&mut streams[stream], &packed, size)?;
+        if data.len() != size {
+            bail!("Tight: rectangle data does not match its size");
+        }
+        data
+    };
+    let colour = |i: u8| palette.get(i as usize).copied().ok_or_else(|| anyhow!("Tight: colour outside the palette"));
+    let mut out = Vec::with_capacity(w * h * 4);
+    match filter {
+        1 if palette.len() == 2 => {
+            for line in data.chunks_exact(row) {
+                for x in 0..w {
+                    out.extend(colour(line[x / 8] >> (7 - x % 8) & 1)?);
+                }
+            }
+        }
+        1 => {
+            for &i in &data {
+                out.extend(colour(i)?);
+            }
+        }
+        2 => {
+            // Each value is the difference from left + above - above-left.
+            let mut prev = vec![0u8; w * 3];
+            for line in data.chunks_exact(row) {
+                let mut current = vec![0u8; w * 3];
+                for i in 0..w * 3 {
+                    let left = if i >= 3 { current[i - 3] as i32 } else { 0 };
+                    let up_left = if i >= 3 { prev[i - 3] as i32 } else { 0 };
+                    let predicted = (left + prev[i] as i32 - up_left).clamp(0, 255);
+                    current[i] = (predicted as u8).wrapping_add(line[i]);
+                }
+                out.extend(current.as_chunks::<3>().0.iter().flat_map(|p| rgba(p)));
+                prev = current;
+            }
+        }
+        _ => out.extend(data.as_chunks::<3>().0.iter().flat_map(|p| rgba(p))),
+    }
+    Ok(out)
+}
+
+/// A Tight JPEG rectangle, which must be `w` x `h`, as RGBA.
+fn jpeg(data: &[u8], w: usize, h: usize) -> anyhow::Result<Vec<u8>> {
+    use zune_jpeg::zune_core::{bytestream::ZCursor, colorspace::ColorSpace, options::DecoderOptions};
+    let options = DecoderOptions::default().jpeg_set_out_colorspace(ColorSpace::RGBA).set_max_width(2048).set_max_height(16384);
+    let mut decoder = zune_jpeg::JpegDecoder::new_with_options(ZCursor::new(data), options);
+    let pixels = decoder.decode().map_err(|e| anyhow!("Tight: bad JPEG picture ({e:?})"))?;
+    if decoder.dimensions() != Some((w, h)) || pixels.len() != w * h * 4 {
+        bail!("Tight: the JPEG picture is not the size of its rectangle");
+    }
+    Ok(pixels)
 }
 
 /// Inflate one rectangle's share of the connection's zlib stream.
@@ -888,6 +1039,71 @@ mod tests {
         Picture::new(2, 2).unwrap().put(0, 0, 0, 2, &[]);
     }
 
+    fn tight(data: &[u8], streams: &mut [Decompress; 4], w: usize, h: usize) -> anyhow::Result<Vec<u8>> {
+        ssh::runtime().unwrap().block_on(read_tight(&mut &data[..], streams, w, h))
+    }
+
+    #[test]
+    fn tight_pictures_decode() {
+        let streams = &mut Streams::new().tight;
+        let len = |bytes: &[u8]| ssh::runtime().unwrap().block_on(compact_len(&mut &bytes[..])).unwrap();
+        assert_eq!((len(&[5]), len(&[0x90, 0x4e]), len(&[0xff, 0xff, 0xff])), (5, 10000, 4194303));
+
+        // One colour; pixels as they are (under 12 bytes: not compressed).
+        assert_eq!(tight(&[0x80, 0, 255, 0], streams, 2, 1).unwrap(), [GREEN, GREEN].concat());
+        assert_eq!(tight(&[0x00, 255, 0, 0, 0, 0, 255], streams, 2, 1).unwrap(), [RED, BLUE].concat());
+        // Two-colour palette, 1 bit each, rows padded to a byte: 10 / 01.
+        let out = tight(&[0x40, 1, 1, 255, 0, 0, 0, 0, 255, 0b1000_0000, 0b0100_0000], streams, 2, 2).unwrap();
+        assert_eq!(out.as_chunks::<4>().0, [BLUE, RED, RED, BLUE]);
+        // Gradient: each value is the difference from left + above - above-left.
+        let out = tight(&[0x40, 2, 10, 20, 30, 5, 5, 5], streams, 2, 1).unwrap();
+        assert_eq!(out.as_chunks::<4>().0, [[10, 20, 30, 255], [15, 25, 35, 255]]);
+
+        // Three-colour palette, 16 pixels zlib-compressed on stream 1, sent twice
+        // on the same stream, then again after resetting it.
+        let mut zlib = flate2::Compress::new(flate2::Compression::default(), true);
+        let indices = [0u8, 1, 2, 1].repeat(4);
+        let mut rect = |reset: u8, zlib: &mut flate2::Compress| {
+            let mut packed = Vec::with_capacity(64);
+            zlib.compress_vec(&indices, &mut packed, flate2::FlushCompress::Sync).unwrap();
+            let mut data = vec![0x50 | reset, 1, 2, 255, 0, 0, 0, 255, 0, 0, 0, 255, packed.len() as u8];
+            data.extend(packed);
+            data
+        };
+        let want: Vec<u8> = [RED, GREEN, BLUE, GREEN].repeat(4).concat();
+        assert_eq!(tight(&rect(0, &mut zlib), streams, 4, 4).unwrap(), want);
+        assert_eq!(tight(&rect(0, &mut zlib), streams, 4, 4).unwrap(), want, "the stream carries on");
+        let mut fresh = flate2::Compress::new(flate2::Compression::default(), true);
+        assert_eq!(tight(&rect(0b0010, &mut fresh), streams, 4, 4).unwrap(), want, "stream 1 reset");
+
+        // A JPEG picture (16 x 8, red): lossy, so near enough.
+        let jpg = include_bytes!("testdata/red16x8.jpg");
+        let mut data = vec![0x90, (jpg.len() & 0x7f) as u8 | 0x80, (jpg.len() >> 7) as u8];
+        data.extend(jpg);
+        let out = tight(&data, streams, 16, 8).unwrap();
+        assert!(out.as_chunks::<4>().0.iter().all(|p| p[0] > 240 && p[1] < 15 && p[2] < 15 && p[3] == 255));
+        assert!(tight(&data, streams, 8, 8).is_err(), "a JPEG of the wrong size");
+
+        // Broken data is an error, not a panic.
+        assert!(tight(&[0x40, 1, 1, 255, 0, 0, 0, 0, 255, 0x80], streams, 2, 2).is_err(), "cut short");
+        assert!(tight(&[0x40, 1, 0, 255, 0, 0, 5, 6], streams, 2, 1).is_err(), "index outside the palette");
+        assert!(tight(&[0x40, 7], streams, 1, 1).is_err(), "unknown filter");
+        assert!(tight(&[0xb0], streams, 1, 1).is_err(), "unknown compression");
+        assert!(tight(&[0x80, 0, 0, 0], streams, 4096, 1).is_err(), "too wide");
+    }
+
+    #[test]
+    fn quality_follows_the_connection_speed() {
+        let encodings = |speed| {
+            let messages = start_messages(1, 1, speed);
+            let n = u16::from_be_bytes([messages[22], messages[23]]) as usize;
+            messages[24..24 + n * 4].as_chunks::<4>().0.iter().map(|e| i32::from_be_bytes(*e)).collect::<Vec<_>>()
+        };
+        assert_eq!(encodings(opencrt_rdp_proto::SPEED_BEST), [TIGHT_PICTURES, ZRLE, COPY_RECT, RAW, DESKTOP_SIZE], "lossless");
+        assert!(encodings(opencrt_rdp_proto::SPEED_BALANCED).ends_with(&[COMPRESS_LEVEL + 6, JPEG_QUALITY + 8]));
+        assert!(encodings(opencrt_rdp_proto::SPEED_FASTEST).ends_with(&[COMPRESS_LEVEL + 9, JPEG_QUALITY + 4]));
+    }
+
     #[test]
     fn keys_become_keysyms() {
         let ch = |s: &str| Key::Character(s.into());
@@ -962,7 +1178,7 @@ mod tests {
             init.extend(b"test");
             s.write_all(&init).unwrap();
             // SetPixelFormat, SetEncodings (4) and a full update request.
-            assert_eq!(read_n(&mut s, 20 + 20)[..2], [0, 0]);
+            assert_eq!(read_n(&mut s, start_messages(4, 2, crate::rdp::SPEED_BALANCED).len() - 10)[..2], [0, 0]);
             assert_eq!(read_n(&mut s, 10), update_request(false, (4, 2)));
 
             // A red raw pixel, then two ZRLE rectangles on one zlib stream, and
@@ -989,7 +1205,7 @@ mod tests {
             // Hang up.
         });
 
-        let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("secret".into()), jump: None, proxy: None };
+        let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("secret".into()), jump: None, proxy: None, speed: crate::rdp::SPEED_BALANCED };
         let (mut handle, input) = connect(settings);
         assert!(matches!(next_event(&mut handle), SshEvent::Cipher(c) if c == "VNC, RFB 3.8, password, not encrypted"));
         assert!(matches!(next_event(&mut handle), SshEvent::Screen(Screen::Size { width: 4, height: 2 })));
@@ -1050,9 +1266,9 @@ mod tests {
             init.extend([0, 1, 0, 0, 0, 1, 0, 0]);
             init.extend(tight_list(&[(150, b"TGHTCUS_EOCU"), (16, b"TRDVZRLE____")])[4..].iter());
             s.write_all(&init).unwrap();
-            assert_eq!(read_n(&mut s, 40)[..2], [0, 0], "the session starts right after");
+            assert_eq!(read_n(&mut s, start_messages(4, 2, crate::rdp::SPEED_BALANCED).len())[..2], [0, 0], "the session starts right after");
         });
-        let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("secret".into()), jump: None, proxy: None };
+        let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("secret".into()), jump: None, proxy: None, speed: crate::rdp::SPEED_BALANCED };
         let (mut handle, _input) = connect(settings);
         assert!(matches!(next_event(&mut handle), SshEvent::Cipher(c) if c == "VNC, RFB 3.8, password, not encrypted"));
         assert!(matches!(next_event(&mut handle), SshEvent::Screen(Screen::Size { width: 4, height: 2 })));
@@ -1066,7 +1282,7 @@ mod tests {
             let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
             let port = listener.local_addr().unwrap().port();
             std::thread::spawn(move || listener.incoming().take(connections).for_each(|s| script(&mut s.unwrap())));
-            let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("wrong".into()), jump: None, proxy: None };
+            let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("wrong".into()), jump: None, proxy: None, speed: crate::rdp::SPEED_BALANCED };
             let mut handle = connect(settings).0;
             loop {
                 match next_event(&mut handle) {

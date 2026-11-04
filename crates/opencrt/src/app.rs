@@ -319,6 +319,7 @@ impl Target {
             password: self.cached_password.as_ref().map(|s| s.0.clone()),
             jump: (!self.hops.is_empty()).then(|| self.credentials()),
             proxy: self.proxy.clone(),
+            speed: self.rdp_speed.unwrap_or(rdp::SPEED_BALANCED),
         })
     }
 

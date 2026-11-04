@@ -1063,7 +1063,7 @@ mod tests {
         // on the same stream, then again after resetting it.
         let mut zlib = flate2::Compress::new(flate2::Compression::default(), true);
         let indices = [0u8, 1, 2, 1].repeat(4);
-        let mut rect = |reset: u8, zlib: &mut flate2::Compress| {
+        let rect = |reset: u8, zlib: &mut flate2::Compress| {
             let mut packed = Vec::with_capacity(64);
             zlib.compress_vec(&indices, &mut packed, flate2::FlushCompress::Sync).unwrap();
             let mut data = vec![0x50 | reset, 1, 2, 255, 0, 0, 0, 255, 0, 0, 0, 255, packed.len() as u8];

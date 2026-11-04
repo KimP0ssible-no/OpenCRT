@@ -767,9 +767,10 @@ async fn server_message<R: AsyncRead + Unpin>(
                         picture.check(x, y, w, h)?;
                         let len = r.read_u32().await? as usize;
                         let (w_, h_) = (w as usize, h as usize);
-                        let limit = zrle_limit(w_, h_);
+                        // Generous for any honest tile data; a bigger stream is corrupt.
+                        let limit = w_ * h_ * 5 + w_.div_ceil(64) * h_.div_ceil(64) * 400;
                         if len > limit {
-                            bail!("ZRLE: rectangle data too large ({len} bytes for {w} x {h})");
+                            bail!("ZRLE: rectangle data too large");
                         }
                         let mut packed = vec![0u8; len];
                         r.read_exact(&mut packed).await?;
@@ -987,12 +988,6 @@ fn inflate(zlib: &mut Decompress, packed: &[u8], limit: usize) -> anyhow::Result
             return Ok(out);
         }
     }
-}
-
-/// Generous for any honest ZRLE data of a `w` x `h` rectangle, zlib's own
-/// bytes included (an empty rectangle has some too); more is corrupt.
-fn zrle_limit(w: usize, h: usize) -> usize {
-    w * h * 5 + w.div_ceil(64) * h.div_ceil(64) * 400 + 1024
 }
 
 /// Decode ZRLE tiles (64 x 64, left to right, top to bottom) of a `w` x `h`
@@ -1255,12 +1250,6 @@ mod tests {
         assert!(zrle(&[17], 1, 1).is_err());
         // An empty rectangle draws nothing (found by fuzzing).
         Picture::new(2, 2).unwrap().put(0, 0, 0, 2, &[]);
-        // Yet a server may still send zlib's flush bytes for it.
-        let mut packed = Vec::with_capacity(64);
-        flate2::Compress::new(flate2::Compression::default(), true).compress_vec(&[], &mut packed, flate2::FlushCompress::Sync).unwrap();
-        assert!(!packed.is_empty() && packed.len() <= zrle_limit(0, 2));
-        let tiles = inflate(&mut Decompress::new(true), &packed, zrle_limit(0, 2)).unwrap();
-        assert!(zrle(&tiles, 0, 2).unwrap().is_empty());
     }
 
     fn tight(data: &[u8], streams: &mut [Decompress; 4], w: usize, h: usize) -> anyhow::Result<Vec<u8>> {

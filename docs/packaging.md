@@ -106,8 +106,11 @@ git push github v0.1.0
   GPL-3.0-only, so the shipped `opencrt` binary is GPL-3.0-only (every
   component OSI-licensed, as SignPath Foundation requires). Dependencies must
   stay GPL-3.0-compatible: `about.toml` accepts no GPL-2.0-only licence.
-- **Code signing**: Windows installer/executable and macOS bundle are unsigned;
-  macOS also needs notarisation for Gatekeeper.
+- **Code signing**: release tags sign the Windows executables, setup,
+  uninstaller and MSI with the Certum certificate (secrets `CERTUM_USERNAME`
+  and `CERTUM_TOTP_SECRET` in the `release` environment, which approves the
+  Windows package job as well as the release job). Pull request and local
+  builds stay unsigned. The macOS bundle is unsigned and not notarised.
 - **Identifiers**: the macOS bundle id (`org.opencrt.OpenCRT`) and the Inno
   Setup `AppId` are placeholders chosen for this project; keep them stable once
   shipped (upgrades rely on them).

@@ -243,14 +243,14 @@ If OpenCRT ever stops unexpectedly, `crash.log` in the same folder records why.
   (installers and releases).
 
 ## Code signing policy
-Windows releases are to be signed with a [Certum](https://www.certum.eu)
-Open Source Code Signing certificate, issued to the project's maintainer. The
-certificate has been applied for and paid for; until it is activated, Windows
-builds are unsigned.
+Windows releases are signed with a [Certum](https://www.certum.eu) Open
+Source Code Signing certificate issued to the project's maintainer: the
+programs, the setup and its uninstaller, and the MSI. The key stays in
+Certum's SimplySign cloud. Releases before the first signed one are unsigned.
 
 Only Windows files built from this repository's source by its GitHub Actions
-release workflow will be signed, and every release that signs them is
-approved by hand.
+release workflow are signed, and every release that signs them is approved by
+hand.
 
 | Role | Members |
 | --- | --- |

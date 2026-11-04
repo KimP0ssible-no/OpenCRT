@@ -967,23 +967,25 @@ fn jpeg(data: &[u8], w: usize, h: usize) -> anyhow::Result<Vec<u8>> {
     Ok(pixels)
 }
 
-/// Inflate one rectangle's share of the connection's zlib stream.
+/// Inflate one rectangle's share of the connection's zlib stream, at most
+/// `limit` bytes of it.
 fn inflate(zlib: &mut Decompress, packed: &[u8], limit: usize) -> anyhow::Result<Vec<u8>> {
-    let mut out = Vec::with_capacity(packed.len() * 4 + 4096);
+    let mut out = Vec::with_capacity((packed.len() * 4 + 4096).min(limit + 1));
     let start = zlib.total_in();
     loop {
         let used = (zlib.total_in() - start) as usize;
+        if out.len() > limit {
+            bail!("VNC: a rectangle's compressed data unpacks larger than the rectangle");
+        }
+        // Room to spare after the last byte: a buffer filled exactly may have more to come.
         if used >= packed.len() && out.len() < out.capacity() {
             return Ok(out);
         }
         if out.len() == out.capacity() {
-            if out.len() >= limit {
-                bail!("ZRLE: rectangle data too large");
-            }
-            out.reserve(out.capacity());
+            out.reserve(out.capacity().min(limit + 1 - out.len()).max(1));
         }
         let before = (zlib.total_in(), zlib.total_out());
-        zlib.decompress_vec(&packed[used..], &mut out, FlushDecompress::Sync).context("ZRLE: bad compressed data")?;
+        zlib.decompress_vec(&packed[used..], &mut out, FlushDecompress::Sync).context("VNC: bad compressed rectangle data")?;
         if (zlib.total_in(), zlib.total_out()) == before {
             return Ok(out);
         }
@@ -1250,6 +1252,17 @@ mod tests {
         assert!(zrle(&[17], 1, 1).is_err());
         // An empty rectangle draws nothing (found by fuzzing).
         Picture::new(2, 2).unwrap().put(0, 0, 0, 2, &[]);
+    }
+
+    #[test]
+    fn inflate_fills_its_limit_exactly() {
+        // Some sizes fill the output buffer to the byte (seen with Tight on TightVNC).
+        for n in 4000..4400 {
+            let mut packed = Vec::with_capacity(n + 64);
+            flate2::Compress::new(flate2::Compression::default(), true).compress_vec(&vec![0; n], &mut packed, flate2::FlushCompress::Sync).unwrap();
+            assert_eq!(inflate(&mut Decompress::new(true), &packed, n).unwrap().len(), n, "{n} bytes");
+            assert!(inflate(&mut Decompress::new(true), &packed, n - 1).is_err(), "more than the limit");
+        }
     }
 
     fn tight(data: &[u8], streams: &mut [Decompress; 4], w: usize, h: usize) -> anyhow::Result<Vec<u8>> {

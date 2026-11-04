@@ -130,6 +130,23 @@ pub fn paste(store: &mut SessionStore, paths: &[String], folder: &str, cut: bool
     moved
 }
 
+/// Sessions in `folder` or any folder below it.
+pub fn in_folder(session: &Session, folder: &str) -> bool {
+    session.folder == folder || session.folder.strip_prefix(folder).is_some_and(|rest| rest.starts_with('/'))
+}
+
+/// Delete the sessions at `paths`, or with `folder` that folder with its
+/// subfolders and every session in them. Returns the deleted sessions' paths.
+pub fn delete(store: &mut SessionStore, paths: &[String], folder: Option<&str>) -> Vec<String> {
+    let doomed = |s: &Session| paths.contains(&s.path()) || folder.is_some_and(|f| in_folder(s, f));
+    let gone = store.sessions.iter().filter(|s| doomed(s)).map(Session::path).collect();
+    store.sessions.retain(|s| !doomed(s));
+    if let Some(folder) = folder {
+        store.folders.retain(|f| *f != folder && !f.strip_prefix(folder).is_some_and(|rest| rest.starts_with('/')));
+    }
+    gone
+}
+
 /// Give `target` the options that differ between `before` and `after`,
 /// keeping its own name and folder (editing several sessions at once).
 pub fn apply_changes(before: &Session, after: &Session, target: &mut Session) -> Result<(), String> {
@@ -560,6 +577,19 @@ mod tests {
         assert_eq!(moved, vec![("Lab/db".to_string(), "Prod/db (2)".to_string())]);
         assert_eq!(store.sessions[1].host, "h2");
         assert_eq!(store.sessions.len(), 4);
+    }
+
+    #[test]
+    fn deletes_picked_sessions_and_whole_folders() {
+        let mut store = SessionStore {
+            sessions: vec![session("Lab", "a", "h"), session("Lab/sub", "b", "h"), session("Labs", "c", "h"), session("", "d", "h"), session("", "e", "h")],
+            folders: vec!["Lab".into(), "Lab/sub".into(), "Lab/empty".into(), "Labs".into()],
+            ..Default::default()
+        };
+        assert_eq!(delete(&mut store, &["d".into(), "Labs/c".into()], None), ["Labs/c", "d"]);
+        assert_eq!(delete(&mut store, &[], Some("Lab")), ["Lab/a", "Lab/sub/b"]);
+        assert_eq!(store.sessions.iter().map(Session::path).collect::<Vec<_>>(), ["e"]);
+        assert_eq!(store.folders, ["Labs"], "subfolders go with their folder; Labs is not inside Lab");
     }
 
     #[test]

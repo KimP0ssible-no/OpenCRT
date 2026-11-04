@@ -29,10 +29,12 @@ The packages need nothing beyond what every system already has:
   only glibc's own libraries and libgcc. fontconfig is loaded at run time
   if present (the UI and terminal fonts are built in); the display libraries
   (Wayland / X11, xkbcommon) are loaded by the windowing layer and are part
-  of any desktop. The .deb depends only on `libc6 (>= 2.28)`, the .rpm only
-  on `glibc >= 2.28` (both written out in `crates/opencrt/Cargo.toml`: the
-  tools' automatic scans ask for more than is needed, or for names no
-  package provides). Build the binaries this way locally with
+  of any desktop. The .deb depends only on `libc6 (>= 2.28)` and `git`, the
+  .rpm only on `glibc >= 2.28` and `git` (both written out in
+  `crates/opencrt/Cargo.toml`: the tools' automatic scans ask for more than
+  is needed, or for names no package provides). git is the one program
+  OpenCRT runs rather than links: it keeps the settings repository
+  (Global Options > Settings Sync); the Arch package depends on it too. Build the binaries this way locally with
   `packaging/linux/build-portable.sh` (Docker; output in
   `target/portable/release/`), then package with
   `CARGO_TARGET_DIR=target/portable cargo deb -p opencrt --no-build` and
@@ -41,7 +43,12 @@ The packages need nothing beyond what every system already has:
   a newer glibc or another library.
 - **Windows**: the C runtime is linked into the executables
   (`.cargo/config.toml`, `+crt-static`), so no Visual C++ Redistributable is
-  needed; CI fails if an executable imports the dynamic runtime.
+  needed; CI fails if an executable imports the dynamic runtime. Git is not
+  bundled: Settings Sync offers to download Git for Windows' installer from
+  its official GitHub releases (checked against the SHA-256 published there)
+  when git is missing.
+- **macOS**: git comes with Apple's command line developer tools; macOS
+  offers to install them the first time git runs.
 
 Checked on 2026-10-16: the .deb installs with no other packages (apt lists
 only `opencrt`) on Debian 11, Ubuntu 20.04 and 24.04; the .rpm installs with

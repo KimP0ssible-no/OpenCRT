@@ -1553,6 +1553,8 @@ struct App {
     next_update_check: Instant,
     /// The new version being downloaded (and on macOS put in place): what to start.
     update_install: Option<(update::InstallKind, std::sync::mpsc::Receiver<Result<PathBuf, String>>)>,
+    /// Git for Windows' installer being downloaded (Settings Sync).
+    git_download: Option<std::sync::mpsc::Receiver<Result<PathBuf, String>>>,
     /// Public keys being added to servers' authorized_keys: (host, result).
     uploads: Vec<(String, std::sync::mpsc::Receiver<Result<bool, String>>)>,
     /// Key files still to load into the agent (encrypted ones ask first).
@@ -1800,7 +1802,8 @@ impl App {
             None => (SessionStore::default(), Some("no configuration directory".into())),
         };
         // Like sessions.toml, an unreadable options.toml is kept rather than overwritten.
-        let (options, options_error) = match config::options_file().map(|p| config::load::<Options>(&p)) {
+        let machine = config::machine_options_file();
+        let (options, options_error) = match config::options_file().map(|p| config::load_options(&p, machine.as_deref())) {
             Some(Ok(options)) => (options, None),
             Some(Err(e)) => (Options::default(), Some(format!("{e:#}"))),
             None => (Options::default(), Some("no configuration directory".into())),
@@ -1833,6 +1836,7 @@ impl App {
             update_check: None,
             next_update_check: Instant::now(),
             update_install: None,
+            git_download: None,
             shown_tabs: Vec::new(),
             shown_recent: Vec::new(),
             window_title: String::new(),
@@ -1925,8 +1929,9 @@ impl App {
             (None, Some(path)) => config::save(&path, &self.store),
             (None, None) => Err(anyhow::anyhow!("no configuration directory")),
         };
-        if let Err(e) = result {
-            self.notify(format!("Sessions not saved: {e:#}"));
+        match result {
+            Ok(()) => crate::gitsync::changed(),
+            Err(e) => self.notify(format!("Sessions not saved: {e:#}")),
         }
         self.rows_dirty = true;
     }
@@ -1934,11 +1939,12 @@ impl App {
     fn save_options(&mut self) {
         let result = match (&self.options_error, config::options_file()) {
             (Some(e), _) => Err(anyhow::anyhow!("options.toml could not be read ({e}); not overwriting it")),
-            (None, Some(path)) => config::save(&path, &self.options),
+            (None, Some(path)) => config::save_options(&path, config::machine_options_file().as_deref(), &self.options),
             (None, None) => Err(anyhow::anyhow!("no configuration directory")),
         };
-        if let Err(e) = result {
-            self.notify(format!("Options not saved: {e:#}"));
+        match result {
+            Ok(()) => crate::gitsync::changed(),
+            Err(e) => self.notify(format!("Options not saved: {e:#}")),
         }
     }
 
@@ -3212,6 +3218,9 @@ impl App {
     /// Periodic work: drain sessions, raise prompts, fit the grid, repaint, refresh chrome.
     fn tick(&mut self, ui: &MainWindow) {
         let now = Instant::now();
+        if let Some(note) = crate::gitsync::take_note() {
+            self.notify(note);
+        }
         // Host-controlled printing.
         for i in 0..self.tabs.len() {
             for job in std::mem::take(&mut self.tabs[i].print_jobs) {
@@ -3292,6 +3301,7 @@ impl App {
         }
         self.update_done(ui);
         self.install_done(ui);
+        self.git_download_done(ui);
         let finished: Vec<(String, Result<bool, String>)> = {
             let mut done = Vec::new();
             self.uploads.retain(|(host, rx)| match rx.try_recv() {
@@ -5455,6 +5465,7 @@ impl App {
             "so-rdp-share" => ui.set_so_rdp_share(text),
             "go-config-dir" => ui.set_go_config_dir(text),
             "go-key" => ui.set_go_global_key(text),
+            "go-git-key" => ui.set_go_git_key(text),
             "kg-file" => ui.set_kg_file(text),
             "fwd-app" => ui.set_fwd_app(text),
             _ => {}
@@ -5581,6 +5592,36 @@ impl App {
                 ui.set_update_status(format!("Could not update: {e}. Download it from the release page instead.").into());
             }
         }
+    }
+
+    /// Settings Sync on Windows without git: fetch Git for Windows' installer.
+    fn get_git(&mut self, ui: &MainWindow) {
+        if self.git_download.is_some() {
+            return;
+        }
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let _ = tx.send(update::download_git_for_windows().map_err(|e| format!("{e:#}")));
+        });
+        self.git_download = Some(rx);
+        ui.set_go_git_status("Downloading Git for Windows from its official releases...".into());
+    }
+
+    fn git_download_done(&mut self, ui: &MainWindow) {
+        let Some(rx) = &self.git_download else {
+            return;
+        };
+        let result = match rx.try_recv() {
+            Ok(result) => result,
+            Err(std::sync::mpsc::TryRecvError::Empty) => return,
+            Err(_) => Err("the download stopped".to_string()),
+        };
+        self.git_download = None;
+        let status = match result.and_then(|path| update::shell_open(&path, "").map_err(|e| format!("{e:#}"))) {
+            Ok(()) => "Git's installer is running: finish it, then press OK.".to_string(),
+            Err(e) => format!("Could not get Git for Windows: {e}. It is also at git-scm.com."),
+        };
+        ui.set_go_git_status(status.into());
     }
 
     /// A key being created in the background has finished.
@@ -6475,6 +6516,16 @@ impl App {
         ui.set_go_word_delimiters(self.options.word_delimiters.clone().into());
         ui.set_go_download(self.options.download_folder.clone().into());
         ui.set_go_config_dir(config::chosen_dir().into());
+        let remote = crate::gitsync::remote().unwrap_or_default();
+        ui.set_go_git_url(remote.url.into());
+        ui.set_go_git_user(remote.user.into());
+        ui.set_go_git_key(remote.key_file.into());
+        ui.set_go_git_token(SharedString::new());
+        ui.set_go_git_token_saved(matches!(config::git_token(), Ok(Some(_))));
+        ui.set_go_git_missing(cfg!(windows) && !crate::gitsync::git_installed());
+        if self.git_download.is_none() {
+            ui.set_go_git_status(SharedString::new());
+        }
         ui.set_go_printer(self.options.print_printer.clone().into());
         let number = |n: u32| if n == 0 { SharedString::new() } else { n.to_string().into() };
         ui.set_go_print_font(number(self.options.print_font_size));
@@ -6550,6 +6601,15 @@ impl App {
         let config_dir = ui.get_go_config_dir().trim().to_string();
         if !config_dir.is_empty() && !Path::new(&config_dir).is_absolute() {
             return ui.set_go_error("General: the configuration folder must be a full path.".into());
+        }
+        let git_url = ui.get_go_git_url().trim().to_string();
+        if !git_url.is_empty() && crate::gitsync::remote().is_none_or(|r| r.url != git_url) && !crate::gitsync::git_installed() {
+            let how = match std::env::consts::OS {
+                "windows" => "use Download Git for Windows on that page",
+                "macos" => "install Apple's command line developer tools (xcode-select --install)",
+                _ => "install it with your package manager",
+            };
+            return ui.set_go_error(format!("Settings Sync needs git, which is not installed: {how}.").into());
         }
         let tftp_allow = ui.get_go_tftp_allow().trim().to_string();
         if crate::forward::parse_allow(&tftp_allow).is_none() {
@@ -6639,7 +6699,22 @@ impl App {
         self.save_options();
         // After saving, so a copy into the new folder has today's settings.
         let mut restart = None;
-        if config_dir != config::chosen_dir() {
+        let remote = crate::gitsync::Remote {
+            url: ui.get_go_git_url().trim().to_string(),
+            user: ui.get_go_git_user().trim().to_string(),
+            key_file: ui.get_go_git_key().trim().to_string(),
+        };
+        let token = Some(ui.get_go_git_token().to_string()).filter(|t| !t.is_empty());
+        if remote != crate::gitsync::remote().unwrap_or_default() || token.is_some() {
+            let remote = (!remote.url.is_empty()).then_some(remote);
+            restart = match crate::gitsync::configure(remote, token) {
+                Ok(note) => Some(format!("{note} Restart OpenCRT now?")),
+                Err(e) => {
+                    self.notify(format!("Settings repository not changed: {e:#}"));
+                    None
+                }
+            };
+        } else if config_dir != config::chosen_dir() {
             let shown = if config_dir.is_empty() { "the default folder" } else { &config_dir };
             restart = match config::choose_dir(&config_dir) {
                 Ok(copied) => {
@@ -7374,6 +7449,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
     on!(on_scheme_save, |app, ui| app.scheme_save(&ui));
     on!(on_scheme_delete, |app, ui| app.scheme_delete(&ui));
     on!(on_global_options_ok, |app, ui| app.global_options_ok(&ui));
+    on!(on_go_get_git, |app, ui| app.get_git(&ui));
     on!(on_confirm_answer, |app, ui, yes| app.confirm_answer(yes, &ui));
     on!(on_name_answer, |app, ui, ok| app.name_answer(ok, &ui));
     on!(on_files_click, |app, _ui, tab, side, row, ctrl, shift| {

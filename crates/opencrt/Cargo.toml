@@ -11,9 +11,10 @@ license = "Apache-2.0"
 [package.metadata.deb]
 maintainer = "Kim Attree"
 section = "net"
-# Built against glibc 2.28 (packaging/linux/build-portable.sh); nothing else is
-# needed. Written out because dpkg-shlibdeps on a newer build machine asks for more.
-depends = "libc6 (>= 2.28)"
+# Built against glibc 2.28 (packaging/linux/build-portable.sh); git runs the
+# settings repository (Settings Sync). Written out because dpkg-shlibdeps on a
+# newer build machine asks for more.
+depends = "libc6 (>= 2.28), git"
 extended-description = "Tabbed terminal client with a session manager, SFTP, port forwarding and logging."
 assets = [
     ["target/release/opencrt", "usr/bin/", "755"],
@@ -32,10 +33,10 @@ assets = [
 [package.metadata.generate-rpm]
 # opencrt is GPL-3.0-only as built with Slint; opencrt-rdp is Apache-2.0.
 license = "Apache-2.0 AND GPL-3.0-only"
-# As for the .deb: glibc 2.28 is all it needs. The automatic scan writes
-# requirements ("...[WEAK]") that no package provides, so it is off.
+# As for the .deb: glibc 2.28, and git for Settings Sync. The automatic scan
+# writes requirements ("...[WEAK]") that no package provides, so it is off.
 auto-req = "no"
-requires = { glibc = ">= 2.28" }
+requires = { glibc = ">= 2.28", git = "*" }
 assets = [
     { source = "target/release/opencrt", dest = "/usr/bin/opencrt", mode = "755" },
     { source = "target/release/opencrt-rdp", dest = "/usr/bin/opencrt-rdp", mode = "755" },
@@ -94,6 +95,12 @@ tokio-rustls = { version = "0.26", default-features = false, features = ["aws_lc
 sha2 = "0.11"
 ureq = { version = "3.4.2", default-features = false, features = ["rustls-no-provider", "platform-verifier", "win-system-proxy"] }
 minisign-verify = "0.3.0"
+# Settings repository: the HTTPS login header and this computer's name in
+# commits (both already in the lockfile).
+base64 = "0.22"
+gethostname = "1.1"
+# Git for Windows' release list (GitHub's JSON), for installing git.
+serde_json = "1.0"
 
 [build-dependencies]
 embed-resource = "3.0.12"

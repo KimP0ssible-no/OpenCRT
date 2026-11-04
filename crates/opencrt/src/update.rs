@@ -98,9 +98,15 @@ pub fn download_verified(releases: &str, tag: &str, asset: &str, dir: &Path, key
 
     std::fs::create_dir_all(dir)?;
     let path = dir.join(asset);
-    let response = agent.get(format!("{base}/{asset}")).call().with_context(|| format!("cannot download {asset}"))?;
+    save_checked(&agent, &format!("{base}/{asset}"), &path, &expected).with_context(|| format!("cannot download {asset}"))?;
+    Ok(path)
+}
+
+/// Download `url` to `path`; it is kept only if its SHA-256 is `expected` (hex).
+fn save_checked(agent: &ureq::Agent, url: &str, path: &Path, expected: &str) -> anyhow::Result<()> {
+    let response = agent.get(url).call()?;
     let mut body = response.into_body().into_with_config().limit(512 << 20).reader();
-    let (mut file, mut hash) = (std::fs::File::create(&path)?, sha2::Sha256::new());
+    let (mut file, mut hash) = (std::fs::File::create(path)?, sha2::Sha256::new());
     let mut buf = vec![0; 64 * 1024];
     let copied = loop {
         match body.read(&mut buf) {
@@ -115,14 +121,76 @@ pub fn download_verified(releases: &str, tag: &str, asset: &str, dir: &Path, key
         }
     };
     let actual: String = hash.finalize().iter().map(|b| format!("{b:02x}")).collect();
-    if let Err(e) = copied.map_err(anyhow::Error::from).and_then(|()| match actual == expected {
+    let result = copied.map_err(anyhow::Error::from).and_then(|()| match actual.eq_ignore_ascii_case(expected) {
         true => Ok(()),
-        false => Err(anyhow!("{asset} does not match its checksum in SHA256SUMS")),
-    }) {
-        let _ = std::fs::remove_file(&path);
-        return Err(e.context(format!("cannot download {asset}")));
+        false => Err(anyhow!("the download does not match its published checksum")),
+    });
+    if result.is_err() {
+        let _ = std::fs::remove_file(path);
     }
+    result
+}
+
+/// Git for Windows' official releases (needed for a settings repository).
+const GIT_FOR_WINDOWS: &str = "https://api.github.com/repos/git-for-windows/git/releases/latest";
+
+/// Download the latest Git for Windows installer for this computer (x64 or
+/// ARM64) from its official releases, checked against the SHA-256 the
+/// release publishes.
+pub fn download_git_for_windows() -> anyhow::Result<PathBuf> {
+    let agent = agent(10);
+    let response = agent.get(GIT_FOR_WINDOWS).header("Accept", "application/vnd.github+json").call().context("cannot reach Git for Windows' releases")?;
+    let release: serde_json::Value = serde_json::from_slice(&response.into_body().into_with_config().limit(8 << 20).read_to_vec()?)?;
+    let (name, url, sha) = git_installer(&release, std::env::consts::ARCH).ok_or_else(|| anyhow!("no Git for Windows installer for this computer in the latest release"))?;
+    let dir = std::env::temp_dir().join("opencrt-git");
+    std::fs::create_dir_all(&dir)?;
+    let path = dir.join(&name);
+    save_checked(&agent, &url, &path, &sha).with_context(|| format!("cannot download {name}"))?;
     Ok(path)
+}
+
+/// The installer in a Git for Windows release (GitHub's JSON) for `arch`:
+/// its name, address and SHA-256, from the asset's digest or else the
+/// release notes' checksum table. None without a checksum.
+fn git_installer(release: &serde_json::Value, arch: &str) -> Option<(String, String, String)> {
+    let suffix = match arch {
+        "x86_64" => "-64-bit.exe",
+        "aarch64" => "-arm64.exe",
+        _ => return None,
+    };
+    let asset = release["assets"].as_array()?.iter().find(|a| a["name"].as_str().is_some_and(|n| n.starts_with("Git-") && n.ends_with(suffix)))?;
+    let name = asset["name"].as_str()?.to_string();
+    let url = asset["browser_download_url"].as_str()?.to_string();
+    let hex = |s: &str| s.len() == 64 && s.bytes().all(|b| b.is_ascii_hexdigit());
+    let sha = asset["digest"].as_str().and_then(|d| d.strip_prefix("sha256:")).filter(|d| hex(d)).map(str::to_string).or_else(|| {
+        let notes = release["body"].as_str()?;
+        let line = notes.lines().find(|l| l.contains(&name))?;
+        line.split(|c: char| !c.is_ascii_hexdigit()).find(|w| hex(w)).map(str::to_string)
+    })?;
+    Some((name, url, sha.to_ascii_lowercase()))
+}
+
+/// Start `program` (with `args`) through the shell, so one that needs
+/// administrator rights gets its elevation prompt.
+#[cfg(windows)]
+pub fn shell_open(program: &Path, args: &str) -> anyhow::Result<()> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::UI::Shell::ShellExecuteW;
+    use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+    let wide = |s: &std::ffi::OsStr| s.encode_wide().chain([0]).collect::<Vec<u16>>();
+    let (file, args) = (wide(program.as_os_str()), wide(std::ffi::OsStr::new(args)));
+    // SAFETY: both strings are NUL-terminated and outlive the call.
+    let started = unsafe { ShellExecuteW(std::ptr::null_mut(), std::ptr::null(), file.as_ptr(), args.as_ptr(), std::ptr::null(), SW_SHOWNORMAL) };
+    // Values up to 32 are errors (ShellExecute's documented convention).
+    if started as usize <= 32 {
+        bail!("{} did not start (error {})", program.display(), started as usize);
+    }
+    Ok(())
+}
+
+#[cfg(not(windows))]
+pub fn shell_open(program: &Path, _: &str) -> anyhow::Result<()> {
+    bail!("{} only runs on Windows", program.display())
 }
 
 /// Download the new version and get it ready; returns what [`launch`] starts.
@@ -152,31 +220,11 @@ pub fn launch(kind: InstallKind, path: &Path) -> anyhow::Result<()> {
     }
 }
 
-/// ShellExecute rather than CreateProcess, so that a setup program that needs
-/// administrator rights gets its elevation prompt.
-#[cfg(windows)]
+/// No questions, close OpenCRT if it is still running, start it again
+/// afterwards (/RELAUNCH=1, see packaging/windows/opencrt.iss). CI runs the
+/// setup program with the same switches.
 fn run_setup(setup: &Path) -> anyhow::Result<()> {
-    use std::os::windows::ffi::OsStrExt;
-    use windows_sys::Win32::UI::Shell::ShellExecuteW;
-    use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
-    // No questions, close OpenCRT if it is still running, start it again
-    // afterwards (/RELAUNCH=1, see packaging/windows/opencrt.iss). CI runs the
-    // setup program with the same switches.
-    const ARGS: &str = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /RELAUNCH=1";
-    let wide = |s: &std::ffi::OsStr| s.encode_wide().chain([0]).collect::<Vec<u16>>();
-    let (file, args) = (wide(setup.as_os_str()), wide(std::ffi::OsStr::new(ARGS)));
-    // SAFETY: both strings are NUL-terminated and outlive the call.
-    let started = unsafe { ShellExecuteW(std::ptr::null_mut(), std::ptr::null(), file.as_ptr(), args.as_ptr(), std::ptr::null(), SW_SHOWNORMAL) };
-    // Values up to 32 are errors (ShellExecute's documented convention).
-    if started as usize <= 32 {
-        bail!("the setup program did not start (error {})", started as usize);
-    }
-    Ok(())
-}
-
-#[cfg(not(windows))]
-fn run_setup(_: &Path) -> anyhow::Result<()> {
-    bail!("the setup program only runs on Windows")
+    shell_open(setup, "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /RELAUNCH=1")
 }
 
 /// Replace `app` with the `OpenCRT.app` on disk image `dmg`. The old bundle
@@ -396,6 +444,26 @@ mod tests {
     #[test]
     fn release_key_is_a_minisign_key() {
         assert!(minisign_verify::PublicKey::decode(RELEASE_KEY).is_ok());
+    }
+
+    #[test]
+    fn git_for_windows_installer_is_picked_with_its_checksum() {
+        let sha = "ab".repeat(32);
+        let release = serde_json::json!({
+            "body": format!("| Git-2.51.0-arm64.exe | {} |", "cd".repeat(32)),
+            "assets": [
+                {"name": "PortableGit-2.51.0-64-bit.7z.exe", "browser_download_url": "u0", "digest": format!("sha256:{sha}")},
+                {"name": "Git-2.51.0-64-bit.exe", "browser_download_url": "u1", "digest": format!("sha256:{sha}")},
+                {"name": "Git-2.51.0-arm64.exe", "browser_download_url": "u2", "digest": null},
+            ]
+        });
+        assert_eq!(git_installer(&release, "x86_64"), Some(("Git-2.51.0-64-bit.exe".into(), "u1".into(), sha)));
+        // No digest: the checksum table in the release notes.
+        assert_eq!(git_installer(&release, "aarch64").map(|i| i.2), Some("cd".repeat(32)));
+        assert_eq!(git_installer(&release, "x86"), None);
+        // Without any checksum it is not used.
+        let unchecked = serde_json::json!({"body": "", "assets": [{"name": "Git-2.51.0-64-bit.exe", "browser_download_url": "u1"}]});
+        assert_eq!(git_installer(&unchecked, "x86_64"), None);
     }
 
     #[cfg(target_os = "macos")]

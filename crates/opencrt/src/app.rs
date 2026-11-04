@@ -6752,7 +6752,7 @@ impl App {
         self.apply_keywords();
         self.save_options();
         // After saving, so a copy into the new folder has today's settings.
-        let mut restart = None;
+        let (mut restart, mut failed) = (None, None);
         let remote = crate::gitsync::Remote {
             url: ui.get_go_git_url().trim().to_string(),
             user: ui.get_go_git_user().trim().to_string(),
@@ -6764,7 +6764,7 @@ impl App {
             restart = match crate::gitsync::configure(remote, token) {
                 Ok(note) => Some(format!("{note} Restart OpenCRT now?")),
                 Err(e) => {
-                    self.notify(format!("Settings repository not changed: {e:#}"));
+                    failed = Some(format!("Settings Sync: the repository was not set up: {e:#}"));
                     None
                 }
             };
@@ -6791,6 +6791,10 @@ impl App {
                 tab.terminal.scheme = scheme;
             }
             tab.dirty = true;
+        }
+        if let Some(error) = failed {
+            // The dialog stays open so the address or key can be put right.
+            return ui.set_go_error(error.into());
         }
         ui.set_dialog(DIALOG_NONE);
         ui.invoke_focus_terminal();

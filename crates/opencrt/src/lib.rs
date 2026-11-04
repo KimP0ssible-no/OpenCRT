@@ -8,6 +8,7 @@ mod codec;
 mod config;
 mod filebrowser;
 mod forward;
+mod gitsync;
 #[cfg(fuzzing)]
 pub mod fuzz;
 mod input;
@@ -45,8 +46,11 @@ pub fn cli_main() -> i32 {
 
 /// The GUI application: `opencrt [options]` (see `app::parse_args`).
 pub fn gui_main() -> anyhow::Result<()> {
+    // A settings repository is brought up to date before anything reads it.
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    gitsync::start_up(&args);
     // `/F folder` picks the configuration folder; everything below uses it.
-    let args = config::use_dir_from_args(std::env::args().skip(1).collect());
+    let args = config::use_dir_from_args(args);
     if args.iter().any(|a| a.eq_ignore_ascii_case("/T")) && instance::hand_over(&args) {
         return Ok(());
     }
@@ -68,6 +72,7 @@ pub fn gui_main() -> anyhow::Result<()> {
     if let Err(e) = &result {
         config::log_crash(&format!("error: {e:#}"));
     }
+    gitsync::finish();
     result
 }
 

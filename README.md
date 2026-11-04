@@ -118,6 +118,12 @@ automatic check off in Options > Global Options > General.
   Bar, Command Manager (with folders), Command Window, keyword
   highlighting, Edit > Send Input to All Tabs; import from `~/.ssh/config`,
   export/import of sessions.
+- **Settings Sync**: keep sessions, options and host keys in a private git
+  repository (GitHub, GitLab or your own server; HTTPS with a token or SSH
+  with a key or agent) shared by all your computers on any OS. Changes are
+  merged by content; passwords and machine-specific settings stay on each
+  computer. Uses the installed `git` (a dependency of the Linux packages; on
+  Windows OpenCRT offers to download Git for Windows).
 - **Automation**: [Rhai](https://rhai.rs) scripts (`.rhai`, see Scripting
   below) and simple `wait` / `send` / `sleep` / `timeout` scripts, run from
   Script > Run or as a session's logon script; Script > Start Recording writes

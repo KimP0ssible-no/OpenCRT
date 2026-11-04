@@ -129,6 +129,14 @@ fn main() {
             ui.set_dialog(5);
         }
         "global-options" => ui.set_dialog(6),
+        "settings-sync" => {
+            ui.set_go_category(8);
+            ui.set_go_git_url("https://gitlab.example.net/kim/opencrt-settings.git".into());
+            ui.set_go_git_user("kim".into());
+            ui.set_go_git_token_saved(true);
+            ui.set_go_git_missing(true);
+            ui.set_dialog(6);
+        }
         "print-options" => {
             ui.set_go_category(7);
             ui.set_go_print_font("10".into());

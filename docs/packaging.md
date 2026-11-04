@@ -67,8 +67,9 @@ all of them.
 | Arch Linux | `makepkg` (in Arch) | `packaging/arch/makepkg.sh` (or `packaging/arch/build-arch.sh` with Docker) | `dist/*.pkg.tar.zst` |
 | macOS | `cargo install cargo-bundle` | `cargo bundle --release -p opencrt`, copy `opencrt-rdp` into `OpenCRT.app/Contents/MacOS/`, then `hdiutil create` (see CI) | `OpenCRT.app` / `.dmg` |
 
-Icons: `packaging/make-icons.ps1` renders `packaging/icons/*.png` and
-`opencrt.ico` from the design in `crates/opencrt/ui/opencrt.svg`. The Windows
+Icons: `sh packaging/make-icons.sh` (needs `cargo install resvg`) renders
+`packaging/icons/*.png` and `opencrt.ico` from `crates/opencrt/ui/opencrt.svg`,
+the mark of the About box's logo. The Windows
 executables embed `opencrt.ico` and version information (ProductName OpenCRT,
 ProductVersion from `crates/opencrt/Cargo.toml`, also for `opencrt-rdp.exe`)
 through `packaging/windows/resources.rs`, which both build scripts include.

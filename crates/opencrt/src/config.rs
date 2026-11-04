@@ -10,11 +10,16 @@ static DIR_OVERRIDE: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 
 /// Take `/F folder` out of the command line: OpenCRT then keeps all its
 /// settings there (a portable setup, e.g. on a USB stick). Without `/F`, the
-/// folder chosen in Global Options is used. Call once, first.
+/// local copy of the settings repository is used if one is set up, else the
+/// folder chosen in Global Options. Call once, first.
 pub fn use_dir_from_args(args: Vec<String>) -> Vec<String> {
     let (folder, rest) = split_dir_arg(args);
+    let synced = crate::gitsync::local_copy();
     let chosen = Some(chosen_dir()).filter(|d| !d.is_empty()).map(PathBuf::from);
-    if let Some(folder) = folder.or(chosen) {
+    if folder.is_none() && synced.is_some() {
+        SYNCED.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+    if let Some(folder) = folder.or(synced).or(chosen) {
         // Fixed now: a relative path must not follow later working-directory changes.
         let folder = std::path::absolute(&folder).unwrap_or(folder);
         // Created up front: not every writer (known_hosts) makes its folder.
@@ -37,8 +42,16 @@ fn split_dir_arg(args: Vec<String>) -> (Option<PathBuf>, Vec<String>) {
     (folder, rest)
 }
 
-/// The OpenCRT configuration directory: the `/F` folder, else the one chosen
-/// in Global Options, else the per-user default.
+/// Whether this run keeps its settings in the settings repository.
+static SYNCED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+pub fn synced() -> bool {
+    SYNCED.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// The OpenCRT configuration directory: the `/F` folder, else the settings
+/// repository's local copy, else the one chosen in Global Options, else the
+/// per-user default.
 pub fn dir() -> Option<PathBuf> {
     DIR_OVERRIDE.get().cloned().or_else(default_dir)
 }
@@ -76,7 +89,7 @@ pub fn choose_dir(folder: &str) -> anyhow::Result<bool> {
 }
 
 /// Copy the files in `from` into `to` unless `to` already has settings.
-fn copy_settings(from: &Path, to: &Path) -> anyhow::Result<bool> {
+pub(crate) fn copy_settings(from: &Path, to: &Path) -> anyhow::Result<bool> {
     std::fs::create_dir_all(to).with_context(|| format!("creating {}", to.display()))?;
     if to.join("options.toml").exists() || to.join("sessions.toml").exists() {
         return Ok(false);
@@ -92,7 +105,7 @@ fn copy_settings(from: &Path, to: &Path) -> anyhow::Result<bool> {
 }
 
 /// The per-user configuration folder following each platform's convention.
-fn default_dir() -> Option<PathBuf> {
+pub(crate) fn default_dir() -> Option<PathBuf> {
     #[cfg(windows)]
     return std::env::var_os("APPDATA").map(|d| PathBuf::from(d).join("OpenCRT"));
 
@@ -653,6 +666,19 @@ pub fn delete_firewall_password(name: &str) -> Result<(), String> {
     keychain_delete(&format!("firewall:{name}"))
 }
 
+/// The password or access token for the settings repository (HTTPS).
+pub fn git_token() -> Result<Option<String>, String> {
+    keychain_get("git-sync")
+}
+
+pub fn set_git_token(token: &str) -> Result<(), String> {
+    keychain_entry("git-sync")?.set_password(token).map_err(|e| e.to_string())
+}
+
+pub fn delete_git_token() -> Result<(), String> {
+    keychain_delete("git-sync")
+}
+
 /// Window chrome colours (Global Options > General).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -804,6 +830,53 @@ pub fn sessions_file() -> Option<PathBuf> {
 
 pub fn options_file() -> Option<PathBuf> {
     dir().map(|d| d.join("options.toml"))
+}
+
+/// Options that belong to one computer: with a settings repository they are
+/// kept beside it (`options.local.toml`), not shared with other machines.
+pub const MACHINE_OPTIONS: &[&str] = &[
+    "window_width",
+    "window_height",
+    "window_maximized",
+    "dock_width",
+    "session_manager_open",
+    "command_manager_open",
+    "download_folder",
+    "tftp_server",
+    "tftp_allow",
+    "print_printer",
+    "open_sessions",
+    "open_groups",
+    "last_update_check",
+    "global_key",
+    "agent_keys",
+    "agent_load_keys",
+];
+
+/// This computer's own options when the settings are in a repository.
+pub fn machine_options_file() -> Option<PathBuf> {
+    default_dir().filter(|_| synced()).map(|d| d.join("options.local.toml"))
+}
+
+/// Load options from `path`, with `machine` (if given) overriding its
+/// machine-specific ones.
+pub fn load_options(path: &Path, machine: Option<&Path>) -> anyhow::Result<Options> {
+    let Some(machine) = machine else { return load(path) };
+    let mut table: toml::Table = load(path)?;
+    let local: toml::Table = load(machine)?;
+    // Another computer's (from before it shared them) are not this one's.
+    table.retain(|k, _| !MACHINE_OPTIONS.contains(&k));
+    table.extend(local.into_iter().filter(|(k, _)| MACHINE_OPTIONS.contains(&k.as_str())));
+    toml::Value::Table(table).try_into().with_context(|| format!("reading {}", path.display()))
+}
+
+/// Save options to `path`; with `machine`, the machine-specific ones go there instead.
+pub fn save_options(path: &Path, machine: Option<&Path>, options: &Options) -> anyhow::Result<()> {
+    let Some(machine) = machine else { return save(path, options) };
+    let toml::Value::Table(shared) = toml::Value::try_from(options)? else { unreachable!("options are a table") };
+    let (local, shared): (toml::Table, toml::Table) = shared.into_iter().partition(|(k, _)| MACHINE_OPTIONS.contains(&k.as_str()));
+    save(machine, &local)?;
+    save(path, &shared)
 }
 
 /// Load a TOML file, or the default when it does not exist yet.

@@ -2742,6 +2742,16 @@ component GlobalOptionsDialog inherits DialogFrame {
     in-out property <string> word-delimiters;
     in-out property <string> download-folder;
     in-out property <string> config-folder;
+    // Settings Sync: the settings repository and its login.
+    in-out property <string> git-url;
+    in-out property <string> git-user;
+    in-out property <string> git-token;
+    in property <bool> git-token-saved;
+    in-out property <string> git-key;
+    // Windows without git: offer Git for Windows.
+    in property <bool> git-missing;
+    in property <string> git-status;
+    callback get-git();
     in-out property <string> printer;
     in-out property <string> print-font;
     in-out property <string> print-margin;
@@ -2792,7 +2802,7 @@ component GlobalOptionsDialog inherits DialogFrame {
             VerticalLayout {
                 padding: 2px;
                 alignment: start;
-                for page[i] in ["General", "Terminal", "Mouse", "Connection", "Highlighting", "Keyboard", "File Transfer", "Printing"]: Rectangle {
+                for page[i] in ["General", "Terminal", "Mouse", "Connection", "Highlighting", "Keyboard", "File Transfer", "Printing", "Settings Sync"]: Rectangle {
                     height: 24px * Theme.ui-scale;
                     background: i == root.category ? Theme.active-row-bg : page-touch.has-hover ? Theme.hover-bg : transparent;
                     Text {
@@ -2876,7 +2886,72 @@ component GlobalOptionsDialog inherits DialogFrame {
                 }
             }
             if root.category == 0: Text {
-                text: "Used from the next start. Your settings are copied there if it has none yet.";
+                text: "Used from the next start. Your settings are copied there if it has none yet. A settings repository (Settings Sync) takes its place.";
+                wrap: word-wrap;
+                color: Theme.text-secondary;
+                font-size: 11px * Theme.ui-scale;
+            }
+            if root.category == 8: Text {
+                text: "Keep your sessions, options and host keys in a private git repository, shared by every computer that uses it. Passwords and this computer's own settings (window, folders, key files) stay here. Needs git installed.";
+                wrap: word-wrap;
+            }
+            if root.category == 8: GridLayout {
+                spacing-horizontal: 12px;
+                spacing-vertical: 8px;
+                Row {
+                    FormLabel { text: "Repository:"; }
+                    LineEdit {
+                        colspan: 2;
+                        text <=> root.git-url;
+                        placeholder-text: "blank: not used; https://... or git@host:user/repo.git";
+                    }
+                }
+                Row {
+                    FormLabel { text: "Username:"; }
+                    LineEdit {
+                        colspan: 2;
+                        text <=> root.git-user;
+                        placeholder-text: "HTTPS: your username on the server";
+                    }
+                }
+                Row {
+                    FormLabel { text: "Password or token:"; }
+                    LineEdit {
+                        colspan: 2;
+                        text <=> root.git-token;
+                        input-type: InputType.password;
+                        placeholder-text: root.git-token-saved ? "saved; type to replace it" : "HTTPS: a personal access token";
+                    }
+                }
+                Row {
+                    FormLabel { text: "SSH key file:"; }
+                    LineEdit {
+                        text <=> root.git-key;
+                        placeholder-text: "SSH: blank for your SSH agent and ~/.ssh/config";
+                    }
+                    Button {
+                        text: "...";
+                        clicked => { root.browse("go-git-key"); }
+                    }
+                }
+            }
+            if root.category == 8 && root.git-missing: HorizontalLayout {
+                spacing: 12px;
+                Text {
+                    text: "Git is not installed on this computer.";
+                    vertical-alignment: center;
+                }
+                Button {
+                    text: "Download Git for Windows";
+                    clicked => { root.get-git(); }
+                }
+            }
+            if root.category == 8 && root.git-status != "": Text {
+                text: root.git-status;
+                wrap: word-wrap;
+            }
+            if root.category == 8: Text {
+                text: "HTTPS: leave username and token blank to use git's own credential manager. The token is kept in the system keychain. Changes are sent as you make them; other computers' changes arrive when OpenCRT starts. Used from the next start: an empty repository gets your current settings.";
                 wrap: word-wrap;
                 color: Theme.text-secondary;
                 font-size: 11px * Theme.ui-scale;
@@ -4324,6 +4399,14 @@ export component MainWindow inherits Window {
     in-out property <string> go-print-margin;
     in-out property <bool> go-tftp;
     in-out property <string> go-tftp-allow;
+    in-out property <string> go-git-url;
+    in-out property <string> go-git-user;
+    in-out property <string> go-git-token;
+    in property <bool> go-git-token-saved;
+    in-out property <string> go-git-key;
+    in property <bool> go-git-missing;
+    in property <string> go-git-status;
+    callback go-get-git();
     in-out property <int> go-drop;
     in property <string> drop-message;
     in property <bool> drop-sftp;
@@ -5856,6 +5939,14 @@ export component MainWindow inherits Window {
         word-delimiters <=> root.go-word-delimiters;
         download-folder <=> root.go-download;
         config-folder <=> root.go-config-dir;
+        git-url <=> root.go-git-url;
+        git-user <=> root.go-git-user;
+        git-token <=> root.go-git-token;
+        git-token-saved: root.go-git-token-saved;
+        git-key <=> root.go-git-key;
+        git-missing: root.go-git-missing;
+        git-status: root.go-git-status;
+        get-git => { root.go-get-git(); }
         printer <=> root.go-printer;
         print-font <=> root.go-print-font;
         print-margin <=> root.go-print-margin;

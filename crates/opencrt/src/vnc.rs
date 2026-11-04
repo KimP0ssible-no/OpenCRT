@@ -835,9 +835,9 @@ mod tests {
         assert_eq!(p.apply(ToHelper::KeySym { keysym: 0xffe3, down: true }), [4, 1, 0, 0, 0, 0, 0xff, 0xe3]);
         // Losing the keyboard lets go of the key and the button.
         assert_eq!(p.apply(ToHelper::ReleaseAll), [4, 0, 0, 0, 0, 0, 0xff, 0xe3, 5, 0, 1, 44, 0, 2]);
-        assert_eq!(p.apply(ToHelper::ReleaseAll), []);
+        assert!(p.apply(ToHelper::ReleaseAll).is_empty());
         assert_eq!(p.apply(ToHelper::Clipboard("a\r\n€".into())), [6, 0, 0, 0, 0, 0, 0, 3, b'a', b'\n', b'?']);
-        assert_eq!(p.apply(ToHelper::Resize { width: 800, height: 600 }), []);
+        assert!(p.apply(ToHelper::Resize { width: 800, height: 600 }).is_empty());
     }
 
     fn next_event(handle: &mut SshHandle) -> SshEvent {

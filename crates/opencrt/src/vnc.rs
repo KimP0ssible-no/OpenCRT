@@ -448,7 +448,11 @@ impl Picture {
     }
 
     fn get(&self, x: u16, y: u16, w: u16, h: u16) -> Vec<u8> {
-        (y as usize..(y + h) as usize).flat_map(|row| self.rgba[self.row(x, row, w)].iter().copied()).collect()
+        let mut out = Vec::with_capacity(w as usize * h as usize * 4);
+        for row in y as usize..(y + h) as usize {
+            out.extend_from_slice(&self.rgba[self.row(x, row, w)]);
+        }
+        out
     }
 
     fn put(&mut self, x: u16, y: u16, w: u16, h: u16, rgba: &[u8]) {
@@ -507,6 +511,9 @@ async fn server_message<R: AsyncRead + Unpin>(
         0 => {
             r.read_u8().await?;
             let mut resized = None;
+            // Shown once the whole update is in: rectangles shown as they
+            // arrive (slowly, on a slow encoding) tear moving pictures.
+            let mut changed: Option<[u16; 4]> = None;
             for _ in 0..r.read_u16().await? {
                 let (x, y, w, h) = (r.read_u16().await?, r.read_u16().await?, r.read_u16().await?, r.read_u16().await?);
                 match r.read_i32().await? {
@@ -514,6 +521,7 @@ async fn server_message<R: AsyncRead + Unpin>(
                         *picture = Picture::new(w, h)?;
                         let _ = output.send(SshEvent::Screen(Screen::Size { width: w, height: h }));
                         resized = Some((w, h));
+                        changed = None;
                         continue;
                     }
                     RAW => {
@@ -547,9 +555,14 @@ async fn server_message<R: AsyncRead + Unpin>(
                     other => bail!("the server sent an encoding it was not asked for ({other})"),
                 }
                 if w > 0 && h > 0 {
-                    let rgba = picture.get(x, y, w, h);
-                    let _ = output.send(SshEvent::Screen(Screen::Pixels { x, y, width: w, height: h, rgba }));
+                    let [x0, y0, x1, y1] = changed.unwrap_or([x, y, x + w, y + h]);
+                    changed = Some([x0.min(x), y0.min(y), x1.max(x + w), y1.max(y + h)]);
                 }
+            }
+            if let Some([x0, y0, x1, y1]) = changed {
+                let (width, height) = (x1 - x0, y1 - y0);
+                let rgba = picture.get(x0, y0, width, height);
+                let _ = output.send(SshEvent::Screen(Screen::Pixels { x: x0, y: y0, width, height, rgba }));
             }
             Ok(Message::Update(resized))
         }
@@ -982,11 +995,13 @@ mod tests {
         assert!(matches!(next_event(&mut handle), SshEvent::Screen(Screen::Size { width: 4, height: 2 })));
         assert!(matches!(next_event(&mut handle), SshEvent::Connected));
         let mut picture = crate::rdp::Desktop::new(4, 2);
-        for _ in 0..4 {
-            match next_event(&mut handle) {
-                SshEvent::Screen(Screen::Pixels { x, y, width, height, rgba }) => picture.paint(x, y, width, height, &rgba),
-                _ => panic!("expected pixels"),
+        // The four rectangles reach the tab together, as one picture.
+        match next_event(&mut handle) {
+            SshEvent::Screen(Screen::Pixels { x, y, width, height, rgba }) => {
+                assert_eq!((x, y, width, height), (0, 0, 4, 2));
+                picture.paint(x, y, width, height, &rgba);
             }
+            _ => panic!("expected pixels"),
         }
         let mut rgb = vec![0u8; 4 * 2 * 3];
         picture.draw(&mut rgb, 4, 2, [0, 0, 0]);

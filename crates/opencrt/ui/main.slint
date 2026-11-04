@@ -1433,13 +1433,12 @@ component ConnectionFields inherits VerticalLayout {
             accepted => { root.submit(); }
         }
     }
-    // VNC logs in with a password only.
-    if root.protocol == 0 || root.protocol == 5 || root.protocol == 6: FieldRow {
+    if root.protocol == 0 || root.protocol >= 5: FieldRow {
         label: "Username:";
         LineEdit {
             text <=> root.user;
-            // RDP accepts a Windows domain this way.
-            placeholder-text: root.protocol == 5 ? "user, DOMAIN\\user or user@domain" : "";
+            // RDP accepts a Windows domain this way; VNC mostly needs none.
+            placeholder-text: root.protocol == 5 ? "user, DOMAIN\\user or user@domain" : root.protocol == 7 ? "only for a Mac (its account) or a VeNCrypt Plain login" : "";
             accepted => { root.submit(); }
         }
     }

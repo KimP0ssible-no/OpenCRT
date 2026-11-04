@@ -238,7 +238,8 @@ impl Target {
             Protocol::Rlogin => format!("rlogin: {}@{host}", self.user),
             Protocol::Rdp if self.user.is_empty() => format!("rdp: {host}"),
             Protocol::Rdp => format!("rdp: {}@{host}", self.user),
-            Protocol::Vnc => format!("vnc: {host}"),
+            Protocol::Vnc if self.user.is_empty() => format!("vnc: {host}"),
+            Protocol::Vnc => format!("vnc: {}@{host}", self.user),
             Protocol::Serial => format!("{} {}", self.serial_port, self.baud),
             Protocol::Local if !self.command.is_empty() => self.command.clone(),
             Protocol::Local => "Local Shell".into(),
@@ -315,6 +316,7 @@ impl Target {
         vnc::connect(vnc::Settings {
             host: self.host.clone(),
             port: self.port,
+            user: self.user.clone(),
             credential: self.credential.clone(),
             password: self.cached_password.as_ref().map(|s| s.0.clone()),
             jump: (!self.hops.is_empty()).then(|| self.credentials()),

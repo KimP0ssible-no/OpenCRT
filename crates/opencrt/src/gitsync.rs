@@ -48,7 +48,7 @@ impl Remote {
 const REMOTE_FILE: &str = "git-sync.toml";
 
 /// The files the repository holds; everything else in the folder stays here.
-const SHARED: &[&str] = &["sessions.toml", "options.toml", "known_hosts", "rdp_known_certs", "telnet_known_certs"];
+const SHARED: &[&str] = &["sessions.toml", "options.toml", "known_hosts", "rdp_known_certs", "telnet_known_certs", "vnc_known_certs"];
 
 /// The settings repository this computer uses, if any.
 pub fn remote() -> Option<Remote> {

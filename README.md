@@ -90,9 +90,11 @@ automatic check off in Options > Global Options > General.
   Telnet, RLogin, raw TCP, serial (COM / tty, modem dialling, VM consoles),
   local shell, and RDP (remote desktop
   in a tab that follows the tab's size, keyboard and mouse, clipboard text
-  both ways; NLA with user name and password), and VNC (RFB 3.3 to 3.8 with
-  no password or a VNC password, ZRLE; the desktop is shown whole or scaled
-  to the tab; VNC is not encrypted, so set a jump host to tunnel it over SSH).
+  both ways; NLA with user name and password), and VNC (RFB 3.3 to 3.8: no
+  password, a VNC password, TightVNC's login, a Mac's own account, or
+  VeNCrypt TLS with a certificate checked like RDP's; Tight with JPEG
+  quality for slow links, ZRLE; the desktop is shown whole or scaled to the
+  tab; without VeNCrypt, set a jump host to tunnel it over SSH).
 - **Security**: host keys checked against OpenCRT's own `known_hosts`; unknown
   keys are confirmed by the user, changed keys block the connection; saved keys
   can be reviewed and removed in Tools > Host Keys. RDP server certificates

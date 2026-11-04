@@ -4019,6 +4019,7 @@ dependencies = [
 name = "opencrt"
 version = "0.5.1"
 dependencies = [
+ "aes",
  "alacritty_terminal",
  "anyhow",
  "arboard",
@@ -4034,7 +4035,9 @@ dependencies = [
  "futures",
  "gethostname",
  "keyring",
+ "md5",
  "minisign-verify",
+ "num-bigint 0.4.8",
  "opencrt-rdp-proto",
  "rand",
  "regex",
@@ -4055,6 +4058,7 @@ dependencies = [
  "ureq",
  "webbrowser",
  "windows-sys 0.61.2",
+ "zune-jpeg",
 ]
 
 [[package]]

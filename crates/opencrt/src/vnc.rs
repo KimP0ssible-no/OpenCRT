@@ -9,9 +9,10 @@
 use anyhow::{Context as _, anyhow, bail};
 use des::Des;
 use des::cipher::{Block, BlockCipherEncrypt, KeyInit};
+
 use flate2::{Decompress, FlushDecompress};
 use slint::winit_030::winit::keyboard::{Key, KeyCode, NamedKey};
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 use tokio::sync::oneshot;
@@ -23,6 +24,8 @@ use crate::ssh::{self, AuthPrompt, Io, SshEvent, SshHandle};
 pub struct Settings {
     pub host: String,
     pub port: u16,
+    /// A Mac's account, or a VeNCrypt Plain login; usually empty.
+    pub user: String,
     /// Saved credential whose password is used instead of asking.
     pub credential: Option<String>,
     /// A password remembered from an earlier login this run.
@@ -61,28 +64,21 @@ pub fn connect(settings: Settings) -> (SshHandle, crate::rdp::Input) {
                 }
                 None => (None, None),
             };
-            let used_saved = saved.is_some();
-            match session(&settings, tunnel, saved, &mut input_rx, io).await {
-                Err(e) if used_saved && e.is::<Refused>() => {
-                    let note = format!("\x1b[33mThe saved password was not accepted ({e}); enter it again.\x1b[0m\r\n");
-                    let _ = io.output.send(SshEvent::Data(note.into_bytes()));
-                    session(&settings, tunnel, None, &mut input_rx, io).await
+            let (mut password, mut no_vencrypt) = (saved, false);
+            loop {
+                match session(&settings, tunnel, password.clone(), no_vencrypt, &mut input_rx, io).await {
+                    Err(e) if !no_vencrypt && e.is::<AnonymousTls>() => no_vencrypt = true,
+                    Err(e) if password.is_some() && e.is::<Refused>() => {
+                        let note = format!("\x1b[33mThe saved password was not accepted ({e}); enter it again.\x1b[0m\r\n");
+                        let _ = io.output.send(SshEvent::Data(note.into_bytes()));
+                        password = None;
+                    }
+                    result => return result,
                 }
-                result => result,
             }
         })
     });
     (handle, input_tx)
-}
-
-async fn ask_password(host: &str, io: &Io) -> anyhow::Result<String> {
-    let (reply, answer) = oneshot::channel();
-    let prompt = AuthPrompt { instructions: String::new(), prompts: vec![(format!("VNC password for {host}:"), false)], kind: ssh::PromptKind::Password, reply };
-    io.output.send(SshEvent::AuthPrompt(prompt)).map_err(|_| anyhow!("the tab was closed"))?;
-    match answer.await.ok().flatten().and_then(|mut answers| answers.pop()) {
-        Some(password) => Ok(password),
-        None => bail!("login cancelled"),
-    }
 }
 
 /// One connection: log in, then show the desktop until either side ends it.
@@ -90,10 +86,11 @@ async fn session(
     settings: &Settings,
     tunnel: Option<u16>,
     password: Option<String>,
+    no_vencrypt: bool,
     input: &mut UnboundedReceiver<ToHelper>,
     io: &mut Io,
 ) -> anyhow::Result<()> {
-    let mut stream: Box<dyn crate::proxy::Stream> = match (tunnel, settings.proxy.as_deref()) {
+    let stream: Box<dyn crate::proxy::Stream> = match (tunnel, settings.proxy.as_deref()) {
         (Some(port), _) => Box::new(TcpStream::connect(("127.0.0.1", port)).await?),
         (None, Some(spec)) => crate::proxy::connect(spec, &settings.host, settings.port).await?,
         (None, None) => {
@@ -102,11 +99,15 @@ async fn session(
             Box::new(tcp)
         }
     };
-    let host = settings.host.clone();
     let output = io.output.clone();
-    let (security, picture) = handshake(&mut stream, password, async || ask_password(&host, &*io).await).await?;
+    let login = Login { host: &settings.host, port: settings.port, user: settings.user.clone(), password, io: Some(&*io), no_vencrypt };
+    let (stream, security, tls, picture) = handshake(stream, login).await?;
     let (width, height) = (picture.width, picture.height);
-    let encrypted = if tunnel.is_some() { "through an SSH tunnel" } else { "not encrypted" };
+    let encrypted = match (tls, tunnel) {
+        (Some(tls), _) => tls,
+        (None, Some(_)) => "through an SSH tunnel".into(),
+        (None, None) => "not encrypted".into(),
+    };
     let _ = output.send(SshEvent::Cipher(format!("VNC, {security}, {encrypted}")));
     let _ = output.send(SshEvent::Screen(Screen::Size { width, height }));
     let _ = output.send(SshEvent::Connected);
@@ -147,13 +148,73 @@ async fn session(
     }
 }
 
-/// Agree the protocol version, log in and start the session. Returns how it
-/// logged in and the (black) desktop picture of the server's size.
-async fn handshake<S: AsyncRead + AsyncWrite + Unpin>(
-    s: &mut S,
+/// How to log in, for `handshake`.
+struct Login<'a> {
+    host: &'a str,
+    port: u16,
+    /// A Mac's account or a VeNCrypt Plain login; asked for when needed.
+    user: String,
     password: Option<String>,
-    ask: impl AsyncFnOnce() -> anyhow::Result<String>,
-) -> anyhow::Result<(String, Picture)> {
+    /// The tab, for prompts and certificate checks; None when fuzzing.
+    io: Option<&'a Io>,
+    /// Not VeNCrypt: its TLS turned out to be anonymous, which rustls cannot do.
+    no_vencrypt: bool,
+}
+
+impl Login<'_> {
+    async fn ask(&self, label: String, echo: bool, kind: ssh::PromptKind) -> anyhow::Result<String> {
+        let io = self.io.ok_or_else(|| anyhow!("login cancelled"))?;
+        let (reply, answer) = oneshot::channel();
+        let prompt = AuthPrompt { instructions: String::new(), prompts: vec![(label, echo)], kind, reply };
+        io.output.send(SshEvent::AuthPrompt(prompt)).map_err(|_| anyhow!("the tab was closed"))?;
+        match answer.await.ok().flatten().and_then(|mut answers| answers.pop()) {
+            Some(answer) => Ok(answer),
+            None => bail!("login cancelled"),
+        }
+    }
+
+    async fn password(&mut self, label: String) -> anyhow::Result<String> {
+        match self.password.take() {
+            Some(password) => Ok(password),
+            None => self.ask(label, false, ssh::PromptKind::Password).await,
+        }
+    }
+
+    async fn user(&mut self) -> anyhow::Result<String> {
+        if self.user.is_empty() {
+            self.user = self.ask(format!("Username for {}:", self.host), true, ssh::PromptKind::Other).await?;
+        }
+        Ok(self.user.clone())
+    }
+}
+
+/// VeNCrypt offered only anonymous TLS: try again with the server's other logins.
+#[derive(Debug)]
+struct AnonymousTls;
+
+impl std::fmt::Display for AnonymousTls {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("the server's VeNCrypt offers only anonymous TLS")
+    }
+}
+
+impl std::error::Error for AnonymousTls {}
+
+/// How the user is logged in, whatever security type carried it.
+#[derive(Clone, Copy, PartialEq)]
+enum Auth {
+    None,
+    Vnc,
+    /// Username and password (VeNCrypt Plain, inside TLS).
+    Plain,
+    /// A Mac's account (Apple's Diffie-Hellman login).
+    Apple,
+}
+
+/// Agree the protocol version, log in and start the session. Returns the
+/// stream (now perhaps TLS), how it logged in, the TLS version if any, and
+/// the (black) desktop picture of the server's size.
+async fn handshake(mut s: Box<dyn crate::proxy::Stream>, mut login: Login<'_>) -> anyhow::Result<(Box<dyn crate::proxy::Stream>, String, Option<String>, Picture)> {
     let mut version = [0u8; 12];
     s.read_exact(&mut version).await.context("no VNC greeting from the server")?;
     let minor = version_minor(&version).ok_or_else(|| anyhow!("not a VNC server (it said {:?})", String::from_utf8_lossy(&version)))?;
@@ -169,29 +230,57 @@ async fn handshake<S: AsyncRead + AsyncWrite + Unpin>(
     };
     // An empty list (or type 0 in 3.3) comes with the reason.
     if offered.is_empty() || offered == [0] {
-        bail!("the server refused the connection: {}", read_text(s).await?);
+        bail!("the server refused the connection: {}", read_text(&mut s).await?);
     }
-    let chosen = [NO_AUTH, VNC_AUTH, TIGHT].into_iter().find(|t| offered.contains(t)).ok_or_else(|| {
+    // Encrypted first; a Mac's account login before the VNC password when a username is set.
+    let apple_first = (!login.user.is_empty()).then_some(APPLE);
+    let order = [VENCRYPT, NO_AUTH].into_iter().chain(apple_first).chain([VNC_AUTH, TIGHT, APPLE]);
+    let usable = |t: &u8| offered.contains(t) && !(*t == VENCRYPT && login.no_vencrypt);
+    let Some(chosen) = order.into_iter().find(usable) else {
+        if login.no_vencrypt {
+            bail!("the server's VeNCrypt offers only anonymous TLS, which OpenCRT does not support: give the server a certificate (X509Vnc), or tunnel VNC through a jump host");
+        }
         let list: Vec<String> = offered.iter().map(|&t| security_name(t)).collect();
-        anyhow!("the server offers no login OpenCRT supports ({}); turn on VNC password login on the server", list.join(", "))
-    })?;
+        bail!("the server offers no login OpenCRT supports ({}); turn on VNC password login on the server", list.join(", "));
+    };
     if minor >= 7 {
         s.write_u8(chosen).await?;
     }
-    // TightVNC's own type carries one of the standard logins inside.
-    let auth = if chosen == TIGHT { tight_login(s).await? } else { chosen };
-    if auth == VNC_AUTH {
-        let mut challenge = [0u8; 16];
-        s.read_exact(&mut challenge).await?;
-        let password = match password {
-            Some(password) => password,
-            None => ask().await?,
-        };
-        s.write_all(&vnc_response(&password, &challenge)).await?;
+    let mut kind = String::new();
+    let mut tls = None;
+    let auth = match chosen {
+        // TightVNC's own type carries one of the standard logins inside.
+        TIGHT if tight_login(&mut s).await? == VNC_AUTH => Auth::Vnc,
+        TIGHT | NO_AUTH => Auth::None,
+        VENCRYPT => {
+            let (stream, auth, name, version) = vencrypt(s, &login).await?;
+            (s, kind, tls) = (stream, format!("VeNCrypt {name}, "), version);
+            auth
+        }
+        APPLE => Auth::Apple,
+        _ => Auth::Vnc,
+    };
+    match auth {
+        Auth::Vnc => {
+            let mut challenge = [0u8; 16];
+            s.read_exact(&mut challenge).await?;
+            let password = login.password(format!("VNC password for {}:", login.host)).await?;
+            s.write_all(&vnc_response(&password, &challenge)).await?;
+        }
+        Auth::Plain => {
+            let user = login.user().await?;
+            let password = login.password(format!("Password for {user} on {}:", login.host)).await?;
+            s.write_all(&(user.len() as u32).to_be_bytes()).await?;
+            s.write_all(&(password.len() as u32).to_be_bytes()).await?;
+            s.write_all(user.as_bytes()).await?;
+            s.write_all(password.as_bytes()).await?;
+        }
+        Auth::Apple => apple_login(&mut s, &mut login).await?,
+        Auth::None => {}
     }
-    // 3.8 always reports the result; older versions only after a password.
-    if (minor >= 8 || auth == VNC_AUTH) && s.read_u32().await? != 0 {
-        let reason = if minor >= 8 { read_text(s).await? } else { String::new() };
+    // 3.8 always reports the result; older versions only after a login.
+    if (minor >= 8 || auth != Auth::None) && s.read_u32().await? != 0 {
+        let reason = if minor >= 8 { read_text(&mut s).await? } else { String::new() };
         let reason = if reason.is_empty() { "authentication failed".to_string() } else { reason };
         return Err(Refused(reason).into());
     }
@@ -200,20 +289,142 @@ async fn handshake<S: AsyncRead + AsyncWrite + Unpin>(
     let (width, height) = (s.read_u16().await?, s.read_u16().await?);
     let mut format = [0u8; 16];
     s.read_exact(&mut format).await?;
-    let _name = read_text(s).await?;
+    let _name = read_text(&mut s).await?;
     if chosen == TIGHT {
         // The server's extra messages and encodings, which are not used.
         let (messages, client_messages, encodings, _pad) = (s.read_u16().await?, s.read_u16().await?, s.read_u16().await?, s.read_u16().await?);
         let skip = (messages as u64 + client_messages as u64 + encodings as u64) * 16;
-        tokio::io::copy(&mut (&mut *s).take(skip), &mut tokio::io::sink()).await?;
+        tokio::io::copy(&mut (&mut s).take(skip), &mut tokio::io::sink()).await?;
     }
-    let auth = if auth == VNC_AUTH { "password" } else { "no password" };
-    Ok((format!("RFB 3.{minor}, {auth}"), Picture::new(width, height)?))
+    let how = match auth {
+        Auth::None => "no password",
+        Auth::Vnc => "password",
+        Auth::Plain => "username and password",
+        Auth::Apple => "Mac account",
+    };
+    Ok((s, format!("RFB 3.{minor}, {kind}{how}"), tls, Picture::new(width, height)?))
+}
+
+/// VeNCrypt subtypes: certificate TLS with no login, the VNC password or
+/// username and password (Plain); the anonymous TLS ones (257-259) rustls
+/// cannot do.
+const X509_NONE: u32 = 260;
+const X509_VNC: u32 = 261;
+const X509_PLAIN: u32 = 262;
+
+/// VeNCrypt 0.2: pick a subtype and, for X509 ones, switch to TLS (the
+/// certificate checked like RDP's). Returns the stream, the login inside,
+/// the subtype's name and the TLS version.
+async fn vencrypt(
+    mut s: Box<dyn crate::proxy::Stream>,
+    login: &Login<'_>,
+) -> anyhow::Result<(Box<dyn crate::proxy::Stream>, Auth, &'static str, Option<String>)> {
+    let version = (s.read_u8().await?, s.read_u8().await?);
+    if version < (0, 2) {
+        bail!("the server's VeNCrypt is too old ({}.{})", version.0, version.1);
+    }
+    s.write_all(&[0, 2]).await?;
+    if s.read_u8().await? != 0 {
+        bail!("the server refused VeNCrypt 0.2");
+    }
+    let n = s.read_u8().await?;
+    let mut subtypes = Vec::new();
+    for _ in 0..n {
+        subtypes.push(s.read_u32().await?);
+    }
+    // Encrypted ones first; Plain first among those when a username is set.
+    let order: &[u32] = match login.user.is_empty() {
+        true => &[X509_VNC, X509_PLAIN, X509_NONE, VNC_AUTH as u32, NO_AUTH as u32],
+        false => &[X509_PLAIN, X509_VNC, X509_NONE, VNC_AUTH as u32, NO_AUTH as u32],
+    };
+    let Some(&chosen) = order.iter().find(|t| subtypes.contains(t)) else {
+        if subtypes.iter().any(|t| (257..=259).contains(t)) {
+            return Err(AnonymousTls.into());
+        }
+        bail!("the server's VeNCrypt offers no login OpenCRT supports (subtypes {subtypes:?})");
+    };
+    s.write_u32(chosen).await?;
+    let (auth, name) = match chosen {
+        X509_NONE => (Auth::None, "X509None"),
+        X509_VNC => (Auth::Vnc, "X509Vnc"),
+        X509_PLAIN => (Auth::Plain, "X509Plain"),
+        t if t == VNC_AUTH as u32 => return Ok((s, Auth::Vnc, "VncAuth", None)),
+        _ => return Ok((s, Auth::None, "None", None)),
+    };
+    if s.read_u8().await? != 1 {
+        bail!("the server refused the TLS login");
+    }
+    let io = login.io.ok_or_else(|| anyhow!("no TLS here"))?;
+    let (stream, version) = crate::telnet::tls_wrap(s, "vnc_known_certs", login.host, login.port, io).await?;
+    Ok((stream, auth, name, Some(version)))
+}
+
+/// Apple's Diffie-Hellman login (a Mac's account): the username and
+/// password, AES-128 encrypted with the MD5 of the shared secret.
+async fn apple_login(s: &mut Box<dyn crate::proxy::Stream>, login: &mut Login<'_>) -> anyhow::Result<()> {
+    let generator = s.read_u16().await?;
+    let len = s.read_u16().await? as usize;
+    if !(16..=1024).contains(&len) {
+        bail!("the Mac sent an unusable key size ({len})");
+    }
+    let mut prime = vec![0u8; len];
+    let mut theirs = vec![0u8; len];
+    s.read_exact(&mut prime).await?;
+    s.read_exact(&mut theirs).await?;
+    let user = login.user().await?;
+    let password = login.password(format!("Password for {user} on {}:", login.host)).await?;
+    s.write_all(&apple_response(generator, &prime, &theirs, &user, &password, &random_bytes(len + 128))?).await?;
+    Ok(())
+}
+
+fn random_bytes(n: usize) -> Vec<u8> {
+    (0..n).map(|_| rand::random::<u8>()).collect()
+}
+
+/// Encrypted credentials then our public value, for Apple's login. `random`
+/// holds the private key (first prime-size bytes) and the padding (128).
+fn apple_response(generator: u16, prime: &[u8], theirs: &[u8], user: &str, password: &str, random: &[u8]) -> anyhow::Result<Vec<u8>> {
+    use aes::Aes128;
+    use num_bigint::BigUint;
+    let len = prime.len();
+    if user.len() > 63 || password.len() > 63 {
+        bail!("the username and password must each be at most 63 bytes for a Mac");
+    }
+    let (p, g, y) = (BigUint::from_bytes_be(prime), BigUint::from(generator), BigUint::from_bytes_be(theirs));
+    let one = BigUint::from(1u8);
+    if p <= one || y <= one || y >= &p - &one {
+        bail!("the Mac sent unusable key values");
+    }
+    let x = BigUint::from_bytes_be(&random[..len]) % &p;
+    let padded = |n: BigUint| {
+        let bytes = n.to_bytes_be();
+        let mut out = vec![0u8; len.saturating_sub(bytes.len())];
+        out.extend(bytes);
+        out
+    };
+    let key = md5::compute(padded(y.modpow(&x, &p))).0;
+    let mut credentials = [0u8; 128];
+    credentials.copy_from_slice(&random[len..len + 128]);
+    for (offset, text) in [(0, user), (64, password)] {
+        credentials[offset..offset + text.len()].copy_from_slice(text.as_bytes());
+        credentials[offset + text.len()] = 0;
+    }
+    let aes = Aes128::new_from_slice(&key).expect("AES-128 takes a 16-byte key");
+    for block in credentials.as_chunks_mut::<16>().0 {
+        let mut b = Block::<Aes128>::from(*block);
+        aes.encrypt_block(&mut b);
+        block.copy_from_slice(&b);
+    }
+    let mut out = credentials.to_vec();
+    out.extend(padded(g.modpow(&x, &p)));
+    Ok(out)
 }
 
 const NO_AUTH: u8 = 1;
 const VNC_AUTH: u8 = 2;
 const TIGHT: u8 = 16;
+const VENCRYPT: u8 = 19;
+const APPLE: u8 = 30;
 
 /// A security type as the user may know it.
 fn security_name(kind: u8) -> String {
@@ -223,7 +434,8 @@ fn security_name(kind: u8) -> String {
         16 => "TightVNC",
         18 => "TLS",
         19 => "VeNCrypt (TLS)",
-        30 | 33 | 35 | 36 => "Apple",
+        30 => "Apple (Mac account)",
+        33 | 35 | 36 => "Apple",
         _ => "",
     };
     if name.is_empty() { format!("security type {kind}") } else { format!("{name}, security type {kind}") }
@@ -236,7 +448,7 @@ const TIGHT_VNC_AUTH: (i32, &[u8; 12]) = (2, b"STDVVNCAUTH_");
 
 /// The Tight security type: no tunnel, then a login from its list. Returns
 /// the standard type the login continues as.
-async fn tight_login<S: AsyncRead + AsyncWrite + Unpin>(s: &mut S) -> anyhow::Result<u8> {
+async fn tight_login(s: &mut Box<dyn crate::proxy::Stream>) -> anyhow::Result<u8> {
     let tunnels = read_capabilities(s).await?;
     if !tunnels.is_empty() {
         if !tunnels.contains(&(NO_TUNNEL.0, *NO_TUNNEL.1)) {
@@ -612,8 +824,9 @@ async fn server_message<R: AsyncRead + Unpin>(
 pub fn fuzz(data: &[u8]) {
     let Ok(runtime) = ssh::runtime() else { return };
     runtime.block_on(async {
-        let mut stream = tokio::io::join(data, tokio::io::sink());
-        let Ok((_, mut picture)) = handshake(&mut stream, Some("pw".into()), async || Ok(String::new())).await else {
+        let stream: Box<dyn crate::proxy::Stream> = Box::new(tokio::io::join(std::io::Cursor::new(data.to_vec()), tokio::io::sink()));
+        let login = Login { host: "fuzz", port: 5900, user: "user".into(), password: Some("pw".into()), io: None, no_vencrypt: false };
+        let Ok((mut stream, _, _, mut picture)) = handshake(stream, login).await else {
             return;
         };
         let (mut zlib, (output, _events)) = (Streams::new(), unbounded_channel());
@@ -1205,7 +1418,7 @@ mod tests {
             // Hang up.
         });
 
-        let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("secret".into()), jump: None, proxy: None, speed: crate::rdp::SPEED_BALANCED };
+        let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("secret".into()), user: String::new(), jump: None, proxy: None, speed: crate::rdp::SPEED_BALANCED };
         let (mut handle, input) = connect(settings);
         assert!(matches!(next_event(&mut handle), SshEvent::Cipher(c) if c == "VNC, RFB 3.8, password, not encrypted"));
         assert!(matches!(next_event(&mut handle), SshEvent::Screen(Screen::Size { width: 4, height: 2 })));
@@ -1268,11 +1481,172 @@ mod tests {
             s.write_all(&init).unwrap();
             assert_eq!(read_n(&mut s, start_messages(4, 2, crate::rdp::SPEED_BALANCED).len())[..2], [0, 0], "the session starts right after");
         });
-        let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("secret".into()), jump: None, proxy: None, speed: crate::rdp::SPEED_BALANCED };
+        let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("secret".into()), user: String::new(), jump: None, proxy: None, speed: crate::rdp::SPEED_BALANCED };
         let (mut handle, _input) = connect(settings);
         assert!(matches!(next_event(&mut handle), SshEvent::Cipher(c) if c == "VNC, RFB 3.8, password, not encrypted"));
         assert!(matches!(next_event(&mut handle), SshEvent::Screen(Screen::Size { width: 4, height: 2 })));
         assert!(matches!(next_event(&mut handle), SshEvent::Connected));
+        server.join().unwrap();
+    }
+
+    /// Run `script` as a VNC server (async, on its own runtime) for `connections`.
+    fn async_server(connections: usize, script: fn(tokio::net::TcpStream) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send>>) -> (u16, std::thread::JoinHandle<()>) {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        listener.set_nonblocking(true).unwrap();
+        let server = std::thread::spawn(move || {
+            tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async move {
+                let listener = tokio::net::TcpListener::from_std(listener).unwrap();
+                for _ in 0..connections {
+                    script(listener.accept().await.unwrap().0).await;
+                }
+            })
+        });
+        (port, server)
+    }
+
+    /// ServerInit for a 4 x 2 desktop.
+    fn server_init() -> Vec<u8> {
+        let mut init = vec![0, 4, 0, 2];
+        init.extend([32, 24, 0, 1, 0, 255, 0, 255, 0, 255, 16, 8, 0, 0, 0, 0]);
+        init.extend(1u32.to_be_bytes());
+        init.extend(b"t");
+        init
+    }
+
+    /// Connect and collect events until Connected (answering certificate
+    /// prompts); the status bar text, and whether a certificate was asked about.
+    fn connected(user: &str, password: &str, port: u16) -> (String, bool) {
+        let settings = Settings { host: "localhost".into(), port, user: user.into(), credential: None, password: Some(password.into()), jump: None, proxy: None, speed: opencrt_rdp_proto::SPEED_BEST };
+        let (mut handle, _input) = connect(settings);
+        let (mut cipher, mut asked) = (String::new(), false);
+        loop {
+            match next_event(&mut handle) {
+                SshEvent::Cipher(c) => cipher = c,
+                SshEvent::UnknownHostKey(prompt) => {
+                    asked = true;
+                    let _ = prompt.reply.send(ssh::HostKeyDecision::AcceptOnce);
+                }
+                SshEvent::Connected => return (cipher, asked),
+                SshEvent::Error(e) => panic!("{e}"),
+                _ => {}
+            }
+        }
+    }
+
+    #[test]
+    fn vencrypt_with_a_certificate() {
+        let (port, server) = async_server(1, |mut s| Box::pin(async move {
+            use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
+            s.write_all(b"RFB 003.008\n").await.unwrap();
+            let mut buf = [0u8; 12];
+            s.read_exact(&mut buf).await.unwrap();
+            s.write_all(&[2, VENCRYPT, VNC_AUTH]).await.unwrap();
+            assert_eq!(s.read_u8().await.unwrap(), VENCRYPT, "encrypted rather than the plain password");
+            s.write_all(&[0, 2]).await.unwrap();
+            assert_eq!((s.read_u8().await.unwrap(), s.read_u8().await.unwrap()), (0, 2));
+            s.write_all(&[0, 3]).await.unwrap();
+            for t in [258u32, X509_VNC, VNC_AUTH as u32] {
+                s.write_all(&t.to_be_bytes()).await.unwrap();
+            }
+            assert_eq!(s.read_u32().await.unwrap(), X509_VNC);
+            s.write_all(&[1]).await.unwrap();
+            let cert = rcgen::generate_simple_self_signed(vec!["localhost".into()]).unwrap();
+            let key = rustls::pki_types::PrivateKeyDer::try_from(cert.signing_key.serialize_der()).unwrap();
+            let config = rustls::ServerConfig::builder_with_provider(std::sync::Arc::new(rustls::crypto::aws_lc_rs::default_provider()))
+                .with_safe_default_protocol_versions()
+                .unwrap()
+                .with_no_client_auth()
+                .with_single_cert(vec![cert.cert.der().clone()], key)
+                .unwrap();
+            let mut tls = tokio_rustls::TlsAcceptor::from(std::sync::Arc::new(config)).accept(s).await.unwrap();
+            let challenge = [3u8; 16];
+            tls.write_all(&challenge).await.unwrap();
+            let mut answer = [0u8; 16];
+            tls.read_exact(&mut answer).await.unwrap();
+            assert_eq!(answer, vnc_response("secret", &challenge));
+            tls.write_all(&0u32.to_be_bytes()).await.unwrap();
+            tls.read_u8().await.unwrap();
+            tls.write_all(&server_init()).await.unwrap();
+            let mut start = vec![0u8; start_messages(4, 2, opencrt_rdp_proto::SPEED_BEST).len()];
+            tls.read_exact(&mut start).await.unwrap();
+        }));
+        let (cipher, asked) = connected("", "secret", port);
+        assert_eq!(cipher, "VNC, RFB 3.8, VeNCrypt X509Vnc, password, TLS 1.3");
+        assert!(asked, "the certificate is put to the user");
+        server.join().unwrap();
+    }
+
+    #[test]
+    fn anonymous_vencrypt_falls_back_to_the_plain_login() {
+        let (port, server) = async_server(2, |mut s| Box::pin(async move {
+            use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
+            s.write_all(b"RFB 003.008\n").await.unwrap();
+            let mut buf = [0u8; 12];
+            s.read_exact(&mut buf).await.unwrap();
+            s.write_all(&[2, VENCRYPT, VNC_AUTH]).await.unwrap();
+            if s.read_u8().await.unwrap() == VENCRYPT {
+                // Only anonymous TLS (TigerVNC's default): the client hangs up.
+                s.write_all(&[0, 2]).await.unwrap();
+                s.read_u16().await.unwrap();
+                s.write_all(&[0, 1, 0, 0, 1, 2]).await.unwrap();
+                assert!(s.read_u32().await.is_err(), "no subtype chosen");
+                return;
+            }
+            let challenge = [4u8; 16];
+            s.write_all(&challenge).await.unwrap();
+            let mut answer = [0u8; 16];
+            s.read_exact(&mut answer).await.unwrap();
+            s.write_all(&0u32.to_be_bytes()).await.unwrap();
+            s.read_u8().await.unwrap();
+            s.write_all(&server_init()).await.unwrap();
+            let mut start = vec![0u8; start_messages(4, 2, opencrt_rdp_proto::SPEED_BEST).len()];
+            s.read_exact(&mut start).await.unwrap();
+        }));
+        assert_eq!(connected("", "secret", port).0, "VNC, RFB 3.8, password, not encrypted");
+        server.join().unwrap();
+    }
+
+    #[test]
+    fn mac_account_login() {
+        let (port, server) = async_server(1, |mut s| Box::pin(async move {
+            use aes::cipher::BlockCipherDecrypt;
+            use num_bigint::BigUint;
+            use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
+            s.write_all(b"RFB 003.889\n").await.unwrap();
+            let mut buf = [0u8; 12];
+            s.read_exact(&mut buf).await.unwrap();
+            s.write_all(&[3, 33, APPLE, 36]).await.unwrap();
+            assert_eq!(s.read_u8().await.unwrap(), APPLE);
+            // RFC 2409's 1024-bit group, generator 2.
+            let prime = BigUint::parse_bytes(b"FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE65381FFFFFFFFFFFFFFFF", 16).unwrap();
+            let secret = BigUint::from(0x1234_5678_9abc_def1u64);
+            let ours = BigUint::from(2u8).modpow(&secret, &prime);
+            s.write_all(&[0, 2, 0, 128]).await.unwrap();
+            s.write_all(&prime.to_bytes_be()).await.unwrap();
+            s.write_all(&ours.to_bytes_be()).await.unwrap();
+            let mut credentials = [0u8; 128];
+            s.read_exact(&mut credentials).await.unwrap();
+            let mut theirs = [0u8; 128];
+            s.read_exact(&mut theirs).await.unwrap();
+            let shared = BigUint::from_bytes_be(&theirs).modpow(&secret, &prime).to_bytes_be();
+            let mut padded = vec![0u8; 128 - shared.len()];
+            padded.extend(shared);
+            let aes = aes::Aes128::new_from_slice(&md5::compute(&padded).0).unwrap();
+            for block in credentials.as_chunks_mut::<16>().0 {
+                let mut b = Block::<aes::Aes128>::from(*block);
+                aes.decrypt_block(&mut b);
+                block.copy_from_slice(&b);
+            }
+            let text = |field: &[u8]| String::from_utf8(field[..field.iter().position(|&b| b == 0).unwrap()].to_vec()).unwrap();
+            assert_eq!((text(&credentials[..64]), text(&credentials[64..])), ("kim".to_string(), "mac pässword".to_string()));
+            s.write_all(&0u32.to_be_bytes()).await.unwrap();
+            s.read_u8().await.unwrap();
+            s.write_all(&server_init()).await.unwrap();
+            let mut start = vec![0u8; start_messages(4, 2, opencrt_rdp_proto::SPEED_BEST).len()];
+            s.read_exact(&mut start).await.unwrap();
+        }));
+        assert_eq!(connected("kim", "mac pässword", port).0, "VNC, RFB 3.8, Mac account, not encrypted");
         server.join().unwrap();
     }
 
@@ -1282,7 +1656,7 @@ mod tests {
             let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
             let port = listener.local_addr().unwrap().port();
             std::thread::spawn(move || listener.incoming().take(connections).for_each(|s| script(&mut s.unwrap())));
-            let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("wrong".into()), jump: None, proxy: None, speed: crate::rdp::SPEED_BALANCED };
+            let settings = Settings { host: "127.0.0.1".into(), port, credential: None, password: Some("wrong".into()), user: String::new(), jump: None, proxy: None, speed: crate::rdp::SPEED_BALANCED };
             let mut handle = connect(settings).0;
             loop {
                 match next_event(&mut handle) {
@@ -1296,9 +1670,9 @@ mod tests {
         let e = serve(1, |s| {
             s.write_all(b"RFB 003.889\n").unwrap();
             read_n(s, 12);
-            s.write_all(&[2, 30, 35]).unwrap();
+            s.write_all(&[2, 33, 35]).unwrap();
         });
-        assert!(e.contains("Apple, security type 30, Apple, security type 35"), "{e}");
+        assert!(e.contains("Apple, security type 33, Apple, security type 35"), "{e}");
         // TightVNC 4 with only its own passwords: say which setting to change.
         let e = serve(1, |s| {
             s.write_all(b"RFB 003.008\n").unwrap();

@@ -65,7 +65,9 @@ const DIALOG_NAME: i32 = 8;
 
 /// A destructive action waiting for the user's Yes.
 enum Deletion {
-    Session(usize),
+    /// These sessions (by path).
+    Sessions(Vec<String>),
+    /// A folder with its subfolders and the sessions in them.
     Folder(String),
     Button(Commands, usize),
     /// Quit while sessions are connected.
@@ -4250,18 +4252,21 @@ impl App {
                 ui.set_name_value(SharedString::new());
                 ui.set_dialog(DIALOG_NAME);
             }
-            ("delete", Some(Node::Session(i))) => {
-                let message = format!("Delete the session \"{}\"?", self.store.sessions[i].path());
-                self.ask_confirm(ui, &message, Deletion::Session(i));
+            ("delete", Some(Node::Session(_))) => {
+                let paths: Vec<String> = self.chosen_sessions(ui).into_iter().map(|i| self.store.sessions[i].path()).collect();
+                let message = match paths.as_slice() {
+                    [one] => format!("Delete the session \"{one}\"?"),
+                    many => format!("Delete {} sessions?", many.len()),
+                };
+                self.ask_confirm(ui, &message, Deletion::Sessions(paths));
             }
             ("delete", Some(Node::Folder(path))) => {
-                let prefix = format!("{path}/");
-                if self.store.sessions.iter().any(|s| s.folder == path || s.folder.starts_with(&prefix)) {
-                    self.notify(format!("Folder \"{path}\" is not empty; delete its sessions first."));
-                } else {
-                    let message = format!("Delete the folder \"{path}\"?");
-                    self.ask_confirm(ui, &message, Deletion::Folder(path));
-                }
+                let message = match self.store.sessions.iter().filter(|s| sessions::in_folder(s, &path)).count() {
+                    0 => format!("Delete the folder \"{path}\"?"),
+                    1 => format!("Delete the folder \"{path}\" and the session in it?"),
+                    n => format!("Delete the folder \"{path}\" and the {n} sessions in it?"),
+                };
+                self.ask_confirm(ui, &message, Deletion::Folder(path));
             }
             _ => {}
         }
@@ -4294,18 +4299,17 @@ impl App {
 
     fn confirm_answer(&mut self, yes: bool, ui: &MainWindow) {
         match self.confirm.take() {
-            Some(Deletion::Session(i)) if yes && i < self.store.sessions.len() => {
-                let path = self.store.sessions.remove(i).path();
+            Some(deletion @ (Deletion::Sessions(_) | Deletion::Folder(_))) if yes => {
+                let gone = match &deletion {
+                    Deletion::Sessions(paths) => sessions::delete(&mut self.store, paths, None),
+                    Deletion::Folder(path) => sessions::delete(&mut self.store, &[], Some(path)),
+                    _ => Vec::new(),
+                };
                 // Open tabs keep running but no longer belong to a saved session.
-                for tab in self.tabs.iter_mut().filter(|t| t.session.as_deref() == Some(path.as_str())) {
+                for tab in self.tabs.iter_mut().filter(|t| t.session.as_ref().is_some_and(|p| gone.contains(p))) {
                     tab.session = None;
                 }
-                ui.set_session_selected(-1);
-                self.save_store();
-            }
-            Some(Deletion::Folder(path)) if yes => {
-                let prefix = format!("{path}/");
-                self.store.folders.retain(|f| *f != path && !f.starts_with(&prefix));
+                self.picked_sessions.clear();
                 ui.set_session_selected(-1);
                 self.save_store();
             }

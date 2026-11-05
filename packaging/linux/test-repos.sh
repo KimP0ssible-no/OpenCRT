@@ -47,7 +47,9 @@ run archlinux:latest sh -euc "
     fingerprint=\$(curl -fsSL $url/opencrt.asc | gpg --with-colons --import-options show-only --import 2>/dev/null | awk -F: '/^fpr/ { print \$10; exit }')
     pacman-key --lsign-key \"\$fingerprint\" > /dev/null 2>&1
     printf '\n[opencrt]\nServer = $url/arch\n' >> /etc/pacman.conf
+    # Synced first: the old package's dependencies (git) come from Arch's repositories.
+    pacman -Syu --noconfirm > /dev/null
     pacman -U --noconfirm /old.pkg.tar.zst > /dev/null
-    pacman -Sy --noconfirm opencrt > /dev/null
+    pacman -S --noconfirm opencrt > /dev/null
     test \"\$(pacman -Q opencrt)\" = 'opencrt $new-1'"
 echo "all repositories upgrade $old to $new"

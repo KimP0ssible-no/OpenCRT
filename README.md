@@ -30,24 +30,35 @@ files are signed as the [Code signing policy](#code-signing-policy) describes):
 The Linux packages need nothing beyond glibc 2.28 (RHEL 8, Debian 10, Ubuntu
 20.04 and newer). `SHA256SUMS` lists the checksum of every file.
 
-### macOS
-OpenCRT is not notarised by Apple, so macOS stops it the first time:
+### Mac users: install how-to
+OpenCRT is not notarised by Apple yet. Install it from Terminal
+(Applications > Utilities > Terminal) with:
 
-1. Open `OpenCRT.dmg` and drag OpenCRT onto Applications.
-2. Double-click OpenCRT in Applications. macOS says it was not opened: click
-   **Done**.
-3. In **System Settings > Privacy & Security**, scroll down to the message
-   about OpenCRT, click **Open Anyway**, confirm, and enter your password or
-   use Touch ID.
+```sh
+curl -fsSL https://raw.githubusercontent.com/KimP0ssible-no/OpenCRT/main/packaging/macos/install.sh | sh
+```
 
-(Right-click > Open no longer does this on macOS 15 and later.) Instead of
-steps 2 and 3, Terminal can clear the download flag:
-`xattr -dr com.apple.quarantine /Applications/OpenCRT.app`
+[The script](packaging/macos/install.sh) downloads `OpenCRT.dmg` from the
+latest release, checks it against `SHA256SUMS`, puts OpenCRT in Applications
+(in your own `~/Applications` if you cannot write to the shared one) and starts
+it. A file Terminal downloads is not flagged as downloaded from the internet,
+so macOS opens OpenCRT without asking.
 
-The first connection to a host on your local network makes macOS ask whether
-OpenCRT may use it: click **Allow**. If you did not, connections fail with
-"No route to host"; turn OpenCRT on in **System Settings > Privacy & Security >
-Local Network**.
+**Upgrades** need nothing more: OpenCRT looks for a new version at start-up and
+once a day (Help > Check for Updates to look now), and **Update
+Now** downloads it, checks the release signature, replaces the app and restarts
+it. Running the install command again also upgrades (quit OpenCRT first).
+
+**From the disk image instead**: open `OpenCRT.dmg` and drag OpenCRT onto
+Applications. The first double-click ends with "OpenCRT Not Opened": click
+**Done**, then in **System Settings > Privacy & Security** click **Open
+Anyway**, confirm, and enter your password or use Touch ID (right-click > Open
+no longer does this on macOS 15 and later).
+
+**Local network**: the first connection to a host on your local network makes
+macOS ask whether OpenCRT may use it: click **Allow**. If you did not,
+connections fail with "No route to host"; turn OpenCRT on in **System Settings
+> Privacy & Security > Local Network**.
 
 ### Linux package repositories
 On Linux, add the signed OpenCRT repository for your distribution once, and

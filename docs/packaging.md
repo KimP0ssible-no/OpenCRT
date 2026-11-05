@@ -65,7 +65,7 @@ all of them.
 | Debian/Ubuntu | `cargo install cargo-deb` | `cargo deb -p opencrt --no-build` | `target/debian/*.deb` |
 | Red Hat/Fedora/SUSE | `cargo install cargo-generate-rpm` | `cargo generate-rpm -p crates/opencrt` | `target/generate-rpm/*.rpm` |
 | Arch Linux | `makepkg` (in Arch) | `packaging/arch/makepkg.sh` (or `packaging/arch/build-arch.sh` with Docker) | `dist/*.pkg.tar.zst` |
-| macOS | `cargo install cargo-bundle` | `cargo bundle --release -p opencrt`, copy `opencrt-rdp` into `OpenCRT.app/Contents/MacOS/`, then `hdiutil create` (see CI) | `OpenCRT.app` / `.dmg` |
+| macOS | `cargo install cargo-bundle` | `cargo bundle --release -p opencrt --bin opencrt` (from the repository root), copy `opencrt-rdp` and `ocrt` into `OpenCRT.app/Contents/MacOS/`, `codesign --sign -`, then `hdiutil create` (see CI) | `OpenCRT.app` / `.dmg` |
 
 Icons: `sh packaging/make-icons.sh` (needs `cargo install resvg`) renders
 `packaging/icons/*.png` and `opencrt.ico` from `crates/opencrt/ui/opencrt.svg`,
@@ -118,7 +118,8 @@ git push github v0.1.0
   uninstaller and MSI with the Certum certificate (secrets `CERTUM_USERNAME`
   and `CERTUM_TOTP_SECRET` in the `release` environment, which approves the
   Windows package job as well as the release job). Pull request and local
-  builds stay unsigned. The macOS bundle is unsigned and not notarised.
+  builds stay unsigned. The macOS bundle is signed ad hoc only
+  (no Apple Developer ID) and not notarised.
 - **Identifiers**: the macOS bundle id (`org.opencrt.OpenCRT`) and the Inno
   Setup `AppId` are placeholders chosen for this project; keep them stable once
   shipped (upgrades rely on them).

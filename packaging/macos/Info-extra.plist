@@ -1,0 +1,2 @@
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>OpenCRT connects to the SSH, Telnet, RDP and VNC hosts you open on your local network.</string>

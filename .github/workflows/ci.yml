@@ -414,6 +414,13 @@ jobs:
           mv $bundle target/release/dmg/
           ln -s /Applications target/release/dmg/Applications
           hdiutil create -volname OpenCRT -srcfolder target/release/dmg -ov -format UDZO target/release/OpenCRT.dmg
+      # The README's one-line install, which takes the latest release.
+      - name: macOS install script
+        if: runner.os == 'macOS'
+        run: |
+          sh packaging/macos/install.sh
+          test -x /Applications/OpenCRT.app/Contents/MacOS/opencrt
+          test -z "$(xattr -p com.apple.quarantine /Applications/OpenCRT.app 2>/dev/null)"
       - uses: actions/upload-artifact@v7
         with:
           name: opencrt-${{ runner.os }}

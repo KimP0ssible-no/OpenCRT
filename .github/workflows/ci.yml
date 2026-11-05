@@ -392,13 +392,28 @@ jobs:
           cargo build --release --target x86_64-apple-darwin
           cargo build --release --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target --target x86_64-apple-darwin
           cargo install cargo-bundle --locked
-          cargo bundle --release -p opencrt
-          app=target/release/bundle/osx/OpenCRT.app/Contents/MacOS
+          cargo bundle --release -p opencrt --bin opencrt
+          bundle=target/release/bundle/osx/OpenCRT.app
+          app=$bundle/Contents/MacOS
           for b in opencrt opencrt-rdp ocrt; do
             lipo -create target/release/$b target/x86_64-apple-darwin/release/$b -output $app/$b
             lipo $app/$b -verify_arch arm64 x86_64
           done
-          hdiutil create -volname OpenCRT -srcfolder target/release/bundle/osx/OpenCRT.app -ov -format UDZO target/release/OpenCRT.dmg
+          plist=$bundle/Contents/Info.plist
+          test "$(plutil -extract CFBundleExecutable raw $plist)" = opencrt
+          plutil -extract NSLocalNetworkUsageDescription raw $plist
+          test -f "$bundle/Contents/Resources/$(plutil -extract CFBundleIconFile raw $plist)"
+          test -f $bundle/Contents/Resources/LICENSE
+          # Ad hoc: not notarised, but one sealed bundle that macOS's privacy
+          # settings (Local Network) know as org.opencrt.OpenCRT.
+          codesign --force --sign - $app/opencrt-rdp $app/ocrt
+          codesign --force --sign - $bundle
+          codesign --verify --strict --deep $bundle
+          # The disk image: the app and a link to drag it onto.
+          rm -rf target/release/dmg && mkdir target/release/dmg
+          mv $bundle target/release/dmg/
+          ln -s /Applications target/release/dmg/Applications
+          hdiutil create -volname OpenCRT -srcfolder target/release/dmg -ov -format UDZO target/release/OpenCRT.dmg
       - uses: actions/upload-artifact@v7
         with:
           name: opencrt-${{ runner.os }}

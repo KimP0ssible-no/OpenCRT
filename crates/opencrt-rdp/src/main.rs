@@ -140,6 +140,17 @@ async fn trusted(cert: &x509_cert::Certificate, input: &mut UnboundedReceiver<To
     }
 }
 
+/// macOS 15 and later refuse a local network connection the user has not
+/// allowed with "No route to host", which reads like a network fault.
+fn connect_failed(host: &str, port: u16, e: std::io::Error) -> anyhow::Error {
+    let hint = if cfg!(target_os = "macos") && e.kind() == std::io::ErrorKind::HostUnreachable {
+        " (on a local network, check that OpenCRT is on in System Settings > Privacy & Security > Local Network)"
+    } else {
+        ""
+    };
+    anyhow!("cannot connect to {host}:{port}: {e}{hint}")
+}
+
 type Framed = TokioFramed<ironrdp_tls::TlsStream<TcpStream>>;
 
 async fn connect(
@@ -152,7 +163,7 @@ async fn connect(
     let stream = tokio::time::timeout(CONNECT_TIMEOUT, TcpStream::connect((target.host.as_str(), target.port)))
         .await
         .map_err(|_| anyhow!("{}:{} did not answer", target.host, target.port))?
-        .with_context(|| format!("cannot connect to {}:{}", target.host, target.port))?;
+        .map_err(|e| connect_failed(&target.host, target.port, e))?;
     let client_addr = stream.local_addr()?;
     // Display Control (a dynamic channel) lets the desktop follow the tab's size.
     let display_control = DisplayControlClient::new(|caps| {
@@ -663,6 +674,15 @@ fn display_control_ready(stage: &mut ActiveStage) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn no_route_names_local_network_privacy_on_macos() {
+        let msg = connect_failed("10.0.0.5", 3389, std::io::ErrorKind::HostUnreachable.into()).to_string();
+        assert!(msg.starts_with("cannot connect to 10.0.0.5:3389: "));
+        assert_eq!(msg.contains("Local Network"), cfg!(target_os = "macos"));
+        let refused = connect_failed("h", 1, std::io::ErrorKind::ConnectionRefused.into()).to_string();
+        assert!(!refused.contains("Local Network"));
+    }
 
     #[test]
     fn changes_are_found_per_band() {

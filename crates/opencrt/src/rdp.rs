@@ -233,6 +233,35 @@ fn start_helper() -> anyhow::Result<Child> {
     command.spawn().context("cannot start the RDP helper")
 }
 
+/// macOS 15 and later can refuse the helper the local network although
+/// OpenCRT is allowed it, so there OpenCRT connects and the helper reaches the
+/// server through it on loopback, which needs no permission.
+async fn relay(host: &str, port: u16) -> anyhow::Result<u16> {
+    let mut server = tokio::time::timeout(std::time::Duration::from_secs(20), tokio::net::TcpStream::connect((host, port)))
+        .await
+        .map_err(|_| anyhow!("{host}:{port} did not answer"))?
+        .map_err(|e| connect_failed(host, port, e))?;
+    let listener = tokio::net::TcpListener::bind(("127.0.0.1", 0)).await?;
+    let local = listener.local_addr()?.port();
+    tokio::spawn(async move {
+        if let Ok((mut helper, _)) = listener.accept().await {
+            let _ = tokio::io::copy_bidirectional(&mut helper, &mut server).await;
+        }
+    });
+    Ok(local)
+}
+
+/// A refused local network connection fails with "No route to host", which
+/// reads like a network fault.
+fn connect_failed(host: &str, port: u16, e: std::io::Error) -> anyhow::Error {
+    let hint = if e.kind() == std::io::ErrorKind::HostUnreachable {
+        " (on a local network, check that OpenCRT is on in System Settings > Privacy & Security > Local Network)"
+    } else {
+        ""
+    };
+    anyhow!("cannot connect to {host}:{port}: {e}{hint}")
+}
+
 fn tell(stdin: &mut ChildStdin, message: &ToHelper) -> anyhow::Result<()> {
     message.write(stdin).map_err(|_| anyhow!("the RDP helper stopped unexpectedly"))
 }
@@ -272,6 +301,13 @@ async fn attempt(
     io: &mut Io,
     progress: &mut Progress,
 ) -> anyhow::Result<()> {
+    // Through a jump host the helper connects to the tunnel; certificates are
+    // still checked against the server's own name and port.
+    let (host, port) = match settings.tunnel {
+        Some(local) => ("127.0.0.1".to_string(), local),
+        None if cfg!(target_os = "macos") => ("127.0.0.1".to_string(), relay(&settings.host, settings.port).await?),
+        None => (settings.host.clone(), settings.port),
+    };
     let mut child = start_helper()?;
     let mut stdin = child.stdin.take().context("helper stdin")?;
     let mut stdout = child.stdout.take().context("helper stdout")?;
@@ -285,12 +321,6 @@ async fn attempt(
     });
 
     let (user, domain) = split_user(&settings.user);
-    // Through a jump host the helper connects to the tunnel; certificates are
-    // still checked against the server's own name and port.
-    let (host, port) = match settings.tunnel {
-        Some(local) => ("127.0.0.1".to_string(), local),
-        None => (settings.host.clone(), settings.port),
-    };
     let connect = ToHelper::Connect {
         host,
         port,
@@ -500,6 +530,21 @@ pub fn chord(keys: &[(u8, bool)]) -> Vec<ToHelper> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn relay_carries_the_connection_and_names_local_network() {
+        use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
+        let server = tokio::net::TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+        let local = relay("127.0.0.1", server.local_addr().unwrap().port()).await.unwrap();
+        let (mut at_server, _) = server.accept().await.unwrap();
+        let mut helper = tokio::net::TcpStream::connect(("127.0.0.1", local)).await.unwrap();
+        helper.write_all(b"x224").await.unwrap();
+        let mut got = [0u8; 4];
+        at_server.read_exact(&mut got).await.unwrap();
+        assert_eq!(&got, b"x224");
+        let blocked = connect_failed("10.0.0.5", 3389, std::io::ErrorKind::HostUnreachable.into()).to_string();
+        assert!(blocked.starts_with("cannot connect to 10.0.0.5:3389: ") && blocked.contains("Local Network"));
+    }
 
     #[test]
     fn chords_press_in_order_and_release_in_reverse() {

@@ -2750,6 +2750,7 @@ component GlobalOptionsDialog inherits DialogFrame {
     in-out property <string> word-delimiters;
     in-out property <string> download-folder;
     in-out property <string> config-folder;
+    in-out property <string> python;
     // Settings Sync: the settings repository and its login.
     in-out property <string> git-url;
     in-out property <string> git-user;
@@ -2898,6 +2899,18 @@ component GlobalOptionsDialog inherits DialogFrame {
                 wrap: word-wrap;
                 color: Theme.text-secondary;
                 font-size: 11px * Theme.ui-scale;
+            }
+            if root.category == 0: HorizontalLayout {
+                spacing: 12px;
+                FormLabel { text: "Python for .py scripts:"; }
+                LineEdit {
+                    text <=> root.python;
+                    placeholder-text: "blank: python3 on Linux, else downloaded on first use";
+                }
+                Button {
+                    text: "...";
+                    clicked => { root.browse("go-python"); }
+                }
             }
             if root.category == 8: Text {
                 text: "Keep your sessions, options and host keys in a private git repository, shared by every computer that uses it. Passwords and this computer's own settings (window, folders, key files) stay here. Needs git installed.";
@@ -4403,6 +4416,7 @@ export component MainWindow inherits Window {
     in-out property <string> go-word-delimiters;
     in-out property <string> go-download;
     in-out property <string> go-config-dir;
+    in-out property <string> go-python;
     in-out property <string> go-printer;
     in-out property <string> go-print-font;
     in-out property <string> go-print-margin;
@@ -5956,6 +5970,7 @@ export component MainWindow inherits Window {
         word-delimiters <=> root.go-word-delimiters;
         download-folder <=> root.go-download;
         config-folder <=> root.go-config-dir;
+        python <=> root.go-python;
         git-url <=> root.go-git-url;
         git-user <=> root.go-git-user;
         git-token <=> root.go-git-token;

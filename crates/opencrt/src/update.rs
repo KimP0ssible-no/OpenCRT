@@ -102,9 +102,15 @@ pub fn download_verified(releases: &str, tag: &str, asset: &str, dir: &Path, key
     Ok(path)
 }
 
+/// Download `url` to `path`, checked against `sha256` (hex).
+pub fn download_checked(url: &str, path: &Path, sha256: &str) -> anyhow::Result<()> {
+    save_checked(&agent(10), url, path, sha256)
+}
+
 /// Download `url` to `path`; it is kept only if its SHA-256 is `expected` (hex).
 fn save_checked(agent: &ureq::Agent, url: &str, path: &Path, expected: &str) -> anyhow::Result<()> {
-    let response = agent.get(url).call()?;
+    // The agent's 15 seconds also cover reading the body: too short for tens of MB.
+    let response = agent.get(url).config().timeout_global(Some(Duration::from_secs(600))).build().call()?;
     let mut body = response.into_body().into_with_config().limit(512 << 20).reader();
     let (mut file, mut hash) = (std::fs::File::create(path)?, sha2::Sha256::new());
     let mut buf = vec![0; 64 * 1024];

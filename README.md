@@ -157,7 +157,8 @@ automatic check off in Options > Global Options > General.
   computer. Uses the installed `git` (a dependency of the Linux packages; on
   Windows OpenCRT offers to download Git for Windows).
 - **Automation**: [Rhai](https://rhai.rs) scripts (`.rhai`, see Scripting
-  below) and simple `wait` / `send` / `sleep` / `timeout` scripts, run from
+  below), SecureCRT's Python scripts (`.py`, unchanged) and simple
+  `wait` / `send` / `sleep` / `timeout` scripts, run from
   Script > Run or as a session's logon script; Script > Start Recording writes
   a Rhai script from what you type (passwords are asked for when it runs).
 - **Keys**: Tools > Create Public Key makes an Ed25519 key pair.
@@ -270,12 +271,15 @@ if crt.Screen.WaitForString("#", 10) {
 
 | Object | Members |
 | --- | --- |
-| `crt` | `Screen`, `Session`, `Dialog`, `Clipboard`, `Arguments`, `ScriptFullName`, `Sleep(ms)`, `GetScriptTab()`, `GetActiveTab()`, `GetTab(n)` (from 1), `GetTabCount()`, `GetLastErrorMessage()`, `Quit()` |
-| `Screen` | `Send(text)`; `WaitForString(text[, timeout[, ms]])`, `WaitForStrings([a, b, ...][, timeout[, ms]])` (the number of the text seen, from 1; 0 on timeout), `ReadString(text or [a, b, ...][, timeout[, ms]])` (the output before it); `MatchIndex`, `Synchronous`, `IgnoreCase`; `Get(row1, col1, row2, col2)`, `Get2(...)` (rows joined by CR LF), `CurrentRow`, `CurrentColumn`, `Rows`, `Columns`, `WaitForCursor([timeout[, ms]])` |
-| `Session` | `Connect(target)` (the script continues in the new tab), `ConnectInTab(target)` (returns the tab), `Disconnect()`, `Connected`, `SetStatusText(text)` |
+| `crt` | `Screen`, `Session`, `Dialog`, `Clipboard`, `FileTransfer`, `Window`, `Arguments`, `ScriptFullName`, `Version`, `Sleep(ms)`, `GetScriptTab()`, `GetActiveTab()`, `GetTab(n)` (from 1), `GetTabCount()`, `GetLastError()` (0 when the last call worked), `GetLastErrorMessage()`, `ClearLastError()`, `OpenSessionConfiguration(session)`, `Quit()` |
+| `Screen` | `Send(text)`; `WaitForString(text[, timeout[, ms]])`, `WaitForStrings([a, b, ...][, timeout[, ms]])` (the number of the text seen, from 1; 0 on timeout), `ReadString(text or [a, b, ...][, timeout[, ms]])` (the output before it); `MatchIndex`, `Synchronous`, `IgnoreCase`, `IgnoreEscape` (waits skip escape sequences); `Get(row1, col1, row2, col2)`, `Get2(...)` (rows joined by CR LF), `CurrentRow`, `CurrentColumn`, `Rows`, `Columns`, `WaitForCursor([timeout[, ms]])`, `Clear()` |
+| `Session` | `Connect(target)` (the script continues in the new tab), `ConnectInTab(target)` (returns the tab), `Disconnect()`, `Connected`, `SetStatusText(text)`, `Config` (the tab's saved session) |
 | Tab | `Screen`, `Session`, `Caption`, `Activate()` |
-| `Dialog` | `MessageBox(text[, title[, style]])`, `Prompt(text[, title[, default[, password]]])` ("" if cancelled), `FileOpenDialog(title[, button[, file[, filter]]])` |
+| `Dialog` | `MessageBox(text[, title[, style]])`, `Prompt(text[, title[, default[, password]]])` ("" if cancelled), `FileOpenDialog(title[, button[, file[, filter]]])`, `FileSaveDialog(title[, file[, filter]])` |
 | `Clipboard` | `Text` |
+| `Window` | `Caption` |
+| `FileTransfer` | `DownloadFolder`, `AddToUploadList(file)` (a Zmodem upload of it starts when the host runs `rz`), `ClearUploadList()`, `SendYmodem()`, `SendKermit()` (the upload list's first file), `SendXmodem(file)`, `ReceiveXmodem(name)`, `ReceiveYmodem()`, `ReceiveKermit()` (into the download folder); each waits for the transfer to end |
+| Session configuration | `GetOption(name)`, `SetOption(name, value)`, `Save([session])` |
 | `Arguments` | `Count`, `GetArg(i)`, `Arguments[i]` |
 
 Timeouts are in seconds (milliseconds when `ms` is true); none or 0 waits for
@@ -292,6 +296,27 @@ the host printed before the last `Send`; set `Synchronous = true` to wait for
 anything not yet matched. Rhai functions cannot see variables set outside
 them, so `crt`, the constants and `G`, a map every function shares
 (`G.count = 0;` then `G.count += 1;` inside a function), work everywhere.
+
+`OpenSessionConfiguration("Default")` is the Default Session; other names are
+saved sessions (folder/name), and `Save("Folder/new")` saves a copy. The
+options OpenCRT has are `Hostname`, `Username`, `Port` (`[SSH2] Port`),
+`Protocol Name` (`SSH2`, `Telnet`, `Raw`, `Serial`, `Local Shell`, `RDP`,
+`RLogin`, `VNC`), `Emulation`, `Description`, `Log Filename V2`,
+`Script Filename V2`, `Identity Filename V2`, `Color Scheme`, `Keyword Set`,
+`Rows` and `Cols`; setting any other option does nothing.
+
+### Python scripts
+Script > Run (or a session's logon script) runs a SecureCRT Python 3 script
+(`.py`) as it is: `crt` and the constants are there as in SecureCRT, with the
+members above. `print()` shows in the status bar, and an error stops the
+script with its line number in the terminal. Python 2 scripts are refused.
+
+Each script runs in its own Python process, so it cannot stall or crash
+OpenCRT, and it is gone (with its memory, about 11 MB) when it ends or is
+cancelled. On Linux that is the system's `python3`; on Windows and macOS
+OpenCRT downloads Python 3.14 (12 to 27 MB, checked against a checksum built
+into OpenCRT) the first time you run a Python script. To use your own Python
+(say, for packages installed with pip), set it in Global Options > General.
 
 ## Build and run
 Requires Rust (stable) and, on Windows, the MSVC build tools. On Linux, a C

@@ -22,6 +22,7 @@ mod log;
 mod memfs;
 mod print;
 mod proxy;
+mod python;
 mod rdp;
 mod vnc;
 mod render;

@@ -466,6 +466,9 @@ pub struct Options {
     pub word_delimiters: String,
     /// Zmodem / Ymodem downloads go here; empty for the Downloads folder.
     pub download_folder: String,
+    /// The Python program for `.py` scripts; empty for python3 on Linux, or
+    /// the copy OpenCRT downloads on Windows and macOS.
+    pub python: String,
     /// Run the built-in TFTP server (port 69) on the download folder.
     pub tftp_server: bool,
     /// Addresses and networks the TFTP server answers (empty for any).
@@ -780,6 +783,7 @@ impl Default for Options {
             copy_on_select: true,
             word_delimiters: String::new(),
             download_folder: String::new(),
+            python: String::new(),
             tftp_server: false,
             tftp_allow: String::new(),
             drop_protocol: String::new(),
@@ -845,6 +849,7 @@ pub const MACHINE_OPTIONS: &[&str] = &[
     "session_manager_open",
     "command_manager_open",
     "download_folder",
+    "python",
     "tftp_server",
     "tftp_allow",
     "print_printer",

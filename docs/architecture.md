@@ -59,6 +59,10 @@ Telnet, raw, serial, local and SFTP tabs alike.
   `Tab::poll` on host output.
 - `src/script.rs` — wait/send/sleep scripts (Script > Run, logon scripts) and
   the script recorder.
+- `src/rhaiscript.rs` — Rhai scripts on their own thread: requests to the app
+  (addressed to the script's tab or another one), per-tab output for waits,
+  files, regex, dates and formatting. `src/crt.rs` — SecureCRT's `crt` object
+  model on top of it.
 - `src/sessions.rs` — Session Manager tree, folder rename, merge, ssh_config import.
 - `src/config.rs` — config folder (or `/F`), sessions.toml / options.toml types,
   crash log.

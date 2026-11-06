@@ -635,9 +635,11 @@ struct Tab {
     /// A Rhai script (`.rhai`) driving this tab, on its own thread.
     rhai: Option<rhaiscript::Script>,
     /// A script's `connect()` waiting to hear whether this tab connected.
-    connect_reply: Option<std::sync::mpsc::Sender<bool>>,
+    connect_reply: Option<std::sync::mpsc::Sender<Option<(u64, bool)>>>,
     /// A script request held until no other dialog is open.
-    held: Option<rhaiscript::Request>,
+    held: Option<(rhaiscript::TabKey, rhaiscript::Request)>,
+    /// Scripts in other tabs that read this tab's output.
+    watchers: Vec<rhaiscript::Output>,
     /// Script > Start Recording in progress.
     recorder: Option<script::Recorder>,
     /// The saved session's logon script, started on every connect.
@@ -799,6 +801,7 @@ impl Tab {
             script: None,
             rhai: None,
             connect_reply: None,
+            watchers: Vec::new(),
             held: None,
             recorder: None,
             logon_script: None,
@@ -1284,7 +1287,7 @@ impl Tab {
         // A Rhai logon script runs on its own thread.
         if let Some(path) = self.logon_script.clone().filter(|p| is_rhai(p)) {
             match read_script(&path) {
-                Ok(source) => self.rhai = Some(rhaiscript::Script::start(&file_name(&path), source, Vec::new())),
+                Ok(source) => self.rhai = Some(rhaiscript::Script::start(&file_name(&path), Some(path.clone()), source, Vec::new(), self.script_folders())),
                 Err(e) => {
                     self.terminal.feed(format!("\x1b[33mLogon script {}: {e}\x1b[0m\r\n", path.display()).as_bytes());
                 }
@@ -1362,7 +1365,7 @@ impl Tab {
             match event {
                 SshEvent::Connected => {
                     if let Some(reply) = self.connect_reply.take() {
-                        let _ = reply.send(true);
+                        let _ = reply.send(Some((self.id, true)));
                     }
                     self.password_to_save = self.pending_password.take();
                     self.credential_to_link = self.pending_credential.take();
@@ -1438,6 +1441,7 @@ impl Tab {
                     if let Some(script) = &self.rhai {
                         script.output(bytes);
                     }
+                    self.watchers.retain(|w| w.send((Some(self.id), bytes.to_vec())).is_ok());
                     if let Some(pacer) = self.pacer.as_mut() {
                         pacer.saw(bytes);
                     }
@@ -1469,7 +1473,7 @@ impl Tab {
                     self.pending_credential = None;
                     self.pending_secrets.clear();
                     if let Some(reply) = self.connect_reply.take() {
-                        let _ = reply.send(false);
+                        let _ = reply.send(Some((self.id, false)));
                     }
                     let text = format!("\r\n\x1b[1;31m{}\x1b[0m\r\n", msg.replace('\n', "\r\n"));
                     self.terminal.feed(text.as_bytes());
@@ -1490,7 +1494,7 @@ impl Tab {
                     self.pending_credential = None;
                     self.pending_secrets.clear();
                     if let Some(reply) = self.connect_reply.take() {
-                        let _ = reply.send(false);
+                        let _ = reply.send(Some((self.id, false)));
                     }
                     self.terminal.feed(b"\r\n\x1b[33mConnection closed. Press Enter to reconnect.\x1b[0m\r\n");
                     self.lost = self.state == State::Connected || self.retry.is_some();
@@ -1534,6 +1538,13 @@ impl Tab {
             .or(session_name)
             .or_else(|| self.terminal.title.clone())
             .unwrap_or_else(|| self.target.label())
+    }
+
+    /// Where a script on this tab may use files, besides its own folder: the
+    /// download folder and the log file's folder.
+    fn script_folders(&self) -> Vec<PathBuf> {
+        let log = self.log_path.as_deref().and_then(Path::parent).map(Path::to_path_buf);
+        std::iter::once(self.download_dir.clone()).chain(log).collect()
     }
 
     /// Window title: the host-set title when there is one (a saved session's
@@ -4814,11 +4825,16 @@ impl App {
         }
     }
 
-    /// Carry out one script request for tab `i`. False when this tab is done
-    /// for now (the request is held, or the script moved to another tab).
-    fn serve_script(&mut self, i: usize, request: rhaiscript::Request, ui: &MainWindow) -> bool {
-        use rhaiscript::Request;
-        let tab = &mut self.tabs[i];
+    /// Carry out one script request from the script on tab `i`, for its own
+    /// tab or the one it names. False when tab `i` is done for now (the
+    /// request is held, or the script moved to another tab).
+    fn serve_script(&mut self, i: usize, (target, request): (rhaiscript::TabKey, rhaiscript::Request), ui: &MainWindow) -> bool {
+        use rhaiscript::{Request, ScreenInfo, Tabs};
+        // A tab that has closed answers nothing: the script hears it closed.
+        let Some(j) = target.map_or(Some(i), |id| self.tabs.iter().position(|t| t.id == id)) else {
+            return true;
+        };
+        let tab = &mut self.tabs[j];
         match request {
             Request::Send(bytes) => {
                 tab.send(match tab.codec.as_ref() {
@@ -4828,7 +4844,8 @@ impl App {
                 tab.terminal.scroll(Scroll::Bottom);
             }
             Request::Screen(reply) => {
-                let _ = reply.send(tab.terminal.screen_text());
+                let ((cols, rows), (row, col)) = (tab.terminal.size(), tab.terminal.cursor_position());
+                let _ = reply.send(ScreenInfo { text: tab.terminal.screen_text(), rows, cols, row, col });
             }
             Request::Status(text) => {
                 tab.status = text;
@@ -4854,34 +4871,62 @@ impl App {
                     let _ = clipboard.set_text(text);
                 }
             }
-            Request::Message(..) | Request::Prompt { .. } if ui.get_dialog() != DIALOG_NONE => {
-                tab.held = Some(request);
+            Request::Tabs(reply) => {
+                let tabs = self.tabs.iter().map(|t| (t.id, t.title(), t.state == State::Connected)).collect();
+                let _ = reply.send(Tabs { tabs, active: self.active, script: i });
+            }
+            Request::Activate => self.select(j),
+            Request::Watch => {
+                if let Some(watcher) = self.tabs[i].rhai.as_ref().map(|s| s.watcher()) {
+                    self.tabs[j].watchers.push(watcher);
+                }
+            }
+            Request::OpenFile { title, file, filters, reply } => {
+                let mut dialog = rfd::FileDialog::new().set_title(&title).set_file_name(&file);
+                for (name, extensions) in &filters {
+                    dialog = dialog.add_filter(name, extensions);
+                }
+                let _ = reply.send(dialog.pick_file().map(|p| p.to_string_lossy().into_owned()).unwrap_or_default());
+            }
+            Request::Quit => {
+                if self.may_exit(ui) {
+                    let _ = slint::quit_event_loop();
+                }
+            }
+            request @ (Request::Message { .. } | Request::Prompt { .. }) if ui.get_dialog() != DIALOG_NONE => {
+                self.tabs[i].held = Some((target, request));
                 return false;
             }
-            Request::Message(text, reply) => {
+            Request::Message { title, text, buttons, reply } => {
                 self.script_dialog = Some(ScriptAnswer::Message(reply));
-                show_script_dialog(ui, "Script", &text, None, false);
+                show_script_dialog(ui, &title, &text, None, false);
+                ui.set_script_buttons(ModelRc::new(VecModel::from(buttons.into_iter().map(SharedString::from).collect::<Vec<_>>())));
             }
-            Request::Prompt { text, default, secret, reply } => {
+            Request::Prompt { title, text, default, secret, reply } => {
                 self.script_dialog = Some(ScriptAnswer::Prompt(reply));
-                show_script_dialog(ui, "Script", &text, Some(&default), secret);
+                show_script_dialog(ui, &title, &text, Some(&default), secret);
             }
-            Request::Connect(name, reply) => {
-                let found = self.store.sessions.iter().find(|s| s.path() == name || s.name == name).cloned();
-                let Some(session) = found else {
-                    let _ = reply.send(false);
+            Request::Connect { spec, follow, reply } => {
+                let Some((target, session)) = self.script_target(&spec) else {
+                    let _ = reply.send(None);
                     return true;
                 };
-                let script = tab.rhai.take();
-                self.open_tab(Target::from_session(&session, &self.options.credentials), Some(&session));
+                let script = if follow { self.tabs[i].rhai.take() } else { None };
+                // A tab opened for the script sends it output from the start.
+                let watcher = self.tabs[i].rhai.as_ref().map(|s| s.watcher());
+                self.open_tab(target, session.as_ref());
                 if let Some(new) = self.tabs.last_mut() {
-                    new.rhai = script;
                     new.connect_reply = Some(reply);
-                    new.status = "Running script...".into();
+                    new.watchers.extend(watcher);
+                    if script.is_some() {
+                        new.rhai = script;
+                        new.status = "Running script...".into();
+                    }
                 }
-                return false;
+                return !follow;
             }
             Request::Done(result) => {
+                let tab = &mut self.tabs[i];
                 let name = tab.rhai.take().map(|s| s.name.clone()).unwrap_or_default();
                 tab.status = match result {
                     Ok(()) => format!("Script {name} finished."),
@@ -4897,7 +4942,23 @@ impl App {
         true
     }
 
-    fn script_answer(&mut self, ok: bool, ui: &MainWindow) {
+    /// What a script's connect names: a saved session (folder/name or name),
+    /// or a command line (`/S session`, `/SSH2 /L user host`...).
+    fn script_target(&self, spec: &str) -> Option<(Target, Option<Session>)> {
+        let args = crate::forward::split_args(spec);
+        let session = match session_arg(&args, &self.store) {
+            Some(found) => found.ok(),
+            None if spec.trim_start().starts_with('/') || spec.contains("://") => {
+                return parse_args(&args).filter(|t| t.problem().is_none()).map(|t| (t, None));
+            }
+            None => self.store.sessions.iter().find(|s| s.path() == spec || s.name == spec),
+        };
+        session.map(|s| (Target::from_session(s, &self.options.credentials), Some(s.clone())))
+    }
+
+    /// The script dialog closed with button `choice` (0 is OK).
+    fn script_answer(&mut self, choice: i32, ui: &MainWindow) {
+        let ok = choice == 0;
         let value = ui.get_script_value().to_string();
         ui.set_script_value(SharedString::new());
         match self.script_dialog.take() {
@@ -4926,7 +4987,7 @@ impl App {
                 return self.agent_next(ui);
             }
             Some(ScriptAnswer::Message(reply)) => {
-                let _ = reply.send(());
+                let _ = reply.send(choice.max(0) as usize);
             }
             Some(ScriptAnswer::Prompt(reply)) => {
                 let _ = reply.send(ok.then_some(value));
@@ -6197,7 +6258,7 @@ impl App {
             match read_script(&path) {
                 Ok(source) => {
                     if let Some(tab) = self.active_tab() {
-                        tab.rhai = Some(rhaiscript::Script::start(&name, source, Vec::new()));
+                        tab.rhai = Some(rhaiscript::Script::start(&name, Some(path.clone()), source, Vec::new(), tab.script_folders()));
                         tab.status = format!("Running script {name}...");
                     }
                 }
@@ -6259,8 +6320,9 @@ impl App {
                 Err(e) => format!("Error: {e}"),
                 Ok(()) if act == "check" => "No syntax errors.".into(),
                 Ok(()) => {
+                    let path = self.script_file.clone();
                     if let Some(tab) = self.active_tab() {
-                        tab.rhai = Some(rhaiscript::Script::start(&name, text, Vec::new()));
+                        tab.rhai = Some(rhaiscript::Script::start(&name, path, text, Vec::new(), tab.script_folders()));
                         tab.status = format!("Running script {name}...");
                     }
                     ui.set_dialog(DIALOG_NONE);
@@ -7097,7 +7159,8 @@ enum LockStep {
 
 /// Where the answer to a script's message or prompt goes.
 enum ScriptAnswer {
-    Message(std::sync::mpsc::Sender<()>),
+    /// The index of the button clicked.
+    Message(std::sync::mpsc::Sender<usize>),
     Prompt(std::sync::mpsc::Sender<Option<String>>),
     /// The passphrase of a key being added to the built-in agent.
     AgentPassphrase(String),
@@ -7109,7 +7172,9 @@ enum ScriptAnswer {
 
 /// A script's message box (`input` None) or prompt.
 fn show_script_dialog(ui: &MainWindow, title: &str, text: &str, input: Option<&str>, secret: bool) {
-    ui.set_script_title(title.into());
+    let buttons: &[&str] = if input.is_some() { &["OK", "Cancel"] } else { &["OK"] };
+    ui.set_script_buttons(ModelRc::new(VecModel::from(buttons.iter().map(|&b| SharedString::from(b)).collect::<Vec<_>>())));
+    ui.set_script_title(if title.is_empty() { "Script" } else { title }.into());
     ui.set_script_text(text.into());
     ui.set_script_input(input.is_some());
     ui.set_script_secret(secret);
@@ -7494,7 +7559,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         }
     });
     on!(on_forward_ok, |app, ui| app.forward_ok(&ui));
-    on!(on_script_answer, |app, ui, ok| app.script_answer(ok, &ui));
+    on!(on_script_answer, |app, ui, choice| app.script_answer(choice, &ui));
     on!(on_credential_edit, |app, ui, index| app.credential_edit(index, &ui));
     on!(on_credential_remove, |app, ui, index| app.credential_remove(index, &ui));
     on!(on_credential_ok, |app, ui| app.credential_ok(&ui));

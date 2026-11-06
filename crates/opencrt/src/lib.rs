@@ -6,6 +6,7 @@ mod app;
 mod cli;
 mod codec;
 mod config;
+mod crt;
 mod filebrowser;
 mod forward;
 mod gitsync;

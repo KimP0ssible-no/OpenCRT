@@ -164,6 +164,7 @@ fn main() {
             ui.set_script_text("Password for admin on core-sw1".into());
             ui.set_script_input(true);
             ui.set_script_secret(true);
+            ui.set_script_buttons(model(vec![SharedString::from("OK"), SharedString::from("Cancel")]));
             ui.set_dialog(13);
         }
         "agent" => {

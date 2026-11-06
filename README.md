@@ -225,6 +225,19 @@ Rhai strings take the usual escapes, so `"\r"` is Enter.
 | `download(protocol)`, `download("xmodem", file)` | Receive into the download folder (Zmodem starts by itself when the host runs `sz`) |
 | `wait_transfer(secs)` | Wait for the transfer to end; true if it succeeded (0 secs waits for ever) |
 | `ARGS` | The script's arguments |
+| `read_file(file)`, `read_lines(file)` | A file's text, or its lines as an array |
+| `write_file(file, text)`, `append_file(file, text)`, `file_exists(file)` | Write, add to, or check for a file |
+| `re_search(pattern, text)`, `re_match(pattern, text)` | The first match and its groups as an array (empty when none); `re_match` only at the start |
+| `re_findall(pattern, text)`, `re_split(pattern, text)`, `re_sub(pattern, with, text)` | Every match, the parts between matches, or the text with matches replaced (`$1` is group 1) |
+| `strftime(format)`, `unix_time()` | The local time formatted (`"%Y-%m-%d"`), or seconds since 1970 |
+| `env(name)` | An environment variable ("" if unset) |
+| `path_join(a, b)`, `dir_name(path)`, `base_name(path)` | Build or take apart file paths |
+| `fmt(value, spec)` | A value formatted as Python's `format` does: `fmt(3.14159, ".2f")`, `fmt(name, "<20")`, `fmt(n, "05d")` |
+| `slice(value, start)`, `slice(value, start, end)` | Part of a string or array, as Python's `value[start:end]` (negative counts from the end) |
+
+Files are found relative to the script's folder, and scripts may only use
+files in their own folder, the download folder and the session's log folder.
+Patterns are [regular expressions](https://docs.rs/regex/latest/regex/#syntax).
 
 ```
 if wait_for("login:", 10) { send("admin\r"); }
@@ -238,6 +251,47 @@ if !wait_transfer(60) { message("Upload failed"); }
 ```
 
 In an SFTP tab, `send("put file\r")` and `send("get file\r")` transfer files.
+
+### SecureCRT's `crt` object
+Scripts can also use the objects SecureCRT gives its scripts, under the same
+names, so scripts written for SecureCRT carry over with few changes:
+
+```
+crt.Screen.Synchronous = true;
+crt.Screen.Send("show version\r");
+if crt.Screen.WaitForString("#", 10) {
+    let tab = crt.Session.ConnectInTab("/S Network/edge-rtr1");
+    tab.Screen.WaitForString("#", 10);
+    if crt.Dialog.MessageBox("Reload edge-rtr1?", "Reload", BUTTON_YESNO) == IDYES {
+        tab.Screen.Send("reload\r");
+    }
+}
+```
+
+| Object | Members |
+| --- | --- |
+| `crt` | `Screen`, `Session`, `Dialog`, `Clipboard`, `Arguments`, `ScriptFullName`, `Sleep(ms)`, `GetScriptTab()`, `GetActiveTab()`, `GetTab(n)` (from 1), `GetTabCount()`, `GetLastErrorMessage()`, `Quit()` |
+| `Screen` | `Send(text)`; `WaitForString(text[, timeout[, ms]])`, `WaitForStrings([a, b, ...][, timeout[, ms]])` (the number of the text seen, from 1; 0 on timeout), `ReadString(text or [a, b, ...][, timeout[, ms]])` (the output before it); `MatchIndex`, `Synchronous`, `IgnoreCase`; `Get(row1, col1, row2, col2)`, `Get2(...)` (rows joined by CR LF), `CurrentRow`, `CurrentColumn`, `Rows`, `Columns`, `WaitForCursor([timeout[, ms]])` |
+| `Session` | `Connect(target)` (the script continues in the new tab), `ConnectInTab(target)` (returns the tab), `Disconnect()`, `Connected`, `SetStatusText(text)` |
+| Tab | `Screen`, `Session`, `Caption`, `Activate()` |
+| `Dialog` | `MessageBox(text[, title[, style]])`, `Prompt(text[, title[, default[, password]]])` ("" if cancelled), `FileOpenDialog(title[, button[, file[, filter]]])` |
+| `Clipboard` | `Text` |
+| `Arguments` | `Count`, `GetArg(i)`, `Arguments[i]` |
+
+Timeouts are in seconds (milliseconds when `ms` is true); none or 0 waits for
+ever. A connect target is a saved session's name or folder/name, or a command
+line such as `/S "Network/core-sw1"` or `/SSH2 /L admin 10.0.0.1`. MessageBox
+styles and answers use SecureCRT's constants: `BUTTON_OK`, `BUTTON_CANCEL`
+(OK and Cancel), `BUTTON_YESNO`, `BUTTON_YESNOCANCEL`, `BUTTON_RETRYCANCEL`,
+`BUTTON_ABORTRETRYIGNORE`, `ICON_INFO`, `ICON_QUESTION`, `ICON_WARN`,
+`ICON_STOP`, and `IDOK`, `IDCANCEL`, `IDYES`, `IDNO`, `IDABORT`, `IDRETRY`,
+`IDIGNORE`.
+
+As in SecureCRT, a screen that is not `Synchronous` (the default) ignores what
+the host printed before the last `Send`; set `Synchronous = true` to wait for
+anything not yet matched. Rhai functions cannot see variables set outside
+them, so `crt`, the constants and `G`, a map every function shares
+(`G.count = 0;` then `G.count += 1;` inside a function), work everywhere.
 
 ## Build and run
 Requires Rust (stable) and, on Windows, the MSVC build tools. On Linux, a C

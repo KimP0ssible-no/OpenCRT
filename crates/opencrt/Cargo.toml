@@ -57,7 +57,7 @@ assets = [
 [package.metadata.bundle.bin.opencrt]
 name = "OpenCRT"
 identifier = "org.opencrt.OpenCRT"
-icon = ["packaging/icons/opencrt-128.png", "packaging/icons/opencrt-256.png"]
+icon = ["crates/opencrt/ui/opencrt.svg"]
 category = "public.app-category.developer-tools"
 short_description = "SSH, Telnet, serial and local terminal client"
 resources = ["LICENSE", "NOTICE", "SLINT-LICENSE.md", "crates/opencrt/ui/fonts/OFL.txt", "target/THIRD-PARTY-NOTICES.html", "target/THIRD-PARTY-NOTICES-RDP.html"]

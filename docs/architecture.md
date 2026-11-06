@@ -17,8 +17,10 @@
 - **File dialogs**: `rfd`. **Log timestamps**: `chrono` (already built for Slint).
 - **Config**: `serde` + `toml`. **Errors**: `anyhow`; panics and fatal errors
   also go to `crash.log` in the config folder.
-- **Scripting**: built-in expect-style scripts (`script.rs`); a Python host
-  (`pyo3`) is undecided (needs a Python runtime on users' machines).
+- **Scripting**: built-in expect-style scripts (`script.rs`), Rhai
+  (`rhaiscript.rs`), and SecureCRT's Python scripts in a separate Python
+  process (`python.rs`; the system's python3 on Linux, downloaded on first
+  use on Windows and macOS).
 
 - **RDP**: IronRDP (connector, session, TLS via rustls, NTLM via sspi) in a
   separate helper program, `crates/opencrt-rdp` (its own workspace: IronRDP
@@ -62,7 +64,9 @@ Telnet, raw, serial, local and SFTP tabs alike.
 - `src/rhaiscript.rs` — Rhai scripts on their own thread: requests to the app
   (addressed to the script's tab or another one), per-tab output for waits,
   files, regex, dates and formatting. `src/crt.rs` — SecureCRT's `crt` object
-  model on top of it.
+  model on top of it. `src/python.rs` — Python scripts: a Python process per
+  script, running `src/crt.py`, whose crt calls arrive as JSON lines and are
+  answered by `crt.rs`.
 - `src/sessions.rs` — Session Manager tree, folder rename, merge, ssh_config import.
 - `src/config.rs` — config folder (or `/F`), sessions.toml / options.toml types,
   crash log.

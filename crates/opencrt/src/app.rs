@@ -16,7 +16,7 @@ use slint::{ComponentHandle, Image, Model, ModelRc, Rgb8Pixel, Rgba8Pixel, Share
 use crate::config::{self, Credential, FlowControl, Options, Parity, Protocol, SerialLine, Session, SessionStore};
 use crate::forward::{Forward, ForwardKind};
 use crate::rdp::ToHelper;
-use crate::{kermit, local, rdp, rhaiscript, script, serial, sftp, telnet, tftp, update, vnc, xymodem, zmodem};
+use crate::{kermit, local, python, rdp, rhaiscript, script, serial, sftp, telnet, tftp, update, vnc, xymodem, zmodem};
 use crate::input::{self, KeyAction, Mods};
 use crate::log::SessionLog;
 use crate::render::{self, FONT_PX, Renderer};
@@ -584,6 +584,10 @@ struct Tab {
     log_day: Option<chrono::NaiveDate>,
     /// Where Zmodem and Ymodem downloads are saved.
     download_dir: PathBuf,
+    /// Global Options' Python program for `.py` scripts (see `python::program`).
+    python: String,
+    /// A Python logon script waiting for Python to be downloaded.
+    wants_python: Option<PathBuf>,
     /// The saved session's tab colour name; empty for none.
     color: String,
     /// SSH2 shell: its logged-in connection, so an SFTP tab can share it.
@@ -632,7 +636,7 @@ struct Tab {
     eat_over_and_out: bool,
     /// Script > Run or logon script in progress.
     script: Option<script::Runner>,
-    /// A Rhai script (`.rhai`) driving this tab, on its own thread.
+    /// A Rhai or Python script driving this tab, on its own thread.
     rhai: Option<rhaiscript::Script>,
     /// A script's `connect()` waiting to hear whether this tab connected.
     connect_reply: Option<std::sync::mpsc::Sender<Option<(u64, bool)>>>,
@@ -780,6 +784,8 @@ impl Tab {
             log_texts: Default::default(),
             log_day: None,
             download_dir: config::download_dir(""),
+            python: String::new(),
+            wants_python: None,
             color: String::new(),
             link: None,
             via: None,
@@ -1037,10 +1043,16 @@ impl Tab {
             return Err("it needs a connected session with no transfer running".into());
         }
         let now = Instant::now();
+        let given = file.is_some();
         let file = || file.clone().ok_or_else(|| "no file was given".to_string());
         let unreadable = |path: &Path, e: std::io::Error| format!("cannot read {}: {e}", path.display());
         let kind = if how == "ymodem" { xymodem::Kind::Ymodem } else { xymodem::Kind::Xmodem };
         let (transfer, start, status) = match (how, send) {
+            // No file: forget an upload waiting for rz.
+            ("zmodem", true) if !given => {
+                self.upload = None;
+                return Ok(());
+            }
             ("zmodem", true) => {
                 let path = file()?;
                 self.status = format!("Run rz on the host to receive {}.", path.display());
@@ -1284,13 +1296,12 @@ impl Tab {
         self.dirty = true;
         self.open_log(chrono::Local::now().naive_local());
         self.log_note(0);
-        // A Rhai logon script runs on its own thread.
-        if let Some(path) = self.logon_script.clone().filter(|p| is_rhai(p)) {
-            match read_script(&path) {
-                Ok(source) => self.rhai = Some(rhaiscript::Script::start(&file_name(&path), Some(path.clone()), source, Vec::new(), self.script_folders())),
-                Err(e) => {
-                    self.terminal.feed(format!("\x1b[33mLogon script {}: {e}\x1b[0m\r\n", path.display()).as_bytes());
-                }
+        // A Rhai or Python logon script runs on its own thread.
+        if let Some(path) = self.logon_script.clone().filter(|p| is_rhai(p) || is_python(p)) {
+            if is_python(&path) && python::program(&self.python).is_none() {
+                self.wants_python = Some(path);
+            } else if let Err(e) = self.start_script(&path) {
+                self.terminal.feed(format!("\x1b[33mLogon script {}: {e}\x1b[0m\r\n", path.display()).as_bytes());
             }
             return;
         }
@@ -1540,6 +1551,19 @@ impl Tab {
             .unwrap_or_else(|| self.target.label())
     }
 
+    /// Start the Rhai or Python script file `path` on this tab.
+    fn start_script(&mut self, path: &Path) -> Result<(), String> {
+        let name = file_name(path);
+        self.rhai = Some(match is_python(path) {
+            true => {
+                let program = python::program(&self.python).ok_or(python::MISSING)?;
+                python::start(&name, path.to_path_buf(), Vec::new(), self.script_folders(), program)
+            }
+            false => rhaiscript::Script::start(&name, Some(path.to_path_buf()), read_script(path)?, Vec::new(), self.script_folders()),
+        });
+        Ok(())
+    }
+
     /// Where a script on this tab may use files, besides its own folder: the
     /// download folder and the log file's folder.
     fn script_folders(&self) -> Vec<PathBuf> {
@@ -1595,6 +1619,9 @@ struct App {
     update_install: Option<(update::InstallKind, std::sync::mpsc::Receiver<Result<PathBuf, String>>)>,
     /// Git for Windows' installer being downloaded (Settings Sync).
     git_download: Option<std::sync::mpsc::Receiver<Result<PathBuf, String>>>,
+    /// Python being downloaded, and the scripts (tab id, file) waiting for it.
+    python_download: Option<std::sync::mpsc::Receiver<Result<PathBuf, String>>>,
+    python_waiting: Vec<(u64, PathBuf)>,
     /// Public keys being added to servers' authorized_keys: (host, result).
     uploads: Vec<(String, std::sync::mpsc::Receiver<Result<bool, String>>)>,
     /// Key files still to load into the agent (encrypted ones ask first).
@@ -1877,6 +1904,8 @@ impl App {
             next_update_check: Instant::now(),
             update_install: None,
             git_download: None,
+            python_download: None,
+            python_waiting: Vec::new(),
             shown_tabs: Vec::new(),
             shown_recent: Vec::new(),
             window_title: String::new(),
@@ -2030,6 +2059,7 @@ impl App {
             tab.target.key_path = Some(config::expand_env(&self.options.global_key));
         }
         tab.download_dir = config::download_dir(&self.options.download_folder);
+        tab.python = self.options.python.clone();
         // Ad-hoc connections (Quick Connect, connect bar, command line) take
         // the Default Session's settings.
         let settings = session.unwrap_or(&self.store.default_session);
@@ -3363,6 +3393,7 @@ impl App {
         self.update_done(ui);
         self.install_done(ui);
         self.git_download_done(ui);
+        self.python_download_done();
         let finished: Vec<(String, Result<bool, String>)> = {
             let mut done = Vec::new();
             self.uploads.retain(|(host, rx)| match rx.try_recv() {
@@ -4881,12 +4912,28 @@ impl App {
                     self.tabs[j].watchers.push(watcher);
                 }
             }
-            Request::OpenFile { title, file, filters, reply } => {
+            Request::OpenFile { title, file, filters, save, reply } => {
                 let mut dialog = rfd::FileDialog::new().set_title(&title).set_file_name(&file);
                 for (name, extensions) in &filters {
                     dialog = dialog.add_filter(name, extensions);
                 }
-                let _ = reply.send(dialog.pick_file().map(|p| p.to_string_lossy().into_owned()).unwrap_or_default());
+                let picked = if save { dialog.save_file() } else { dialog.pick_file() };
+                let _ = reply.send(picked.map(|p| p.to_string_lossy().into_owned()).unwrap_or_default());
+            }
+            Request::Clear => {
+                tab.terminal.feed(b"\x1b[H\x1b[2J");
+                tab.dirty = true;
+            }
+            Request::SessionConfig { path, reply } => {
+                let found = match path.as_deref().or(tab.session.as_deref()) {
+                    Some(p) if p.eq_ignore_ascii_case("Default") => Some(self.store.default_session.clone()),
+                    Some(p) => self.store.sessions.iter().find(|s| s.path() == p).cloned(),
+                    None => None,
+                };
+                let _ = reply.send(found.map(Box::new));
+            }
+            Request::SaveSession { path, session, reply } => {
+                let _ = reply.send(self.save_script_session(&path, *session));
             }
             Request::Quit => {
                 if self.may_exit(ui) {
@@ -4940,6 +4987,26 @@ impl App {
             }
         }
         true
+    }
+
+    /// A script's session settings saved as `path`: the Default Session, a
+    /// saved session it replaces, or a new one.
+    fn save_script_session(&mut self, path: &str, session: Session) -> Result<(), String> {
+        if path.eq_ignore_ascii_case("Default") {
+            self.store.default_session = Session { name: String::new(), folder: String::new(), ..session };
+        } else {
+            let (folder, name) = path.rsplit_once('/').unwrap_or(("", path));
+            if name.trim().is_empty() {
+                return Err("the session needs a name".into());
+            }
+            let session = Session { name: name.to_string(), folder: folder.to_string(), ..session };
+            match self.store.sessions.iter_mut().find(|s| s.path() == path) {
+                Some(old) => *old = session,
+                None => self.store.sessions.push(session),
+            }
+        }
+        self.save_store();
+        Ok(())
     }
 
     /// What a script's connect names: a saved session (folder/name or name),
@@ -5544,6 +5611,7 @@ impl App {
             "fwd-app" => dialog.set_title("Application").pick_file(),
             "go-download" => dialog.set_title("Download Folder").pick_folder(),
             "go-config-dir" => dialog.set_title("Configuration Folder").pick_folder(),
+            "go-python" => dialog.set_title("Python Program").pick_file(),
             "so-rdp-share" => dialog.set_title("Folder to Share with the Remote Computer").pick_folder(),
             "kg-file" => {
                 let current = PathBuf::from(ui.get_kg_file().as_str());
@@ -5579,6 +5647,7 @@ impl App {
             "go-download" => ui.set_go_download(text),
             "so-rdp-share" => ui.set_so_rdp_share(text),
             "go-config-dir" => ui.set_go_config_dir(text),
+            "go-python" => ui.set_go_python(text),
             "go-key" => ui.set_go_global_key(text),
             "go-git-key" => ui.set_go_git_key(text),
             "kg-file" => ui.set_kg_file(text),
@@ -5705,6 +5774,52 @@ impl App {
             Err(e) => {
                 ui.set_update_installable(true);
                 ui.set_update_status(format!("Could not update: {e}. Download it from the release page instead.").into());
+            }
+        }
+    }
+
+    /// Run `script` on tab `id` once Python is downloaded (Windows, macOS).
+    fn get_python(&mut self, id: u64, script: PathBuf) {
+        self.python_waiting.push((id, script));
+        if self.python_download.is_some() {
+            return;
+        }
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let _ = tx.send(python::fetch().map_err(|e| format!("{e:#}")));
+        });
+        self.python_download = Some(rx);
+        self.notify("Downloading Python for Python scripts (once) from its official site...");
+    }
+
+    fn python_download_done(&mut self) {
+        for tab in &mut self.tabs {
+            if let Some(script) = tab.wants_python.take() {
+                self.python_waiting.push((tab.id, script));
+            }
+        }
+        if self.python_download.is_none() {
+            if let Some((id, script)) = self.python_waiting.pop() {
+                self.get_python(id, script);
+            }
+            return;
+        }
+        let Some(rx) = &self.python_download else {
+            return;
+        };
+        let result = match rx.try_recv() {
+            Ok(result) => result,
+            Err(std::sync::mpsc::TryRecvError::Empty) => return,
+            Err(_) => Err("the download stopped".to_string()),
+        };
+        self.python_download = None;
+        for (id, script) in std::mem::take(&mut self.python_waiting) {
+            let Some(tab) = self.tabs.iter_mut().find(|t| t.id == id) else {
+                continue;
+            };
+            if let Err(e) = result.clone().and_then(|_| tab.start_script(&script)) {
+                tab.terminal.feed(format!("\r\n\x1b[33mScript {}: cannot get Python: {e}\x1b[0m\r\n", file_name(&script)).as_bytes());
+                tab.dirty = true;
             }
         }
     }
@@ -6070,7 +6185,7 @@ impl App {
         if self.tabs.is_empty() {
             return self.notify("Run Script: open a session first.");
         }
-        let Some(path) = rfd::FileDialog::new().set_title("Run Script").add_filter("Scripts", &["rhai", "txt", "script"]).add_filter("All files", &["*"]).pick_file() else {
+        let Some(path) = rfd::FileDialog::new().set_title("Run Script").add_filter("Scripts", &["rhai", "py", "txt", "script"]).add_filter("All files", &["*"]).pick_file() else {
             return;
         };
         self.run_script_path(&path);
@@ -6254,14 +6369,18 @@ impl App {
             return self.notify(format!("Script {name}: open a session first."));
         }
         let path = PathBuf::from(config::expand_env(&path.to_string_lossy()));
-        if is_rhai(&path) {
-            match read_script(&path) {
-                Ok(source) => {
-                    if let Some(tab) = self.active_tab() {
-                        tab.rhai = Some(rhaiscript::Script::start(&name, Some(path.clone()), source, Vec::new(), tab.script_folders()));
-                        tab.status = format!("Running script {name}...");
-                    }
-                }
+        if is_python(&path) && python::program(&self.options.python).is_none() {
+            if let Some(id) = self.tabs.get(self.active).map(|t| t.id) {
+                self.get_python(id, path);
+            }
+            return;
+        }
+        if is_rhai(&path) || is_python(&path) {
+            let Some(tab) = self.active_tab() else {
+                return;
+            };
+            match tab.start_script(&path) {
+                Ok(()) => tab.status = format!("Running script {name}..."),
                 Err(e) => self.notify(format!("Script {name}: {e}")),
             }
             return;
@@ -6632,6 +6751,7 @@ impl App {
         ui.set_go_word_delimiters(self.options.word_delimiters.clone().into());
         ui.set_go_download(self.options.download_folder.clone().into());
         ui.set_go_config_dir(config::chosen_dir().into());
+        ui.set_go_python(self.options.python.clone().into());
         let remote = crate::gitsync::remote().unwrap_or_default();
         ui.set_go_git_url(remote.url.into());
         ui.set_go_git_user(remote.user.into());
@@ -6746,6 +6866,7 @@ impl App {
         self.options.print_margin_mm = print_margin;
         self.options.drop_protocol = DROP_PROTOCOLS.get(ui.get_go_drop().max(0) as usize).unwrap_or(&"").to_string();
         self.options.download_folder = download_folder;
+        self.options.python = ui.get_go_python().trim().to_string();
         if tftp_changed {
             self.apply_tftp();
         }
@@ -6797,6 +6918,7 @@ impl App {
             tab.terminal.set_scrollback(scrollback);
             tab.terminal.set_host_copy(self.options.host_clipboard);
             tab.download_dir = config::download_dir(&self.options.download_folder);
+            tab.python = self.options.python.clone();
         }
         ui.set_paste_on_right(self.options.paste_on_right_click);
         let scheme = schemes().get(ui.get_go_scheme().max(0) as usize).copied().unwrap_or(&SCHEMES[0]);
@@ -7257,9 +7379,14 @@ fn read_script(path: &Path) -> Result<String, String> {
     source.map_err(|e| e.to_string())
 }
 
-/// Rhai scripts end in `.rhai`; anything else is the simple wait/send format.
+/// Rhai scripts end in `.rhai` and Python ones in `.py`; anything else is
+/// the simple wait/send format.
 fn is_rhai(path: &Path) -> bool {
     path.extension().is_some_and(|e| e.eq_ignore_ascii_case("rhai"))
+}
+
+fn is_python(path: &Path) -> bool {
+    path.extension().is_some_and(|e| e.eq_ignore_ascii_case("py"))
 }
 
 fn file_name(path: &Path) -> String {

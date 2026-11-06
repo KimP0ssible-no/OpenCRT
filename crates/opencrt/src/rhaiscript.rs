@@ -1,7 +1,8 @@
 //! Rhai scripts (`.rhai`, Script > Run or a logon script). A script runs on
 //! its own thread against its tab, and any other tab it asks for: the tabs
 //! hand it their output, and it asks the app for everything else through
-//! `Request`s. SecureCRT's `crt` object comes from `crt.rs`.
+//! `Request`s. SecureCRT's `crt` object comes from `crt.rs`; Python scripts
+//! (`python.rs`) run on the same thread model.
 //!
 //! ```text
 //! if wait_for("login:", 10) { send("admin\r"); }
@@ -55,8 +56,17 @@ pub enum Request {
     Activate,
     /// Send the script this tab's output too.
     Watch,
-    /// Pick a file to open: (filter name, extensions) pairs; "" when cancelled.
-    OpenFile { title: String, file: String, filters: Vec<(String, Vec<String>)>, reply: Sender<String> },
+    /// Pick a file to open (or to save as): (filter name, extensions) pairs;
+    /// "" when cancelled.
+    OpenFile { title: String, file: String, filters: Vec<(String, Vec<String>)>, save: bool, reply: Sender<String> },
+    /// Clear the screen (the host is not told).
+    Clear,
+    /// A saved session's settings: by folder/name, "Default" for the Default
+    /// Session, None for the tab's own; None when there is no such session.
+    SessionConfig { path: Option<String>, reply: Sender<Option<Box<crate::config::Session>>> },
+    /// Save `session` as the saved session `path` ("Default": the Default
+    /// Session), creating it if needed.
+    SaveSession { path: String, session: Box<crate::config::Session>, reply: Sender<Result<(), String>> },
     /// File > Exit.
     Quit,
     /// The script ended (the error, if it failed).
@@ -90,15 +100,22 @@ pub struct Script {
 
 impl Script {
     /// `path` is the script file (None for unsaved text): scripts read and
-    /// write files only in its folder and in `folders`.
+    /// write files only in its folder and in `folders` (the download folder
+    /// first).
     pub fn start(name: &str, path: Option<PathBuf>, source: String, args: Vec<String>, folders: Vec<PathBuf>) -> Script {
+        Script::spawn(name, path, folders, move |ctx| run(&source, args, ctx))
+    }
+
+    /// Run `body` on its own thread as the script.
+    pub(crate) fn spawn(name: &str, path: Option<PathBuf>, folders: Vec<PathBuf>, body: impl FnOnce(Ctx) -> Result<(), String> + Send + 'static) -> Script {
         let (output, output_rx) = channel();
         let (request_tx, requests) = channel();
         let abort = Arc::new(AtomicBool::new(false));
         let roots = path.iter().filter_map(|p| p.parent()).chain(folders.iter().map(PathBuf::as_path)).filter_map(|d| d.canonicalize().ok()).collect();
-        let ctx = Ctx { requests: request_tx.clone(), output: output_rx, seen: RefCell::default(), watched: RefCell::default(), abort: abort.clone(), path, roots };
+        let downloads = folders.first().cloned().unwrap_or_default();
+        let ctx = Ctx { requests: request_tx.clone(), output: output_rx, seen: RefCell::default(), watched: RefCell::default(), abort: abort.clone(), path, roots, downloads };
         std::thread::spawn(move || {
-            let result = run(&source, args, ctx);
+            let result = body(ctx);
             let _ = request_tx.send((None, Request::Done(result)));
         });
         Script { name: name.to_string(), output, requests, abort }
@@ -136,6 +153,7 @@ pub(crate) struct Ctx {
     pub path: Option<PathBuf>,
     /// Folders the script may use files in (canonical).
     roots: Vec<PathBuf>,
+    pub downloads: PathBuf,
 }
 
 impl Ctx {
@@ -155,7 +173,7 @@ impl Ctx {
     }
 
     /// Like `reply`, but None after `secs` (0 waits for ever).
-    fn reply_within<T>(&self, rx: Receiver<T>, secs: i64) -> Result<Option<T>, Fail> {
+    pub fn reply_within<T>(&self, rx: Receiver<T>, secs: i64) -> Result<Option<T>, Fail> {
         let deadline = (secs > 0).then(|| Instant::now() + Duration::from_secs(secs as u64));
         loop {
             self.check()?;
@@ -168,13 +186,13 @@ impl Ctx {
         }
     }
 
-    fn transfer(&self, protocol: &str, send: bool, file: Option<&str>) -> Result<(), Fail> {
+    pub fn transfer(&self, protocol: &str, send: bool, file: Option<&str>) -> Result<(), Fail> {
         let file = file.map(str::to_string);
         let started = self.get(None, |reply| Request::Transfer { protocol: protocol.to_string(), send, file, reply })?;
         started.map_err(|e| format!("cannot start the transfer: {e}").into())
     }
 
-    fn check(&self) -> Result<(), Fail> {
+    pub fn check(&self) -> Result<(), Fail> {
         if self.abort.load(Ordering::Relaxed) { Err("cancelled".into()) } else { Ok(()) }
     }
 
@@ -220,8 +238,9 @@ impl Ctx {
     }
 
     /// Wait (up to `timeout`; None = no limit) until `tab` has shown one of
-    /// `texts`. Returns its index and the output before it, consuming both.
-    pub fn wait(&self, tab: TabKey, texts: &[Vec<u8>], timeout: Option<Duration>, nocase: bool) -> Result<Option<(usize, Vec<u8>)>, Fail> {
+    /// `texts`, ignoring escape sequences with `plain`. Returns its index and
+    /// the output before it, consuming both.
+    pub fn wait(&self, tab: TabKey, texts: &[Vec<u8>], timeout: Option<Duration>, nocase: bool, plain: bool) -> Result<Option<(usize, Vec<u8>)>, Fail> {
         self.watch(tab)?;
         let deadline = timeout.map(|t| Instant::now() + t);
         loop {
@@ -229,16 +248,20 @@ impl Ctx {
             {
                 let mut seen = self.seen.borrow_mut();
                 let seen = seen.entry(tab).or_default();
+                let stripped = plain.then(|| without_escapes(seen));
+                let text = stripped.as_ref().map_or(seen.as_slice(), |(text, _)| text);
                 let same = |w: &[u8], t: &[u8]| if nocase { w.eq_ignore_ascii_case(t) } else { w == t };
                 let first = texts
                     .iter()
                     .enumerate()
                     .filter(|(_, t)| !t.is_empty())
-                    .filter_map(|(i, t)| seen.windows(t.len()).position(|w| same(w, t)).map(|at| (at, i)))
+                    .filter_map(|(i, t)| text.windows(t.len()).position(|w| same(w, t)).map(|at| (at, i)))
                     .min();
                 if let Some((at, i)) = first {
-                    let before = seen[..at].to_vec();
-                    seen.drain(..at + texts[i].len());
+                    let before = text[..at].to_vec();
+                    let last = at + texts[i].len() - 1;
+                    let end = stripped.as_ref().map_or(last, |(_, from)| from[last]) + 1;
+                    seen.drain(..end);
                     return Ok(Some((i, before)));
                 }
             }
@@ -300,6 +323,43 @@ impl Ctx {
     }
 }
 
+/// `bytes` without terminal escape sequences, and where each byte left came from.
+fn without_escapes(bytes: &[u8]) -> (Vec<u8>, Vec<usize>) {
+    let (mut text, mut from) = (Vec::new(), Vec::new());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] != 0x1b {
+            text.push(bytes[i]);
+            from.push(i);
+            i += 1;
+            continue;
+        }
+        i += 1;
+        match bytes.get(i) {
+            // CSI: parameters up to a final byte.
+            Some(b'[') => {
+                i += 1;
+                while i < bytes.len() && !(0x40..=0x7e).contains(&bytes[i]) {
+                    i += 1;
+                }
+                i += 1;
+            }
+            // OSC: up to BEL or ESC \.
+            Some(b']') => {
+                while i < bytes.len() && bytes[i] != 0x07 && !(bytes[i] == 0x1b && bytes.get(i + 1) == Some(&b'\\')) {
+                    i += 1;
+                }
+                i += if bytes.get(i) == Some(&0x07) { 1 } else { 2 };
+            }
+            // Character set choices take one more byte.
+            Some(b'(' | b')' | b'*' | b'+') => i += 2,
+            Some(_) => i += 1,
+            None => {}
+        }
+    }
+    (text, from)
+}
+
 fn run(source: &str, args: Vec<String>, ctx: Ctx) -> Result<(), String> {
     let ctx = Rc::new(ctx);
     let mut engine = Engine::new();
@@ -319,12 +379,12 @@ fn run(source: &str, args: Vec<String>, ctx: Ctx) -> Result<(), String> {
         }};
     }
     register!("send", |c, text: &str| c.ask(None, Request::Send(text.as_bytes().to_vec())));
-    register!("wait_for", |c, text: &str| c.wait(None, &[text.into()], None, false).map(|m| m.is_some()));
-    register!("wait_for", |c, text: &str, secs: i64| c.wait(None, &[text.into()], secs_limit(secs), false).map(|m| m.is_some()));
+    register!("wait_for", |c, text: &str| c.wait(None, &[text.into()], None, false, false).map(|m| m.is_some()));
+    register!("wait_for", |c, text: &str, secs: i64| c.wait(None, &[text.into()], secs_limit(secs), false, false).map(|m| m.is_some()));
     register!("wait_for_any", |c, texts: Array| wait_any(&c, texts, 0));
     register!("wait_for_any", |c, texts: Array, secs: i64| wait_any(&c, texts, secs));
     register!("read_until", |c, text: &str, secs: i64| {
-        let found = c.wait(None, &[text.into()], secs_limit(secs), false)?;
+        let found = c.wait(None, &[text.into()], secs_limit(secs), false, false)?;
         Ok::<String, Fail>(found.map(|(_, before)| String::from_utf8_lossy(&before).into_owned()).unwrap_or_default())
     });
     register!("sleep", |c, ms: i64| c.sleep(ms));
@@ -381,7 +441,7 @@ fn secs_limit(secs: i64) -> Option<Duration> {
 
 fn wait_any(c: &Ctx, texts: Array, secs: i64) -> Result<i64, Fail> {
     let texts: Vec<Vec<u8>> = texts.into_iter().map(|t| t.to_string().into_bytes()).collect();
-    Ok(c.wait(None, &texts, secs_limit(secs), false)?.map_or(-1, |(i, _)| i as i64))
+    Ok(c.wait(None, &texts, secs_limit(secs), false, false)?.map_or(-1, |(i, _)| i as i64))
 }
 
 fn prompt(c: &Ctx, text: &str, default: &str, secret: bool) -> Result<String, Fail> {
@@ -648,6 +708,13 @@ mod tests {
         assert!(matches!(next(&s), Request::Done(Err(e)) if e.contains("may only use files")));
         assert_eq!(std::fs::read_to_string(downloads.join("copy.txt")).unwrap(), "a\nb\nc\n");
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn escape_sequences_can_be_ignored() {
+        let (text, from) = without_escapes(b"a\x1b[1;32mb\x1b]0;title\x07c\x1b(Bd\x1b");
+        assert_eq!(text, b"abcd");
+        assert_eq!(from, [0, 8, 19, 23]);
     }
 
     #[test]

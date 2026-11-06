@@ -216,7 +216,11 @@ enum Auth {
 /// the (black) desktop picture of the server's size.
 async fn handshake(mut s: Box<dyn crate::proxy::Stream>, mut login: Login<'_>) -> anyhow::Result<(Box<dyn crate::proxy::Stream>, String, Option<String>, Picture)> {
     let mut version = [0u8; 12];
-    s.read_exact(&mut version).await.context("no VNC greeting from the server")?;
+    // A Mac whose screen is not up (WindowServer restarting) takes the connection and says nothing.
+    tokio::time::timeout(std::time::Duration::from_secs(20), s.read_exact(&mut version))
+        .await
+        .map_err(|_| anyhow!("{}:{} took the connection but sent no VNC greeting", login.host, login.port))?
+        .context("no VNC greeting from the server")?;
     let minor = version_minor(&version).ok_or_else(|| anyhow!("not a VNC server (it said {:?})", String::from_utf8_lossy(&version)))?;
     s.write_all(format!("RFB 003.{minor:03}\n").as_bytes()).await?;
 
@@ -287,6 +291,9 @@ async fn handshake(mut s: Box<dyn crate::proxy::Stream>, mut login: Login<'_>) -
 
     s.write_u8(1).await?; // ClientInit: share the desktop with other viewers
     let (width, height) = (s.read_u16().await?, s.read_u16().await?);
+    if width == 0 || height == 0 {
+        bail!("the server has no screen to share ({width} x {height}); on a Mac, someone must be logged in at its screen");
+    }
     let mut format = [0u8; 16];
     s.read_exact(&mut format).await?;
     let _name = read_text(&mut s).await?;
@@ -1686,6 +1693,17 @@ mod tests {
             s.write_all(&[2, 33, 35]).unwrap();
         });
         assert!(e.contains("Apple, security type 33, Apple, security type 35"), "{e}");
+        // A Mac with no screen up yet reports a 0 x 0 desktop.
+        let e = serve(1, |s| {
+            s.write_all(b"RFB 003.889\n").unwrap();
+            read_n(s, 12);
+            s.write_all(&[1, NO_AUTH]).unwrap();
+            read_n(s, 1);
+            s.write_all(&0u32.to_be_bytes()).unwrap();
+            read_n(s, 1);
+            s.write_all(&[0; 4]).unwrap();
+        });
+        assert!(e.contains("no screen to share (0 x 0)"), "{e}");
         // TightVNC 4 with only its own passwords: say which setting to change.
         let e = serve(1, |s| {
             s.write_all(b"RFB 003.008\n").unwrap();

@@ -2483,7 +2483,9 @@ component ScriptDialog inherits DialogFrame {
     in property <bool> input;
     in property <bool> secret;
     in-out property <string> value;
-    callback answer(bool);
+    // The first is the default; answer gives the index of the one clicked.
+    in property <[string]> buttons: ["OK"];
+    callback answer(int);
     dialog-width: 440px * Theme.ui-scale;
     Text {
         text: root.text;
@@ -2492,18 +2494,14 @@ component ScriptDialog inherits DialogFrame {
     if root.input: LineEdit {
         text <=> root.value;
         input-type: root.secret ? InputType.password : InputType.text;
-        accepted => { root.answer(true); }
+        accepted => { root.answer(0); }
         init => { self.focus(); }
     }
     DialogButtons {
-        Button {
-            text: "OK";
-            primary: true;
-            clicked => { root.answer(true); }
-        }
-        if root.input: Button {
-            text: "Cancel";
-            clicked => { root.answer(false); }
+        for label[i] in root.buttons: Button {
+            text: label;
+            primary: i == 0;
+            clicked => { root.answer(i); }
         }
     }
 }
@@ -4481,6 +4479,7 @@ export component MainWindow inherits Window {
     in property <bool> script-input;
     in property <bool> script-secret;
     in-out property <string> script-value;
+    in property <[string]> script-buttons: ["OK"];
     in-out property <bool> auth-save;
     in-out property <string> qc-host;
     in-out property <string> qc-port: "22";
@@ -4581,7 +4580,7 @@ export component MainWindow inherits Window {
     callback firewall-edit(int);
     callback firewall-remove(int);
     callback firewall-ok();
-    callback script-answer(bool);
+    callback script-answer(int);
     callback global-options-ok();
     callback confirm-answer(bool);
     callback name-answer(bool);
@@ -6292,7 +6291,8 @@ export component MainWindow inherits Window {
         input: root.script-input;
         secret: root.script-secret;
         value <=> root.script-value;
-        answer(ok) => { root.script-answer(ok); }
+        buttons: root.script-buttons;
+        answer(choice) => { root.script-answer(choice); }
     }
     if root.dialog == 14: DialogFrame {
         title: "Agent Keys";

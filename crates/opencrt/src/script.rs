@@ -287,8 +287,8 @@ mod tests {
 
         // Replayed as Rhai against the same output, it sends what was typed.
         use crate::rhaiscript::{Request, Script};
-        let run = Script::start("t", script, vec![]);
-        let next = || run.requests.recv_timeout(std::time::Duration::from_secs(5)).expect("a request");
+        let run = Script::start("t", None, script, vec![], vec![]);
+        let next = || run.requests.recv_timeout(std::time::Duration::from_secs(5)).expect("a request").1;
         run.output(b"Welcome\r\nlogin: ");
         assert!(matches!(next(), Request::Send(b) if b == b"admin\r"));
         run.output(b"admin\r\nPassword: ");

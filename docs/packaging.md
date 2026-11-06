@@ -100,14 +100,18 @@ unsigned, so Windows SmartScreen warns before running it ("More info", then
 CI (`.github/workflows/ci.yml`) builds and tests every push. Pushing a tag
 `vX.Y.Z` also publishes a GitHub Release with the Windows installer and MSI,
 the macOS disk image, the .deb, .rpm and Arch packages, and `SHA256SUMS`.
-Set the version first in `crates/opencrt/Cargo.toml` and
-`packaging/windows/opencrt.iss` (the release job stops if either differs from
-the tag), then:
+The version comes from the tag: main stays at `0.0.0`, and on a tag every
+packaging job runs `packaging/set-version.sh X.Y.Z` before it builds (run it
+locally too, to build a numbered package by hand). The annotated tag's message
+is the release notes, a short "- " list of what changed for users:
 
 ```
-git tag v0.1.0
-git push github v0.1.0
+git tag -a v0.6.4 -F notes.txt
+git push github v0.6.4
 ```
+
+The first CI job stops a tag that is not newer than the latest release or has
+no notes.
 
 ## Before a public release
 - **Licence**: OpenCRT's source is Apache-2.0; Slint is used under

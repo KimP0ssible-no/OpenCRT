@@ -22,6 +22,7 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pull-requests: read
     outputs:
       code: ${{ steps.check.outputs.code }}
@@ -42,6 +43,24 @@ jobs:
             fi
           fi
           echo "code=$code" | tee -a "$GITHUB_OUTPUT"
+      # A release tag carries the version (packaging/set-version.sh writes it
+      # into the build) and, as its message, the release notes. Checked here,
+      # before an hour of builds.
+      - name: Release tag is newer than the latest release and has notes
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          echo "$v" | grep -qxE '[0-9]+\.[0-9]+\.[0-9]+'
+          latest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+          latest="${latest#v}"
+          echo "latest release $latest, this tag $v"
+          [ "$v" != "$latest" ] && [ "$(printf '%s\n' "$latest" "$v" | sort -V | tail -1)" = "$v" ]
+          ref=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GITHUB_REF_NAME")
+          [ "$(echo "$ref" | jq -r .object.type)" = tag ] || { echo "::error::$GITHUB_REF_NAME is not an annotated tag: its message is the release notes"; exit 1; }
+          gh api "repos/$GITHUB_REPOSITORY/git/tags/$(echo "$ref" | jq -r .object.sha)" --jq .message | tee notes.md
+          grep -q '[^[:space:]]' notes.md || { echo "::error::$GITHUB_REF_NAME has no release notes in its message"; exit 1; }
 
   test:
     needs: changes
@@ -70,6 +89,16 @@ jobs:
       - name: Linux fontconfig headers and fonts for the renderer tests
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libfontconfig-dev fonts-dejavu-core minisign
+      # What a release tag runs first: the version in every file, and the
+      # lock files still matching (main is put back afterwards).
+      - name: Release version script
+        shell: bash
+        run: |
+          sh packaging/set-version.sh 9.8.7
+          cargo metadata --locked --format-version 1 > /dev/null
+          (cd crates/opencrt/fuzz && cargo metadata --locked --format-version 1 > /dev/null)
+          test "$(git diff --numstat | wc -l)" -eq 5
+          git checkout -- .
       # The release job's signing script, with a throwaway key: it must sign,
       # and refuse a signature the given public key does not match.
       - name: Release signing script
@@ -163,6 +192,11 @@ jobs:
         # decoder statically (crates/opencrt-rdp/build.rs).
         run: dnf -y -q --enablerepo=powertools install gcc gcc-c++ libstdc++-static make perl git
       - uses: actions/checkout@v7
+      # Release tags: the version comes from the tag (main says 0.0.0).
+      - name: Version from the tag
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: sh packaging/set-version.sh "${GITHUB_REF_NAME#v}"
       - uses: dtolnay/rust-toolchain@stable
       # Dependencies and cargo-installed tools, as built by the last run on
       # main; pull requests and tags only read it.
@@ -216,6 +250,11 @@ jobs:
     container: archlinux:latest
     steps:
       - uses: actions/checkout@v7
+      # Release tags: the version comes from the tag (main says 0.0.0).
+      - name: Version from the tag
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: sh packaging/set-version.sh "${GITHUB_REF_NAME#v}"
       - uses: actions/download-artifact@v8
         with:
           name: linux-binaries
@@ -271,6 +310,11 @@ jobs:
       SIGN: ${{ matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v') }}
     steps:
       - uses: actions/checkout@v7
+      # Release tags: the version comes from the tag (main says 0.0.0).
+      - name: Version from the tag
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: sh packaging/set-version.sh "${GITHUB_REF_NAME#v}"
       - uses: dtolnay/rust-toolchain@stable
       # Dependencies and cargo-installed tools, as built by the last run on
       # main; pull requests and tags only read it.
@@ -462,11 +506,6 @@ jobs:
       artifact-metadata: write
     steps:
       - uses: actions/checkout@v7
-      - name: Tag matches the version in Cargo.toml and the Windows installer
-        run: |
-          v="${GITHUB_REF_NAME#v}"
-          grep -qx "version = \"$v\"" crates/opencrt/Cargo.toml
-          grep -qx "#define AppVersion \"$v\"" packaging/windows/opencrt.iss
       - uses: actions/download-artifact@v8
         with:
           pattern: opencrt-*
@@ -487,8 +526,8 @@ jobs:
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: release/*
-      # The notes say what changed in plain words: the body of the tagged
-      # "Version X.Y.Z" commit, its wrapped lines joined, trailers dropped.
+      # The notes say what changed in plain words: the annotated tag's
+      # message, its wrapped lines joined.
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -498,7 +537,8 @@ jobs:
             echo
             echo "## What's changed"
             echo
-            git log -1 --format=%b "$GITHUB_SHA" | grep -viE '^(co-authored-by|signed-off-by):' | perl -0pe 's/\s+\z/\n/; s/(?<!\n)\n(?![\n*-]|\z)/ /g'
+            tag=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GITHUB_REF_NAME" --jq .object.sha)
+            gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag" --jq .message | perl -0pe 's/\s+\z/\n/; s/(?<!\n)\n(?![\n*-]|\z)/ /g'
           } > notes.md
           cat notes.md
           cd release

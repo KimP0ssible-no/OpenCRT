@@ -4100,7 +4100,7 @@ dependencies = [
 
 [[package]]
 name = "opencrt"
-version = "0.6.2"
+version = "0.0.0"
 dependencies = [
  "aes",
  "alacritty_terminal",

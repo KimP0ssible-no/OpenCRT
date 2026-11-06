@@ -4140,10 +4140,11 @@ export component MainWindow inherits Window {
     preferred-height: 720px;
     min-width: 480px;
     min-height: 300px;
-    // Flipped to repaint the whole window (after being minimised); the two
-    // backgrounds look the same.
+    // Flipped to repaint the whole window (after being minimised), through the
+    // backdrop below: a window background that is not opaque makes the macOS
+    // window transparent, title bar included.
     in-out property <bool> repaint-all;
-    background: root.repaint-all ? Theme.window-bg.with-alpha(0.996) : Theme.window-bg;
+    background: Theme.window-bg;
     default-font-family: "IBM Plex Sans";
     default-font-size: 12px * Theme.ui-scale;
 
@@ -5048,6 +5049,13 @@ export component MainWindow inherits Window {
                 }
             }
         }
+    }
+
+    // Behind everything; both backgrounds look the same.
+    Rectangle {
+        width: 100%;
+        height: 100%;
+        background: root.repaint-all ? Theme.window-bg : transparent;
     }
 
     VerticalLayout {

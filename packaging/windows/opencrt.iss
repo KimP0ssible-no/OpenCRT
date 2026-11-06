@@ -3,7 +3,7 @@
 ;   iscc packaging\windows\opencrt.iss
 ; The installer is written to packaging\windows\Output\.
 
-#define AppVersion "0.6.2"
+#define AppVersion "0.6.3"
 ; Where the executables are (iscc /DBinDir=... for a cross-compiled build).
 #ifndef BinDir
   #define BinDir "..\..\target\release"

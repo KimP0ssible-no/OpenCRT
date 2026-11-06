@@ -30,6 +30,8 @@ rm -rf "$dest/.OpenCRT.app.new"
 ditto "$tmp/mnt/OpenCRT.app" "$dest/.OpenCRT.app.new"
 rm -rf "$dest/OpenCRT.app"
 mv "$dest/.OpenCRT.app.new" "$dest/OpenCRT.app"
+# A new modification time makes the Dock and Finder read the icon again.
+touch "$dest/OpenCRT.app"
 
 echo "OpenCRT is installed in $dest."
 open "$dest/OpenCRT.app"

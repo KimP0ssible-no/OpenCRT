@@ -402,7 +402,8 @@ jobs:
           plist=$bundle/Contents/Info.plist
           test "$(plutil -extract CFBundleExecutable raw $plist)" = opencrt
           plutil -extract NSLocalNetworkUsageDescription raw $plist
-          test -f "$bundle/Contents/Resources/$(plutil -extract CFBundleIconFile raw $plist)"
+          iconutil -c iconset -o target/release/icon.iconset "$bundle/Contents/Resources/$(plutil -extract CFBundleIconFile raw $plist)"
+          test -f target/release/icon.iconset/icon_512x512@2x.png
           test -f $bundle/Contents/Resources/LICENSE
           # Ad hoc: not notarised, but one sealed bundle that macOS's privacy
           # settings (Local Network) know as org.opencrt.OpenCRT.

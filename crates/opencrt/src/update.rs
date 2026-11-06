@@ -266,9 +266,13 @@ fn swap_bundle(dmg: &Path, app: &Path) -> anyhow::Result<()> {
 pub fn clean_up(exe: &Path) {
     let _ = std::fs::remove_dir_all(download_dir());
     if InstallKind::of(exe) == InstallKind::MacBundle
-        && let Some(parent) = exe.ancestors().nth(4)
+        && let Some(app) = exe.ancestors().nth(3)
+        && let Some(parent) = app.parent()
+        && std::fs::remove_dir_all(parent.join(".OpenCRT.app.old")).is_ok()
     {
-        let _ = std::fs::remove_dir_all(parent.join(".OpenCRT.app.old"));
+        // Just updated: a new modification time makes the Dock and Finder
+        // read the new bundle's icon instead of a cached one.
+        let _ = std::process::Command::new("touch").arg(app).status();
     }
 }
 
@@ -491,8 +495,11 @@ mod tests {
         assert_eq!(std::fs::read_to_string(dir.join("Applications/.OpenCRT.app.old/Contents/Info.plist")).unwrap(), "old");
         let quarantine = std::process::Command::new("xattr").args(["-p", "com.apple.quarantine"]).arg(&app).output().unwrap();
         assert!(!quarantine.status.success(), "the new bundle must not be quarantined");
+        assert!(std::process::Command::new("touch").args(["-t", "200001010000"]).arg(&app).status().unwrap().success());
         clean_up(&app.join("Contents/MacOS/opencrt"));
         assert!(!dir.join("Applications/.OpenCRT.app.old").exists());
+        let touched = std::fs::metadata(&app).unwrap().modified().unwrap();
+        assert!(touched.elapsed().unwrap() < std::time::Duration::from_secs(600), "clean_up must refresh the bundle's time");
         std::fs::remove_dir_all(&dir).unwrap();
     }
 

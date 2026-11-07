@@ -1,5 +1,6 @@
 //! Render the main window off-screen to a PNG-convertible PPM, for checking the
 //! look without opening a window: `cargo run --example ui_snapshot -- out.ppm dark main [font size]`.
+//! Themes: light, dark, and breeze / breeze-dark (KDE's Breeze colour schemes).
 //! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite, quick-open.
 
 use std::rc::Rc;
@@ -31,7 +32,18 @@ fn main() {
     slint::platform::set_platform(Box::new(Offscreen(window.clone()))).unwrap();
     window.set_size(PhysicalSize::new(width, height));
     let ui = MainWindow::new().unwrap();
-    ui.set_theme_mode(if theme == "dark" { 2 } else { 1 });
+    ui.set_theme_mode(if theme.ends_with("dark") { 2 } else { 1 });
+    if theme.starts_with("breeze") {
+        let rgb = |[r, g, b]: [u8; 3]| Color::from_rgb_u8(r, g, b);
+        let dark = theme == "breeze-dark";
+        let t = ui.global::<Theme>();
+        t.set_kde_header(rgb(if dark { [41, 44, 48] } else { [222, 224, 226] }));
+        t.set_kde_window(rgb(if dark { [32, 35, 38] } else { [239, 240, 241] }));
+        t.set_kde_view(rgb(if dark { [20, 22, 24] } else { [255, 255, 255] }));
+        t.set_kde_text(rgb(if dark { [252, 252, 252] } else { [35, 38, 41] }));
+        t.set_kde_text_inactive(rgb(if dark { [161, 169, 177] } else { [112, 125, 138] }));
+        t.set_kde_dark(dark);
+    }
     if let Some(size) = args.get(3).and_then(|s| s.parse::<f32>().ok()) {
         ui.global::<Theme>().set_ui_scale(size / 12.0);
     }

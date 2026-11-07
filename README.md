@@ -150,17 +150,20 @@ automatic check off in Options > Global Options > General.
   Bar, Command Manager (with folders), Command Window, keyword
   highlighting, Edit > Send Input to All Tabs; import from `~/.ssh/config`,
   export/import of sessions.
-- **Settings Sync**: keep sessions, options and host keys in a private git
-  repository (GitHub, GitLab or your own server; HTTPS with a token or SSH
-  with a key or agent) shared by all your computers on any OS. Changes are
-  merged by content; passwords and machine-specific settings stay on each
-  computer. Uses the installed `git` (a dependency of the Linux packages; on
-  Windows OpenCRT offers to download Git for Windows).
+- **Settings Sync**: keep sessions, options, host keys and scripts in a
+  private git repository (GitHub, GitLab or your own server; HTTPS with a
+  token or SSH with a key or agent) shared by all your computers on any OS.
+  Changes are merged by content; passwords and machine-specific settings stay
+  on each computer. Uses the installed `git` (a dependency of the Linux
+  packages; on Windows OpenCRT offers to download Git for Windows).
 - **Automation**: [Rhai](https://rhai.rs) scripts (`.rhai`, see Scripting
   below), SecureCRT's Python scripts (`.py`, unchanged) and simple
   `wait` / `send` / `sleep` / `timeout` scripts, run from
   Script > Run or as a session's logon script; Script > Start Recording writes
   a Rhai script from what you type (passwords are asked for when it runs).
+  Scripts kept in the `scripts` folder in the settings folder (where Script >
+  Run starts) go wherever Settings Sync takes your settings; a logon script
+  in there is saved by its name, so every computer finds it.
 - **Keys**: Tools > Create Public Key makes an Ed25519 key pair.
 - **File transfer**: SFTP tab (`sftp>` prompt with get/put/ls/cd, wildcards and
   progress) or SFTP GUI tab (local and remote file lists side by side, with a
@@ -325,8 +328,10 @@ folder, the download folder and the log folder (and read Python's own), and
 may not run programs, use the network or load native code. When it tries,
 OpenCRT says what it wants and asks: Allow once lets this run go on unlocked,
 Always trust this script remembers it until the file changes (in
-`trusted_scripts` in the settings folder, kept on each computer), and Stop
-ends it. A locked script may use up to 2 GB of memory, and stopping a script
+`trusted_scripts` in the settings folder), and Stop ends it. Settings Sync
+shares that list, so a script in the `scripts` folder trusted on one computer
+is trusted on the others; anyone who can change your settings repository can
+therefore add a trusted script. A locked script may use up to 2 GB of memory, and stopping a script
 also ends the programs it started. On Linux a locked script also cannot read
 other programs' memory (OpenCRT's passwords) or use the kernel's riskier
 calls. The lock stops surprises, not a script written to get round it: run

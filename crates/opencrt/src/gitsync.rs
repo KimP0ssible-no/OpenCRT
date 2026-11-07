@@ -7,8 +7,9 @@
 //! Passwords never go there (they stay in each computer's keychain), nor do
 //! machine-specific options (`config::MACHINE_OPTIONS`). Changes made on two
 //! computers are merged by content: sessions, credentials and the like by
-//! name, host keys by line; where both changed the same thing, this computer
-//! wins (the other version stays in the repository's history).
+//! name, host keys and trusted scripts by line, scripts by file; where both
+//! changed the same thing, this computer wins (the other version stays in the
+//! repository's history).
 
 use std::collections::{HashMap, HashSet};
 use std::io::Read;
@@ -22,7 +23,7 @@ use base64::Engine as _;
 use serde::{Deserialize, Serialize};
 use toml::Value;
 
-use crate::config;
+use crate::config::{self, SCRIPTS_DIR};
 
 /// Where the settings repository is and how to log in to it; kept in
 /// `git-sync.toml` in the per-user folder, so each computer has its own. The
@@ -48,7 +49,7 @@ impl Remote {
 const REMOTE_FILE: &str = "git-sync.toml";
 
 /// The files the repository holds; everything else in the folder stays here.
-const SHARED: &[&str] = &["sessions.toml", "options.toml", "known_hosts", "rdp_known_certs", "telnet_known_certs", "vnc_known_certs"];
+const SHARED: &[&str] = &["sessions.toml", "options.toml", "known_hosts", "rdp_known_certs", "telnet_known_certs", "vnc_known_certs", "trusted_scripts"];
 
 /// The settings repository this computer uses, if any.
 pub fn remote() -> Option<Remote> {
@@ -227,11 +228,13 @@ impl Git {
     fn commit_all(&self) -> anyhow::Result<()> {
         let ignore: String = std::iter::once("# OpenCRT shares only these files; the rest stays on each computer.\n*\n!.gitignore\n!.gitattributes\n".to_string())
             .chain(SHARED.iter().map(|name| format!("!{name}\n")))
+            .chain([format!("!{SCRIPTS_DIR}/\n!{SCRIPTS_DIR}/**\n")])
             .collect();
         // Stored byte for byte, whatever line ends each system prefers.
         for (name, text) in [(".gitignore", ignore.as_str()), (".gitattributes", "* -text\n")] {
             let path = self.dir.join(name);
-            if !path.exists() {
+            // Rewritten when an older OpenCRT wrote a shorter list.
+            if std::fs::read_to_string(&path).ok().as_deref() != Some(text) {
                 std::fs::write(&path, text).with_context(|| format!("writing {}", path.display()))?;
             }
         }
@@ -286,10 +289,25 @@ impl Git {
         Ok(())
     }
 
+    /// The files in the scripts folder at `rev`, with their blob ids.
+    fn scripts(&self, rev: Option<&str>) -> anyhow::Result<HashMap<String, String>> {
+        let Some(rev) = rev else { return Ok(HashMap::new()) };
+        let (_, list) = self.run(&["ls-tree", "-r", "-z", rev, "--", SCRIPTS_DIR])?;
+        // "<mode> blob <id>\t<path>", NUL-separated.
+        let file = |entry: &str| {
+            let (meta, path) = entry.split_once('\t')?;
+            Some((path.to_string(), meta.split(' ').nth(2)?.to_string()))
+        };
+        Ok(list.split('\0').filter_map(file).collect())
+    }
+
     /// Merge `theirs` by content (`merge_file`), recorded as a git merge.
+    /// Scripts merge file by file: one side's change wins over no change,
+    /// and where both changed one, this computer's stays.
     fn merge(&self, theirs: &str) -> anyhow::Result<()> {
         let (has_base, base) = self.run(&["merge-base", "HEAD", theirs])?;
         let base = has_base.then(|| base.trim().to_string());
+        let scripts = (self.scripts(base.as_deref())?, self.scripts(Some("HEAD"))?, self.scripts(Some(theirs))?);
         let show = |rev: &str, name: &str| -> anyhow::Result<Option<String>> {
             let (ok, text) = self.run(&["show", &format!("{rev}:{name}")])?;
             Ok(ok.then_some(text))
@@ -305,6 +323,17 @@ impl Git {
         }
         // Recorded as merged with our files as they are; then the merged ones go in.
         self.ok(&["merge", "--quiet", "--no-ff", "--no-commit", "--allow-unrelated-histories", "-s", "ours", theirs])?;
+        let (base_ids, our_ids, their_ids) = scripts;
+        for (name, id) in &their_ids {
+            if our_ids.get(name) == base_ids.get(name) && our_ids.get(name) != Some(id) {
+                self.ok(&["checkout", theirs, "--", name])?;
+            }
+        }
+        for (name, id) in &our_ids {
+            if !their_ids.contains_key(name) && base_ids.get(name) == Some(id) {
+                std::fs::remove_file(self.dir.join(name))?;
+            }
+        }
         for (name, text) in merged {
             let path = self.dir.join(name);
             match text {
@@ -458,6 +487,7 @@ fn start_using(base: &Path, current: &Path, current_synced: bool, remote: &Remot
                 std::fs::copy(&from, git.dir.join(name)).with_context(|| format!("copying {}", from.display()))?;
             }
         }
+        config::copy_folder(&current.join(SCRIPTS_DIR), &git.dir.join(SCRIPTS_DIR), false)?;
         config::save_options(&git.dir.join("options.toml"), Some(&machine), &options)?;
         git.commit_all()?;
         git.send().context("sending your settings to the repository")?;
@@ -485,6 +515,7 @@ fn stop_using(base: &Path, current: &Path, folder: &Path, current_synced: bool) 
                 std::fs::copy(&from, folder.join(name)).with_context(|| format!("copying {}", from.display()))?;
             }
         }
+        config::copy_folder(&current.join(SCRIPTS_DIR), &folder.join(SCRIPTS_DIR), true)?;
         let options = config::load_options(&current.join("options.toml"), Some(&base.join("options.local.toml")))?;
         config::save(&folder.join("options.toml"), &options)?;
     }
@@ -716,6 +747,9 @@ mod tests {
         config::save(&folder_a.join("options.toml"), &Options { window_width: 1111.0, ..Default::default() }).unwrap();
         std::fs::write(folder_a.join("known_hosts"), "hostA key\n").unwrap();
         std::fs::write(folder_a.join("crash.log"), "local only\n").unwrap();
+        std::fs::create_dir_all(folder_a.join("scripts")).unwrap();
+        std::fs::write(folder_a.join("scripts/a.py"), "A1").unwrap();
+        std::fs::write(folder_a.join("trusted_scripts"), "1 scripts/a.py\n").unwrap();
         let note = start_using(&base_a, &folder_a, false, &remote, None).unwrap();
         assert!(note.contains("now in the repository"), "{note}");
         assert_eq!(remote_in(&base_a), Some(remote.clone()));
@@ -729,6 +763,7 @@ mod tests {
         let (a, b) = (clone_dir(&base_a, &remote.url), clone_dir(&base_b, &remote.url));
         assert_eq!(sessions_in(&b), ["a"]);
         assert!(!b.join("crash.log").exists(), "logs are not shared");
+        assert_eq!(std::fs::read_to_string(b.join("scripts/a.py")).unwrap(), "A1");
         let options_b = config::load_options(&b.join("options.toml"), Some(&base_b.join("options.local.toml"))).unwrap();
         assert_eq!(options_b.window_width, Options::default().window_width, "A's window size is A's");
 
@@ -736,8 +771,12 @@ mod tests {
         let (git_a, git_b) = (Git { dir: a.clone(), remote: remote.clone(), token: None }, Git { dir: b.clone(), remote: remote.clone(), token: None });
         add_session(&b, "b2");
         std::fs::write(b.join("known_hosts"), "hostA key\nhostB key\n").unwrap();
+        std::fs::create_dir_all(b.join("scripts/lab")).unwrap();
+        std::fs::write(b.join("scripts/lab/b.py"), "B1").unwrap();
+        std::fs::write(b.join("trusted_scripts"), "1 scripts/a.py\n2 scripts/lab/b.py\n").unwrap();
         assert!(git_b.send_if_current().unwrap());
         add_session(&a, "a2");
+        std::fs::write(a.join("scripts/a.py"), "A2").unwrap();
         assert!(!git_a.send_if_current().unwrap(), "B's change came first");
         // A's next start merges both and sends the result; B's next start gets it.
         git_a.update().unwrap();
@@ -745,10 +784,23 @@ mod tests {
         assert_eq!(std::fs::read_to_string(a.join("known_hosts")).unwrap(), "hostA key\nhostB key\n");
         git_b.update().unwrap();
         assert_eq!(sessions_in(&b), ["a", "a2", "b2"]);
+        for dir in [&a, &b] {
+            assert_eq!(std::fs::read_to_string(dir.join("scripts/a.py")).unwrap(), "A2");
+            assert_eq!(std::fs::read_to_string(dir.join("scripts/lab/b.py")).unwrap(), "B1");
+            assert_eq!(std::fs::read_to_string(dir.join("trusted_scripts")).unwrap(), "1 scripts/a.py\n2 scripts/lab/b.py\n");
+        }
+        // A deletes a script; B, which left it alone, loses it too.
+        git_a.update().unwrap();
+        std::fs::remove_file(a.join("scripts/lab/b.py")).unwrap();
+        assert!(git_a.send_if_current().unwrap());
+        add_session(&b, "b3");
+        git_b.update().unwrap();
+        assert!(!b.join("scripts/lab/b.py").exists());
 
         // B goes back to a plain folder with the latest settings.
         stop_using(&base_b, &b, &folder_b, true).unwrap();
-        assert_eq!(sessions_in(&folder_b), ["a", "a2", "b2"]);
+        assert_eq!(sessions_in(&folder_b), ["a", "a2", "b2", "b3"]);
+        assert_eq!(std::fs::read_to_string(folder_b.join("scripts/a.py")).unwrap(), "A2");
         assert_eq!(remote_in(&base_b), None);
         let _ = std::fs::remove_dir_all(&root);
     }

@@ -101,7 +101,50 @@ pub(crate) fn copy_settings(from: &Path, to: &Path) -> anyhow::Result<bool> {
             std::fs::copy(&path, to.join(name)).with_context(|| format!("copying {}", path.display()))?;
         }
     }
+    copy_folder(&from.join(SCRIPTS_DIR), &to.join(SCRIPTS_DIR), false)?;
     Ok(true)
+}
+
+/// Copy the folder `from` (if there is one) into `to`; files `to` already
+/// has are kept unless `replace`.
+pub(crate) fn copy_folder(from: &Path, to: &Path, replace: bool) -> anyhow::Result<()> {
+    let Ok(entries) = std::fs::read_dir(from) else { return Ok(()) };
+    std::fs::create_dir_all(to).with_context(|| format!("creating {}", to.display()))?;
+    for entry in entries {
+        let path = entry?.path();
+        let target = to.join(path.file_name().unwrap_or_default());
+        if path.is_dir() {
+            copy_folder(&path, &target, replace)?;
+        } else if replace || !target.exists() {
+            std::fs::copy(&path, &target).with_context(|| format!("copying {}", path.display()))?;
+        }
+    }
+    Ok(())
+}
+
+/// The scripts kept with the settings (and shared by Settings Sync).
+pub const SCRIPTS_DIR: &str = "scripts";
+
+pub fn scripts_dir() -> Option<PathBuf> {
+    dir().map(|d| d.join(SCRIPTS_DIR))
+}
+
+/// A session's logon script setting as a file: a relative one is in the
+/// scripts folder, so it is found on every computer sharing the settings.
+pub fn script_path(setting: &str) -> PathBuf {
+    let path = PathBuf::from(expand_env(setting));
+    match scripts_dir() {
+        Some(dir) if path.is_relative() => dir.join(path),
+        _ => path,
+    }
+}
+
+/// `path` relative to `folder`, with `/` between names, when it is inside it.
+pub fn in_folder(path: &Path, folder: &Path) -> Option<String> {
+    let real = |p: &Path| p.canonicalize().unwrap_or_else(|_| p.to_path_buf());
+    let path = real(path);
+    let inner = path.strip_prefix(real(folder)).ok()?;
+    Some(inner.components().map(|c| c.as_os_str().to_string_lossy()).collect::<Vec<_>>().join("/"))
 }
 
 /// The per-user configuration folder following each platform's convention.
@@ -1201,9 +1244,15 @@ mod tests {
         for (name, text) in [("options.toml", "a"), ("sessions.toml", "b"), (CHOSEN_DIR_FILE, "x"), ("known_hosts", "c")] {
             std::fs::write(from.join(name), text).unwrap();
         }
+        std::fs::create_dir_all(from.join("scripts/lab")).unwrap();
+        std::fs::write(from.join("scripts/lab/backup.py"), "pass").unwrap();
         assert!(copy_settings(&from, &to).unwrap());
         assert_eq!(std::fs::read_to_string(to.join("sessions.toml")).unwrap(), "b");
         assert!(to.join("known_hosts").exists() && !to.join(CHOSEN_DIR_FILE).exists());
+        let script = to.join("scripts/lab/backup.py");
+        assert_eq!(std::fs::read_to_string(&script).unwrap(), "pass");
+        assert_eq!(in_folder(&script, &to).as_deref(), Some("scripts/lab/backup.py"));
+        assert_eq!(in_folder(&script, &from), None);
         // A folder that already has settings keeps them.
         std::fs::write(from.join("options.toml"), "new").unwrap();
         assert!(!copy_settings(&from, &to).unwrap());

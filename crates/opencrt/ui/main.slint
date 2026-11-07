@@ -261,13 +261,20 @@ component SessionManagerPanel inherits Rectangle {
     callback action(string);
     // A key the list does not use; true if the terminal took it.
     callback pass-key(string, bool, bool, bool, bool) -> bool;
-    // Scroll so the selected row (21px each) is in view.
+    // Row `from` dropped on row `to`: into that folder or that session's
+    // folder, or the top level for -1 (below the rows).
+    callback drop(int, int);
+    property <length> row-h: 21px * Theme.ui-scale;
+    property <int> drag-from: -1;
+    property <length> drag-y;
+    property <int> drop-row: root.drag-y >= root.rows.length * root.row-h ? -1 : max(0, floor(root.drag-y / root.row-h));
+    // Scroll so the selected row is in view.
     function show-selected() {
-        if root.selected * 21px + session-list.content-y < 0 {
-            session-list.content-y = -root.selected * 21px;
+        if root.selected * root.row-h + session-list.content-y < 0 {
+            session-list.content-y = -root.selected * root.row-h;
         }
-        if (root.selected + 1) * 21px + session-list.content-y > session-list.visible-height {
-            session-list.content-y = session-list.visible-height - (root.selected + 1) * 21px;
+        if (root.selected + 1) * root.row-h + session-list.content-y > session-list.visible-height {
+            session-list.content-y = session-list.visible-height - (root.selected + 1) * root.row-h;
         }
     }
     callback filter-changed(string);
@@ -375,8 +382,10 @@ component SessionManagerPanel inherits Rectangle {
             }
             session-list := ListView {
                 for row[i] in root.rows: Rectangle {
-                    height: 21px * Theme.ui-scale;
+                    height: root.row-h;
                     background: i == root.selected || row.picked ? Theme.active-row-bg : row-touch.has-hover ? Theme.hover-bg : transparent;
+                    border-width: root.drag-from >= 0 && i == root.drop-row ? 1px : 0px;
+                    border-color: Theme.accent;
                     row-menu := ContextMenuArea {
                         Menu {
                             MenuItem {
@@ -443,6 +452,7 @@ component SessionManagerPanel inherits Rectangle {
                             }
                         }
                         row-touch := TouchArea {
+                            mouse-cursor: root.drag-from >= 0 ? MouseCursor.grabbing : MouseCursor.default;
                             clicked => {
                                 root.selected = i;
                                 list-keys.focus();
@@ -451,9 +461,29 @@ component SessionManagerPanel inherits Rectangle {
                                 root.selected = i;
                                 root.activate(i);
                             }
+                            // shortcut: the list does not scroll while dragging; scroll first to reach rows out of view.
+                            moved => {
+                                if root.drag-from >= 0 || abs(self.mouse-x - self.pressed-x) > 6px || abs(self.mouse-y - self.pressed-y) > 6px {
+                                    root.drag-from = i;
+                                    root.drag-y = i * root.row-h + self.mouse-y;
+                                }
+                            }
                             pointer-event(event) => {
+                                // A picked session stays picked on the press so the picked ones
+                                // can be dragged together; a plain click still clears them.
                                 if (event.kind == PointerEventKind.down && event.button == PointerEventButton.left) {
-                                    root.pick(i, event.modifiers.control);
+                                    if (!row.picked || event.modifiers.control) {
+                                        root.pick(i, event.modifiers.control);
+                                    }
+                                } else if (event.kind == PointerEventKind.up && event.button == PointerEventButton.left) {
+                                    if (root.drag-from >= 0) {
+                                        if (root.drop-row != root.drag-from) {
+                                            root.drop(root.drag-from, root.drop-row);
+                                        }
+                                        root.drag-from = -1;
+                                    } else if (row.picked && !event.modifiers.control) {
+                                        root.pick(i, false);
+                                    }
                                 } else if (event.kind == PointerEventKind.down && event.button == PointerEventButton.right) {
                                     if (!row.picked) {
                                         root.pick(i, false);
@@ -4583,6 +4613,7 @@ export component MainWindow inherits Window {
     callback session-toggle(int);
     callback session-pick(int, bool);
     callback session-action(string);
+    callback session-drop(int, int);
     callback session-filter(string);
     callback session-options-ok();
     callback forward-edit(int);
@@ -5246,6 +5277,7 @@ export component MainWindow inherits Window {
                 toggle(i) => { root.session-toggle(i); }
                 pick(i, add) => { root.session-pick(i, add); }
                 action(name) => { root.session-action(name); }
+                drop(from, to) => { root.session-drop(from, to); }
                 filter-changed(text) => { root.session-filter(text); }
                 pass-key(text, control, alt, shift, meta) => {
                     root.focus-terminal();

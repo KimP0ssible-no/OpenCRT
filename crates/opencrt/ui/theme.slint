@@ -1,6 +1,6 @@
 // OpenCRT window chrome colours. They follow the system: the style's light or
 // dark neutrals (system setting, or Global Options > General > Theme) and the
-// system accent colour.
+// system accent colour; on KDE, the backgrounds and text of its colour scheme.
 
 import { Palette } from "std-widgets.slint";
 
@@ -14,18 +14,29 @@ export global Theme {
     out property <bool> dark: Palette.color-scheme == ColorScheme.dark
         || (Palette.color-scheme == ColorScheme.unknown && Palette.background == #1C1C1C);
 
-    out property <brush> window-bg: Palette.alternate-background;
-    out property <brush> toolbar-bg: Palette.alternate-background;
-    out property <brush> tabbar-bg: Palette.alternate-background;
-    out property <brush> tab-inactive-bg: Palette.alternate-background;
-    out property <brush> tab-active-bg: Palette.background;
-    out property <brush> sidebar-bg: Palette.background;
-    out property <brush> panel-bg: Palette.background;
-    out property <brush> input-bg: dark ? #202020 : #FFFFFF;
+    // KDE's colour scheme while following the system there (transparent otherwise),
+    // and whether it is dark. It is used only while the style shows the same light
+    // or dark, so switching the desktop while OpenCRT runs never mixes the two.
+    in property <color> kde-header;
+    in property <color> kde-window;
+    in property <color> kde-view;
+    in property <color> kde-text;
+    in property <color> kde-text-inactive;
+    in property <bool> kde-dark;
+    property <bool> kde: kde-window.alpha > 0 && kde-dark == dark;
+
+    out property <brush> window-bg: kde ? kde-header : Palette.alternate-background;
+    out property <brush> toolbar-bg: kde ? kde-header : Palette.alternate-background;
+    out property <brush> tabbar-bg: kde ? kde-header : Palette.alternate-background;
+    out property <brush> tab-inactive-bg: kde ? kde-header : Palette.alternate-background;
+    out property <brush> tab-active-bg: kde ? kde-window : Palette.background;
+    out property <brush> sidebar-bg: kde ? kde-window : Palette.background;
+    out property <brush> panel-bg: kde ? kde-window : Palette.background;
+    out property <brush> input-bg: kde ? kde-view : dark ? #202020 : #FFFFFF;
     out property <brush> border: dark ? #3A3A3A : #D4D4D4;
     out property <brush> border-strong: dark ? #555555 : #B4B4B4;
-    out property <brush> text: Palette.foreground;
-    out property <brush> text-secondary: dark ? #FFFFFFA6 : #0000009E;
+    out property <brush> text: kde ? kde-text : Palette.foreground;
+    out property <brush> text-secondary: kde ? kde-text-inactive : dark ? #FFFFFFA6 : #0000009E;
     out property <brush> text-disabled: dark ? #FFFFFF5E : #0000005E;
     out property <brush> accent: Palette.accent-background;
     out property <brush> text-on-accent: Palette.accent-foreground;

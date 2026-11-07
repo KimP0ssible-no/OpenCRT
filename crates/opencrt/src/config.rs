@@ -757,6 +757,36 @@ impl Options {
     }
 }
 
+/// The Linux desktop's interface font size in pixels (KDE or GNOME), if it has one.
+#[cfg(all(unix, not(target_os = "macos")))]
+fn desktop_font_px() -> Option<f32> {
+    let desktop = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default();
+    let spec = if desktop.contains("KDE") {
+        // kdeglobals has no font line while the user keeps Plasma's 10pt default.
+        let kdeglobals = default_dir()?.parent()?.join("kdeglobals");
+        let text = std::fs::read_to_string(kdeglobals).unwrap_or_default();
+        text.lines().find_map(|l| l.strip_prefix("font=")).unwrap_or("Noto Sans,10").to_string()
+    } else if desktop.contains("GNOME") {
+        let out = std::process::Command::new("gsettings").args(["get", "org.gnome.desktop.interface", "font-name"]).output().ok()?;
+        String::from_utf8_lossy(&out.stdout).into_owned()
+    } else {
+        return None;
+    };
+    font_spec_px(&spec)
+}
+
+/// Points to pixels from KDE's "Noto Sans,10,-1,..." or GNOME's "'Cantarell 11'".
+#[cfg(all(unix, not(target_os = "macos")))]
+fn font_spec_px(spec: &str) -> Option<f32> {
+    let spec = spec.trim().trim_matches('\'');
+    let points = match spec.split_once(',') {
+        Some((_, rest)) => rest.split(',').next()?,
+        None => spec.rsplit_once(' ')?.1,
+    };
+    let px = (points.parse::<f32>().ok()? * 96.0 / 72.0).round();
+    (px > 0.0).then_some(px.clamp(9.0, 20.0))
+}
+
 impl Default for Options {
     fn default() -> Self {
         Self {
@@ -803,8 +833,13 @@ impl Default for Options {
             cursor: Cursor::Block,
             bell: Bell::Visual,
             theme: UiTheme::System,
-            // macOS menus use 13 points.
-            ui_font_size: if cfg!(target_os = "macos") { 13.0 } else { 12.0 },
+            // macOS menus use 13 points; Linux follows the desktop's font.
+            #[cfg(target_os = "macos")]
+            ui_font_size: 13.0,
+            #[cfg(all(unix, not(target_os = "macos")))]
+            ui_font_size: desktop_font_px().unwrap_or(12.0),
+            #[cfg(not(unix))]
+            ui_font_size: 12.0,
             buttons: Vec::new(),
             commands: Vec::new(),
             credentials: Vec::new(),
@@ -1092,6 +1127,15 @@ mod tests {
         assert_eq!(rest, args(&["/SSH2", "/L", "me", "host"]));
         // Without a folder after it, /F is left for the usual parsing.
         assert_eq!(split_dir_arg(args(&["host", "/F"])), (None, args(&["host", "/F"])));
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    #[test]
+    fn desktop_font_points_become_pixels() {
+        assert_eq!(font_spec_px("Noto Sans,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"), Some(13.0));
+        assert_eq!(font_spec_px("'Cantarell 11'\n"), Some(15.0));
+        assert_eq!(font_spec_px("'Adwaita Sans Bold 30'"), Some(20.0));
+        assert_eq!(font_spec_px("Noto Sans"), None);
     }
 
     #[test]

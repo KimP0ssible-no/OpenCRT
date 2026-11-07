@@ -1,4 +1,4 @@
-# OpenCRT's SecureCRT-style `crt` object for Python scripts (Python 3.6 or
+# OpenCRT's SecureCRT-style `crt` object for Python scripts (Python 3.8 or
 # newer). OpenCRT starts Python with this file and the script to run (START);
 # each crt call is one JSON line to OpenCRT, answered by one line back.
 import builtins
@@ -298,7 +298,88 @@ CONSTANTS = dict(
 )
 
 
+# Audit events a locked script needs the user's leave for (see _lock_down).
+_PROGRAMS = ("subprocess.Popen", "os.system", "os.exec", "os.posix_spawn", "os.spawn", "os.startfile", "os.fork", "os.forkpty", "pty.spawn")
+_NETWORK = ("socket.connect", "socket.bind", "socket.sendto", "socket.sendmsg")
+_CHANGES = ("os.remove", "os.rmdir", "os.mkdir", "os.rename", "os.chmod", "os.chown", "os.utime", "os.truncate", "os.symlink", "os.link",
+            "shutil.rmtree", "shutil.copyfile", "shutil.copytree", "shutil.move")
+_SYSTEM = {"ctypes.": "load native code (ctypes)", "winreg.": "use the Windows registry", "resource.setrlimit": "change its limits",
+           "resource.prlimit": "change its limits", "gc.get_": "look through Python's memory"}
+
+
+def _lock_down(folders):
+    """Ask OpenCRT (which asks the user) before the script uses files outside
+    `folders` (reading Python's own is fine), runs programs, uses the network
+    or reaches into the system; once allowed, it runs unlocked."""
+    # Kept in this closure, out of the script's reach: crt.py's globals are not.
+    ask, real, full, devnull, write_flags = _call, os.path.realpath, os.path.abspath, os.devnull, os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND
+    programs, network, changes, system = _PROGRAMS, _NETWORK, _CHANGES, dict(_SYSTEM)
+    norm = lambda p: os.path.normcase(real(p))
+    writable = [norm(f) for f in folders]
+    python = set([sys.prefix, sys.exec_prefix, sys.base_prefix, sys.base_exec_prefix] + [p for p in sys.path if p])
+    readable = writable + [norm(p) for p in python]
+    locked = [True]
+    limit = None
+    if sys.platform.startswith("linux"):
+        # Not macOS: its system libraries alone take more address space than this.
+        import resource
+        try:
+            limit = resource.getrlimit(resource.RLIMIT_AS)
+            resource.setrlimit(resource.RLIMIT_AS, (2 << 30, limit[1]))
+        except (ValueError, OSError):
+            limit = None
+
+    def inside(path, roots):
+        if isinstance(path, int):
+            return True  # an open file
+        try:
+            path = os.fsdecode(path if path is not None else ".")
+            if path == devnull:
+                return True
+            path = norm(path)
+        except (TypeError, ValueError, OSError):
+            return False
+        return any(path == r or path.startswith(r.rstrip(os.sep) + os.sep) for r in roots)
+
+    def wants(what):
+        ask(None, "Trust", what[:300])  # OpenCRT ends the script if the user says no.
+        locked[0] = False
+        if limit:
+            resource.setrlimit(resource.RLIMIT_AS, limit)
+
+    def hook(event, args):
+        if not locked[0]:
+            return
+        if event == "open":
+            path, mode, flags = args
+            write = any(c in mode for c in "wax+") if isinstance(mode, str) else bool(flags & write_flags)
+            if not inside(path, writable if write else readable):
+                wants("%s %s" % ("write to" if write else "read", full(os.fsdecode(path))))
+        elif event in ("os.listdir", "os.scandir"):
+            if not inside(args[0], readable):
+                wants("list the folder %s" % full(os.fsdecode(args[0] or ".")))
+        elif event in changes:
+            for path in args[:2]:
+                if isinstance(path, (str, bytes, os.PathLike)) and not inside(path, writable):
+                    return wants("change %s" % full(os.fsdecode(path)))
+        elif event in ("os.kill", "os.killpg"):
+            wants("signal another program (process %s)" % (args[0],))
+        elif event in programs:
+            wants("run a program: %s" % (args[1] if event == "subprocess.Popen" else args[0] if args else event))
+        elif event in network:
+            wants("use the network (%s)" % (args[1],))
+        else:
+            for prefix, what in system.items():
+                if event.startswith(prefix):
+                    return wants(what)
+
+    sys.addaudithook(hook)
+
+
 def _run():
+    if sys.version_info < (3, 8):
+        sys.exit("OpenCRT runs Python scripts with Python 3.8 or newer; this is Python %s. Install a newer one and choose it in Global Options > General."
+                 % sys.version.split()[0])
     path, args = START["script"], START["args"]
     with open(path, "rb") as f:
         source = f.read()
@@ -320,6 +401,8 @@ def _run():
     sys.argv = [path] + list(args)
     sys.path.insert(0, os.path.dirname(os.path.abspath(path)))
     sys.stdout = _Status()
+    if START["locked"]:
+        _lock_down(START["folders"])
     try:
         exec(code, {"__name__": "__main__", "__file__": path, "__builtins__": builtins, "crt": crt})
     except Exception as e:

@@ -66,7 +66,10 @@ Telnet, raw, serial, local and SFTP tabs alike.
   files, regex, dates and formatting. `src/crt.rs` — SecureCRT's `crt` object
   model on top of it. `src/python.rs` — Python scripts: a Python process per
   script, running `src/crt.py`, whose crt calls arrive as JSON lines and are
-  answered by `crt.rs`.
+  answered by `crt.rs`. Untrusted scripts run locked: an audit hook in
+  `crt.py` asks (through `python.rs`) before files outside the script's
+  folders, programs, network or native code; a seccomp filter on Linux, a job
+  object on Windows and a process group on Unix back it up.
 - `src/sessions.rs` — Session Manager tree, folder rename, merge, ssh_config import.
 - `src/config.rs` — config folder (or `/F`), sessions.toml / options.toml types,
   crash log.

@@ -2,7 +2,14 @@
 //! process, with a `crt` object (`crt.py`) whose calls come here as JSON
 //! lines and are answered by `crt.rs`, as Rhai scripts' calls are. Stopping
 //! the script kills the process.
+//!
+//! Until the user trusts it, a script runs locked: an audit hook in `crt.py`
+//! asks the user before it uses files outside its own, the download and log
+//! folders, runs programs or uses the network. That stops surprises, not a
+//! determined script, so on Linux a seccomp filter also keeps it away from
+//! other processes' memory (OpenCRT's passwords) and the kernel's riskier calls.
 
+use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
@@ -12,6 +19,7 @@ use std::time::Duration;
 
 use anyhow::{anyhow, ensure};
 use serde_json::{Value, json};
+use sha2::Digest;
 
 use crate::crt;
 use crate::rhaiscript::{Ctx, Script};
@@ -122,19 +130,127 @@ fn no_window(command: &mut Command) {
 }
 
 /// Start the Python script at `path` with `python` (see [`program`]).
-pub fn start(name: &str, path: PathBuf, args: Vec<String>, folders: Vec<PathBuf>, python: PathBuf) -> Script {
+/// `trusted` lists the scripts that run unlocked (see [`ask`]).
+pub fn start(name: &str, path: PathBuf, args: Vec<String>, folders: Vec<PathBuf>, python: PathBuf, trusted: Option<PathBuf>) -> Script {
     let script = path.clone();
-    Script::spawn(name, Some(path), folders, move |ctx| run(ctx, &python, &script, args))
+    let roots = path.parent().map(Path::to_path_buf).into_iter().chain(folders.iter().cloned()).collect();
+    Script::spawn(name, Some(path), folders, move |ctx| run(ctx, &python, &script, args, roots, trusted))
 }
 
-/// The script's process, killed if the script stops early.
-struct Process(Child);
+/// The script's process; if the script stops early, it is killed with the
+/// programs it started.
+struct Process {
+    child: Child,
+    #[cfg(windows)]
+    job: windows_sys::Win32::Foundation::HANDLE,
+}
 
 impl Drop for Process {
     fn drop(&mut self) {
-        let _ = self.0.kill();
-        let _ = self.0.wait();
+        if let Ok(None) = self.child.try_wait() {
+            #[cfg(unix)]
+            // SAFETY: no pointers; Python is running or unreaped, so its process group is still its own.
+            unsafe {
+                libc::kill(-(self.child.id() as libc::pid_t), libc::SIGKILL);
+            }
+            #[cfg(windows)]
+            // SAFETY: the job `spawn` made (if that failed it is null and the call just fails).
+            unsafe {
+                windows_sys::Win32::System::JobObjects::TerminateJobObject(self.job, 1);
+            }
+            let _ = self.child.kill();
+        }
+        let _ = self.child.wait();
+        #[cfg(windows)]
+        // SAFETY: as above; nothing uses the job after this.
+        unsafe {
+            windows_sys::Win32::Foundation::CloseHandle(self.job);
+        }
     }
+}
+
+/// Start `command` in its own process group (Unix) or job (Windows), with a
+/// 2 GB memory limit on Windows; Linux's is set in `crt.py`.
+fn spawn(mut command: Command) -> std::io::Result<Process> {
+    #[cfg(unix)]
+    std::os::unix::process::CommandExt::process_group(&mut command, 0);
+    let child = command.spawn()?;
+    #[cfg(windows)]
+    // SAFETY: no name or attributes; `limits` outlives the call, which gets its
+    // size; the child's handle is open.
+    let job = unsafe {
+        use std::os::windows::io::AsRawHandle as _;
+        use windows_sys::Win32::System::JobObjects::*;
+        let job = CreateJobObjectW(std::ptr::null(), std::ptr::null());
+        let mut limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
+        limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_PROCESS_MEMORY;
+        // shortcut: also for the programs a trusted script runs.
+        limits.ProcessMemoryLimit = 2 << 30;
+        SetInformationJobObject(job, JobObjectExtendedLimitInformation, (&raw const limits).cast(), size_of_val(&limits) as u32);
+        // Python waits for its first line before running anything, so nothing escapes the job.
+        AssignProcessToJobObject(job, child.as_raw_handle());
+        job
+    };
+    Ok(Process {
+        child,
+        #[cfg(windows)]
+        job,
+    })
+}
+
+/// Refuse a locked script's process the system calls no script needs: other
+/// processes' memory, kernel modules and keys, BPF, perf, io_uring.
+#[cfg(all(target_os = "linux", any(target_arch = "x86_64", target_arch = "aarch64")))]
+fn backstop(command: &mut Command) {
+    use libc::{BPF_ABS, BPF_JEQ, BPF_JMP, BPF_K, BPF_LD, BPF_RET, BPF_W};
+    #[cfg(target_arch = "x86_64")]
+    const ARCH: u32 = 0xc000_003e;
+    #[cfg(target_arch = "aarch64")]
+    const ARCH: u32 = 0xc000_00b7;
+    const DENY: &[libc::c_long] = &[
+        libc::SYS_ptrace, libc::SYS_process_vm_readv, libc::SYS_process_vm_writev, libc::SYS_bpf, libc::SYS_init_module, libc::SYS_finit_module,
+        libc::SYS_delete_module, libc::SYS_kexec_load, libc::SYS_kexec_file_load, libc::SYS_keyctl, libc::SYS_add_key, libc::SYS_request_key,
+        libc::SYS_perf_event_open, libc::SYS_userfaultfd, libc::SYS_open_by_handle_at, libc::SYS_io_uring_setup,
+    ];
+    let refuse = libc::SECCOMP_RET_ERRNO | libc::EPERM as u32;
+    let op = |code: u32, k: u32, jt: usize| libc::sock_filter { code: code as u16, jt: jt as u8, jf: 0, k };
+    // seccomp_data: the call's number at 0, the architecture at 4.
+    let mut filter = vec![op(BPF_LD | BPF_W | BPF_ABS, 4, 0), op(BPF_JMP | BPF_JEQ | BPF_K, ARCH, 1), op(BPF_RET | BPF_K, refuse, 0), op(BPF_LD | BPF_W | BPF_ABS, 0, 0)];
+    // x32 calls: x86_64's numbers with bit 30 set.
+    #[cfg(target_arch = "x86_64")]
+    filter.push(op(BPF_JMP | libc::BPF_JGE | BPF_K, 0x4000_0000, DENY.len() + 1));
+    filter.extend(DENY.iter().enumerate().map(|(i, &call)| op(BPF_JMP | BPF_JEQ | BPF_K, call as u32, DENY.len() - i)));
+    filter.extend([op(BPF_RET | BPF_K, libc::SECCOMP_RET_ALLOW, 0), op(BPF_RET | BPF_K, refuse, 0)]);
+    let apply = move || {
+        let program = libc::sock_fprog { len: filter.len() as u16, filter: filter.as_ptr().cast_mut() };
+        let none: libc::c_ulong = 0;
+        // SAFETY: `program` points into `filter`, which outlives the calls.
+        match unsafe { libc::prctl(libc::PR_SET_NO_NEW_PRIVS, 1 as libc::c_ulong, none, none, none) == 0 && libc::prctl(libc::PR_SET_SECCOMP, libc::SECCOMP_MODE_FILTER as libc::c_ulong, &raw const program) == 0 } {
+            true => Ok(()),
+            false => Err(std::io::Error::last_os_error()),
+        }
+    };
+    // SAFETY: between fork and exec `apply` only makes system calls; it allocates nothing.
+    unsafe { std::os::unix::process::CommandExt::pre_exec(command, apply) };
+}
+
+/// A locked script wants to `what`: let it (once or from now on) or stop it.
+/// Trust is kept in `trusted` as `entry`, the script's SHA-256 and path, so an
+/// edited script asks again.
+fn ask(ctx: &Ctx, path: &Path, what: &str, trusted: Option<&Path>, entry: &str) -> Result<Value, String> {
+    let name = path.file_name().unwrap_or_default().to_string_lossy();
+    let text = format!(
+        "{name} wants to {what}.\n\nUntil you trust a script, it may use files only in its own folder, the download folder and the log folder, and may not run programs or use the network.\n\nAllow once lets this run go on; Always trust lets the script do anything from now on, until it is changed."
+    );
+    match ctx.message("Script Wants More Access", &text, &["Allow once", "Always trust this script", "Stop"]).map_err(|e| crt::message(&e))? {
+        0 => {}
+        1 => {
+            // Unsaved, it is only trusted for this run.
+            let _ = trusted.map(|file| OpenOptions::new().create(true).append(true).open(file).and_then(|mut f| writeln!(f, "{entry}")));
+        }
+        _ => return Err(format!("Stopped: {name} wanted to {what}.")),
+    }
+    Ok(Value::Null)
 }
 
 /// The last `KEEP` bytes `pipe` writes (a script's error report).
@@ -150,18 +266,28 @@ fn tail<R: Read + Send + 'static>(mut pipe: R) -> std::thread::JoinHandle<String
     })
 }
 
-fn run(ctx: Ctx, python: &Path, path: &Path, args: Vec<String>) -> Result<(), String> {
+fn run(ctx: Ctx, python: &Path, path: &Path, args: Vec<String>, roots: Vec<PathBuf>, trusted: Option<PathBuf>) -> Result<(), String> {
+    let source = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let sha256: String = sha2::Sha256::digest(&source).iter().map(|b| format!("{b:02x}")).collect();
+    let entry = format!("{sha256} {}", path.display());
+    let locked = !trusted.as_deref().and_then(|f| std::fs::read_to_string(f).ok()).is_some_and(|list| list.lines().any(|l| l == entry));
     let ctx = Rc::new(ctx);
     let state = crt::State::new(ctx.clone(), args.clone());
     let mut command = Command::new(python);
-    // -E: no PYTHON* variables; -u: no buffering; UTF-8 everywhere.
-    command.args(["-E", "-u", "-X", "utf8", "-c", BOOT]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
+    // -E: no PYTHON* variables; -B: no .pyc files beside Python's own; -u: no buffering; UTF-8 everywhere.
+    command.args(["-E", "-B", "-u", "-X", "utf8", "-c", BOOT]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
     if let Some(dir) = path.parent().filter(|d| d.is_dir()) {
         command.current_dir(dir);
     }
     no_window(&mut command);
-    let mut child = Process(command.spawn().map_err(|e| format!("cannot run {}: {e}", python.display()))?);
-    let (mut input, output, errors) = match (child.0.stdin.take(), child.0.stdout.take(), child.0.stderr.take()) {
+    // shortcut: a script let go mid-run keeps this until its next run, so the
+    // programs it runs cannot gain privileges (sudo).
+    #[cfg(all(target_os = "linux", any(target_arch = "x86_64", target_arch = "aarch64")))]
+    if locked {
+        backstop(&mut command);
+    }
+    let mut child = spawn(command).map_err(|e| format!("cannot run {}: {e}", python.display()))?;
+    let (mut input, output, errors) = match (child.child.stdin.take(), child.child.stdout.take(), child.child.stderr.take()) {
         (Some(input), Some(output), Some(errors)) => (input, output, tail(errors)),
         _ => return Err("cannot talk to Python".into()),
     };
@@ -173,7 +299,7 @@ fn run(ctx: Ctx, python: &Path, path: &Path, args: Vec<String>) -> Result<(), St
             }
         }
     });
-    let start = json!({ "source": CRT_PY, "script": path, "args": args });
+    let start = json!({ "source": CRT_PY, "script": path, "args": args, "locked": locked, "folders": roots });
     // A Python that exits at once (too old, broken) says why on stderr, below.
     let _ = writeln!(input, "{start}");
     loop {
@@ -187,16 +313,19 @@ fn run(ctx: Ctx, python: &Path, path: &Path, args: Vec<String>) -> Result<(), St
             return Err(format!("unexpected output from Python: {line}"));
         };
         let args = message["args"].as_array().map_or(&[][..], Vec::as_slice);
-        let reply = match crt::call(&state, message["tab"].as_u64(), message["call"].as_str().unwrap_or_default(), args) {
-            Ok(value) => json!({ "ok": value }),
-            Err(e) => json!({ "error": crt::message(&e) }),
+        let reply = match message["call"].as_str().unwrap_or_default() {
+            "Trust" => json!({ "ok": ask(&ctx, path, args.first().and_then(Value::as_str).unwrap_or("do more"), trusted.as_deref(), &entry)? }),
+            call => match crt::call(&state, message["tab"].as_u64(), call, args) {
+                Ok(value) => json!({ "ok": value }),
+                Err(e) => json!({ "error": crt::message(&e) }),
+            },
         };
         if writeln!(input, "{reply}").is_err() {
             break;
         }
     }
     drop(input);
-    let status = child.0.wait().map_err(|e| e.to_string())?;
+    let status = child.child.wait().map_err(|e| e.to_string())?;
     let report = errors.join().unwrap_or_default();
     match status.success() {
         true => Ok(()),
@@ -222,12 +351,28 @@ mod tests {
     }
 
     fn run(name: &str, source: &str, args: Vec<String>) -> Option<Script> {
+        run_trusting(name, source, args, None)
+    }
+
+    fn run_trusting(name: &str, source: &str, args: Vec<String>, trusted: Option<&Path>) -> Option<Script> {
         let python = python()?;
         let dir = std::env::temp_dir().join(format!("opencrt-python-{}-{name}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join(format!("{name}.py"));
         std::fs::write(&path, source).unwrap();
-        Some(start(name, path, args, vec![], python))
+        Some(start(name, path, args, vec![], python, trusted.map(Path::to_path_buf)))
+    }
+
+    /// Answer a locked script's question with `button`; the question.
+    fn answer(script: &Script, button: usize) -> String {
+        match next(script) {
+            (None, Request::Message { text, buttons, reply, .. }) => {
+                assert_eq!(buttons, ["Allow once", "Always trust this script", "Stop"]);
+                reply.send(button).unwrap();
+                text
+            }
+            _ => panic!("expected the locked script's question"),
+        }
     }
 
     fn next(script: &Script) -> (TabKey, Request) {
@@ -308,6 +453,56 @@ crt.Screen.Nope()
             return;
         };
         assert!(matches!(next(&s), (None, Request::Status(t)) if t == "done"));
+        assert!(matches!(next(&s), (None, Request::Done(Ok(())))));
+    }
+
+    #[test]
+    fn locked_scripts_ask_before_going_further() {
+        let outside = std::env::temp_dir().join(format!("opencrt-python-{}-outside.txt", std::process::id()));
+        let source = format!("import subprocess, sys\nopen('inside.txt', 'w').write('x')\nopen({outside:?}, 'w').write('y')\nsubprocess.run([sys.executable, '-c', 'pass'])\ncrt.Session.SetStatusText('done')\n");
+        let Some(s) = run("locked", &source, vec![]) else {
+            return;
+        };
+        let question = answer(&s, 0);
+        assert!(question.starts_with(&format!("locked.py wants to write to {}.", outside.display())), "{question}");
+        assert!(matches!(next(&s), (None, Request::Status(t)) if t == "done"));
+        assert!(matches!(next(&s), (None, Request::Done(Ok(())))));
+        assert_eq!(std::fs::read_to_string(&outside).unwrap(), "y");
+        let _ = std::fs::remove_file(outside);
+    }
+
+    #[test]
+    fn trust_lasts_until_the_script_changes() {
+        let trusted = std::env::temp_dir().join(format!("opencrt-python-{}-trusted", std::process::id()));
+        let _ = std::fs::remove_file(&trusted);
+        let source = "import socket\ntry:\n    socket.create_connection(('127.0.0.1', 9), 1)\nexcept OSError:\n    pass\nprint('tried')\n";
+        let Some(s) = run_trusting("net", source, vec![], Some(&trusted)) else {
+            return;
+        };
+        assert!(answer(&s, 1).starts_with("net.py wants to use the network (('127.0.0.1', 9))."));
+        assert!(matches!(next(&s), (None, Request::Status(t)) if t == "tried"));
+        assert!(matches!(next(&s), (None, Request::Done(Ok(())))));
+
+        let s = run_trusting("net", source, vec![], Some(&trusted)).unwrap();
+        assert!(matches!(next(&s), (None, Request::Status(t)) if t == "tried"));
+        assert!(matches!(next(&s), (None, Request::Done(Ok(())))));
+
+        let s = run_trusting("net", &format!("{source}# edited\n"), vec![], Some(&trusted)).unwrap();
+        answer(&s, 2);
+        assert!(matches!(next(&s), (None, Request::Done(Err(e))) if e.starts_with("Stopped: net.py wanted to use the network")));
+        let _ = std::fs::remove_file(trusted);
+    }
+
+    #[cfg(all(target_os = "linux", any(target_arch = "x86_64", target_arch = "aarch64")))]
+    #[test]
+    fn locked_scripts_keep_out_of_other_processes() {
+        // Unfiltered, an unknown keyctl operation fails with EOPNOTSUPP, not EPERM.
+        let source = format!("import ctypes\nlibc = ctypes.CDLL(None, use_errno=True)\nlibc.syscall({}, 0xffff)\nprint(ctypes.get_errno())\n", libc::SYS_keyctl);
+        let Some(s) = run("native", &source, vec![]) else {
+            return;
+        };
+        assert!(answer(&s, 0).starts_with("native.py wants to load native code (ctypes)."));
+        assert!(matches!(next(&s), (None, Request::Status(t)) if t == "1"));
         assert!(matches!(next(&s), (None, Request::Done(Ok(())))));
     }
 }

@@ -6943,6 +6943,7 @@ impl App {
         self.options.bell = config::Bell::ALL.get(ui.get_go_bell().max(0) as usize).copied().unwrap_or_default();
         self.options.theme = config::UiTheme::ALL.get(ui.get_go_theme().max(0) as usize).copied().unwrap_or_default();
         ui.set_theme_mode(self.options.theme.index());
+        apply_desktop_colours(ui, self.options.theme);
         self.options.ui_font_size = ui_font_size;
         ui.global::<crate::Theme>().set_ui_scale(self.options.ui_scale());
         self.draw_dock_labels(ui);
@@ -7552,6 +7553,21 @@ fn update_status_empty(ui: &MainWindow) {
 }
 
 /// Build the window, wire its callbacks and run until it closes.
+/// KDE's colour scheme for the window chrome while the theme follows the system.
+// shortcut: read when OpenCRT starts or Global Options is saved; a scheme changed meanwhile shows after that.
+fn apply_desktop_colours(ui: &MainWindow, theme: config::UiTheme) {
+    let colours = if theme == config::UiTheme::System { config::kde_colours() } else { None };
+    let [header, window, view, text, inactive] = colours.map(|c| c.map(|[r, g, b]| slint::Color::from_rgb_u8(r, g, b))).unwrap_or_default();
+    let global = ui.global::<crate::Theme>();
+    global.set_kde_header(header);
+    global.set_kde_window(window);
+    global.set_kde_view(view);
+    global.set_kde_text(text);
+    global.set_kde_text_inactive(inactive);
+    let [r, g, b] = colours.map_or([0; 3], |c| c[1]).map(u32::from);
+    global.set_kde_dark(r * 299 + g * 587 + b * 114 < 128_000);
+}
+
 pub fn run(args: &[String]) -> anyhow::Result<()> {
     let ui = MainWindow::new()?;
     ui.set_version(env!("CARGO_PKG_VERSION").into());
@@ -7813,6 +7829,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_show_menubar(app.options.show_menubar);
         ui.set_show_connect_bar(app.options.show_connect_bar);
         ui.set_theme_mode(app.options.theme.index());
+        apply_desktop_colours(&ui, app.options.theme);
         ui.global::<crate::Theme>().set_ui_scale(app.options.ui_scale());
         crate::proxy::set_firewalls(&app.options.firewalls);
         app.show_snapshots(&ui);

@@ -312,16 +312,25 @@ pub fn rename_folder(store: &mut SessionStore, old: &str, name: &str) -> Result<
         Some((parent, _)) => format!("{parent}/{name}"),
         None => name,
     };
+    move_folder(store, old, &new)?;
+    Ok(new)
+}
+
+/// Move folder `old` with its subfolders and sessions to the full path `new`.
+pub fn move_folder(store: &mut SessionStore, old: &str, new: &str) -> Result<(), String> {
     if new == old {
-        return Ok(new);
+        return Ok(());
+    }
+    if new.strip_prefix(old).is_some_and(|rest| rest.starts_with('/')) {
+        return Err(format!("\"{old}\" cannot go inside itself."));
     }
     // Folders also exist implicitly through the sessions in them.
-    if all_folders(store).contains(&new) {
+    if all_folders(store).contains(new) {
         return Err(format!("A folder \"{new}\" already exists."));
     }
     let moved = |path: &str| -> Option<String> {
         if path == old {
-            Some(new.clone())
+            Some(new.to_string())
         } else {
             path.strip_prefix(old).filter(|rest| rest.starts_with('/')).map(|rest| format!("{new}{rest}"))
         }
@@ -336,7 +345,7 @@ pub fn rename_folder(store: &mut SessionStore, old: &str, name: &str) -> Result<
             session.folder = path;
         }
     }
-    Ok(new)
+    Ok(())
 }
 
 /// Sessions for the concrete `Host` entries of an OpenSSH client config, in
@@ -673,6 +682,11 @@ mod tests {
         // "Production" exists only through a session in it: still a clash.
         store.folders.retain(|f| f != "Production");
         assert!(rename_folder(&mut store, "Live", "Production").unwrap_err().contains("already exists"));
+
+        assert_eq!(move_folder(&mut store, "Live/Front", "Lab/Front"), Ok(()));
+        let paths: Vec<String> = store.sessions.iter().map(Session::path).collect();
+        assert_eq!(paths, ["Live/db", "Lab/Front/web1", "Production/other"]);
+        assert!(move_folder(&mut store, "Lab", "Lab/Front/Lab").unwrap_err().contains("inside itself"));
     }
 
     #[test]

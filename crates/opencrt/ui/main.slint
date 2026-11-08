@@ -2703,6 +2703,16 @@ component SchemesDialog inherits DialogFrame {
     callback close();
     title: "Colour Schemes";
     dialog-width: 760px * Theme.ui-scale;
+    function show-selected() {
+        let row-h = 22px * Theme.ui-scale;
+        if root.selected * row-h + scheme-list.content-y < 0 {
+            scheme-list.content-y = -root.selected * row-h;
+        }
+        if (root.selected + 1) * row-h + scheme-list.content-y > scheme-list.visible-height {
+            scheme-list.content-y = scheme-list.visible-height - (root.selected + 1) * row-h;
+        }
+    }
+    changed selected => { root.show-selected(); }
     HorizontalLayout {
         spacing: 14px;
         height: 400px * Theme.ui-scale;
@@ -2715,16 +2725,7 @@ component SchemesDialog inherits DialogFrame {
                 count: root.names.length;
                 selected: root.selected;
                 init => { self.focus(); }
-                moved(i) => {
-                    root.pick(i);
-                    let row-h = 22px * Theme.ui-scale;
-                    if i * row-h + scheme-list.content-y < 0 {
-                        scheme-list.content-y = -i * row-h;
-                    }
-                    if (i + 1) * row-h + scheme-list.content-y > scheme-list.visible-height {
-                        scheme-list.content-y = scheme-list.visible-height - (i + 1) * row-h;
-                    }
-                }
+                moved(i) => { root.pick(i); }
             }
             scheme-list := ListView {
                 for name[i] in root.names: Rectangle {
@@ -2752,7 +2753,7 @@ component SchemesDialog inherits DialogFrame {
             alignment: start;
             FieldRow {
                 label: "Name:";
-                LineEdit {
+                name-edit := LineEdit {
                     text <=> root.name;
                     enabled: root.editable;
                 }
@@ -2802,7 +2803,14 @@ component SchemesDialog inherits DialogFrame {
     DialogButtons {
         Button {
             text: "New";
-            clicked => { root.new-scheme(); }
+            // The copy is picked (and scrolled to) at the end of the list: name it next.
+            clicked => {
+                root.new-scheme();
+                if root.editable {
+                    name-edit.focus();
+                    name-edit.select-all();
+                }
+            }
         }
         Button {
             text: "Delete";

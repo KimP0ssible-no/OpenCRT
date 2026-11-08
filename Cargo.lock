@@ -4106,7 +4106,7 @@ dependencies = [
  "alacritty_terminal",
  "anyhow",
  "arboard",
- "base64 0.22.1",
+ "base64 0.23.1",
  "chrono",
  "crossterm",
  "des",

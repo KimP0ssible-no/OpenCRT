@@ -111,7 +111,7 @@ md5 = "0.8"
 num-bigint = "0.4"
 # Settings repository: the HTTPS login header and this computer's name in
 # commits (both already in the lockfile).
-base64 = "0.22"
+base64 = "0.23"
 gethostname = "1.1"
 # Git for Windows' release list (GitHub's JSON), for installing git.
 serde_json = "1.0"

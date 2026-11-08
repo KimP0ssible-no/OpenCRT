@@ -4120,7 +4120,7 @@ dependencies = [
  "keyring",
  "md5",
  "minisign-verify",
- "num-bigint 0.4.8",
+ "num-bigint 0.5.1",
  "opencrt-rdp-proto",
  "rand",
  "rcgen",

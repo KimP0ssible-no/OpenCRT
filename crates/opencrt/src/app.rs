@@ -4163,6 +4163,71 @@ impl App {
         }
     }
 
+    /// Copy or move the sessions at `paths` into `folder`.
+    fn paste_sessions(&mut self, paths: &[String], folder: String, cut: bool, ui: &MainWindow) {
+        let moved = sessions::paste(&mut self.store, paths, &folder, cut);
+        // Open tabs follow their moved sessions.
+        for (old, new) in &moved {
+            for tab in self.tabs.iter_mut().filter(|t| t.session.as_deref() == Some(old.as_str())) {
+                tab.session = Some(new.clone());
+            }
+            self.options.recent_sessions.iter_mut().filter(|r| *r == old).for_each(|r| *r = new.clone());
+        }
+        if !folder.is_empty() && self.expanded.insert(folder) {
+            self.options.collapsed_folders.retain(|f| !self.expanded.contains(f));
+        }
+        self.picked_sessions.clear();
+        self.rows_dirty = true;
+        ui.set_session_selected(-1);
+        self.save_store();
+        self.save_options();
+    }
+
+    /// Open tabs and expanded folders follow a folder that moved from `old` to `new`.
+    fn folder_moved(&mut self, old: &str, new: &str, ui: &MainWindow) {
+        let prefix = format!("{old}/");
+        let moved = |path: &str| match path.strip_prefix(&prefix) {
+            Some(rest) => Some(format!("{new}/{rest}")),
+            None => (path == old).then(|| new.to_string()),
+        };
+        for tab in &mut self.tabs {
+            if let Some(path) = tab.session.as_deref().and_then(moved) {
+                tab.session = Some(path);
+            }
+        }
+        self.expanded = self.expanded.iter().map(|f| moved(f).unwrap_or_else(|| f.clone())).collect();
+        self.rows_dirty = true;
+        ui.set_session_selected(-1);
+        self.save_store();
+    }
+
+    /// Row `from` dragged onto row `to` (-1: below the rows): into that folder,
+    /// the folder of that session, or the top level. Picked sessions move together.
+    fn session_drop(&mut self, from: usize, to: i32, ui: &MainWindow) {
+        let folder = match usize::try_from(to).ok().and_then(|t| self.rows.get(t)).map(|r| &r.node) {
+            Some(Node::Folder(path)) => path.clone(),
+            Some(Node::Session(i)) => self.store.sessions[*i].folder.clone(),
+            None => String::new(),
+        };
+        match self.rows.get(from).map(|r| r.node.clone()) {
+            Some(Node::Session(i)) => {
+                let path = self.store.sessions[i].path();
+                let paths = if self.picked_sessions.contains(&path) { self.picked_sessions.iter().cloned().collect() } else { vec![path] };
+                self.paste_sessions(&paths, folder, true, ui);
+            }
+            Some(Node::Folder(old)) => {
+                let leaf = old.rsplit('/').next().unwrap_or(&old);
+                let new = if folder.is_empty() { leaf.to_string() } else { format!("{folder}/{leaf}") };
+                match sessions::move_folder(&mut self.store, &old, &new) {
+                    Ok(()) if new != old => self.folder_moved(&old, &new, ui),
+                    Ok(()) => {}
+                    Err(e) => self.notify(e),
+                }
+            }
+            None => {}
+        }
+    }
+
     fn session_action(&mut self, name: &str, ui: &MainWindow) {
         let row = self.selected_row(ui);
         match (name, row.map(|r| r.node)) {
@@ -4181,26 +4246,11 @@ impl App {
             }
             ("paste", _) => {
                 let Some((paths, cut)) = self.session_clip.take() else { return };
-                let folder = self.selected_folder(ui);
-                let moved = sessions::paste(&mut self.store, &paths, &folder, cut);
-                // Open tabs follow their moved sessions; a copy can be pasted again.
-                for (old, new) in &moved {
-                    for tab in self.tabs.iter_mut().filter(|t| t.session.as_deref() == Some(old.as_str())) {
-                        tab.session = Some(new.clone());
-                    }
-                    self.options.recent_sessions.iter_mut().filter(|r| *r == old).for_each(|r| *r = new.clone());
-                }
+                self.paste_sessions(&paths, self.selected_folder(ui), cut, ui);
+                // A copy can be pasted again.
                 if !cut {
                     self.session_clip = Some((paths, false));
                 }
-                if !folder.is_empty() && self.expanded.insert(folder) {
-                    self.options.collapsed_folders.retain(|f| !self.expanded.contains(f));
-                }
-                self.picked_sessions.clear();
-                self.rows_dirty = true;
-                ui.set_session_selected(-1);
-                self.save_store();
-                self.save_options();
             }
             // Every session in the folder and its subfolders, each in a tab.
             ("connect-all", Some(Node::Folder(path))) => {
@@ -4483,22 +4533,7 @@ impl App {
         if let Some(old) = self.renaming_folder.take() {
             if ok {
                 match sessions::rename_folder(&mut self.store, &old, &ui.get_name_value()) {
-                    Ok(new) if new != old => {
-                        // Open tabs and expanded folders follow the new path.
-                        let prefix = format!("{old}/");
-                        let moved = |path: &str| match path.strip_prefix(&prefix) {
-                            Some(rest) => Some(format!("{new}/{rest}")),
-                            None => (path == old).then(|| new.clone()),
-                        };
-                        for tab in &mut self.tabs {
-                            if let Some(path) = tab.session.as_deref().and_then(moved) {
-                                tab.session = Some(path);
-                            }
-                        }
-                        self.expanded = self.expanded.iter().map(|f| moved(f).unwrap_or_else(|| f.clone())).collect();
-                        ui.set_session_selected(-1);
-                        self.save_store();
-                    }
+                    Ok(new) if new != old => self.folder_moved(&old, &new, ui),
                     Ok(_) => {}
                     Err(e) => {
                         // Keep the dialog open to correct the name.
@@ -6908,6 +6943,7 @@ impl App {
         self.options.bell = config::Bell::ALL.get(ui.get_go_bell().max(0) as usize).copied().unwrap_or_default();
         self.options.theme = config::UiTheme::ALL.get(ui.get_go_theme().max(0) as usize).copied().unwrap_or_default();
         ui.set_theme_mode(self.options.theme.index());
+        apply_desktop_colours(ui, self.options.theme);
         self.options.ui_font_size = ui_font_size;
         ui.global::<crate::Theme>().set_ui_scale(self.options.ui_scale());
         self.draw_dock_labels(ui);
@@ -7475,7 +7511,7 @@ fn update_status(ui: &MainWindow, tab: &Tab) {
     ui.set_has_selection(tab.terminal.selection_text().is_some());
     ui.set_session_live(tab.state != State::Closed);
     ui.set_session_closed(tab.state == State::Closed);
-    ui.set_script_running(tab.script.is_some());
+    ui.set_script_running(tab.script.is_some() || tab.rhai.is_some());
     ui.set_recording(tab.recorder.is_some());
     ui.set_logging(tab.log_path.is_some());
     ui.set_capturing(tab.capture.is_some());
@@ -7517,6 +7553,21 @@ fn update_status_empty(ui: &MainWindow) {
 }
 
 /// Build the window, wire its callbacks and run until it closes.
+/// KDE's colour scheme for the window chrome while the theme follows the system.
+// shortcut: read when OpenCRT starts or Global Options is saved; a scheme changed meanwhile shows after that.
+fn apply_desktop_colours(ui: &MainWindow, theme: config::UiTheme) {
+    let colours = if theme == config::UiTheme::System { config::kde_colours() } else { None };
+    let [header, window, view, text, inactive] = colours.map(|c| c.map(|[r, g, b]| slint::Color::from_rgb_u8(r, g, b))).unwrap_or_default();
+    let global = ui.global::<crate::Theme>();
+    global.set_kde_header(header);
+    global.set_kde_window(window);
+    global.set_kde_view(view);
+    global.set_kde_text(text);
+    global.set_kde_text_inactive(inactive);
+    let [r, g, b] = colours.map_or([0; 3], |c| c[1]).map(u32::from);
+    global.set_kde_dark(r * 299 + g * 587 + b * 114 < 128_000);
+}
+
 pub fn run(args: &[String]) -> anyhow::Result<()> {
     let ui = MainWindow::new()?;
     ui.set_version(env!("CARGO_PKG_VERSION").into());
@@ -7670,6 +7721,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
     });
     on!(on_session_pick, |app, ui, index, add| app.session_pick(index.max(0) as usize, add, &ui));
     on!(on_session_action, |app, ui, name| app.session_action(&name, &ui));
+    on!(on_session_drop, |app, ui, from, to| app.session_drop(from.max(0) as usize, to, &ui));
     on!(on_session_filter, |app, ui, text| {
         app.filter = text.to_string();
         app.rows_dirty = true;
@@ -7777,6 +7829,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_show_menubar(app.options.show_menubar);
         ui.set_show_connect_bar(app.options.show_connect_bar);
         ui.set_theme_mode(app.options.theme.index());
+        apply_desktop_colours(&ui, app.options.theme);
         ui.global::<crate::Theme>().set_ui_scale(app.options.ui_scale());
         crate::proxy::set_firewalls(&app.options.firewalls);
         app.show_snapshots(&ui);

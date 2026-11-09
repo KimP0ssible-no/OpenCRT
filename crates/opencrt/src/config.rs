@@ -760,6 +760,75 @@ impl Options {
     }
 }
 
+/// The Linux desktop's interface font size in pixels (KDE or GNOME), if it has one.
+#[cfg(all(unix, not(target_os = "macos")))]
+fn desktop_font_px() -> Option<f32> {
+    let desktop = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default();
+    let spec = if let Some(text) = kdeglobals() {
+        // kdeglobals has no font line while the user keeps Plasma's 10pt default.
+        ini_value(&text, "General", "font").unwrap_or("Noto Sans,10").to_string()
+    } else if desktop.contains("GNOME") {
+        let out = std::process::Command::new("gsettings").args(["get", "org.gnome.desktop.interface", "font-name"]).output().ok()?;
+        String::from_utf8_lossy(&out.stdout).into_owned()
+    } else {
+        return None;
+    };
+    font_spec_px(&spec)
+}
+
+/// Points to pixels from KDE's "Noto Sans,10,-1,..." or GNOME's "'Cantarell 11'".
+#[cfg(all(unix, not(target_os = "macos")))]
+fn font_spec_px(spec: &str) -> Option<f32> {
+    let spec = spec.trim().trim_matches('\'');
+    let points = match spec.split_once(',') {
+        Some((_, rest)) => rest.split(',').next()?,
+        None => spec.rsplit_once(' ')?.1,
+    };
+    let px = (points.parse::<f32>().ok()? * 96.0 / 72.0).round();
+    (px > 0.0).then_some(px.clamp(9.0, 20.0))
+}
+
+/// KDE's settings file on a Linux KDE desktop (empty if it has none yet), else none.
+fn kdeglobals() -> Option<String> {
+    let kde = cfg!(all(unix, not(target_os = "macos"))) && std::env::var("XDG_CURRENT_DESKTOP").is_ok_and(|d| d.contains("KDE"));
+    kde.then(|| default_dir().and_then(|d| std::fs::read_to_string(d.parent()?.join("kdeglobals")).ok()).unwrap_or_default())
+}
+
+/// The value of `key` in `[section]` of an INI file.
+fn ini_value<'a>(text: &'a str, section: &str, key: &str) -> Option<&'a str> {
+    let mut inside = false;
+    for line in text.lines().map(str::trim) {
+        if let Some(name) = line.strip_prefix('[') {
+            inside = name.strip_suffix(']') == Some(section);
+        } else if inside && let Some(value) = line.strip_prefix(key).and_then(|rest| rest.strip_prefix('=')) {
+            return Some(value.trim());
+        }
+    }
+    None
+}
+
+/// KDE's colour scheme as RGB: header, window and view backgrounds, then the
+/// window's text and inactive text. None off KDE or without a scheme.
+pub fn kde_colours() -> Option<[[u8; 3]; 5]> {
+    kde_scheme(&kdeglobals()?)
+}
+
+fn kde_scheme(text: &str) -> Option<[[u8; 3]; 5]> {
+    let rgb = |section: &str, key: &str| -> Option<[u8; 3]> {
+        let mut parts = ini_value(text, section, key)?.split(',').map(|p| p.trim().parse::<u8>().ok());
+        Some([parts.next()??, parts.next()??, parts.next()??])
+    };
+    let window = rgb("Colors:Window", "BackgroundNormal")?;
+    Some([
+        // Schemes older than Plasma 5.25 have no header colours.
+        rgb("Colors:Header", "BackgroundNormal").unwrap_or(window),
+        window,
+        rgb("Colors:View", "BackgroundNormal")?,
+        rgb("Colors:Window", "ForegroundNormal")?,
+        rgb("Colors:Window", "ForegroundInactive")?,
+    ])
+}
+
 impl Default for Options {
     fn default() -> Self {
         Self {
@@ -807,8 +876,13 @@ impl Default for Options {
             cursor: Cursor::Block,
             bell: Bell::Visual,
             theme: UiTheme::System,
-            // macOS menus use 13 points.
-            ui_font_size: if cfg!(target_os = "macos") { 13.0 } else { 12.0 },
+            // macOS menus use 13 points; Linux follows the desktop's font.
+            #[cfg(target_os = "macos")]
+            ui_font_size: 13.0,
+            #[cfg(all(unix, not(target_os = "macos")))]
+            ui_font_size: desktop_font_px().unwrap_or(12.0),
+            #[cfg(not(unix))]
+            ui_font_size: 12.0,
             buttons: Vec::new(),
             commands: Vec::new(),
             credentials: Vec::new(),
@@ -1097,6 +1171,25 @@ mod tests {
         assert_eq!(rest, args(&["/SSH2", "/L", "me", "host"]));
         // Without a folder after it, /F is left for the usual parsing.
         assert_eq!(split_dir_arg(args(&["host", "/F"])), (None, args(&["host", "/F"])));
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    #[test]
+    fn desktop_font_points_become_pixels() {
+        assert_eq!(font_spec_px("Noto Sans,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"), Some(13.0));
+        assert_eq!(font_spec_px("'Cantarell 11'\n"), Some(15.0));
+        assert_eq!(font_spec_px("'Adwaita Sans Bold 30'"), Some(20.0));
+        assert_eq!(font_spec_px("Noto Sans"), None);
+    }
+
+    #[test]
+    fn reads_a_kde_colour_scheme() {
+        let text = "[Colors:View]\nBackgroundNormal=20,22,24\n\n[Colors:Window]\nBackgroundAlternate=41,44,48\n\
+                    BackgroundNormal=32,35,38\nForegroundInactive=161,169,177\nForegroundNormal=252,252,252\n\n\
+                    [Colors:Window][Inactive]\nBackgroundNormal=1,2,3\n[General]\nfont=Noto Sans,11\n";
+        assert_eq!(ini_value(text, "General", "font"), Some("Noto Sans,11"));
+        assert_eq!(kde_scheme(text), Some([[32, 35, 38], [32, 35, 38], [20, 22, 24], [252, 252, 252], [161, 169, 177]]));
+        assert_eq!(kde_scheme("[Colors:Window]\nBackgroundNormal=32,35\n"), None);
     }
 
     #[test]

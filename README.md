@@ -317,7 +317,20 @@ OpenCRT, and it is gone (with its memory, about 11 MB) when it ends or is
 cancelled. On Linux that is the system's `python3`; on Windows and macOS
 OpenCRT downloads Python 3.14 (12 to 27 MB, checked against a checksum built
 into OpenCRT) the first time you run a Python script. To use your own Python
-(say, for packages installed with pip), set it in Global Options > General.
+(say, for packages installed with pip), set it in Global Options > General;
+it must be Python 3.8 or newer.
+
+A script runs locked until you trust it: it may use files only in its own
+folder, the download folder and the log folder (and read Python's own), and
+may not run programs, use the network or load native code. When it tries,
+OpenCRT says what it wants and asks: Allow once lets this run go on unlocked,
+Always trust this script remembers it until the file changes (in
+`trusted_scripts` in the settings folder, kept on each computer), and Stop
+ends it. A locked script may use up to 2 GB of memory, and stopping a script
+also ends the programs it started. On Linux a locked script also cannot read
+other programs' memory (OpenCRT's passwords) or use the kernel's riskier
+calls. The lock stops surprises, not a script written to get round it: run
+only scripts you would run outside OpenCRT.
 
 ## Build and run
 Requires Rust (stable) and, on Windows, the MSVC build tools. On Linux, a C

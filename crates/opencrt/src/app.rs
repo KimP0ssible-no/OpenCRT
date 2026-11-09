@@ -1557,7 +1557,7 @@ impl Tab {
         self.rhai = Some(match is_python(path) {
             true => {
                 let program = python::program(&self.python).ok_or(python::MISSING)?;
-                python::start(&name, path.to_path_buf(), Vec::new(), self.script_folders(), program)
+                python::start(&name, path.to_path_buf(), Vec::new(), self.script_folders(), program, config::dir().map(|d| d.join("trusted_scripts")))
             }
             false => rhaiscript::Script::start(&name, Some(path.to_path_buf()), read_script(path)?, Vec::new(), self.script_folders()),
         });

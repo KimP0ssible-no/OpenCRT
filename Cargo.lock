@@ -4107,6 +4107,7 @@ dependencies = [
  "futures",
  "gethostname",
  "keyring",
+ "libc",
  "md5",
  "minisign-verify",
  "num-bigint 0.5.1",

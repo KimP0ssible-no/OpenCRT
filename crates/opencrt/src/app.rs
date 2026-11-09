@@ -7511,7 +7511,7 @@ fn update_status(ui: &MainWindow, tab: &Tab) {
     ui.set_has_selection(tab.terminal.selection_text().is_some());
     ui.set_session_live(tab.state != State::Closed);
     ui.set_session_closed(tab.state == State::Closed);
-    ui.set_script_running(tab.script.is_some());
+    ui.set_script_running(tab.script.is_some() || tab.rhai.is_some());
     ui.set_recording(tab.recorder.is_some());
     ui.set_logging(tab.log_path.is_some());
     ui.set_capturing(tab.capture.is_some());

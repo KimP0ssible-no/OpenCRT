@@ -235,8 +235,9 @@ fn backstop(command: &mut Command) {
 }
 
 /// A locked script wants to `what`: let it (once or from now on) or stop it.
-/// Trust is kept in `trusted` as `entry`, the script's SHA-256 and path, so an
-/// edited script asks again.
+/// Trust is kept in `trusted` as `entry`, the script's SHA-256 and path
+/// (relative to `trusted`'s folder when inside it), so an edited script asks
+/// again.
 fn ask(ctx: &Ctx, path: &Path, what: &str, trusted: Option<&Path>, entry: &str) -> Result<Value, String> {
     let name = path.file_name().unwrap_or_default().to_string_lossy();
     let text = format!(
@@ -269,7 +270,9 @@ fn tail<R: Read + Send + 'static>(mut pipe: R) -> std::thread::JoinHandle<String
 fn run(ctx: Ctx, python: &Path, path: &Path, args: Vec<String>, roots: Vec<PathBuf>, trusted: Option<PathBuf>) -> Result<(), String> {
     let source = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
     let sha256: String = sha2::Sha256::digest(&source).iter().map(|b| format!("{b:02x}")).collect();
-    let entry = format!("{sha256} {}", path.display());
+    // Inside the settings folder the path is relative, so Settings Sync's other computers match it too.
+    let shown = trusted.as_deref().and_then(Path::parent).and_then(|dir| crate::config::in_folder(path, dir)).unwrap_or_else(|| path.display().to_string());
+    let entry = format!("{sha256} {shown}");
     let locked = !trusted.as_deref().and_then(|f| std::fs::read_to_string(f).ok()).is_some_and(|list| list.lines().any(|l| l == entry));
     let ctx = Rc::new(ctx);
     let state = crt::State::new(ctx.clone(), args.clone());
@@ -483,6 +486,8 @@ crt.Screen.Nope()
         assert!(matches!(next(&s), (None, Request::Status(t)) if t == "tried"));
         assert!(matches!(next(&s), (None, Request::Done(Ok(())))));
 
+        let saved = std::fs::read_to_string(&trusted).unwrap();
+        assert!(saved.trim_end().ends_with(&format!(" opencrt-python-{}-net/net.py", std::process::id())), "{saved}");
         let s = run_trusting("net", source, vec![], Some(&trusted)).unwrap();
         assert!(matches!(next(&s), (None, Request::Status(t)) if t == "tried"));
         assert!(matches!(next(&s), (None, Request::Done(Ok(())))));

@@ -852,7 +852,7 @@ impl Tab {
         let name = if s.name.is_empty() { self.target.host.clone() } else { s.path() };
         self.log_template = (!s.log_file.is_empty()).then(|| (s.log_file.clone(), name, self.target.host.clone()));
         self.log_texts = [s.log_connect_text.clone(), s.log_disconnect_text.clone(), s.log_line_text.clone()];
-        self.logon_script = (!s.logon_script.is_empty()).then(|| PathBuf::from(config::expand_env(&s.logon_script)));
+        self.logon_script = (!s.logon_script.is_empty()).then(|| config::script_path(&s.logon_script));
         self.logon_actions = s.logon_actions.clone();
         self.backspace_ctrl_h = s.backspace_ctrl_h;
         self.emulation = s.emulation;
@@ -5641,7 +5641,7 @@ impl App {
         let dialog = rfd::FileDialog::new();
         let path = match field {
             "so-log" => dialog.set_title("Log File").add_filter("Log files", &["log", "txt"]).save_file(),
-            "so-script" => dialog.set_title("Logon Script").pick_file(),
+            "so-script" => scripts_dialog().set_title("Logon Script").pick_file(),
             "so-cert" => dialog.set_title("OpenSSH Certificate").add_filter("Certificates", &["pub"]).pick_file(),
             "fwd-app" => dialog.set_title("Application").pick_file(),
             "go-download" => dialog.set_title("Download Folder").pick_folder(),
@@ -5678,7 +5678,8 @@ impl App {
             "so-key" => ui.set_so_key(text),
             "so-cert" => ui.set_so_cert(text),
             "so-log" => ui.set_so_log(text),
-            "so-script" => ui.set_so_script(text),
+            // In the scripts folder: relative, so other computers sharing the settings find it.
+            "so-script" => ui.set_so_script(config::scripts_dir().and_then(|dir| config::in_folder(&path, &dir)).map_or(text, SharedString::from)),
             "go-download" => ui.set_go_download(text),
             "so-rdp-share" => ui.set_so_rdp_share(text),
             "go-config-dir" => ui.set_go_config_dir(text),
@@ -6220,7 +6221,7 @@ impl App {
         if self.tabs.is_empty() {
             return self.notify("Run Script: open a session first.");
         }
-        let Some(path) = rfd::FileDialog::new().set_title("Run Script").add_filter("Scripts", &["rhai", "py", "txt", "script"]).add_filter("All files", &["*"]).pick_file() else {
+        let Some(path) = scripts_dialog().set_title("Run Script").add_filter("Scripts", &["rhai", "py", "txt", "script"]).add_filter("All files", &["*"]).pick_file() else {
             return;
         };
         self.run_script_path(&path);
@@ -7419,6 +7420,12 @@ fn read_script(path: &Path) -> Result<String, String> {
 /// the simple wait/send format.
 fn is_rhai(path: &Path) -> bool {
     path.extension().is_some_and(|e| e.eq_ignore_ascii_case("rhai"))
+}
+
+/// A file dialog that starts in the scripts folder kept with the settings.
+fn scripts_dialog() -> rfd::FileDialog {
+    let dir = config::scripts_dir().filter(|dir| std::fs::create_dir_all(dir).is_ok());
+    dir.map_or_else(rfd::FileDialog::new, |dir| rfd::FileDialog::new().set_directory(dir))
 }
 
 fn is_python(path: &Path) -> bool {

@@ -118,6 +118,7 @@ component ToolButton inherits Rectangle {
     in property <IconKind> icon;
     in property <bool> enabled: true;
     in property <length> icon-size: 16px;
+    in property <string> tip;
     callback clicked;
     width: root.icon-size + 8px;
     height: self.width;
@@ -135,6 +136,9 @@ component ToolButton inherits Rectangle {
         kind: root.icon;
         enabled: root.enabled;
         size: root.icon-size;
+    }
+    Tooltip {
+        text: @markdown("\{root.tip}");
     }
 }
 
@@ -293,24 +297,29 @@ component SessionManagerPanel inherits Rectangle {
                     horizontal-stretch: 1;
                 }
                 ToolButton {
+                    tip: "Connect";
                     icon: IconKind.connect;
                     enabled: root.selected >= 0;
                     clicked => { root.action("connect"); }
                 }
                 ToolButton {
+                    tip: "New Session";
                     icon: IconKind.new-session;
                     clicked => { root.action("new-session"); }
                 }
                 ToolButton {
+                    tip: "New Folder";
                     icon: IconKind.new-folder;
                     clicked => { root.action("new-folder"); }
                 }
                 ToolButton {
+                    tip: "Properties";
                     icon: IconKind.properties;
                     enabled: root.selected >= 0;
                     clicked => { root.action("edit"); }
                 }
                 ToolButton {
+                    tip: "Delete";
                     icon: IconKind.delete;
                     enabled: root.selected >= 0;
                     clicked => { root.action("delete"); }
@@ -653,20 +662,24 @@ component CommandManagerPanel inherits Rectangle {
                     horizontal-stretch: 1;
                 }
                 ToolButton {
+                    tip: "Send Command";
                     icon: IconKind.connect;
                     enabled: root.selected >= 0;
                     clicked => { root.send(root.selected); }
                 }
                 ToolButton {
+                    tip: "New Command";
                     icon: IconKind.new-session;
                     clicked => { root.edit(-1); }
                 }
                 ToolButton {
+                    tip: "Edit Command";
                     icon: IconKind.properties;
                     enabled: root.selected >= 0;
                     clicked => { root.edit(root.selected); }
                 }
                 ToolButton {
+                    tip: "Delete Command";
                     icon: IconKind.delete;
                     enabled: root.selected >= 0;
                     clicked => { root.remove(root.selected); }
@@ -1303,6 +1316,11 @@ component DialogButtons inherits HorizontalLayout {
     spacing: 8px;
 }
 
+// Confirmation buttons (OK, Cancel, Close...) share one minimum width.
+component DialogButton inherits Button {
+    min-width: 80px * Theme.ui-scale;
+}
+
 component HostKeyDialog inherits DialogFrame {
     in property <string> host;
     in property <string> key-type;
@@ -1329,16 +1347,16 @@ component HostKeyDialog inherits DialogFrame {
         }
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "Accept & Save";
             primary: true;
             clicked => { root.answer(0); }
         }
-        Button {
+        DialogButton {
             text: "Accept Once";
             clicked => { root.answer(1); }
         }
-        Button {
+        DialogButton {
             text: "Cancel";
             clicked => { root.answer(2); }
         }
@@ -1403,12 +1421,12 @@ component AuthDialog inherits DialogFrame {
         wrap: word-wrap;
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "OK";
             primary: true;
             clicked => { root.answer(true); }
         }
-        Button {
+        DialogButton {
             text: "Cancel";
             clicked => { root.answer(false); }
         }
@@ -1620,12 +1638,12 @@ component QuickConnectDialog inherits DialogFrame {
         color: Theme.status-error;
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "Connect";
             primary: true;
             clicked => { root.connect(); }
         }
-        Button {
+        DialogButton {
             text: "Cancel";
             clicked => { root.cancel(); }
         }
@@ -2332,12 +2350,12 @@ component SessionOptionsDialog inherits DialogFrame {
         wrap: word-wrap;
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "OK";
             primary: true;
             clicked => { root.ok(); }
         }
-        Button {
+        DialogButton {
             text: "Cancel";
             clicked => { root.cancel(); }
         }
@@ -2461,12 +2479,12 @@ component ForwardDialog inherits DialogFrame {
             checked <=> root.enabled;
         }
         Rectangle { horizontal-stretch: 1; }
-        Button {
+        DialogButton {
             text: "OK";
             primary: true;
             clicked => { root.ok(); }
         }
-        Button {
+        DialogButton {
             text: "Cancel";
             clicked => { root.cancel(); }
         }
@@ -2531,12 +2549,12 @@ component CredentialDialog inherits DialogFrame {
         wrap: word-wrap;
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "OK";
             primary: true;
             clicked => { root.ok(); }
         }
-        Button {
+        DialogButton {
             text: "Cancel";
             clicked => { root.cancel(); }
         }
@@ -2564,7 +2582,7 @@ component ScriptDialog inherits DialogFrame {
         init => { self.focus(); }
     }
     DialogButtons {
-        for label[i] in root.buttons: Button {
+        for label[i] in root.buttons: DialogButton {
             text: label;
             primary: i == 0;
             clicked => { root.answer(i); }
@@ -2645,12 +2663,12 @@ component FirewallDialog inherits DialogFrame {
         wrap: word-wrap;
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "OK";
             primary: true;
             clicked => { root.ok(); }
         }
-        Button {
+        DialogButton {
             text: "Cancel";
             clicked => { root.cancel(); }
         }
@@ -2801,7 +2819,7 @@ component SchemesDialog inherits DialogFrame {
         }
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "New";
             // The copy is picked (and scrolled to) at the end of the list: name it next.
             clicked => {
@@ -2812,17 +2830,17 @@ component SchemesDialog inherits DialogFrame {
                 }
             }
         }
-        Button {
+        DialogButton {
             text: "Delete";
             enabled: root.editable;
             clicked => { root.delete-scheme(); }
         }
-        Button {
+        DialogButton {
             text: "Save";
             enabled: root.editable;
             clicked => { root.save(); }
         }
-        Button {
+        DialogButton {
             text: "Close";
             primary: true;
             clicked => { root.close(); }
@@ -3342,12 +3360,12 @@ component GlobalOptionsDialog inherits DialogFrame {
         wrap: word-wrap;
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "OK";
             primary: true;
             clicked => { root.ok(); }
         }
-        Button {
+        DialogButton {
             text: "Cancel";
             clicked => { root.cancel(); }
         }
@@ -3370,12 +3388,12 @@ component ConfirmDialog inherits DialogFrame {
         checked <=> root.checked;
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "Yes";
             primary: true;
             clicked => { root.answer(true); }
         }
-        Button {
+        DialogButton {
             text: "No";
             clicked => { root.answer(false); }
         }
@@ -3397,12 +3415,12 @@ component NameDialog inherits DialogFrame {
         }
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "OK";
             primary: true;
             clicked => { root.answer(true); }
         }
-        Button {
+        DialogButton {
             text: "Cancel";
             clicked => { root.answer(false); }
         }
@@ -3427,12 +3445,12 @@ component PasteDialog inherits DialogFrame {
         font-size: 12px * Theme.ui-scale;
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "Paste";
             primary: true;
             clicked => { root.answer(true); }
         }
-        Button {
+        DialogButton {
             text: "Cancel";
             clicked => { root.answer(false); }
         }
@@ -3493,7 +3511,7 @@ component DropDialog inherits DialogFrame {
         checked <=> root.always;
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "Cancel";
             clicked => { root.answer(""); }
         }
@@ -3539,13 +3557,13 @@ component ScriptEditor inherits DialogFrame {
             clicked => { root.act("check"); }
         }
         Rectangle { horizontal-stretch: 1; }
-        Button {
+        DialogButton {
             text: "Run";
             primary: true;
             enabled: root.can-run;
             clicked => { root.act("run"); }
         }
-        Button {
+        DialogButton {
             text: "Close";
             clicked => { root.act("close"); }
         }
@@ -3617,20 +3635,20 @@ component AboutDialog inherits DialogFrame {
         font-weight: root.update-version != "" ? 600 : 400;
     }
     DialogButtons {
-        Button {
+        DialogButton {
             text: "Check for Updates";
             clicked => { root.check-updates(); }
         }
-        if root.update-version != "": Button {
+        if root.update-version != "": DialogButton {
             text: "Release Notes";
             clicked => { root.release-notes(); }
         }
-        if root.update-installable: Button {
+        if root.update-installable: DialogButton {
             text: "Update Now";
             primary: true;
             clicked => { root.install-update(); }
         }
-        Button {
+        DialogButton {
             text: "OK";
             primary: !root.update-installable;
             clicked => { root.close(); }
@@ -5206,21 +5224,25 @@ export component MainWindow inherits Window {
                 spacing: 1px;
                 alignment: start;
                 ToolButton {
+                    tip: "Session Manager";
                     icon-size: 20px;
                     icon: IconKind.sessions;
                     clicked => { root.sessions-open = !root.sessions-open; }
                 }
                 ToolButton {
+                    tip: "Quick Connect";
                     icon-size: 20px;
                     icon: IconKind.quick-connect;
                     clicked => { root.action("quick-connect"); }
                 }
                 ToolButton {
+                    tip: "Connect in Tab";
                     icon-size: 20px;
                     icon: IconKind.connect-tab;
                     clicked => { root.action("quick-connect"); }
                 }
                 ToolButton {
+                    tip: "Connect Local Shell";
                     icon-size: 20px;
                     icon: IconKind.local-shell;
                     clicked => {
@@ -5245,12 +5267,14 @@ export component MainWindow inherits Window {
                     }
                 }
                 ToolButton {
+                    tip: "Reconnect";
                     icon-size: 20px;
                     icon: IconKind.reconnect;
                     enabled: root.session-closed;
                     clicked => { root.action("reconnect"); }
                 }
                 ToolButton {
+                    tip: "Disconnect";
                     icon-size: 20px;
                     icon: IconKind.disconnect;
                     enabled: root.session-live;
@@ -5265,18 +5289,21 @@ export component MainWindow inherits Window {
                 }
                 ToolSeparator { }
                 ToolButton {
+                    tip: "Copy";
                     icon-size: 20px;
                     icon: IconKind.copy;
                     enabled: root.has-selection;
                     clicked => { root.action("copy"); }
                 }
                 ToolButton {
+                    tip: "Paste";
                     icon-size: 20px;
                     icon: IconKind.paste;
                     enabled: root.session-live;
                     clicked => { root.action("paste"); }
                 }
                 ToolButton {
+                    tip: "Find";
                     icon-size: 20px;
                     icon: IconKind.find;
                     enabled: root.tabs.length > 0;
@@ -5289,12 +5316,14 @@ export component MainWindow inherits Window {
                 }
                 ToolSeparator { }
                 ToolButton {
+                    tip: "Print Screen";
                     icon-size: 20px;
                     icon: IconKind.print;
                     enabled: root.tabs.length > 0;
                     clicked => { root.action("print-screen"); }
                 }
                 ToolButton {
+                    tip: "Session Options";
                     icon-size: 20px;
                     icon: IconKind.options;
                     enabled: root.tabs.length > 0;
@@ -6215,25 +6244,25 @@ export component MainWindow inherits Window {
             }
         }
         DialogButtons {
-            Button {
+            DialogButton {
                 text: "Import...";
                 clicked => { root.action("host-key-import"); }
             }
-            Button {
+            DialogButton {
                 text: "Import SecureCRT...";
                 clicked => { root.action("host-key-import-securecrt"); }
             }
-            Button {
+            DialogButton {
                 text: "Export...";
                 enabled: root.host-keys.length > 0;
                 clicked => { root.action("host-key-export"); }
             }
-            Button {
+            DialogButton {
                 text: "Remove";
                 enabled: root.host-key-selected >= 0;
                 clicked => { root.action("host-key-remove"); }
             }
-            Button {
+            DialogButton {
                 text: "Close";
                 primary: true;
                 clicked => {
@@ -6290,21 +6319,21 @@ export component MainWindow inherits Window {
             }
         }
         DialogButtons {
-            Button {
+            DialogButton {
                 text: "Add...";
                 clicked => { root.credential-edit(-1); }
             }
-            Button {
+            DialogButton {
                 text: "Edit...";
                 enabled: root.credential-selected >= 0 && root.credential-selected < root.credential-rows.length;
                 clicked => { root.credential-edit(root.credential-selected); }
             }
-            Button {
+            DialogButton {
                 text: "Remove";
                 enabled: root.credential-selected >= 0 && root.credential-selected < root.credential-rows.length;
                 clicked => { root.credential-remove(root.credential-selected); }
             }
-            Button {
+            DialogButton {
                 text: "Close";
                 primary: true;
                 clicked => {
@@ -6361,21 +6390,21 @@ export component MainWindow inherits Window {
             }
         }
         DialogButtons {
-            Button {
+            DialogButton {
                 text: "Add...";
                 clicked => { root.firewall-edit(-1); }
             }
-            Button {
+            DialogButton {
                 text: "Edit...";
                 enabled: root.firewall-selected >= 0 && root.firewall-selected < root.firewall-rows.length;
                 clicked => { root.firewall-edit(root.firewall-selected); }
             }
-            Button {
+            DialogButton {
                 text: "Remove";
                 enabled: root.firewall-selected >= 0 && root.firewall-selected < root.firewall-rows.length;
                 clicked => { root.firewall-remove(root.firewall-selected); }
             }
-            Button {
+            DialogButton {
                 text: "Close";
                 primary: true;
                 clicked => {
@@ -6472,16 +6501,16 @@ export component MainWindow inherits Window {
             checked <=> root.agent-load;
         }
         DialogButtons {
-            Button {
+            DialogButton {
                 text: "Add...";
                 clicked => { root.action("agent-add"); }
             }
-            Button {
+            DialogButton {
                 text: "Remove";
                 enabled: root.agent-selected >= 0 && root.agent-selected < root.agent-rows.length;
                 clicked => { root.action("agent-remove"); }
             }
-            Button {
+            DialogButton {
                 text: "Close";
                 primary: true;
                 clicked => { root.action("agent-close"); }
@@ -6556,13 +6585,13 @@ export component MainWindow inherits Window {
             wrap: word-wrap;
         }
         DialogButtons {
-            Button {
+            DialogButton {
                 text: root.kg-busy ? "Creating..." : "Create";
                 primary: true;
                 enabled: !root.kg-busy;
                 clicked => { root.keygen-ok(); }
             }
-            Button {
+            DialogButton {
                 text: "Cancel";
                 clicked => {
                     root.dialog = 0;
@@ -6630,12 +6659,12 @@ export component MainWindow inherits Window {
             color: Theme.status-error;
         }
         DialogButtons {
-            Button {
+            DialogButton {
                 text: "OK";
                 primary: true;
                 clicked => { root.bar-button-ok(); }
             }
-            Button {
+            DialogButton {
                 text: "Cancel";
                 clicked => {
                     root.dialog = 0;

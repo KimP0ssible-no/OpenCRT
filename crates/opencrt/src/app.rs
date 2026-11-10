@@ -6143,19 +6143,31 @@ impl App {
     /// Tools > Import Sessions: add the sessions from an exported file; ones
     /// that already exist under the same name are left alone.
     fn import_sessions(&mut self) {
-        let Some(path) = rfd::FileDialog::new()
+        let Some(paths) = rfd::FileDialog::new()
             .set_title("Import Sessions")
-            .add_filter("Sessions", &["toml", "csv", "tsv", "txt"])
-            .pick_file()
+            .add_filter("Sessions", &["toml", "csv", "tsv", "txt", "rdp"])
+            .pick_files()
         else {
             return;
         };
-        let toml = path.extension().is_some_and(|e| e.eq_ignore_ascii_case("toml"));
+        for path in paths {
+            self.import_sessions_from(&path);
+        }
+    }
+
+    fn import_sessions_from(&mut self, path: &Path) {
+        let extension = path.extension().map(|e| e.to_ascii_lowercase());
         let mut note = String::new();
-        let other = if toml {
-            config::load::<SessionStore>(&path).map_err(|e| format!("{e:#}"))
+        let other = if extension.as_deref() == Some("toml".as_ref()) {
+            config::load::<SessionStore>(path).map_err(|e| format!("{e:#}"))
+        } else if extension.as_deref() == Some("rdp".as_ref()) {
+            let name = path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+            std::fs::read(path)
+                .map_err(|e| e.to_string())
+                .and_then(|bytes| sessions::from_rdp_file(&sessions::decode_text(&bytes), &name, &self.store.default_session))
+                .map(|session| SessionStore { sessions: vec![session], ..Default::default() })
         } else {
-            std::fs::read_to_string(&path)
+            std::fs::read_to_string(path)
                 .map_err(|e| e.to_string())
                 .and_then(|text| sessions::from_delimited(&text, &self.store.default_session))
                 .map(|(sessions, ignored)| {

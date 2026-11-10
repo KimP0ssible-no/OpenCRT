@@ -206,6 +206,60 @@ fn split_delimited(line: &str, sep: char) -> Vec<String> {
     fields
 }
 
+/// Text that may be UTF-16LE (with a BOM, as mstsc saves .rdp files, or
+/// without one, as `wsl -l -q` prints) or UTF-8.
+pub fn decode_text(bytes: &[u8]) -> String {
+    let utf16 = |b: &[u8]| String::from_utf16_lossy(&b.as_chunks::<2>().0.iter().map(|p| u16::from_le_bytes(*p)).collect::<Vec<_>>());
+    match bytes {
+        [0xff, 0xfe, rest @ ..] => utf16(rest),
+        _ if bytes.len().is_multiple_of(2) && !bytes.is_empty() && bytes.iter().skip(1).step_by(2).all(|&b| b == 0) => utf16(bytes),
+        _ => String::from_utf8_lossy(bytes).trim_start_matches('\u{feff}').to_string(),
+    }
+}
+
+/// An RDP session named `name` from a Remote Desktop Connection (.rdp) file,
+/// starting from `base`. A fixed desktop size is kept only for a windowed
+/// connection (screen mode 1); full screen follows the tab instead.
+pub fn from_rdp_file(text: &str, name: &str, base: &Session) -> Result<Session, String> {
+    let mut s = Session { name: name.into(), folder: String::new(), protocol: Protocol::Rdp, port: 3389, user: String::new(), ..base.clone() };
+    let (mut width, mut height, mut windowed) = (0, 0, false);
+    for line in text.lines() {
+        let mut parts = line.trim().splitn(3, ':');
+        let (Some(key), Some(_), Some(value)) = (parts.next(), parts.next(), parts.next()) else { continue };
+        let number = value.trim().parse::<u32>().ok();
+        match key.to_ascii_lowercase().as_str() {
+            "full address" => {
+                // host, host:port or [IPv6]:port
+                let (host, port) = match value.strip_prefix('[').and_then(|v| v.split_once(']')) {
+                    Some((host, rest)) => (host, rest.strip_prefix(':')),
+                    None => match value.split_once(':') {
+                        Some((host, port)) if !port.contains(':') => (host, Some(port)),
+                        _ => (value, None),
+                    },
+                };
+                s.host = host.trim().into();
+                s.port = port.and_then(|p| p.trim().parse().ok()).unwrap_or(s.port);
+            }
+            "server port" => s.port = number.and_then(|n| u16::try_from(n).ok()).unwrap_or(s.port),
+            "username" => s.user = value.trim().into(),
+            "desktopwidth" => width = number.unwrap_or(0),
+            "desktopheight" => height = number.unwrap_or(0),
+            "screen mode id" => windowed = number == Some(1),
+            "administrative session" => s.rdp_admin = number == Some(1),
+            // 0 plays on this computer, 1 on the remote one, 2 nowhere.
+            "audiomode" => s.rdp_sound = number == Some(0),
+            _ => {}
+        }
+    }
+    if s.host.is_empty() {
+        return Err("it has no \"full address\" line".into());
+    }
+    if windowed && width > 0 && height > 0 {
+        (s.rdp_width, s.rdp_height) = (u16::try_from(width).unwrap_or(0), u16::try_from(height).unwrap_or(0));
+    }
+    Ok(s)
+}
+
 /// Sessions from a CSV/TSV file whose first line names the columns (name,
 /// host, port, protocol, user, folder, key, emulation; common aliases too),
 /// each starting from `base`. Also returns the column names it did not use.
@@ -572,6 +626,22 @@ pub fn from_securecrt(text: &str, folder: &str, name: &str, config_dir: &str, gl
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn rdp_files() {
+        let text = "screen mode id:i:1\r\ndesktopwidth:i:1600\r\ndesktopheight:i:900\r\nfull address:s:win11.lab:3390\r\nusername:s:LAB\\kim\r\naudiomode:i:2\r\nadministrative session:i:1\r\n";
+        let mstsc: Vec<u8> = [0xff, 0xfe].into_iter().chain(text.encode_utf16().flat_map(u16::to_le_bytes)).collect();
+        let s = from_rdp_file(&decode_text(&mstsc), "Win 11", &Session::default()).unwrap();
+        assert_eq!((s.name.as_str(), s.protocol, s.host.as_str(), s.port, s.user.as_str()), ("Win 11", Protocol::Rdp, "win11.lab", 3390, "LAB\\kim"));
+        assert_eq!((s.rdp_width, s.rdp_height, s.rdp_sound, s.rdp_admin), (1600, 900, false, true));
+        // Full screen (the default) follows the tab; IPv6 with a port.
+        let s = from_rdp_file("full address:s:[fd00::5]:3391\ndesktopwidth:i:1920\ndesktopheight:i:1080\n", "v6", &Session::default()).unwrap();
+        assert_eq!((s.host.as_str(), s.port, s.rdp_width, s.rdp_sound), ("fd00::5", 3391, 0, true));
+        let s = from_rdp_file("full address:s:host\nserver port:i:3392\n", "p", &Session::default()).unwrap();
+        assert_eq!((s.host.as_str(), s.port), ("host", 3392));
+        assert!(from_rdp_file("username:s:kim\n", "x", &Session::default()).is_err());
+        assert_eq!(decode_text(b"\xef\xbb\xbfa:b"), "a:b");
+    }
 
     #[test]
     fn pastes_copies_and_moves() {

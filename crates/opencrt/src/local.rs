@@ -34,12 +34,8 @@ pub fn wsl_distributions() -> Vec<String> {
 
 /// The names in `wsl -l -q`'s output: UTF-16LE, or UTF-8 when WSL_UTF8 is set.
 fn wsl_names(out: &[u8]) -> Vec<String> {
-    let text = if out.len().is_multiple_of(2) && out.iter().skip(1).step_by(2).all(|&b| b == 0) {
-        String::from_utf16_lossy(&out.as_chunks::<2>().0.iter().map(|p| u16::from_le_bytes(*p)).collect::<Vec<_>>())
-    } else {
-        String::from_utf8_lossy(out).into_owned()
-    };
-    text.lines().map(|l| l.trim_matches(|c: char| c.is_whitespace() || c == '\u{feff}')).filter(|l| !l.is_empty()).map(String::from).collect()
+    crate::sessions::decode_text(out)
+        .lines().map(|l| l.trim_matches(|c: char| c.is_whitespace() || c == '\u{feff}')).filter(|l| !l.is_empty()).map(String::from).collect()
 }
 
 /// The shell's terminal settings: `term` as TERM (whatever OpenCRT itself was

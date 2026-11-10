@@ -105,12 +105,13 @@ struct Target {
     sound: bool,
     share: String,
     h264: bool,
+    admin: bool,
 }
 
 async fn run(mut input: UnboundedReceiver<ToHelper>, out: &Out) -> anyhow::Result<()> {
     let target = match input.recv().await {
-        Some(ToHelper::Connect { host, port, user, domain, password, width, height, speed, sound, share, h264 }) => {
-            Target { host, port, user, domain, password, width, height, speed, sound, share, h264 }
+        Some(ToHelper::Connect { host, port, user, domain, password, width, height, speed, sound, share, h264, admin }) => {
+            Target { host, port, user, domain, password, width, height, speed, sound, share, h264, admin }
         }
         Some(ToHelper::Close) | None => return Ok(()),
         Some(other) => bail!("expected a connect request first, got {other:?}"),
@@ -118,8 +119,8 @@ async fn run(mut input: UnboundedReceiver<ToHelper>, out: &Out) -> anyhow::Resul
     let (clip_queue, clips) = unbounded_channel();
     let (gfx_queue, gfx_events) = unbounded_channel();
     note(format_args!(
-        "connecting to {}:{} as {}x{}, speed {}, sound {}, shared folder {:?}, H.264 {}",
-        target.host, target.port, target.width, target.height, target.speed, target.sound, target.share, target.h264
+        "connecting to {}:{} as {}x{}, speed {}, sound {}, shared folder {:?}, H.264 {}, admin {}",
+        target.host, target.port, target.width, target.height, target.speed, target.sound, target.share, target.h264, target.admin
     ));
     let (result, framed, security) = connect(&target, &mut input, out, clip_queue, gfx_queue).await?;
     session(result, framed, security, input, clips, gfx_events, out).await
@@ -293,6 +294,7 @@ fn config(target: &Target) -> connector::Config {
         // yet (IronRDP leaves the default pointer to the client to draw).
         enable_server_pointer: false,
         support_dyn_vc_gfx_protocol: false, // set in connect, with the channel
+        admin_session: target.admin,
         request_data: None,
         autologon: false,
         enable_audio_playback: target.sound,

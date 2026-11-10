@@ -172,6 +172,8 @@ pub struct Target {
     pub rdp_share: String,
     /// RDP: H.264 when the server offers it; None for yes.
     pub rdp_h264: Option<bool>,
+    /// RDP: the console (administrative) session.
+    pub rdp_admin: bool,
 }
 
 /// A remembered secret; kept out of debug output.
@@ -224,6 +226,7 @@ impl Target {
             rdp_sound: Some(s.rdp_sound),
             rdp_share: config::expand_env(&s.rdp_share),
             rdp_h264: Some(s.rdp_h264),
+            rdp_admin: s.rdp_admin,
         }
     }
 
@@ -340,6 +343,7 @@ impl Target {
             sound: self.rdp_sound.unwrap_or(true),
             share: self.rdp_share.clone(),
             h264: self.rdp_h264.unwrap_or(true),
+            admin: self.rdp_admin,
             credential: self.credential.clone(),
             password: self.cached_password.as_ref().map(|s| s.0.clone()),
             jump: (!self.hops.is_empty()).then(|| self.credentials()),
@@ -4642,6 +4646,7 @@ impl App {
         ui.set_so_rdp_sound(session.rdp_sound);
         ui.set_so_rdp_share(session.rdp_share.clone().into());
         ui.set_so_rdp_h264(session.rdp_h264);
+        ui.set_so_rdp_admin(session.rdp_admin);
         ui.set_so_term(session.terminal_type.clone().into());
         let names: Vec<SharedString> = crate::codec::ENCODINGS.iter().map(|(_, name)| SharedString::from(*name)).collect();
         ui.set_encoding_names(ModelRc::new(VecModel::from(names)));
@@ -4738,6 +4743,7 @@ impl App {
             rdp_sound: ui.get_so_rdp_sound(),
             rdp_share: ui.get_so_rdp_share().trim().to_string(),
             rdp_h264: ui.get_so_rdp_h264(),
+            rdp_admin: ui.get_so_rdp_admin(),
             terminal_type: ui.get_so_term().trim().to_string(),
             latin1: false,
             encoding: crate::codec::ENCODINGS.get(ui.get_so_encoding().max(0) as usize).map_or("", |(label, _)| label).to_string(),

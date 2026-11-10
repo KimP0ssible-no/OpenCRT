@@ -1697,6 +1697,7 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <bool> rdp-sound;
     in-out property <string> rdp-share;
     in-out property <bool> rdp-h264;
+    in-out property <bool> rdp-admin;
     in-out property <string> terminal-type;
     // Index into codec::ENCODINGS.
     in-out property <int> encoding;
@@ -2188,6 +2189,11 @@ component SessionOptionsDialog inherits DialogFrame {
                     CheckBox {
                         text: "Use H.264 when the server offers it (much faster; turn off if the desktop stays black)";
                         checked <=> root.rdp-h264;
+                        enabled: root.protocol == 5;
+                    }
+                    CheckBox {
+                        text: "Connect to the console (administrative) session, like mstsc /admin";
+                        checked <=> root.rdp-admin;
                         enabled: root.protocol == 5;
                     }
                     CheckBox {
@@ -4519,6 +4525,7 @@ export component MainWindow inherits Window {
     in-out property <bool> so-rdp-sound;
     in-out property <string> so-rdp-share;
     in-out property <bool> so-rdp-h264;
+    in-out property <bool> so-rdp-admin;
     in-out property <string> so-term;
     in-out property <int> so-encoding;
     in property <[string]> encoding-names;
@@ -6110,6 +6117,7 @@ export component MainWindow inherits Window {
         rdp-sound <=> root.so-rdp-sound;
         rdp-share <=> root.so-rdp-share;
         rdp-h264 <=> root.so-rdp-h264;
+        rdp-admin <=> root.so-rdp-admin;
         terminal-type <=> root.so-term;
         encoding <=> root.so-encoding;
         encoding-names: root.encoding-names;

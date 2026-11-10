@@ -878,7 +878,12 @@ fn create_gcc_blocks<'a>(
             Some(ClientNetworkData { channels })
         },
         // TODO(#139): support for Some(ClientClusterData { flags: RedirectionFlags::REDIRECTION_SUPPORTED, redirection_version: RedirectionVersion::V4, redirected_session_id: 0, }),
-        cluster: None,
+        // OpenCRT: the admin session sends the block, as FreeRDP's /admin does.
+        cluster: config.admin_session.then(|| gcc::ClientClusterData {
+            flags: gcc::RedirectionFlags::REDIRECTION_SUPPORTED | gcc::RedirectionFlags::REDIRECTED_SESSION_FIELD_VALID,
+            redirection_version: gcc::RedirectionVersion::V4,
+            redirected_session_id: 0,
+        }),
         monitor: None,
         // Request the MCS message channel, which carries network auto-detect
         // ([MS-RDPBCGR] 2.2.14) and the multitransport / heartbeat PDUs. The

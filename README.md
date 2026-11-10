@@ -202,6 +202,8 @@ automatic check off in Options > Global Options > General.
 
 Help > Keyboard Shortcuts shows the main ones in OpenCRT. F1 stays with the
 host; map it with `F1 = menu: shortcuts` to open that list instead.
+`Alt+R = menu: focus-connect-bar` puts the keyboard in the toolbar's quick
+connect box, as Alt+R does in SecureCRT (Alt+R stays with the host unless mapped).
 
 ## Command-line tools
 `ocrt` (installed beside OpenCRT) uses OpenCRT's known host keys and SSH code:

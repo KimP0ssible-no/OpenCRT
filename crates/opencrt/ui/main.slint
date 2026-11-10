@@ -4412,6 +4412,8 @@ export component MainWindow inherits Window {
     in-out property <bool> show-statusbar: true;
     in-out property <bool> show-menubar: true;
     in-out property <bool> show-connect-bar: true;
+    // Raised to put the keyboard in the toolbar's quick connect box.
+    in-out property <int> connect-bar-focus;
     // Saved-session paths for the File menu, newest first.
     in property <[string]> recent-sessions;
     in property <[string]> snapshots;
@@ -5361,6 +5363,8 @@ export component MainWindow inherits Window {
                 }
                 if root.show-connect-bar: ToolSeparator { }
                 if root.show-connect-bar: CompactInput {
+                    property <int> asked: root.connect-bar-focus;
+                    changed asked => { self.focus-input(); }
                     width: 170px * Theme.ui-scale;
                     placeholder: "Quick connect: user@host";
                     clear-on-submit: true;

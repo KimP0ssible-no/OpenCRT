@@ -2455,7 +2455,9 @@ impl App {
                 let command = format!("wsl.exe -d {} --cd ~", &name["local-wsl-".len()..]);
                 self.open_tab(Target { protocol: Protocol::Local, command, ..Default::default() }, None);
             }
-            "quick-connect" => {
+            // For a key map (SecureCRT has Alt+R): the toolbar's box, else the dialog.
+            "focus-connect-bar" if ui.get_show_connect_bar() => return ui.set_connect_bar_focus(ui.get_connect_bar_focus() + 1),
+            "quick-connect" | "focus-connect-bar" => {
                 let target = (self.tabs.get(active).map(|t| t.target.clone()))
                     .unwrap_or_else(|| Target::from_session(&self.store.default_session, &self.options.credentials));
                 show_quick_connect(ui, &target);

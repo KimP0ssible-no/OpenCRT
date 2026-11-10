@@ -633,7 +633,8 @@ pub fn from_securecrt(text: &str, folder: &str, name: &str, config_dir: &str, gl
         notes: lists.get("Description").map(|lines| lines.join("\n").trim().to_string()).unwrap_or_default(),
         // SecureCRT's "Default" bar is OpenCRT's default (unnamed) one.
         button_bar: Some(text("User Button Bar Name")).filter(|b| *b != "Default").unwrap_or_default().into(),
-        keyword_set: text("Keyword Set").into(),
+        // SecureCRT writes "<None>" for no keyword list.
+        keyword_set: Some(text("Keyword Set")).filter(|k| *k != "<None>").unwrap_or_default().into(),
         ..Default::default()
     };
     if protocol == Protocol::Ssh2 {
@@ -719,6 +720,8 @@ mod tests {
         assert_eq!((s.button_bar.as_str(), s.keyword_set.as_str()), ("Lab", "Test"));
         let s = from_securecrt(&session.replace("=Lab", "=Default"), "SecureCRT", "web1", "/cfg", "").unwrap();
         assert_eq!(s.button_bar, "", "SecureCRT's Default bar is OpenCRT's default");
+        let s = from_securecrt(&session.replace("=Test", "=<None>"), "SecureCRT", "web1", "/cfg", "").unwrap();
+        assert_eq!(s.keyword_set, "");
     }
 
     #[test]

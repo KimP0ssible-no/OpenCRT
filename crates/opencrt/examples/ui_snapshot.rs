@@ -1,7 +1,7 @@
 //! Render the main window off-screen to a PNG-convertible PPM, for checking the
 //! look without opening a window: `cargo run --example ui_snapshot -- out.ppm dark main [font size]`.
 //! Themes: light, dark, and breeze / breeze-dark (KDE's Breeze colour schemes).
-//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite, quick-open.
+//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite, quick-open, shortcuts.
 
 use std::rc::Rc;
 
@@ -166,6 +166,7 @@ fn main() {
             ui.set_dialog(12);
         }
         "about" => ui.set_dialog(4),
+        "shortcuts" => ui.set_dialog(21),
         "update" => {
             ui.set_update_version("0.2.1".into());
             ui.set_update_status("OpenCRT 0.2.1 is available. Update Now installs it and restarts OpenCRT.".into());

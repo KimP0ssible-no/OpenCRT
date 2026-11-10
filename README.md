@@ -195,6 +195,9 @@ automatic check off in Options > Global Options > General.
 | F1 … F12 (with Ctrl/Alt/Shift) | Your text, if mapped in Global Options > Keyboard |
 | Ctrl+C or Esc during a transfer | Cancel it |
 
+Help > Keyboard Shortcuts shows the main ones in OpenCRT. F1 stays with the
+host; map it with `F1 = menu: shortcuts` to open that list instead.
+
 ## Command-line tools
 `ocrt` (installed beside OpenCRT) uses OpenCRT's known host keys and SSH code:
 

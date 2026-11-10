@@ -107,6 +107,7 @@ const DIALOG_PASTE: i32 = 17;
 const DIALOG_DROP: i32 = 18;
 const DIALOG_SCRIPT_EDITOR: i32 = 19;
 const DIALOG_QUICK_OPEN: i32 = 20;
+const DIALOG_SHORTCUTS: i32 = 21;
 /// File > Auto Print collects at most this much output.
 const AUTO_PRINT_LIMIT: usize = 4 << 20;
 /// How dropped files are sent (Global Options > File Transfer); "" asks.
@@ -2608,6 +2609,7 @@ impl App {
             "export-sessions" => self.export_sessions(),
             "import-sessions" => self.import_sessions(),
             "global-options" => return self.show_global_options(ui),
+            "shortcuts" => return ui.set_dialog(DIALOG_SHORTCUTS),
             "check-updates" => {
                 ui.set_dialog(DIALOG_ABOUT);
                 return self.check_updates(ui, true);

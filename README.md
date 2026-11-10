@@ -118,7 +118,8 @@ automatic check off in Options > Global Options > General.
   PPK, with passphrase prompts, and SSH agent keys — Pageant or the OpenSSH
   agent on Windows, `SSH_AUTH_SOCK` elsewhere — when no key file is set),
   Telnet, RLogin, raw TCP, serial (COM / tty, modem dialling, VM consoles),
-  local shell, and RDP (remote desktop
+  local shell (on Windows PowerShell, Command Prompt or a WSL distribution from
+  the toolbar's local-shell button), and RDP (remote desktop
   in a tab that follows the tab's size, keyboard and mouse, clipboard text
   both ways; NLA with user name and password; the console (administrative)
   session like `mstsc /admin`), and VNC (RFB 3.3 to 3.8: no

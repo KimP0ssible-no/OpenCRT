@@ -1627,6 +1627,8 @@ struct App {
     next_update_check: Instant,
     /// The new version being downloaded (and on macOS put in place): what to start.
     update_install: Option<(update::InstallKind, std::sync::mpsc::Receiver<Result<PathBuf, String>>)>,
+    /// Windows: the WSL distributions, listed once at start-up off the UI thread.
+    wsl_list: Option<std::sync::mpsc::Receiver<Vec<String>>>,
     /// Git for Windows' installer being downloaded (Settings Sync).
     git_download: Option<std::sync::mpsc::Receiver<Result<PathBuf, String>>>,
     /// Python being downloaded, and the scripts (tab id, file) waiting for it.
@@ -1913,6 +1915,7 @@ impl App {
             update_check: None,
             next_update_check: Instant::now(),
             update_install: None,
+            wsl_list: None,
             git_download: None,
             python_download: None,
             python_waiting: Vec::new(),
@@ -2437,6 +2440,11 @@ impl App {
             "local-cmd" | "local-powershell" => {
                 let command = if name == "local-cmd" { "cmd.exe" } else { "powershell.exe" };
                 self.open_tab(Target { protocol: Protocol::Local, command: command.into(), ..Default::default() }, None);
+            }
+            // Windows takes the command as a whole command line, so the quotes and arguments carry over.
+            _ if name.starts_with("local-wsl-") => {
+                let command = format!("wsl.exe -d \"{}\" --cd ~", &name["local-wsl-".len()..]);
+                self.open_tab(Target { protocol: Protocol::Local, command, ..Default::default() }, None);
             }
             "quick-connect" => {
                 let target = (self.tabs.get(active).map(|t| t.target.clone()))
@@ -3320,6 +3328,10 @@ impl App {
     /// Periodic work: drain sessions, raise prompts, fit the grid, repaint, refresh chrome.
     fn tick(&mut self, ui: &MainWindow) {
         let now = Instant::now();
+        if let Some(names) = self.wsl_list.as_ref().and_then(|rx| rx.try_recv().ok()) {
+            self.wsl_list = None;
+            ui.set_wsl_distros(ModelRc::new(VecModel::from(names.into_iter().map(SharedString::from).collect::<Vec<_>>())));
+        }
         if let Some(note) = crate::gitsync::take_note() {
             self.notify(note);
         }
@@ -7847,6 +7859,11 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_files_views(ModelRc::from(app.files_model.clone()));
         ui.set_show_toolbar(app.options.show_toolbar);
         ui.set_windows(cfg!(windows));
+        if cfg!(windows) {
+            let (tx, rx) = std::sync::mpsc::channel();
+            std::thread::spawn(move || tx.send(crate::local::wsl_distributions()));
+            app.wsl_list = Some(rx);
+        }
         ui.set_show_statusbar(app.options.show_statusbar);
         ui.set_show_menubar(app.options.show_menubar);
         ui.set_show_connect_bar(app.options.show_connect_bar);

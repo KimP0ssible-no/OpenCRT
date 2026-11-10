@@ -4405,8 +4405,9 @@ export component MainWindow inherits Window {
     in property <bool> caps-on;
     in property <bool> num-on;
     in-out property <bool> show-toolbar: true;
-    // The local-shell button offers PowerShell or Command Prompt.
+    // The local-shell button offers PowerShell, Command Prompt and the WSL distributions.
     in property <bool> windows;
+    in property <[string]> wsl-distros;
     in-out property <bool> show-statusbar: true;
     in-out property <bool> show-menubar: true;
     in-out property <bool> show-connect-bar: true;
@@ -5329,6 +5330,11 @@ export component MainWindow inherits Window {
                             MenuItem {
                                 title: "Command Prompt (classic)";
                                 activated => { root.action("local-cmd"); }
+                            }
+                            if root.wsl-distros.length > 0: MenuSeparator { }
+                            for name in root.wsl-distros: MenuItem {
+                                title: "WSL: " + name;
+                                activated => { root.action("local-wsl-" + name); }
                             }
                         }
                     }

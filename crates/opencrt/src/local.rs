@@ -16,6 +16,32 @@ fn window(cols: u32, rows: u32) -> WindowSize {
     WindowSize { num_lines: rows as u16, num_cols: cols as u16, cell_width: 1, cell_height: 1 }
 }
 
+/// The installed WSL distributions (`wsl.exe -l -q`), empty without WSL.
+pub fn wsl_distributions() -> Vec<String> {
+    let mut command = std::process::Command::new("wsl.exe");
+    command.args(["-l", "-q"]).stdin(std::process::Stdio::null());
+    #[cfg(windows)]
+    {
+        // No console window flashing up.
+        use std::os::windows::process::CommandExt as _;
+        command.creation_flags(0x0800_0000);
+    }
+    match command.output() {
+        Ok(out) if out.status.success() => wsl_names(&out.stdout),
+        _ => Vec::new(),
+    }
+}
+
+/// The names in `wsl -l -q`'s output: UTF-16LE, or UTF-8 when WSL_UTF8 is set.
+fn wsl_names(out: &[u8]) -> Vec<String> {
+    let text = if out.len().is_multiple_of(2) && out.iter().skip(1).step_by(2).all(|&b| b == 0) {
+        String::from_utf16_lossy(&out.as_chunks::<2>().0.iter().map(|p| u16::from_le_bytes(*p)).collect::<Vec<_>>())
+    } else {
+        String::from_utf8_lossy(out).into_owned()
+    };
+    text.lines().map(|l| l.trim_matches(|c: char| c.is_whitespace() || c == '\u{feff}')).filter(|l| !l.is_empty()).map(String::from).collect()
+}
+
 /// The shell's terminal settings: `term` as TERM (whatever OpenCRT itself was
 /// started with, often nothing or "dumb" from a desktop launcher, does not
 /// apply), and 24-bit colour.
@@ -106,6 +132,14 @@ fn write_all(writer: &mut impl Write, mut bytes: &[u8]) -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn wsl_names_from_utf16_or_utf8() {
+        let utf16: Vec<u8> = "Ubuntu-24.04\r\ndocker-desktop\r\n\r\n".encode_utf16().flat_map(u16::to_le_bytes).collect();
+        assert_eq!(wsl_names(&utf16), ["Ubuntu-24.04", "docker-desktop"]);
+        assert_eq!(wsl_names(b"Debian\n"), ["Debian"]);
+        assert!(wsl_names(b"").is_empty());
+    }
 
     #[test]
     fn runs_a_command_in_the_local_shell() {

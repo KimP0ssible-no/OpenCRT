@@ -189,7 +189,7 @@ automatic check off in Options > Global Options > General.
 | Alt+1 … Alt+9 | Go to tab 1 … 9 (Command+n on macOS) |
 | Alt+key | Sent as Esc+key (Meta), e.g. Alt+B / Alt+F in shells |
 | Alt+Enter | Full screen on / off |
-| Ctrl+click a web address | Open it in the browser |
+| Ctrl+click a web address or an OSC 8 link | Open it in the browser (links are underlined; http and https only) |
 | Ctrl+mouse wheel | Larger / smaller font |
 | Session Manager: Up / Down, Enter, Delete | Select, connect (or open a folder), delete |
 | Session Manager filter: Enter | Connect the selected (or first) session |

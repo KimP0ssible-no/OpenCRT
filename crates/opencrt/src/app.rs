@@ -6855,7 +6855,7 @@ impl App {
             );
         };
         let global_key = ui.get_go_global_key().trim().to_string();
-        if !global_key.is_empty() && !Path::new(&global_key).is_file() {
+        if !global_key.is_empty() && !Path::new(&config::expand_env(&global_key)).is_file() {
             return ui.set_go_error("Connection: the default SSH2 key file does not exist.".into());
         }
         let (print_font, print_margin) = (ui.get_go_print_font(), ui.get_go_print_margin());

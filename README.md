@@ -140,7 +140,8 @@ automatic check off in Options > Global Options > General.
   system, an interface font size for menus, tabs and dialogs (on Linux it starts at the desktop's), CJK text, bell as flash or sound, plain-text session
   logging with optional timestamps and dated file names that roll over at
   midnight (per session or File > Log Session), a raw log beside it with the
-  bytes as received (`.raw`, for emulation debugging), Send
+  bytes as received (`.raw`, for emulation debugging), recordings in asciicast
+  v2 (File > Record Session, for `asciinema play` and web players), Send
   Break for serial and Telnet, per-session terminal type, Latin-1 encoding
   and Backspace as ^H, function-key mapping, full screen and always on top.
 - **Sessions**: Session Manager with folders (rename, Connect All, drag and drop), filter

@@ -694,6 +694,8 @@ struct Tab {
     pacer: Option<input::Pacer>,
     /// Transfer > Receive ASCII: host output copied into this file.
     capture: Option<(std::fs::File, PathBuf)>,
+    /// File > Record Session: an asciicast recording of the output and resizes.
+    cast: Option<(crate::cast::Recording, PathBuf)>,
     /// Input to send once connected (files dropped for a new SFTP tab).
     on_connect: Vec<u8>,
     /// Host-controlled printing, and the jobs it asked for.
@@ -840,6 +842,7 @@ impl Tab {
             received_total: 0,
             pacer: None,
             capture: None,
+            cast: None,
             on_connect: Vec::new(),
             media: Default::default(),
             print_jobs: Vec::new(),
@@ -1470,6 +1473,12 @@ impl Tab {
                         recorder.output(bytes);
                     }
                     self.log_output(bytes, false);
+                    if let Some((cast, path)) = self.cast.as_mut()
+                        && let Err(e) = cast.output(bytes)
+                    {
+                        self.status = format!("Recording to {} stopped: {e}", path.display());
+                        self.cast = None;
+                    }
                     if let Some((file, path)) = self.capture.as_mut()
                         && let Err(e) = std::io::Write::write_all(file, bytes)
                     {
@@ -2469,6 +2478,7 @@ impl App {
             "font-smaller" => self.zoom(-1.0),
             "record-script" => self.toggle_recording(),
             "log-session" => self.toggle_log(),
+            "record-cast" => self.toggle_cast(),
             "xmodem-send" => self.transfer("xmodem", true, None),
             "xmodem-receive" => self.transfer("xmodem", false, None),
             "ymodem-send" => self.transfer("ymodem", true, None),
@@ -3681,6 +3691,12 @@ impl App {
             }
             if tab.terminal.size() != (cols, lines) {
                 tab.terminal.resize(cols, lines);
+                if let Some((cast, path)) = tab.cast.as_mut()
+                    && let Err(e) = cast.resize(cols, lines)
+                {
+                    tab.status = format!("Recording to {} stopped: {e}", path.display());
+                    tab.cast = None;
+                }
                 if let Some(ssh) = tab.ssh.as_ref() {
                     ssh.resize(cols as u32, lines as u32);
                 }
@@ -6076,6 +6092,32 @@ impl App {
         }
     }
 
+    /// File > Record Session / Stop Recording for the active tab (asciicast v2).
+    fn toggle_cast(&mut self) {
+        let Some(tab) = self.tabs.get_mut(self.active) else {
+            return;
+        };
+        if let Some((_, path)) = tab.cast.take() {
+            return self.notify(format!("Stopped recording to {}.", path.display()));
+        }
+        let Some(path) = rfd::FileDialog::new()
+            .set_title("Record Session")
+            .add_filter("asciicast recordings", &["cast"])
+            .set_file_name(format!("{}.cast", tab.title().replace(['/', '\\', ':', '@'], "_")))
+            .save_file()
+        else {
+            return;
+        };
+        let (cols, rows) = tab.terminal.size();
+        match crate::cast::Recording::create(&path, cols, rows) {
+            Ok(cast) => {
+                tab.cast = Some((cast, path.clone()));
+                self.notify(format!("Recording to {}; play it with asciinema play.", path.display()));
+            }
+            Err(e) => self.notify(format!("Cannot create {}: {e}", path.display())),
+        }
+    }
+
     fn toggle_log(&mut self) {
         let Some(tab) = self.tabs.get_mut(self.active) else {
             return;
@@ -7561,6 +7603,7 @@ fn update_status(ui: &MainWindow, tab: &Tab) {
     ui.set_recording(tab.recorder.is_some());
     ui.set_logging(tab.log_path.is_some());
     ui.set_capturing(tab.capture.is_some());
+    ui.set_casting(tab.cast.is_some());
     ui.set_auto_printing(tab.auto_print.is_some());
 }
 
@@ -7592,6 +7635,7 @@ fn update_status_empty(ui: &MainWindow) {
     ui.set_recording(false);
     ui.set_logging(false);
     ui.set_capturing(false);
+    ui.set_casting(false);
     ui.set_auto_printing(false);
     ui.set_mouse_reporting(false);
     ui.set_remote_desktop(false);

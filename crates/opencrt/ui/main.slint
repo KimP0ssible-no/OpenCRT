@@ -4385,6 +4385,7 @@ export component MainWindow inherits Window {
     in property <bool> logging;
     // Transfer > Receive ASCII is writing the active tab's output to a file.
     in property <bool> capturing;
+    in property <bool> casting;
     // File > Auto Print is collecting the active tab's output.
     in property <bool> auto-printing;
     // The active tab is an SSH2 shell (SFTP tabs can be opened from it).
@@ -4866,6 +4867,11 @@ export component MainWindow inherits Window {
                 title: root.logging ? "Stop Logging" : "Log Session...";
                 enabled: root.tabs.length > 0;
                 activated => { root.menu("log-session"); }
+            }
+            MenuItem {
+                title: root.casting ? "Stop Recording" : "Record Session (asciicast)...";
+                enabled: root.tabs.length > 0;
+                activated => { root.menu("record-cast"); }
             }
             MenuSeparator { }
             MenuItem {

@@ -1686,7 +1686,8 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <bool> backspace-ctrl-h;
     in-out property <int> emulation;
     in-out property <string> key-map;
-    in-out property <string> button-bar;
+    in property <[string]> button-bar-choices;
+    in-out property <int> button-bar;
     in-out property <string> columns;
     in-out property <string> rows;
     in-out property <bool> deccolm;
@@ -2078,9 +2079,9 @@ component SessionOptionsDialog inherits DialogFrame {
                     }
                     Row {
                         FormLabel { text: "Button bar:"; }
-                        LineEdit {
-                            text <=> root.button-bar;
-                            placeholder-text: "a named Button Bar; blank for the default bar";
+                        ComboBox {
+                            model: root.button-bar-choices;
+                            current-index <=> root.button-bar;
                         }
                     }
                 }
@@ -4523,7 +4524,8 @@ export component MainWindow inherits Window {
     in-out property <bool> so-backspace-ctrl-h;
     in-out property <int> so-emulation;
     in-out property <string> so-key-map;
-    in-out property <string> so-button-bar;
+    in property <[string]> so-button-bar-choices;
+    in-out property <int> so-button-bar;
     in-out property <string> so-columns;
     in-out property <string> so-rows;
     in-out property <bool> so-deccolm;
@@ -6128,6 +6130,7 @@ export component MainWindow inherits Window {
         backspace-ctrl-h <=> root.so-backspace-ctrl-h;
         emulation <=> root.so-emulation;
         key-map <=> root.so-key-map;
+        button-bar-choices: root.so-button-bar-choices;
         button-bar <=> root.so-button-bar;
         columns <=> root.so-columns;
         rows <=> root.so-rows;

@@ -4669,7 +4669,13 @@ impl App {
         ui.set_so_backspace_ctrl_h(session.backspace_ctrl_h);
         ui.set_so_emulation(session.emulation.index());
         ui.set_so_key_map(session.key_map.join("\n").into());
-        ui.set_so_button_bar(session.button_bar.clone().into());
+        // "Default", then the bars buttons are on, and this session's even if it has none yet.
+        let mut bars: Vec<String> = self.options.buttons.iter().map(|b| b.bar.clone()).chain([session.button_bar.clone()]).filter(|b| !b.is_empty()).collect();
+        bars.sort_by_key(|b| b.to_lowercase());
+        bars.dedup_by(|a, b| a.eq_ignore_ascii_case(b));
+        ui.set_so_button_bar(bars.iter().position(|b| b.eq_ignore_ascii_case(&session.button_bar)).map_or(0, |i| i as i32 + 1));
+        let choices: Vec<SharedString> = std::iter::once("Default".to_string()).chain(bars).map(SharedString::from).collect();
+        ui.set_so_button_bar_choices(ModelRc::new(VecModel::from(choices)));
         let size = |n: u16| if n == 0 { SharedString::new() } else { n.to_string().into() };
         ui.set_so_columns(size(session.columns));
         ui.set_so_rows(size(session.rows));
@@ -4764,7 +4770,11 @@ impl App {
             backspace_ctrl_h: ui.get_so_backspace_ctrl_h(),
             emulation: input::Emulation::ALL.get(ui.get_so_emulation().max(0) as usize).copied().unwrap_or_default(),
             key_map: ui.get_so_key_map().lines().map(|l| l.trim().to_string()).filter(|l| !l.is_empty()).collect(),
-            button_bar: ui.get_so_button_bar().trim().to_string(),
+            button_bar: usize::try_from(ui.get_so_button_bar())
+                .ok()
+                .filter(|&i| i > 0)
+                .and_then(|i| ui.get_so_button_bar_choices().row_data(i))
+                .map_or(String::new(), |b| b.to_string()),
             keyword_set: usize::try_from(ui.get_so_keyword_set() - 1)
                 .ok()
                 .and_then(|i| render::keyword_set_names(&self.options.keywords).into_iter().nth(i))

@@ -33,9 +33,14 @@ pub fn wsl_distributions() -> Vec<String> {
 }
 
 /// The names in `wsl -l -q`'s output: UTF-16LE, or UTF-8 when WSL_UTF8 is set.
+/// WSL names hold only letters, digits, `.`, `_` and `-`; anything else (a BOM,
+/// a NUL left by an odd-length read) is dropped, so a name is safe on a command line.
 fn wsl_names(out: &[u8]) -> Vec<String> {
     crate::sessions::decode_text(out)
-        .lines().map(|l| l.trim_matches(|c: char| c.is_whitespace() || c == '\u{feff}')).filter(|l| !l.is_empty()).map(String::from).collect()
+        .lines()
+        .map(|l| l.chars().filter(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-')).collect::<String>())
+        .filter(|l| !l.is_empty())
+        .collect()
 }
 
 /// The shell's terminal settings: `term` as TERM (whatever OpenCRT itself was
@@ -135,6 +140,9 @@ mod tests {
         assert_eq!(wsl_names(&utf16), ["Ubuntu-24.04", "docker-desktop"]);
         assert_eq!(wsl_names(b"Debian\n"), ["Debian"]);
         assert!(wsl_names(b"").is_empty());
+        // UTF-16 that the decoder took for UTF-8 (odd length): the NULs go.
+        assert_eq!(wsl_names(b"D\0e\0b\0i\0a\0n\0\r\0\n\0\0"), ["Debian"]);
+        assert_eq!(wsl_names("\u{feff}Ubuntu \"x\"\r\n".as_bytes()), ["Ubuntux"]);
     }
 
     #[test]

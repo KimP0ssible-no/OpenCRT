@@ -2450,9 +2450,9 @@ impl App {
                 let command = if name == "local-cmd" { "cmd.exe" } else { "powershell.exe" };
                 self.open_tab(Target { protocol: Protocol::Local, command: command.into(), ..Default::default() }, None);
             }
-            // Windows takes the command as a whole command line, so the quotes and arguments carry over.
+            // Windows takes the command as a whole command line; WSL names need no quotes.
             _ if name.starts_with("local-wsl-") => {
-                let command = format!("wsl.exe -d \"{}\" --cd ~", &name["local-wsl-".len()..]);
+                let command = format!("wsl.exe -d {} --cd ~", &name["local-wsl-".len()..]);
                 self.open_tab(Target { protocol: Protocol::Local, command, ..Default::default() }, None);
             }
             "quick-connect" => {

@@ -362,6 +362,8 @@ pub struct Session {
     pub compression: bool,
     /// Start each logged line with the local date and time.
     pub log_timestamps: bool,
+    /// Also log the bytes as received, escape sequences included, to `<log file>.raw`.
+    pub log_raw: bool,
     /// Text logged on connect, on disconnect and at the start of each line
     /// (log parameters such as %S and %H expanded); empty for none.
     pub log_connect_text: String,
@@ -434,6 +436,7 @@ impl Default for Session {
             legacy_algorithms: false,
             compression: false,
             log_timestamps: false,
+            log_raw: false,
             log_connect_text: String::new(),
             log_disconnect_text: String::new(),
             log_line_text: String::new(),

@@ -1707,6 +1707,7 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <bool> forward-agent;
     in-out property <bool> forward-x11;
     in-out property <bool> log-timestamps;
+    in-out property <bool> log-raw;
     in-out property <string> log-connect;
     in-out property <string> log-disconnect;
     in-out property <string> log-line;
@@ -2099,6 +2100,10 @@ component SessionOptionsDialog inherits DialogFrame {
                     CheckBox {
                         text: "Start each line with the date and time";
                         checked <=> root.log-timestamps;
+                    }
+                    CheckBox {
+                        text: "Also keep a raw log (.raw beside it): the bytes as received, escape sequences included";
+                        checked <=> root.log-raw;
                     }
                     FieldRow {
                         label: "On connect:";
@@ -4538,6 +4543,7 @@ export component MainWindow inherits Window {
     in-out property <bool> so-tls;
     in-out property <bool> so-forward-x11;
     in-out property <bool> so-log-timestamps;
+    in-out property <bool> so-log-raw;
     in-out property <string> so-log-connect;
     in-out property <string> so-log-disconnect;
     in-out property <string> so-log-line;
@@ -6126,6 +6132,7 @@ export component MainWindow inherits Window {
         forward-agent <=> root.so-forward-agent;
         forward-x11 <=> root.so-forward-x11;
         log-timestamps <=> root.so-log-timestamps;
+        log-raw <=> root.so-log-raw;
         log-connect <=> root.so-log-connect;
         log-disconnect <=> root.so-log-disconnect;
         log-line <=> root.so-log-line;

@@ -1,4 +1,5 @@
-//! Plain-text session logging: terminal output with escape sequences removed.
+//! Plain-text session logging: terminal output with escape sequences removed,
+//! and optionally a raw log beside it (`<file>.raw`) with the bytes as received.
 
 use std::fs::{File, OpenOptions};
 use std::io::{BufWriter, Write};
@@ -67,6 +68,13 @@ fn stamp_lines(text: &[u8], stamp: &str, line_start: &mut bool, out: &mut Vec<u8
     }
 }
 
+/// The raw log beside the text log `path`: `<path>.raw`.
+pub fn raw_path(path: &Path) -> std::path::PathBuf {
+    let mut name = path.as_os_str().to_owned();
+    name.push(".raw");
+    name.into()
+}
+
 pub struct SessionLog {
     file: BufWriter<File>,
     state: State,
@@ -76,16 +84,28 @@ pub struct SessionLog {
     /// Prefix each line with this text, expanded for the time of writing.
     line_text: Option<Box<dyn Fn() -> String>>,
     line_start: bool,
+    raw: Option<BufWriter<File>>,
 }
 
 impl SessionLog {
-    /// Open `path` for appending, creating it and its directory if needed.
-    pub fn open(path: &Path, timestamps: bool) -> std::io::Result<Self> {
+    /// Open `path` for appending, creating it and its directory if needed;
+    /// with `raw`, `<path>.raw` too.
+    pub fn open(path: &Path, timestamps: bool, raw: bool) -> std::io::Result<Self> {
         if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
             std::fs::create_dir_all(parent)?;
         }
-        let file = OpenOptions::new().create(true).append(true).open(path)?;
-        Ok(Self { file: BufWriter::new(file), state: State::Ground, scratch: Vec::new(), timestamps, line_text: None, line_start: true })
+        let append = |path: &Path| OpenOptions::new().create(true).append(true).open(path).map(BufWriter::new);
+        let raw = if raw { Some(append(&raw_path(path))?) } else { None };
+        Ok(Self { file: append(path)?, state: State::Ground, scratch: Vec::new(), timestamps, line_text: None, line_start: true, raw })
+    }
+
+    /// Log received bytes, before any decoding, to the raw log if there is one.
+    pub fn write_raw(&mut self, bytes: &[u8]) -> std::io::Result<()> {
+        let Some(raw) = self.raw.as_mut() else {
+            return Ok(());
+        };
+        raw.write_all(bytes)?;
+        raw.flush()
     }
 
     /// Start each line with `text()` (after the timestamp, if any).
@@ -150,10 +170,10 @@ mod tests {
     fn appends_to_file() {
         let path = std::env::temp_dir().join(format!("opencrt-log-{}", std::process::id())).join("s.log");
         let _ = std::fs::remove_file(&path);
-        let mut log = SessionLog::open(&path, false).unwrap();
+        let mut log = SessionLog::open(&path, false, false).unwrap();
         log.write(b"one\r\n\x1b[32mtwo").unwrap();
         drop(log);
-        let mut log = SessionLog::open(&path, false).unwrap();
+        let mut log = SessionLog::open(&path, false, false).unwrap();
         log.write(b"\r\nthree\r\n").unwrap();
         assert_eq!(std::fs::read_to_string(&path).unwrap(), "one\ntwo\nthree\n");
         std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
@@ -162,7 +182,7 @@ mod tests {
     #[test]
     fn custom_text_on_each_line_and_notes() {
         let path = std::env::temp_dir().join(format!("opencrt-logtext-{}", std::process::id())).join("new").join("s.log");
-        let mut log = SessionLog::open(&path, false).unwrap();
+        let mut log = SessionLog::open(&path, false, false).unwrap();
         log.note("== connected ==").unwrap();
         log.set_line_text(|| "web1: ".into());
         log.write(b"one\r\ntw").unwrap();
@@ -170,6 +190,17 @@ mod tests {
         let text = std::fs::read_to_string(&path).unwrap();
         assert_eq!(text, "== connected ==\nweb1: one\nweb1: tw\n== closed ==\n");
         std::fs::remove_dir_all(path.parent().unwrap().parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn raw_log_keeps_the_bytes() {
+        let path = std::env::temp_dir().join(format!("opencrt-lograw-{}", std::process::id())).join("s.log");
+        let mut log = SessionLog::open(&path, false, true).unwrap();
+        log.write_raw(b"\x1b[1mbold\x1b[0m\r\n\xff").unwrap();
+        log.write(b"\x1b[1mbold\x1b[0m\r\n").unwrap();
+        assert_eq!(std::fs::read(raw_path(&path)).unwrap(), b"\x1b[1mbold\x1b[0m\r\n\xff");
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "bold\n");
+        std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
     #[test]

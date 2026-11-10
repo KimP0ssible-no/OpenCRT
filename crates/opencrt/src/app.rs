@@ -707,6 +707,8 @@ struct Tab {
     transfer_outcome: Option<bool>,
     /// Logged lines start with the date and time.
     log_timestamps: bool,
+    /// A raw log (bytes as received) beside the text log.
+    log_raw: bool,
     /// The saved session's anti-idle text and interval.
     anti_idle: Option<(Vec<u8>, Duration)>,
     /// Last input sent (or connect), for anti-idle.
@@ -845,6 +847,7 @@ impl Tab {
             transfer_waiter: None,
             transfer_outcome: None,
             log_timestamps: false,
+            log_raw: false,
             anti_idle: None,
             last_input: Instant::now(),
         }
@@ -871,6 +874,7 @@ impl Tab {
         self.rdp_scale = s.rdp_scale;
         self.codec = crate::codec::Codec::new(s.encoding_label());
         self.log_timestamps = s.log_timestamps;
+        self.log_raw = s.log_raw;
         self.color = s.tab_color.clone();
         // Empty text stands for the protocol no-op, which only SSH and Telnet have.
         let protocol = s.anti_idle_protocol && matches!(s.protocol, Protocol::Ssh2 | Protocol::Telnet);
@@ -1142,9 +1146,9 @@ impl Tab {
     }
 
     /// Stop logging after a write error rather than failing the session.
-    fn log_output(&mut self, bytes: &[u8]) {
+    fn log_output(&mut self, bytes: &[u8], raw: bool) {
         if let Some(log) = self.log.as_mut()
-            && let Err(e) = log.write(bytes)
+            && let Err(e) = if raw { log.write_raw(bytes) } else { log.write(bytes) }
         {
             self.log = None;
             self.status = format!("Logging stopped: {e}");
@@ -1176,7 +1180,7 @@ impl Tab {
         };
         // The path only changes once the file is open, so a failed rollover
         // keeps writing (and reporting) the previous day's file.
-        match SessionLog::open(&path, self.log_timestamps) {
+        match SessionLog::open(&path, self.log_timestamps, self.log_raw) {
             Ok(mut log) => {
                 if !self.log_texts[2].is_empty() {
                     let (text, (session, host)) = (self.log_texts[2].clone(), self.log_names());
@@ -1436,6 +1440,7 @@ impl Tab {
                     let excess = self.received.len().saturating_sub(HEX_KEEP);
                     self.received.drain(..excess);
                     self.received_total += bytes.len();
+                    self.log_output(bytes, true);
                     let decoded;
                     if let Some(codec) = self.codec.as_mut() {
                         decoded = codec.decode(bytes);
@@ -1464,7 +1469,7 @@ impl Tab {
                     if let Some(recorder) = self.recorder.as_mut() {
                         recorder.output(bytes);
                     }
-                    self.log_output(bytes);
+                    self.log_output(bytes, false);
                     if let Some((file, path)) = self.capture.as_mut()
                         && let Err(e) = std::io::Write::write_all(file, bytes)
                     {
@@ -4658,6 +4663,7 @@ impl App {
         ui.set_so_tls(session.tls);
         ui.set_so_forward_x11(session.forward_x11);
         ui.set_so_log_timestamps(session.log_timestamps);
+        ui.set_so_log_raw(session.log_raw);
         ui.set_so_log_connect(session.log_connect_text.clone().into());
         ui.set_so_log_disconnect(session.log_disconnect_text.clone().into());
         ui.set_so_log_line(session.log_line_text.clone().into());
@@ -4754,6 +4760,7 @@ impl App {
             tls: ui.get_so_tls(),
             forward_x11: ui.get_so_forward_x11(),
             log_timestamps: ui.get_so_log_timestamps(),
+            log_raw: ui.get_so_log_raw(),
             log_connect_text: ui.get_so_log_connect().to_string(),
             log_disconnect_text: ui.get_so_log_disconnect().to_string(),
             log_line_text: ui.get_so_log_line().to_string(),
@@ -6049,7 +6056,7 @@ impl App {
         let log = args.iter().position(|a| a.eq_ignore_ascii_case("/LOG")).and_then(|i| args.get(i + 1));
         if let Some(path) = log.map(|l| PathBuf::from(config::expand_env(l))) {
             for tab in &mut self.tabs[before..] {
-                match SessionLog::open(&path, tab.log_timestamps) {
+                match SessionLog::open(&path, tab.log_timestamps, tab.log_raw) {
                     Ok(log) => (tab.log, tab.log_path) = (Some(log), Some(path.clone())),
                     Err(e) => return self.notify(format!("Cannot open {}: {e}", path.display())),
                 }
@@ -6075,7 +6082,7 @@ impl App {
         else {
             return;
         };
-        match SessionLog::open(&path, tab.log_timestamps) {
+        match SessionLog::open(&path, tab.log_timestamps, tab.log_raw) {
             Ok(log) => {
                 // Only a live connection writes; otherwise the next connect opens it.
                 tab.log = (tab.state != State::Closed).then_some(log);

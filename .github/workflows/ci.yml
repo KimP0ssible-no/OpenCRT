@@ -573,7 +573,25 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url || steps.retry.outputs.page_url || steps.last.outputs.page_url }}
+    # Since November 2026 Pages deployments sometimes stall in syncing_files
+    # until the action's 10-minute cap (raising its timeout does not help). A
+    # timed-out attempt is cancelled and a new one usually goes through, so
+    # three 4-minute attempts instead of one 10-minute one.
     steps:
       - id: deploy
+        continue-on-error: true
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        with:
+          timeout: 240000
+      - id: retry
+        if: steps.deploy.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        with:
+          timeout: 240000
+      - id: last
+        if: steps.retry.outcome == 'failure'
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        with:
+          timeout: 240000

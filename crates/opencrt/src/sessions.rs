@@ -493,7 +493,8 @@ pub fn securecrt_extras(config_dir: &Path, home: &str) -> (Vec<BarButton>, usize
 }
 
 /// Buttons from a ButtonBar `.ini`: one `Z:` list per bar, a button per line as
-/// `FUNCTION,argument,label` and six more fields (the argument may hold commas).
+/// `FUNCTION,argument,label` and six more fields, the icon colour third from
+/// the end (the argument may hold commas).
 fn securecrt_buttons(text: &str, config_dir: &str, home: &str) -> (Vec<BarButton>, usize) {
     let (_, lists) = securecrt_entries(text);
     let mut bars: Vec<_> = lists.into_iter().collect();
@@ -516,8 +517,19 @@ fn securecrt_buttons(text: &str, config_dir: &str, home: &str) -> (Vec<BarButton
                     continue;
                 }
             };
+            // SecureCRT's colour numbers: 0 black, 1 green, 2 blue, 3 cyan, 4 magenta,
+            // 5 orange, 6 purple, 7 red, 8 white, 9 yellow, 10 grey; OpenCRT's nearest.
+            let color = match fields[fields.len() - 3] {
+                "1" => "green",
+                "2" | "3" => "blue",
+                "4" | "6" => "purple",
+                "5" => "orange",
+                "7" => "red",
+                "9" => "yellow",
+                _ => "",
+            };
             let bar = if bar == "Default" { String::new() } else { bar.to_string() };
-            buttons.push(BarButton { label: label.into(), text, kind, bar, ..Default::default() });
+            buttons.push(BarButton { label: label.into(), text, kind, bar, color: color.into(), ..Default::default() });
         }
     }
     (buttons, left_out)
@@ -706,13 +718,16 @@ mod tests {
         let bars = "\u{feff}Z:\"Default\"=00000003\r\n SEND,echo \"hello world\"\\\\r,Send String,,,0,1,,\r\n MENU_HELP_UPDATE,,menu ,,,0,4,,\r\n RUN,${VDS_USER_DATA_PATH}/test.sh,Run Script,,,0,5,,\r\nZ:\"Lab\"=00000001\r\n SEND,a,b\\\\r,two,,,0,1,,\r\n";
         let (buttons, left_out) = securecrt_buttons(bars, "/cfg", "/home/kim");
         assert_eq!(left_out, 1, "the menu function");
-        let shown: Vec<_> = buttons.iter().map(|b| (b.bar.as_str(), b.label.as_str(), b.kind, b.text.as_str())).collect();
+        let shown: Vec<_> = buttons.iter().map(|b| (b.bar.as_str(), b.label.as_str(), b.kind, b.text.as_str(), b.color.as_str())).collect();
         use crate::input::ActionKind::{Script, Send};
         assert_eq!(shown, [
-            ("", "Send String", Send, "echo \"hello world\"\\r"),
-            ("", "Run Script", Script, "/home/kim/test.sh"),
-            ("Lab", "two", Send, "a,b\\r"),
+            ("", "Send String", Send, "echo \"hello world\"\\r", "green"),
+            ("", "Run Script", Script, "/home/kim/test.sh", "orange"),
+            ("Lab", "two", Send, "a,b\\r", "green"),
         ]);
+        let colours = " SEND,x,c,,,0,3,,\r\n SEND,x,c,,,0,4,,\r\n SEND,x,c,,,0,8,,\r\n SEND,x,c,,,0,9,,\r\n";
+        let (buttons, _) = securecrt_buttons(&format!("Z:\"T\"=00000004\r\n{colours}"), "/cfg", "/home/kim");
+        assert_eq!(buttons.iter().map(|b| b.color.as_str()).collect::<Vec<_>>(), ["blue", "purple", "", "yellow"], "cyan, magenta, white, yellow");
         let list = "\u{feff}S:\"List Name\"=Test\r\nD:\"Regex Line Mode\"=00000001\r\nD:\"Match Case\"=00000000\r\nZ:\"Keyword List V3\"=00000003\r\n \"error\",000000ff,00000000,00000001\r\n \"warning\",00ff4b2b,00000000,00000001\r\n \"whatheheck\",0000ff7b,00000000,00000001\r\n";
         assert_eq!(securecrt_keywords(list, "file"), ("Test".to_string(), vec!["error = red".to_string(), "warning = blue".into(), "whatheheck = green".into()]));
         let session = "S:\"Protocol Name\"=SSH2\r\nS:\"Hostname\"=web1\r\nS:\"User Button Bar Name\"=Lab\r\nS:\"Keyword Set\"=Test\r\n";

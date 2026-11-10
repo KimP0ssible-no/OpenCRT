@@ -6300,7 +6300,9 @@ impl App {
         // Button bars and keyword lists sit beside the Sessions folder; ones already here are kept.
         let home = std::env::home_dir().map(|h| h.display().to_string()).unwrap_or_default();
         let (buttons, left_out, sets) = sessions::securecrt_extras(root.parent().unwrap_or(&root), &home);
-        let buttons: Vec<_> = buttons.into_iter().filter(|b| !self.options.buttons.contains(b)).collect();
+        // The same button imported again (even with another colour) is not added twice.
+        let have = |b: &config::BarButton| self.options.buttons.iter().any(|o| (&o.bar, &o.label, o.kind, &o.text) == (&b.bar, &b.label, b.kind, &b.text));
+        let buttons: Vec<_> = buttons.into_iter().filter(|b| !have(b)).collect();
         let known = render::keyword_set_names(&self.options.keywords);
         let sets: Vec<_> = sets.into_iter().filter(|(name, _)| !known.contains(name)).collect();
         let mut extras = String::new();

@@ -4954,7 +4954,8 @@ impl App {
             }
             Request::Screen(reply) => {
                 let ((cols, rows), (row, col)) = (tab.terminal.size(), tab.terminal.cursor_position());
-                let _ = reply.send(ScreenInfo { text: tab.terminal.screen_text(), rows, cols, row, col });
+                let selection = tab.terminal.selection_text().unwrap_or_default();
+                let _ = reply.send(ScreenInfo { text: tab.terminal.screen_text(), rows, cols, row, col, selection });
             }
             Request::Status(text) => {
                 tab.status = text;

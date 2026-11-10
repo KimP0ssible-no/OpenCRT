@@ -1700,6 +1700,8 @@ struct App {
     renaming_tab: Option<usize>,
     /// The name dialog is asking for a snapshot's name.
     naming_snapshot: bool,
+    /// The name dialog is for a new Button Bar.
+    naming_bar: bool,
     /// Folder (full path) whose new name the name dialog is asking for.
     renaming_folder: Option<String>,
     /// Session Options is editing the default session (the template).
@@ -1955,6 +1957,7 @@ impl App {
             editing_button: None,
             renaming_tab: None,
             naming_snapshot: false,
+            naming_bar: false,
             renaming_folder: None,
             editing_many: None,
             editing_default: false,
@@ -2421,6 +2424,14 @@ impl App {
                 self.show_snapshots(ui);
                 self.notify(format!("Deleted the snapshot \"{gone}\"."));
             }
+            return;
+        }
+        if name == "button-bar-new" {
+            self.naming_bar = true;
+            ui.set_name_title("New Button Bar".into());
+            ui.set_name_label("Bar name:".into());
+            ui.set_name_value(SharedString::new());
+            ui.set_dialog(DIALOG_NAME);
             return;
         }
         if name == "snapshot-save" {
@@ -4588,6 +4599,26 @@ impl App {
             ui.invoke_focus_terminal();
             return;
         }
+        if std::mem::take(&mut self.naming_bar) {
+            let name = ui.get_name_value().trim().to_string();
+            if ok && !name.is_empty() {
+                // "Default" is the unnamed bar; an existing name just switches to it.
+                let existing = self.bar_names().into_iter().find(|b| b.eq_ignore_ascii_case(&name));
+                let name = match existing {
+                    _ if name.eq_ignore_ascii_case("default") => String::new(),
+                    Some(existing) => existing,
+                    None => {
+                        self.options.button_bars.push(name.clone());
+                        self.save_options();
+                        name
+                    }
+                };
+                self.pick_bar(name);
+            }
+            ui.set_dialog(DIALOG_NONE);
+            ui.invoke_focus_terminal();
+            return;
+        }
         if std::mem::take(&mut self.naming_snapshot) {
             let name = ui.get_name_value().trim().to_string();
             if ok && !name.is_empty() {
@@ -4669,10 +4700,11 @@ impl App {
         ui.set_so_backspace_ctrl_h(session.backspace_ctrl_h);
         ui.set_so_emulation(session.emulation.index());
         ui.set_so_key_map(session.key_map.join("\n").into());
-        // "Default", then the bars buttons are on, and this session's even if it has none yet.
-        let mut bars: Vec<String> = self.options.buttons.iter().map(|b| b.bar.clone()).chain([session.button_bar.clone()]).filter(|b| !b.is_empty()).collect();
-        bars.sort_by_key(|b| b.to_lowercase());
-        bars.dedup_by(|a, b| a.eq_ignore_ascii_case(b));
+        // "Default", then the named bars, and this session's even if it is not one of them.
+        let mut bars = self.bar_names();
+        if !session.button_bar.is_empty() && !bars.iter().any(|b| b.eq_ignore_ascii_case(&session.button_bar)) {
+            bars.push(session.button_bar.clone());
+        }
         ui.set_so_button_bar(bars.iter().position(|b| b.eq_ignore_ascii_case(&session.button_bar)).map_or(0, |i| i as i32 + 1));
         let choices: Vec<SharedString> = std::iter::once("Default".to_string()).chain(bars).map(SharedString::from).collect();
         ui.set_so_button_bar_choices(ModelRc::new(VecModel::from(choices)));
@@ -6309,20 +6341,28 @@ impl App {
         let other = if not_imported > 0 { format!("; {not_imported} not imported (unreadable or unsupported protocol)") } else { String::new() };
         // Button bars and keyword lists sit beside the Sessions folder; ones already here are kept.
         let home = std::env::home_dir().map(|h| h.display().to_string()).unwrap_or_default();
-        let (buttons, left_out, sets) = sessions::securecrt_extras(root.parent().unwrap_or(&root), &home);
+        let found = sessions::securecrt_extras(root.parent().unwrap_or(&root), &home);
         // The same button imported again (even with another colour) is not added twice.
         let have = |b: &config::BarButton| self.options.buttons.iter().any(|o| (&o.bar, &o.label, o.kind, &o.text) == (&b.bar, &b.label, b.kind, &b.text));
-        let buttons: Vec<_> = buttons.into_iter().filter(|b| !have(b)).collect();
+        let buttons: Vec<_> = found.buttons.into_iter().filter(|b| !have(b)).collect();
+        let known_bars = self.bar_names();
+        let bars: Vec<_> = found.bars.into_iter().filter(|b| !known_bars.iter().any(|k| k.eq_ignore_ascii_case(b))).collect();
         let known = render::keyword_set_names(&self.options.keywords);
-        let sets: Vec<_> = sets.into_iter().filter(|(name, _)| !known.contains(name)).collect();
+        let sets: Vec<_> = found.keyword_sets.into_iter().filter(|(name, _)| !known.contains(name)).collect();
         let mut extras = String::new();
-        if !buttons.is_empty() || !sets.is_empty() {
+        if !buttons.is_empty() || !bars.is_empty() || !sets.is_empty() {
             let plural = |n: usize, word: &str| format!("{n} {word}{}", if n == 1 { "" } else { "s" });
-            extras = format!(" Added {} and {}", plural(buttons.len(), "button"), plural(sets.len(), "keyword list"));
-            if left_out > 0 {
-                extras += &format!(" ({} left out: SecureCRT menu functions)", plural(left_out, "button"));
+            extras = format!(
+                " Added {}, {} and {}",
+                plural(bars.len(), "button bar"),
+                plural(buttons.len(), "button"),
+                plural(sets.len(), "keyword list")
+            );
+            if found.left_out > 0 {
+                extras += &format!(" ({} left out: SecureCRT menu functions)", plural(found.left_out, "button"));
             }
             extras.push('.');
+            self.options.button_bars.extend(bars);
             self.options.buttons.extend(buttons);
             for (name, lines) in sets {
                 self.options.keywords.push(format!("[{name}]"));
@@ -6782,6 +6822,29 @@ impl App {
         }
     }
 
+    /// The named Button Bars: kept ones and the ones buttons are on, A to Z.
+    fn bar_names(&self) -> Vec<String> {
+        let buttons = self.options.buttons.iter().map(|b| &b.bar);
+        let mut names: Vec<String> = self.options.button_bars.iter().chain(buttons).filter(|b| !b.is_empty()).cloned().collect();
+        names.sort_by_key(|b| b.to_lowercase());
+        names.dedup_by(|a, b| a.eq_ignore_ascii_case(b));
+        names
+    }
+
+    /// Show `bar` (empty: the default) on the Button Bar for the active tab,
+    /// and keep it as that tab's saved session's bar.
+    fn pick_bar(&mut self, bar: String) {
+        let Some(tab) = self.tabs.get_mut(self.active) else {
+            return self.notify("Open a session to choose its button bar.");
+        };
+        tab.button_bar = bar.clone();
+        if let Some(session) = tab.session.as_ref().and_then(|path| self.store.sessions.iter_mut().find(|s| s.path() == *path)) {
+            session.button_bar = bar;
+            self.save_store();
+        }
+        self.shown_bar = None;
+    }
+
     fn show_buttons(&self, ui: &MainWindow) {
         let bar = self.shown_bar.clone().unwrap_or_default();
         let buttons: Vec<BarRow> = self
@@ -6790,9 +6853,11 @@ impl App {
             .iter()
             .enumerate()
             .filter(|(_, b)| b.bar.eq_ignore_ascii_case(&bar))
-            .map(|(i, b)| BarRow { label: b.label.as_str().into(), color: tab_color(&b.color), index: i as i32 })
+            .map(|(i, b)| BarRow { label: b.label.as_str().into(), color: tab_color(&b.color), has_color: !b.color.is_empty(), index: i as i32 })
             .collect();
         ui.set_bar_buttons(ModelRc::new(VecModel::from(buttons)));
+        let names = self.bar_names();
+        ui.set_bar_choices(ModelRc::new(VecModel::from(std::iter::once("Default".to_string()).chain(names).map(SharedString::from).collect::<Vec<_>>())));
         ui.set_bar_name(bar.into());
         let rows: Vec<CommandRow> = command_rows(&self.options.commands, &self.collapsed_commands, &self.command_filter)
             .into_iter()
@@ -7759,6 +7824,11 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
     on!(on_browse, |app, ui, field| app.browse(&field, &ui));
     on!(on_bar_button, |app, ui, index| app.bar_button(Commands::Bar, index as usize, &ui));
     on!(on_bar_button_edit, |app, ui, index| app.bar_button_edit(Commands::Bar, index, &ui));
+    // 0 is the default bar, then the named bars in bar_names' order.
+    on!(on_bar_pick, |app, _ui, index| {
+        let bar = usize::try_from(index - 1).ok().and_then(|i| app.bar_names().into_iter().nth(i)).unwrap_or_default();
+        app.pick_bar(bar);
+    });
     on!(on_bar_button_delete, |app, ui, index| app.bar_button_delete(Commands::Bar, index as usize, &ui));
     on!(on_bar_button_ok, |app, ui| app.bar_button_ok(&ui));
     on!(on_keygen_ok, |app, ui| app.keygen_ok(&ui));

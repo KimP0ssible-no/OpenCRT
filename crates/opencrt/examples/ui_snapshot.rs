@@ -1,7 +1,7 @@
 //! Render the main window off-screen to a PNG-convertible PPM, for checking the
 //! look without opening a window: `cargo run --example ui_snapshot -- out.ppm dark main [font size]`.
 //! Themes: light, dark, and breeze / breeze-dark (KDE's Breeze colour schemes).
-//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite, quick-open, shortcuts.
+//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite, quick-open, shortcuts, bar.
 
 use std::rc::Rc;
 
@@ -234,8 +234,17 @@ fn main() {
             ui.set_bb_color(5);
             ui.set_command_window(true);
             ui.set_show_button_bar(true);
-            ui.set_bar_buttons(model(vec![BarRow { label: "show ver".into(), color: Color::from_rgb_u8(70, 130, 220), index: 0 }]));
+            ui.set_bar_buttons(model(vec![BarRow { label: "show ver".into(), color: Color::from_rgb_u8(70, 130, 220), has_color: true, index: 0 }]));
             ui.set_dialog(9);
+        }
+        "bar" => {
+            ui.set_show_button_bar(true);
+            ui.set_bar_name("Lab".into());
+            ui.set_bar_buttons(model(vec![
+                BarRow { label: "Send String".into(), color: Color::from_rgb_u8(0x10, 0x89, 0x3e), has_color: true, index: 0 },
+                BarRow { label: "show ver".into(), color: Color::from_argb_u8(0, 0, 0, 0), has_color: false, index: 1 },
+                BarRow { label: "Run Script".into(), color: Color::from_rgb_u8(0xf7, 0x63, 0x0c), has_color: true, index: 2 },
+            ]));
         }
         "editor" => {
             ui.set_se_title("Script Editor - backup.rhai".into());

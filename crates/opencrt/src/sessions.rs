@@ -475,21 +475,38 @@ fn securecrt_path(path: &str, config_dir: &str) -> String {
 /// A keyword set's name and its keyword list lines.
 pub type KeywordSet = (String, Vec<String>);
 
+/// What a SecureCRT Config folder holds besides sessions.
+pub struct SecureCrtExtras {
+    pub buttons: Vec<BarButton>,
+    /// Buttons left out: SecureCRT's own menu functions have no OpenCRT counterpart.
+    pub left_out: usize,
+    /// The named button bars, empty ones included.
+    pub bars: Vec<String>,
+    pub keyword_sets: Vec<KeywordSet>,
+}
+
 /// SecureCRT's button bars (`ButtonBarV5.ini`, else V4 or V3) and keyword
-/// lists (`Keywords/*.ini`) in `config_dir`, as OpenCRT buttons and keyword
-/// sets (name, `word = colour` lines). Also counts the buttons left out:
-/// SecureCRT's own menu functions have no OpenCRT counterpart.
-pub fn securecrt_extras(config_dir: &Path, home: &str) -> (Vec<BarButton>, usize, Vec<KeywordSet>) {
+/// lists (`Keywords/*.ini`) in `config_dir`, as OpenCRT buttons, bar names
+/// and keyword sets (name, `word = colour` lines).
+pub fn securecrt_extras(config_dir: &Path, home: &str) -> SecureCrtExtras {
     let bars = ["ButtonBarV5.ini", "ButtonBarV4.ini", "ButtonBarV3.ini"].iter().find_map(|n| std::fs::read_to_string(config_dir.join(n)).ok());
-    let (buttons, left_out) = securecrt_buttons(&bars.unwrap_or_default(), &config_dir.display().to_string(), home);
+    let bars = bars.unwrap_or_default();
+    let (buttons, left_out) = securecrt_buttons(&bars, &config_dir.display().to_string(), home);
+    // From the `Z:"name"=count` lines, so bars without buttons count too.
+    let mut names: Vec<String> = bars
+        .lines()
+        .filter_map(|l| l.trim_start_matches('\u{feff}').strip_prefix("Z:\"")?.split_once("\"=").map(|(n, _)| n.to_string()))
+        .filter(|n| n != "Default")
+        .collect();
+    names.sort();
     let mut files: Vec<PathBuf> = std::fs::read_dir(config_dir.join("Keywords")).into_iter().flatten().flatten().map(|e| e.path()).collect();
     files.retain(|p| p.extension().is_some_and(|e| e == "ini"));
     files.sort();
-    let sets = files
+    let keyword_sets = files
         .iter()
         .filter_map(|p| Some(securecrt_keywords(&std::fs::read_to_string(p).ok()?, &p.file_stem()?.to_string_lossy())))
         .collect();
-    (buttons, left_out, sets)
+    SecureCrtExtras { buttons, left_out, bars: names, keyword_sets }
 }
 
 /// Buttons from a ButtonBar `.ini`: one `Z:` list per bar, a button per line as
@@ -725,6 +742,13 @@ mod tests {
             ("", "Run Script", Script, "/home/kim/test.sh", "orange"),
             ("Lab", "two", Send, "a,b\\r", "green"),
         ]);
+        let dir = std::env::temp_dir().join(format!("opencrt-scrt-bars-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("ButtonBarV5.ini"), format!("{bars}Z:\"Empty\"=00000000\r\n")).unwrap();
+        let extras = securecrt_extras(&dir, "/home/kim");
+        assert_eq!(extras.bars, ["Empty", "Lab"], "every named bar, empty ones too");
+        assert_eq!((extras.buttons.len(), extras.left_out), (3, 1));
+        std::fs::remove_dir_all(&dir).unwrap();
         let colours = " SEND,x,c,,,0,3,,\r\n SEND,x,c,,,0,4,,\r\n SEND,x,c,,,0,8,,\r\n SEND,x,c,,,0,9,,\r\n";
         let (buttons, _) = securecrt_buttons(&format!("Z:\"T\"=00000004\r\n{colours}"), "/cfg", "/home/kim");
         assert_eq!(buttons.iter().map(|b| b.color.as_str()).collect::<Vec<_>>(), ["blue", "purple", "", "yellow"], "cyan, magenta, white, yellow");

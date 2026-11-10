@@ -589,6 +589,8 @@ pub struct Options {
     /// Button Bar buttons, left to right.
     #[serde(rename = "button")]
     pub buttons: Vec<BarButton>,
+    /// Named Button Bars, kept even while they have no buttons.
+    pub button_bars: Vec<String>,
     /// Command Manager commands, top to bottom.
     #[serde(rename = "command")]
     pub commands: Vec<BarButton>,
@@ -933,6 +935,7 @@ impl Default for Options {
             #[cfg(not(unix))]
             ui_font_size: 12.0,
             buttons: Vec::new(),
+            button_bars: Vec::new(),
             commands: Vec::new(),
             credentials: Vec::new(),
             agent_keys: Vec::new(),

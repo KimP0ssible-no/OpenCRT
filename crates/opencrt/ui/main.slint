@@ -211,6 +211,7 @@ export struct CredentialRow {
 export struct BarRow {
     label: string,
     color: color,
+    has-color: bool,
     // Index in the saved button list.
     index: int,
 }
@@ -1159,11 +1160,14 @@ component TermScrollBar inherits Rectangle {
 component BarButtonView inherits Rectangle {
     in property <string> label;
     in property <color> tint;
+    in property <bool> has-color;
+    // Room for the colour dot before the label.
+    property <length> dot: root.has-color ? 10px * Theme.ui-scale + 5px : 0px;
     callback clicked();
     callback edit();
     callback remove();
     height: 22px * Theme.ui-scale;
-    width: max(44px, caption.preferred-width + 18px);
+    width: max(44px, caption.preferred-width + 18px + root.dot);
     border-radius: 3px;
     border-width: 1px;
     border-color: Theme.border;
@@ -1188,20 +1192,20 @@ component BarButtonView inherits Rectangle {
             }
         }
         caption := Text {
-            x: 9px;
+            x: 9px + root.dot;
             height: parent.height;
             text: root.label;
             font-size: 11px * Theme.ui-scale;
             vertical-alignment: center;
         }
     }
-    // The button's colour, as a strip on its left edge.
-    Rectangle {
-        x: 1px;
-        y: 1px;
-        width: 4px;
-        height: parent.height - 2px;
-        border-radius: 2px;
+    // The button's colour, as a dot before its label.
+    if root.has-color: Rectangle {
+        x: 9px;
+        y: (parent.height - self.height) / 2;
+        width: 10px * Theme.ui-scale;
+        height: self.width;
+        border-radius: self.width / 2;
         background: root.tint;
     }
 }
@@ -4449,8 +4453,10 @@ export component MainWindow inherits Window {
     in-out property <bool> find-open: false;
     in-out property <bool> show-button-bar: false;
     in property <[BarRow]> bar-buttons;
-    // The named bar shown (empty: the default bar).
+    // The named bar shown (empty: the default bar), and "Default" then every named bar.
     in property <string> bar-name;
+    in property <[string]> bar-choices;
+    callback bar-pick(int);
     in property <[CommandRow]> command-rows;
     in-out property <int> command-selected: -1;
     in property <string> bb-title;
@@ -5780,9 +5786,41 @@ export component MainWindow inherits Window {
                 padding-bottom: 3px;
                 spacing: 4px;
                 alignment: start;
+                // Which bar this is; switch to another or make a new one.
+                Rectangle {
+                    width: bar-label.preferred-width + 16px;
+                    border-radius: 3px;
+                    border-width: 1px;
+                    border-color: Theme.border;
+                    background: bar-touch.has-hover ? Theme.hover-bg : Theme.panel-bg;
+                    bar-label := Text {
+                        x: 8px;
+                        height: parent.height;
+                        text: (root.bar-name == "" ? "Default" : root.bar-name) + "  ▾";
+                        font-size: 11px * Theme.ui-scale;
+                        vertical-alignment: center;
+                    }
+                    bar-touch := TouchArea {
+                        clicked => { bar-menu.show({ x: 0, y: self.height }); }
+                    }
+                    bar-menu := ContextMenuArea {
+                        Menu {
+                            for name[i] in root.bar-choices: MenuItem {
+                                title: name;
+                                activated => { root.bar-pick(i); }
+                            }
+                            MenuSeparator { }
+                            MenuItem {
+                                title: "New Bar...";
+                                activated => { root.menu("button-bar-new"); }
+                            }
+                        }
+                    }
+                }
                 for b in root.bar-buttons: BarButtonView {
                     label: b.label;
                     tint: b.color;
+                    has-color: b.has-color;
                     clicked => { root.bar-button(b.index); }
                     edit => { root.bar-button-edit(b.index); }
                     remove => { root.bar-button-delete(b.index); }

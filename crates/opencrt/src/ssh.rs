@@ -19,6 +19,8 @@ use crate::forward::{self, Forward, RemoteTargets};
 /// SSH keepalive interval in seconds for new connections (0 = off); set from
 /// Global Options.
 pub static KEEPALIVE_SECS: AtomicU64 = AtomicU64::new(0);
+/// Global Options: save a host key seen for the first time without asking.
+pub static ACCEPT_NEW_HOST_KEYS: AtomicBool = AtomicBool::new(false);
 /// Global Options: offer the old algorithms to every host (old network gear).
 pub static LEGACY_EVERYWHERE: AtomicBool = AtomicBool::new(false);
 
@@ -109,6 +111,9 @@ pub struct Credentials {
     pub saved: Option<String>,
     /// OpenSSH certificate for the key; None to use `<key>-cert.pub` if it exists.
     pub cert_path: Option<String>,
+    /// Save a host's key the first time it is seen instead of asking (a
+    /// changed key is still refused).
+    pub accept_new_keys: bool,
 }
 
 /// The saved password of credential `name`, or None (with a note in the
@@ -606,6 +611,7 @@ async fn login(
         gateway: None,
         forward_agent: creds.forward_agent,
         x11: creds.x11_display.as_deref().and_then(x11_target).map(|(target, _)| target),
+        accept_new_keys: creds.accept_new_keys,
     };
     let keepalive = KEEPALIVE_SECS.load(Ordering::Relaxed);
     let legacy = creds.legacy || LEGACY_EVERYWHERE.load(Ordering::Relaxed);
@@ -1254,6 +1260,8 @@ pub(crate) struct SshHandler {
     forward_agent: bool,
     /// X11 forwarding target: X11 channels from the host go here.
     x11: Option<X11Target>,
+    /// Save an unknown host key without asking.
+    accept_new_keys: bool,
 }
 
 /// The local agent's raw stream, for a forwarded agent channel.
@@ -1371,6 +1379,17 @@ impl client::Handler for SshHandler {
                 key.algorithm(),
                 self.known_hosts.display(),
             )),
+            HostKeyStatus::Unknown if self.accept_new_keys => {
+                keys::known_hosts::learn_known_hosts_path(&self.host, self.port, &key, &self.known_hosts)?;
+                let note = format!(
+                    "\x1b[33mSaved the new host key of {}:{} ({} {fingerprint}) without asking, as Global Options > Connection allows.\x1b[0m\r\n",
+                    self.host,
+                    self.port,
+                    key.algorithm(),
+                );
+                let _ = self.events.send(SshEvent::Data(note.into_bytes()));
+                Ok(true)
+            }
             HostKeyStatus::Unknown => {
                 let (reply, decision) = oneshot::channel();
                 self.events
@@ -1759,6 +1778,10 @@ mod tests {
     }
 
     fn connect_with(port: u16, known_hosts: &Path, password: Option<&str>) -> SshHandle {
+        connect_accepting(port, known_hosts, password, false)
+    }
+
+    fn connect_accepting(port: u16, known_hosts: &Path, password: Option<&str>, accept_new_keys: bool) -> SshHandle {
         let creds = Credentials {
             user: "u".into(),
             password: password.map(String::from),
@@ -1772,6 +1795,7 @@ mod tests {
             compression: false,
             saved: None,
             cert_path: None,
+            accept_new_keys,
         };
         connect("127.0.0.1".into(), port, creds, Some(known_hosts.to_path_buf()), Pty::new("", 80, 24), Vec::new())
     }
@@ -1830,6 +1854,30 @@ mod tests {
         assert!(matches!(next_event(&mut second), SshEvent::Connected));
 
         std::fs::remove_file(&path).unwrap();
+    }
+
+    #[test]
+    fn new_host_keys_saved_without_asking_but_changed_ones_refused() {
+        let (port, server_key) = start_server(&[MethodKind::Password]);
+        let path = temp_known_hosts("accept-new");
+
+        let mut first = connect_accepting(port, &path, Some("p"), true);
+        let SshEvent::Data(note) = next_event(&mut first) else {
+            panic!("expected the note that the key was saved");
+        };
+        assert!(String::from_utf8_lossy(&note).contains("without asking"));
+        assert!(matches!(next_event(&mut first), SshEvent::Connected));
+        assert!(matches!(check_host_key(&path, "127.0.0.1", port, &server_key).unwrap(), HostKeyStatus::Known));
+
+        // A different stored key still fails hard.
+        let other = keys::parse_public_key_base64(KEY_A).unwrap();
+        let changed_path = temp_known_hosts("accept-new-changed");
+        keys::known_hosts::learn_known_hosts_path("127.0.0.1", port, &other, &changed_path).unwrap();
+        let mut changed = connect_accepting(port, &changed_path, Some("p"), true);
+        assert!(matches!(next_event(&mut changed), SshEvent::Error(e) if e.contains("HOST KEY MISMATCH")));
+
+        std::fs::remove_file(&path).unwrap();
+        std::fs::remove_file(&changed_path).unwrap();
     }
 
     #[test]
@@ -1909,7 +1957,7 @@ Nv7Px2ZPXZJghtsQ==
         assert_eq!(authorize_command("ssh-ed25519 AAAA' ; rm -rf ~ '"), None);
 
         let (port, _) = start_server(&[MethodKind::Password]);
-        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None, accept_new_keys: false };
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("upload")), Pty::new("", 80, 24), Vec::new());
         accept_host_key_once(&mut handle);
         let deadline = Instant::now() + Duration::from_secs(5);
@@ -1929,7 +1977,7 @@ Nv7Px2ZPXZJghtsQ==
     fn uploads_a_public_key_over_the_publickey_subsystem() {
         let line = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGdumaQ0RDmJ8SRLmH8LlAm4xLtUzrVfgJpJWPEo3AQe me@host";
         let (port, _) = start_server(&[MethodKind::Password]);
-        let creds = Credentials { user: "pk".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "pk".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None, accept_new_keys: false };
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("upload-pk")), Pty::new("", 80, 24), Vec::new());
         accept_host_key_once(&mut handle);
         let deadline = Instant::now() + Duration::from_secs(5);
@@ -2011,7 +2059,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
     #[test]
     fn runs_a_remote_command_instead_of_the_shell() {
         let (port, _) = start_server(&[MethodKind::Password]);
-        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None, accept_new_keys: false };
         let pty = Pty::new("", 80, 24).with_command(" top -b ");
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("exec")), pty, Vec::new());
         accept_host_key_once(&mut handle);
@@ -2041,7 +2089,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
         std::fs::write(&cert_file, cert.to_openssh().unwrap()).unwrap();
 
         let (port, _) = start_server(&[MethodKind::PublicKey]);
-        let creds = Credentials { user: "u".into(), password: None, key_path: Some(key_file.display().to_string()), key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: None, key_path: Some(key_file.display().to_string()), key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None, accept_new_keys: false };
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("cert-kh")), Pty::new("", 80, 24), Vec::new());
         accept_host_key_once(&mut handle);
         assert!(matches!(next_event(&mut handle), SshEvent::Connected));
@@ -2068,6 +2116,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             compression: false,
             saved: None,
             cert_path: None,
+            accept_new_keys: false,
         };
 
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(known_hosts), Pty::new("", 80, 24), Vec::new());
@@ -2108,6 +2157,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             compression: false,
             saved: None,
             cert_path: None,
+            accept_new_keys: false,
         };
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("agentfwd")), Pty::new("", 80, 24), Vec::new());
         accept_host_key_once(&mut handle);
@@ -2153,6 +2203,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             compression: false,
             saved: None,
             cert_path: None,
+            accept_new_keys: false,
         };
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("x11")), Pty::new("", 80, 24), Vec::new());
         accept_host_key_once(&mut handle);
@@ -2191,6 +2242,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
                 compression: false,
                 saved: None,
                 cert_path: None,
+                accept_new_keys: false,
             };
             let path = temp_known_hosts(&format!("legacy-{legacy}"));
             connect("127.0.0.1".into(), port, creds, Some(path), Pty::new("", 80, 24), Vec::new())
@@ -2230,6 +2282,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
                 compression,
                 saved: None,
                 cert_path: None,
+                accept_new_keys: false,
             };
             let path = temp_known_hosts(&format!("zlib-{compression}"));
             connect("127.0.0.1".into(), port, creds, Some(path), Pty::new("", 80, 24), Vec::new())
@@ -2286,6 +2339,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             compression: false,
             saved: None,
             cert_path: None,
+            accept_new_keys: false,
         };
         let mut handle = connect("127.0.0.1".into(), target_port, creds, Some(path), Pty::new("", 80, 24), Vec::new());
 
@@ -2344,6 +2398,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             compression: false,
             saved: None,
             cert_path: None,
+            accept_new_keys: false,
         };
         let creds = Credentials { jump: parse_hops(&format!("u@127.0.0.1:{jump_port}"), "x").unwrap(), ..creds };
         let mut handle = spawn(move |io| {
@@ -2394,6 +2449,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             compression: false,
             saved: None,
             cert_path: None,
+            accept_new_keys: false,
         };
         let mut handle = tunnels("127.0.0.1".into(), server_port, creds, Some(path), vec![forward]);
         let SshEvent::UnknownHostKey(prompt) = next_event(&mut handle) else { panic!("expected the host key") };
@@ -2434,6 +2490,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             compression: false,
             saved: None,
             cert_path: None,
+            accept_new_keys: false,
         };
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(path), Pty::new("", 80, 24), Vec::new());
         accept_host_key_once(&mut handle);
@@ -2501,6 +2558,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             compression: false,
             saved: None,
             cert_path: None,
+            accept_new_keys: false,
         };
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("proxy")), Pty::new("", 80, 24), Vec::new());
         accept_host_key_once(&mut handle);
@@ -2517,7 +2575,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
     fn closing_a_forwarding_session_releases_its_port() {
         let (port, _) = start_server(&[MethodKind::Password]);
         let local = free_port();
-        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None, accept_new_keys: false };
         let forwards = vec![Forward::parse(&format!("L {local} 127.0.0.1:9")).unwrap()];
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(temp_known_hosts("fwd-close")), Pty::new("", 80, 24), forwards);
         accept_host_key_once(&mut handle);
@@ -2539,7 +2597,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
         let echo = start_echo();
         let (local, socks) = (free_port(), free_port());
         let path = temp_known_hosts("forward");
-        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None, accept_new_keys: false };
         let forwards = vec![
             Forward::parse(&format!("L {local} 127.0.0.1:{echo}")).unwrap(),
             Forward::parse(&format!("D {socks}")).unwrap(),
@@ -2577,7 +2635,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
         let echo = start_echo();
         let remote = free_port();
         let path = temp_known_hosts("rforward");
-        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None };
+        let creds = Credentials { user: "u".into(), password: Some("p".into()), key_path: None, key_passphrase: None, jump: Vec::new(), legacy: false, forward_agent: false, x11_display: None, proxy: None, compression: false, saved: None, cert_path: None, accept_new_keys: false };
         let forwards = vec![Forward::parse(&format!("R {remote} 127.0.0.1:{echo}")).unwrap()];
         let mut handle = connect("127.0.0.1".into(), port, creds, Some(path), Pty::new("", 80, 24), forwards);
         accept_host_key_once(&mut handle);
@@ -2646,6 +2704,7 @@ Private-MAC: 1febef3c18a829d267da5770eba445348a873a1de8779743afa2e7888d05824a\n"
             compression: false,
             saved: None,
             cert_path: None,
+            accept_new_keys: false,
         };
         let mut clone = shell_on(shared.clone(), creds, Pty::new("", 80, 24));
         assert!(matches!(next_event(&mut clone), SshEvent::Connected));

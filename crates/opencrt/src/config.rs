@@ -549,6 +549,9 @@ pub struct Options {
     pub auto_reconnect: bool,
     /// SSH2: offer the old algorithms to every host, not only sessions set to.
     pub legacy_algorithms: bool,
+    /// SSH2: save a host key seen for the first time without asking (as
+    /// OpenSSH's StrictHostKeyChecking=accept-new); changed keys are still refused.
+    pub accept_new_host_keys: bool,
     /// Keep typed passwords and key passphrases in memory until exit, so
     /// reconnects and new tabs to the same host do not ask again.
     pub remember_secrets: bool,
@@ -922,6 +925,7 @@ impl Default for Options {
             web_search: "https://duckduckgo.com/?q=%s".into(),
             auto_reconnect: false,
             legacy_algorithms: false,
+            accept_new_host_keys: false,
             remember_secrets: false,
             reopen_sessions: false,
             server_load: true,

@@ -128,7 +128,9 @@ automatic check off in Options > Global Options > General.
   quality for slow links, ZRLE; the desktop is shown whole or scaled to the
   tab; without VeNCrypt, set a jump host to tunnel it over SSH).
 - **Security**: host keys checked against OpenCRT's own `known_hosts`; unknown
-  keys are confirmed by the user, changed keys block the connection; saved keys
+  keys are confirmed by the user (or, if Global Options > Connection says so,
+  saved without asking, as OpenSSH's `accept-new`), changed keys block the
+  connection; saved keys
   can be reviewed and removed in Tools > Host Keys. RDP server certificates
   are checked the same way (`rdp_known_certs`) before any password is sent.
 - **Terminal**: xterm emulation (256 colours, truecolour, mouse reporting,

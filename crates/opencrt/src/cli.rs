@@ -174,6 +174,7 @@ fn credentials(login: &Login) -> Credentials {
         compression: false,
         saved: None,
         cert_path: None,
+        accept_new_keys: false,
     }
 }
 

@@ -4,6 +4,7 @@
 mod agent;
 mod app;
 mod cli;
+mod cast;
 mod codec;
 mod config;
 mod crt;

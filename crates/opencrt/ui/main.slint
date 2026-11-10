@@ -1707,6 +1707,7 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <bool> forward-agent;
     in-out property <bool> forward-x11;
     in-out property <bool> log-timestamps;
+    in-out property <bool> log-raw;
     in-out property <string> log-connect;
     in-out property <string> log-disconnect;
     in-out property <string> log-line;
@@ -2099,6 +2100,10 @@ component SessionOptionsDialog inherits DialogFrame {
                     CheckBox {
                         text: "Start each line with the date and time";
                         checked <=> root.log-timestamps;
+                    }
+                    CheckBox {
+                        text: "Also keep a raw log (.raw beside it): the bytes as received, escape sequences included";
+                        checked <=> root.log-raw;
                     }
                     FieldRow {
                         label: "On connect:";
@@ -4380,6 +4385,7 @@ export component MainWindow inherits Window {
     in property <bool> logging;
     // Transfer > Receive ASCII is writing the active tab's output to a file.
     in property <bool> capturing;
+    in property <bool> casting;
     // File > Auto Print is collecting the active tab's output.
     in property <bool> auto-printing;
     // The active tab is an SSH2 shell (SFTP tabs can be opened from it).
@@ -4400,8 +4406,9 @@ export component MainWindow inherits Window {
     in property <bool> caps-on;
     in property <bool> num-on;
     in-out property <bool> show-toolbar: true;
-    // The local-shell button offers PowerShell or Command Prompt.
+    // The local-shell button offers PowerShell, Command Prompt and the WSL distributions.
     in property <bool> windows;
+    in property <[string]> wsl-distros;
     in-out property <bool> show-statusbar: true;
     in-out property <bool> show-menubar: true;
     in-out property <bool> show-connect-bar: true;
@@ -4538,6 +4545,7 @@ export component MainWindow inherits Window {
     in-out property <bool> so-tls;
     in-out property <bool> so-forward-x11;
     in-out property <bool> so-log-timestamps;
+    in-out property <bool> so-log-raw;
     in-out property <string> so-log-connect;
     in-out property <string> so-log-disconnect;
     in-out property <string> so-log-line;
@@ -4859,6 +4867,11 @@ export component MainWindow inherits Window {
                 title: root.logging ? "Stop Logging" : "Log Session...";
                 enabled: root.tabs.length > 0;
                 activated => { root.menu("log-session"); }
+            }
+            MenuItem {
+                title: root.casting ? "Stop Recording" : "Record Session (asciicast)...";
+                enabled: root.tabs.length > 0;
+                activated => { root.menu("record-cast"); }
             }
             MenuSeparator { }
             MenuItem {
@@ -5323,6 +5336,11 @@ export component MainWindow inherits Window {
                             MenuItem {
                                 title: "Command Prompt (classic)";
                                 activated => { root.action("local-cmd"); }
+                            }
+                            if root.wsl-distros.length > 0: MenuSeparator { }
+                            for name in root.wsl-distros: MenuItem {
+                                title: "WSL: " + name;
+                                activated => { root.action("local-wsl-" + name); }
                             }
                         }
                     }
@@ -6126,6 +6144,7 @@ export component MainWindow inherits Window {
         forward-agent <=> root.so-forward-agent;
         forward-x11 <=> root.so-forward-x11;
         log-timestamps <=> root.so-log-timestamps;
+        log-raw <=> root.so-log-raw;
         log-connect <=> root.so-log-connect;
         log-disconnect <=> root.so-log-disconnect;
         log-line <=> root.so-log-line;

@@ -6,7 +6,8 @@
 //!
 //! It prints a test screen (colours, attributes, 200 lines of scrollback), then
 //! echoes input. Commands: `bell`, `title <text>`, `lines <n>`, `mouse` (turns on
-//! SGR mouse reporting and echoes reports), `nomouse`, `sz <file>` (Zmodem
+//! SGR mouse reporting and echoes reports), `nomouse`, `links` (OSC 8 links,
+//! one web and one file), `sz <file>` (Zmodem
 //! download to the client), `rz` (Zmodem upload into a temp folder), `sx <file>`
 //! / `sb <file>` (Xmodem / Ymodem download: start Receive in the client).
 //! SFTP tabs work too, against an in-memory /home that lasts while the server runs.
@@ -103,6 +104,7 @@ impl DevShell {
             "lines" => (1..=rest.parse().unwrap_or(10)).map(|i| format!("line {i}\r\n")).collect(),
             "mouse" => "\x1b[?1000h\x1b[?1002h\x1b[?1006hmouse reporting on\r\n".into(),
             "nomouse" => "\x1b[?1000l\x1b[?1002l\x1b[?1006lmouse reporting off\r\n".into(),
+            "links" => "\x1b]8;;https://example.com\x1b\\example link\x1b]8;;\x1b\\  \x1b]8;;file:///etc/passwd\x1b\\file link\x1b]8;;\x1b\\\r\n".into(),
             _ => format!("unknown command: {name}\r\n"),
         }
     }

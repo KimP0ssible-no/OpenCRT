@@ -877,15 +877,27 @@ impl Terminal {
                 wide: c.flags.contains(Flags::WIDE_CHAR),
                 bold: c.flags.contains(Flags::BOLD),
                 italic: c.flags.contains(Flags::ITALIC),
-                underline: c.flags.intersects(Flags::ALL_UNDERLINES),
+                // OSC 8 links are underlined so they show as clickable.
+                underline: c.flags.intersects(Flags::ALL_UNDERLINES) || c.hyperlink().is_some(),
                 strike: c.flags.contains(Flags::STRIKEOUT),
                 selected,
             });
         }
     }
 
-    /// The web address under screen cell (`row`, `col`), if there is one.
+    /// The web address under screen cell (`row`, `col`), if there is one:
+    /// an OSC 8 link's (http and https only), else one written out in the text.
     pub fn url_at(&self, row: usize, col: usize) -> Option<String> {
+        let mut content = self.term.renderable_content();
+        let offset = content.display_offset as i32;
+        let link = content
+            .display_iter
+            .find(|c| c.point.line.0 + offset == row as i32 && c.point.column.0 == col)
+            .and_then(|c| c.hyperlink());
+        if let Some(link) = link {
+            let uri = link.uri();
+            return (uri.starts_with("https://") || uri.starts_with("http://")).then(|| uri.to_string());
+        }
         let mut line = vec![' '; self.cols];
         self.for_each_cell(false, |cell| {
             if cell.row == row && cell.col < line.len() {
@@ -1086,6 +1098,18 @@ mod tests {
         t.feed(b"go to https://opencrt.test now");
         assert_eq!(t.url_at(0, 10).as_deref(), Some("https://opencrt.test"));
         assert_eq!(t.url_at(0, 2), None);
+    }
+
+    #[test]
+    fn osc8_links() {
+        let mut t = Terminal::new(40, 2);
+        t.feed(b"see \x1b]8;;https://opencrt.test/docs\x1b\\the docs\x1b]8;;\x1b\\ or \x1b]8;;file:///etc/passwd\x07this\x1b]8;;\x07");
+        assert_eq!(t.url_at(0, 6).as_deref(), Some("https://opencrt.test/docs"));
+        assert_eq!(t.url_at(0, 3), None);
+        assert_eq!(t.url_at(0, 17), None, "only web addresses are opened");
+        let mut underlined = Vec::new();
+        t.for_each_cell(false, |c| if c.row == 0 && c.underline { underlined.push(c.col) });
+        assert_eq!(underlined, (4..12).chain(16..20).collect::<Vec<_>>());
     }
 
     #[test]

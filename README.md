@@ -118,7 +118,8 @@ automatic check off in Options > Global Options > General.
   PPK, with passphrase prompts, and SSH agent keys — Pageant or the OpenSSH
   agent on Windows, `SSH_AUTH_SOCK` elsewhere — when no key file is set),
   Telnet, RLogin, raw TCP, serial (COM / tty, modem dialling, VM consoles),
-  local shell, and RDP (remote desktop
+  local shell (on Windows PowerShell, Command Prompt or a WSL distribution from
+  the toolbar's local-shell button), and RDP (remote desktop
   in a tab that follows the tab's size, keyboard and mouse, clipboard text
   both ways; NLA with user name and password; the console (administrative)
   session like `mstsc /admin`), and VNC (RFB 3.3 to 3.8: no
@@ -138,7 +139,9 @@ automatic check off in Options > Global Options > General.
   Mono built in or a system font, cursor shape, light and dark window themes that follow the
   system, an interface font size for menus, tabs and dialogs (on Linux it starts at the desktop's), CJK text, bell as flash or sound, plain-text session
   logging with optional timestamps and dated file names that roll over at
-  midnight (per session or File > Log Session), Send
+  midnight (per session or File > Log Session), a raw log beside it with the
+  bytes as received (`.raw`, for emulation debugging), recordings in asciicast
+  v2 (File > Record Session, for `asciinema play` and web players), Send
   Break for serial and Telnet, per-session terminal type, Latin-1 encoding
   and Backspace as ^H, function-key mapping, full screen and always on top.
 - **Sessions**: Session Manager with folders (rename, Connect All, drag and drop), filter
@@ -150,7 +153,8 @@ automatic check off in Options > Global Options > General.
   sessions; SSH keepalive and per-session anti-idle; Global Options, Button
   Bar, Command Manager (with folders), Command Window, keyword
   highlighting, Edit > Send Input to All Tabs; import from `~/.ssh/config`,
-  export/import of sessions.
+  export/import of sessions, and Remote Desktop Connection `.rdp` files as RDP
+  sessions (Tools > Import Sessions, several at once).
 - **Settings Sync**: keep sessions, options, host keys and scripts in a
   private git repository (GitHub, GitLab or your own server; HTTPS with a
   token or SSH with a key or agent) shared by all your computers on any OS.
@@ -188,7 +192,7 @@ automatic check off in Options > Global Options > General.
 | Alt+1 … Alt+9 | Go to tab 1 … 9 (Command+n on macOS) |
 | Alt+key | Sent as Esc+key (Meta), e.g. Alt+B / Alt+F in shells |
 | Alt+Enter | Full screen on / off |
-| Ctrl+click a web address | Open it in the browser |
+| Ctrl+click a web address or an OSC 8 link | Open it in the browser (links are underlined; http and https only) |
 | Ctrl+mouse wheel | Larger / smaller font |
 | Session Manager: Up / Down, Enter, Delete | Select, connect (or open a folder), delete |
 | Session Manager filter: Enter | Connect the selected (or first) session |

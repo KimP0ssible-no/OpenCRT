@@ -694,6 +694,8 @@ struct Tab {
     pacer: Option<input::Pacer>,
     /// Transfer > Receive ASCII: host output copied into this file.
     capture: Option<(std::fs::File, PathBuf)>,
+    /// File > Record Session: an asciicast recording of the output and resizes.
+    cast: Option<(crate::cast::Recording, PathBuf)>,
     /// Input to send once connected (files dropped for a new SFTP tab).
     on_connect: Vec<u8>,
     /// Host-controlled printing, and the jobs it asked for.
@@ -707,6 +709,8 @@ struct Tab {
     transfer_outcome: Option<bool>,
     /// Logged lines start with the date and time.
     log_timestamps: bool,
+    /// A raw log (bytes as received) beside the text log.
+    log_raw: bool,
     /// The saved session's anti-idle text and interval.
     anti_idle: Option<(Vec<u8>, Duration)>,
     /// Last input sent (or connect), for anti-idle.
@@ -838,6 +842,7 @@ impl Tab {
             received_total: 0,
             pacer: None,
             capture: None,
+            cast: None,
             on_connect: Vec::new(),
             media: Default::default(),
             print_jobs: Vec::new(),
@@ -845,6 +850,7 @@ impl Tab {
             transfer_waiter: None,
             transfer_outcome: None,
             log_timestamps: false,
+            log_raw: false,
             anti_idle: None,
             last_input: Instant::now(),
         }
@@ -871,6 +877,7 @@ impl Tab {
         self.rdp_scale = s.rdp_scale;
         self.codec = crate::codec::Codec::new(s.encoding_label());
         self.log_timestamps = s.log_timestamps;
+        self.log_raw = s.log_raw;
         self.color = s.tab_color.clone();
         // Empty text stands for the protocol no-op, which only SSH and Telnet have.
         let protocol = s.anti_idle_protocol && matches!(s.protocol, Protocol::Ssh2 | Protocol::Telnet);
@@ -1142,9 +1149,9 @@ impl Tab {
     }
 
     /// Stop logging after a write error rather than failing the session.
-    fn log_output(&mut self, bytes: &[u8]) {
+    fn log_output(&mut self, bytes: &[u8], raw: bool) {
         if let Some(log) = self.log.as_mut()
-            && let Err(e) = log.write(bytes)
+            && let Err(e) = if raw { log.write_raw(bytes) } else { log.write(bytes) }
         {
             self.log = None;
             self.status = format!("Logging stopped: {e}");
@@ -1176,7 +1183,7 @@ impl Tab {
         };
         // The path only changes once the file is open, so a failed rollover
         // keeps writing (and reporting) the previous day's file.
-        match SessionLog::open(&path, self.log_timestamps) {
+        match SessionLog::open(&path, self.log_timestamps, self.log_raw) {
             Ok(mut log) => {
                 if !self.log_texts[2].is_empty() {
                     let (text, (session, host)) = (self.log_texts[2].clone(), self.log_names());
@@ -1436,6 +1443,7 @@ impl Tab {
                     let excess = self.received.len().saturating_sub(HEX_KEEP);
                     self.received.drain(..excess);
                     self.received_total += bytes.len();
+                    self.log_output(bytes, true);
                     let decoded;
                     if let Some(codec) = self.codec.as_mut() {
                         decoded = codec.decode(bytes);
@@ -1464,7 +1472,13 @@ impl Tab {
                     if let Some(recorder) = self.recorder.as_mut() {
                         recorder.output(bytes);
                     }
-                    self.log_output(bytes);
+                    self.log_output(bytes, false);
+                    if let Some((cast, path)) = self.cast.as_mut()
+                        && let Err(e) = cast.output(bytes)
+                    {
+                        self.status = format!("Recording to {} stopped: {e}", path.display());
+                        self.cast = None;
+                    }
                     if let Some((file, path)) = self.capture.as_mut()
                         && let Err(e) = std::io::Write::write_all(file, bytes)
                     {
@@ -1622,6 +1636,8 @@ struct App {
     next_update_check: Instant,
     /// The new version being downloaded (and on macOS put in place): what to start.
     update_install: Option<(update::InstallKind, std::sync::mpsc::Receiver<Result<PathBuf, String>>)>,
+    /// Windows: the WSL distributions, listed once at start-up off the UI thread.
+    wsl_list: Option<std::sync::mpsc::Receiver<Vec<String>>>,
     /// Git for Windows' installer being downloaded (Settings Sync).
     git_download: Option<std::sync::mpsc::Receiver<Result<PathBuf, String>>>,
     /// Python being downloaded, and the scripts (tab id, file) waiting for it.
@@ -1908,6 +1924,7 @@ impl App {
             update_check: None,
             next_update_check: Instant::now(),
             update_install: None,
+            wsl_list: None,
             git_download: None,
             python_download: None,
             python_waiting: Vec::new(),
@@ -2433,6 +2450,11 @@ impl App {
                 let command = if name == "local-cmd" { "cmd.exe" } else { "powershell.exe" };
                 self.open_tab(Target { protocol: Protocol::Local, command: command.into(), ..Default::default() }, None);
             }
+            // Windows takes the command as a whole command line; WSL names need no quotes.
+            _ if name.starts_with("local-wsl-") => {
+                let command = format!("wsl.exe -d {} --cd ~", &name["local-wsl-".len()..]);
+                self.open_tab(Target { protocol: Protocol::Local, command, ..Default::default() }, None);
+            }
             "quick-connect" => {
                 let target = (self.tabs.get(active).map(|t| t.target.clone()))
                     .unwrap_or_else(|| Target::from_session(&self.store.default_session, &self.options.credentials));
@@ -2456,6 +2478,7 @@ impl App {
             "font-smaller" => self.zoom(-1.0),
             "record-script" => self.toggle_recording(),
             "log-session" => self.toggle_log(),
+            "record-cast" => self.toggle_cast(),
             "xmodem-send" => self.transfer("xmodem", true, None),
             "xmodem-receive" => self.transfer("xmodem", false, None),
             "ymodem-send" => self.transfer("ymodem", true, None),
@@ -3315,6 +3338,10 @@ impl App {
     /// Periodic work: drain sessions, raise prompts, fit the grid, repaint, refresh chrome.
     fn tick(&mut self, ui: &MainWindow) {
         let now = Instant::now();
+        if let Some(names) = self.wsl_list.as_ref().and_then(|rx| rx.try_recv().ok()) {
+            self.wsl_list = None;
+            ui.set_wsl_distros(ModelRc::new(VecModel::from(names.into_iter().map(SharedString::from).collect::<Vec<_>>())));
+        }
         if let Some(note) = crate::gitsync::take_note() {
             self.notify(note);
         }
@@ -3664,6 +3691,12 @@ impl App {
             }
             if tab.terminal.size() != (cols, lines) {
                 tab.terminal.resize(cols, lines);
+                if let Some((cast, path)) = tab.cast.as_mut()
+                    && let Err(e) = cast.resize(cols, lines)
+                {
+                    tab.status = format!("Recording to {} stopped: {e}", path.display());
+                    tab.cast = None;
+                }
                 if let Some(ssh) = tab.ssh.as_ref() {
                     ssh.resize(cols as u32, lines as u32);
                 }
@@ -4658,6 +4691,7 @@ impl App {
         ui.set_so_tls(session.tls);
         ui.set_so_forward_x11(session.forward_x11);
         ui.set_so_log_timestamps(session.log_timestamps);
+        ui.set_so_log_raw(session.log_raw);
         ui.set_so_log_connect(session.log_connect_text.clone().into());
         ui.set_so_log_disconnect(session.log_disconnect_text.clone().into());
         ui.set_so_log_line(session.log_line_text.clone().into());
@@ -4754,6 +4788,7 @@ impl App {
             tls: ui.get_so_tls(),
             forward_x11: ui.get_so_forward_x11(),
             log_timestamps: ui.get_so_log_timestamps(),
+            log_raw: ui.get_so_log_raw(),
             log_connect_text: ui.get_so_log_connect().to_string(),
             log_disconnect_text: ui.get_so_log_disconnect().to_string(),
             log_line_text: ui.get_so_log_line().to_string(),
@@ -6049,11 +6084,37 @@ impl App {
         let log = args.iter().position(|a| a.eq_ignore_ascii_case("/LOG")).and_then(|i| args.get(i + 1));
         if let Some(path) = log.map(|l| PathBuf::from(config::expand_env(l))) {
             for tab in &mut self.tabs[before..] {
-                match SessionLog::open(&path, tab.log_timestamps) {
+                match SessionLog::open(&path, tab.log_timestamps, tab.log_raw) {
                     Ok(log) => (tab.log, tab.log_path) = (Some(log), Some(path.clone())),
                     Err(e) => return self.notify(format!("Cannot open {}: {e}", path.display())),
                 }
             }
+        }
+    }
+
+    /// File > Record Session / Stop Recording for the active tab (asciicast v2).
+    fn toggle_cast(&mut self) {
+        let Some(tab) = self.tabs.get_mut(self.active) else {
+            return;
+        };
+        if let Some((_, path)) = tab.cast.take() {
+            return self.notify(format!("Stopped recording to {}.", path.display()));
+        }
+        let Some(path) = rfd::FileDialog::new()
+            .set_title("Record Session")
+            .add_filter("asciicast recordings", &["cast"])
+            .set_file_name(format!("{}.cast", tab.title().replace(['/', '\\', ':', '@'], "_")))
+            .save_file()
+        else {
+            return;
+        };
+        let (cols, rows) = tab.terminal.size();
+        match crate::cast::Recording::create(&path, cols, rows) {
+            Ok(cast) => {
+                tab.cast = Some((cast, path.clone()));
+                self.notify(format!("Recording to {}; play it with asciinema play.", path.display()));
+            }
+            Err(e) => self.notify(format!("Cannot create {}: {e}", path.display())),
         }
     }
 
@@ -6075,7 +6136,7 @@ impl App {
         else {
             return;
         };
-        match SessionLog::open(&path, tab.log_timestamps) {
+        match SessionLog::open(&path, tab.log_timestamps, tab.log_raw) {
             Ok(log) => {
                 // Only a live connection writes; otherwise the next connect opens it.
                 tab.log = (tab.state != State::Closed).then_some(log);
@@ -6124,19 +6185,31 @@ impl App {
     /// Tools > Import Sessions: add the sessions from an exported file; ones
     /// that already exist under the same name are left alone.
     fn import_sessions(&mut self) {
-        let Some(path) = rfd::FileDialog::new()
+        let Some(paths) = rfd::FileDialog::new()
             .set_title("Import Sessions")
-            .add_filter("Sessions", &["toml", "csv", "tsv", "txt"])
-            .pick_file()
+            .add_filter("Sessions", &["toml", "csv", "tsv", "txt", "rdp"])
+            .pick_files()
         else {
             return;
         };
-        let toml = path.extension().is_some_and(|e| e.eq_ignore_ascii_case("toml"));
+        for path in paths {
+            self.import_sessions_from(&path);
+        }
+    }
+
+    fn import_sessions_from(&mut self, path: &Path) {
+        let extension = path.extension().map(|e| e.to_ascii_lowercase());
         let mut note = String::new();
-        let other = if toml {
-            config::load::<SessionStore>(&path).map_err(|e| format!("{e:#}"))
+        let other = if extension.as_deref() == Some("toml".as_ref()) {
+            config::load::<SessionStore>(path).map_err(|e| format!("{e:#}"))
+        } else if extension.as_deref() == Some("rdp".as_ref()) {
+            let name = path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+            std::fs::read(path)
+                .map_err(|e| e.to_string())
+                .and_then(|bytes| sessions::from_rdp_file(&sessions::decode_text(&bytes), &name, &self.store.default_session))
+                .map(|session| SessionStore { sessions: vec![session], ..Default::default() })
         } else {
-            std::fs::read_to_string(&path)
+            std::fs::read_to_string(path)
                 .map_err(|e| e.to_string())
                 .and_then(|text| sessions::from_delimited(&text, &self.store.default_session))
                 .map(|(sessions, ignored)| {
@@ -7530,6 +7603,7 @@ fn update_status(ui: &MainWindow, tab: &Tab) {
     ui.set_recording(tab.recorder.is_some());
     ui.set_logging(tab.log_path.is_some());
     ui.set_capturing(tab.capture.is_some());
+    ui.set_casting(tab.cast.is_some());
     ui.set_auto_printing(tab.auto_print.is_some());
 }
 
@@ -7561,6 +7635,7 @@ fn update_status_empty(ui: &MainWindow) {
     ui.set_recording(false);
     ui.set_logging(false);
     ui.set_capturing(false);
+    ui.set_casting(false);
     ui.set_auto_printing(false);
     ui.set_mouse_reporting(false);
     ui.set_remote_desktop(false);
@@ -7840,6 +7915,11 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_files_views(ModelRc::from(app.files_model.clone()));
         ui.set_show_toolbar(app.options.show_toolbar);
         ui.set_windows(cfg!(windows));
+        if cfg!(windows) {
+            let (tx, rx) = std::sync::mpsc::channel();
+            std::thread::spawn(move || tx.send(crate::local::wsl_distributions()));
+            app.wsl_list = Some(rx);
+        }
         ui.set_show_statusbar(app.options.show_statusbar);
         ui.set_show_menubar(app.options.show_menubar);
         ui.set_show_connect_bar(app.options.show_connect_bar);

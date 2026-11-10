@@ -16,6 +16,33 @@ fn window(cols: u32, rows: u32) -> WindowSize {
     WindowSize { num_lines: rows as u16, num_cols: cols as u16, cell_width: 1, cell_height: 1 }
 }
 
+/// The installed WSL distributions (`wsl.exe -l -q`), empty without WSL.
+pub fn wsl_distributions() -> Vec<String> {
+    let mut command = std::process::Command::new("wsl.exe");
+    command.args(["-l", "-q"]).stdin(std::process::Stdio::null());
+    #[cfg(windows)]
+    {
+        // No console window flashing up.
+        use std::os::windows::process::CommandExt as _;
+        command.creation_flags(0x0800_0000);
+    }
+    match command.output() {
+        Ok(out) if out.status.success() => wsl_names(&out.stdout),
+        _ => Vec::new(),
+    }
+}
+
+/// The names in `wsl -l -q`'s output: UTF-16LE, or UTF-8 when WSL_UTF8 is set.
+/// WSL names hold only letters, digits, `.`, `_` and `-`; anything else (a BOM,
+/// a NUL left by an odd-length read) is dropped, so a name is safe on a command line.
+fn wsl_names(out: &[u8]) -> Vec<String> {
+    crate::sessions::decode_text(out)
+        .lines()
+        .map(|l| l.chars().filter(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-')).collect::<String>())
+        .filter(|l| !l.is_empty())
+        .collect()
+}
+
 /// The shell's terminal settings: `term` as TERM (whatever OpenCRT itself was
 /// started with, often nothing or "dumb" from a desktop launcher, does not
 /// apply), and 24-bit colour.
@@ -106,6 +133,17 @@ fn write_all(writer: &mut impl Write, mut bytes: &[u8]) -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn wsl_names_from_utf16_or_utf8() {
+        let utf16: Vec<u8> = "Ubuntu-24.04\r\ndocker-desktop\r\n\r\n".encode_utf16().flat_map(u16::to_le_bytes).collect();
+        assert_eq!(wsl_names(&utf16), ["Ubuntu-24.04", "docker-desktop"]);
+        assert_eq!(wsl_names(b"Debian\n"), ["Debian"]);
+        assert!(wsl_names(b"").is_empty());
+        // UTF-16 that the decoder took for UTF-8 (odd length): the NULs go.
+        assert_eq!(wsl_names(b"D\0e\0b\0i\0a\0n\0\r\0\n\0\0"), ["Debian"]);
+        assert_eq!(wsl_names("\u{feff}Ubuntu \"x\"\r\n".as_bytes()), ["Ubuntux"]);
+    }
 
     #[test]
     fn runs_a_command_in_the_local_shell() {

@@ -6305,9 +6305,10 @@ impl App {
         let sets: Vec<_> = sets.into_iter().filter(|(name, _)| !known.contains(name)).collect();
         let mut extras = String::new();
         if !buttons.is_empty() || !sets.is_empty() {
-            extras = format!(" Added {} buttons and {} keyword lists", buttons.len(), sets.len());
+            let plural = |n: usize, word: &str| format!("{n} {word}{}", if n == 1 { "" } else { "s" });
+            extras = format!(" Added {} and {}", plural(buttons.len(), "button"), plural(sets.len(), "keyword list"));
             if left_out > 0 {
-                extras += &format!(" ({left_out} SecureCRT menu-function buttons left out)");
+                extras += &format!(" ({} left out: SecureCRT menu functions)", plural(left_out, "button"));
             }
             extras.push('.');
             self.options.buttons.extend(buttons);

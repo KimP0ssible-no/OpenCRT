@@ -1751,6 +1751,8 @@ struct App {
     cw_history: Vec<String>,
     /// The named Button Bar on show.
     shown_bar: Option<String>,
+    /// The Button Bar picked while no tab is open.
+    idle_bar: String,
     /// known_hosts line of each row in the Host Keys dialog.
     host_key_lines: Vec<usize>,
     /// How tabs share the terminal area.
@@ -1984,6 +1986,7 @@ impl App {
             picked_sessions: HashSet::new(),
             session_clip: None,
             shown_bar: None,
+            idle_bar: String::new(),
             host_key_lines: Vec::new(),
             layout: Layout::Tabs,
             stamp: 0,
@@ -3426,7 +3429,7 @@ impl App {
             self.action(&name, ui);
         }
         // The Button Bar shows the active session's named bar.
-        let bar = self.tabs.get(self.active).map(|t| t.button_bar.clone()).unwrap_or_default();
+        let bar = self.tabs.get(self.active).map_or_else(|| self.idle_bar.clone(), |t| t.button_bar.clone());
         if self.shown_bar.as_ref() != Some(&bar) {
             self.shown_bar = Some(bar);
             self.show_buttons(ui);
@@ -6832,17 +6835,18 @@ impl App {
     }
 
     /// Show `bar` (empty: the default) on the Button Bar for the active tab,
-    /// and keep it as that tab's saved session's bar.
+    /// and keep it as that tab's saved session's bar; with no tab, until one opens.
     fn pick_bar(&mut self, bar: String) {
+        self.shown_bar = None;
         let Some(tab) = self.tabs.get_mut(self.active) else {
-            return self.notify("Open a session to choose its button bar.");
+            self.idle_bar = bar;
+            return;
         };
         tab.button_bar = bar.clone();
         if let Some(session) = tab.session.as_ref().and_then(|path| self.store.sessions.iter_mut().find(|s| s.path() == *path)) {
             session.button_bar = bar;
             self.save_store();
         }
-        self.shown_bar = None;
     }
 
     fn show_buttons(&self, ui: &MainWindow) {

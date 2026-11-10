@@ -1700,6 +1700,8 @@ struct App {
     renaming_tab: Option<usize>,
     /// The name dialog is asking for a snapshot's name.
     naming_snapshot: bool,
+    /// The name dialog is for a new Button Bar.
+    naming_bar: bool,
     /// Folder (full path) whose new name the name dialog is asking for.
     renaming_folder: Option<String>,
     /// Session Options is editing the default session (the template).
@@ -1749,6 +1751,8 @@ struct App {
     cw_history: Vec<String>,
     /// The named Button Bar on show.
     shown_bar: Option<String>,
+    /// The Button Bar picked while no tab is open.
+    idle_bar: String,
     /// known_hosts line of each row in the Host Keys dialog.
     host_key_lines: Vec<usize>,
     /// How tabs share the terminal area.
@@ -1955,6 +1959,7 @@ impl App {
             editing_button: None,
             renaming_tab: None,
             naming_snapshot: false,
+            naming_bar: false,
             renaming_folder: None,
             editing_many: None,
             editing_default: false,
@@ -1981,6 +1986,7 @@ impl App {
             picked_sessions: HashSet::new(),
             session_clip: None,
             shown_bar: None,
+            idle_bar: String::new(),
             host_key_lines: Vec::new(),
             layout: Layout::Tabs,
             stamp: 0,
@@ -2423,6 +2429,14 @@ impl App {
             }
             return;
         }
+        if name == "button-bar-new" {
+            self.naming_bar = true;
+            ui.set_name_title("New Button Bar".into());
+            ui.set_name_label("Bar name:".into());
+            ui.set_name_value(SharedString::new());
+            ui.set_dialog(DIALOG_NAME);
+            return;
+        }
         if name == "snapshot-save" {
             self.naming_snapshot = true;
             ui.set_name_title("Save Snapshot".into());
@@ -2455,7 +2469,9 @@ impl App {
                 let command = format!("wsl.exe -d {} --cd ~", &name["local-wsl-".len()..]);
                 self.open_tab(Target { protocol: Protocol::Local, command, ..Default::default() }, None);
             }
-            "quick-connect" => {
+            // For a key map (SecureCRT has Alt+R): the toolbar's box, else the dialog.
+            "focus-connect-bar" if ui.get_show_connect_bar() => return ui.set_connect_bar_focus(ui.get_connect_bar_focus() + 1),
+            "quick-connect" | "focus-connect-bar" => {
                 let target = (self.tabs.get(active).map(|t| t.target.clone()))
                     .unwrap_or_else(|| Target::from_session(&self.store.default_session, &self.options.credentials));
                 show_quick_connect(ui, &target);
@@ -3413,7 +3429,7 @@ impl App {
             self.action(&name, ui);
         }
         // The Button Bar shows the active session's named bar.
-        let bar = self.tabs.get(self.active).map(|t| t.button_bar.clone()).unwrap_or_default();
+        let bar = self.tabs.get(self.active).map_or_else(|| self.idle_bar.clone(), |t| t.button_bar.clone());
         if self.shown_bar.as_ref() != Some(&bar) {
             self.shown_bar = Some(bar);
             self.show_buttons(ui);
@@ -4586,6 +4602,26 @@ impl App {
             ui.invoke_focus_terminal();
             return;
         }
+        if std::mem::take(&mut self.naming_bar) {
+            let name = ui.get_name_value().trim().to_string();
+            if ok && !name.is_empty() {
+                // "Default" is the unnamed bar; an existing name just switches to it.
+                let existing = self.bar_names().into_iter().find(|b| b.eq_ignore_ascii_case(&name));
+                let name = match existing {
+                    _ if name.eq_ignore_ascii_case("default") => String::new(),
+                    Some(existing) => existing,
+                    None => {
+                        self.options.button_bars.push(name.clone());
+                        self.save_options();
+                        name
+                    }
+                };
+                self.pick_bar(name);
+            }
+            ui.set_dialog(DIALOG_NONE);
+            ui.invoke_focus_terminal();
+            return;
+        }
         if std::mem::take(&mut self.naming_snapshot) {
             let name = ui.get_name_value().trim().to_string();
             if ok && !name.is_empty() {
@@ -4667,7 +4703,14 @@ impl App {
         ui.set_so_backspace_ctrl_h(session.backspace_ctrl_h);
         ui.set_so_emulation(session.emulation.index());
         ui.set_so_key_map(session.key_map.join("\n").into());
-        ui.set_so_button_bar(session.button_bar.clone().into());
+        // "Default", then the named bars, and this session's even if it is not one of them.
+        let mut bars = self.bar_names();
+        if !session.button_bar.is_empty() && !bars.iter().any(|b| b.eq_ignore_ascii_case(&session.button_bar)) {
+            bars.push(session.button_bar.clone());
+        }
+        ui.set_so_button_bar(bars.iter().position(|b| b.eq_ignore_ascii_case(&session.button_bar)).map_or(0, |i| i as i32 + 1));
+        let choices: Vec<SharedString> = std::iter::once("Default".to_string()).chain(bars).map(SharedString::from).collect();
+        ui.set_so_button_bar_choices(ModelRc::new(VecModel::from(choices)));
         let size = |n: u16| if n == 0 { SharedString::new() } else { n.to_string().into() };
         ui.set_so_columns(size(session.columns));
         ui.set_so_rows(size(session.rows));
@@ -4762,7 +4805,11 @@ impl App {
             backspace_ctrl_h: ui.get_so_backspace_ctrl_h(),
             emulation: input::Emulation::ALL.get(ui.get_so_emulation().max(0) as usize).copied().unwrap_or_default(),
             key_map: ui.get_so_key_map().lines().map(|l| l.trim().to_string()).filter(|l| !l.is_empty()).collect(),
-            button_bar: ui.get_so_button_bar().trim().to_string(),
+            button_bar: usize::try_from(ui.get_so_button_bar())
+                .ok()
+                .filter(|&i| i > 0)
+                .and_then(|i| ui.get_so_button_bar_choices().row_data(i))
+                .map_or(String::new(), |b| b.to_string()),
             keyword_set: usize::try_from(ui.get_so_keyword_set() - 1)
                 .ok()
                 .and_then(|i| render::keyword_set_names(&self.options.keywords).into_iter().nth(i))
@@ -4954,7 +5001,8 @@ impl App {
             }
             Request::Screen(reply) => {
                 let ((cols, rows), (row, col)) = (tab.terminal.size(), tab.terminal.cursor_position());
-                let _ = reply.send(ScreenInfo { text: tab.terminal.screen_text(), rows, cols, row, col });
+                let selection = tab.terminal.selection_text().unwrap_or_default();
+                let _ = reply.send(ScreenInfo { text: tab.terminal.screen_text(), rows, cols, row, col, selection });
             }
             Request::Status(text) => {
                 tab.status = text;
@@ -6294,7 +6342,40 @@ impl App {
         self.save_store();
         let existed = if skipped > 0 { format!("; {skipped} already existed") } else { String::new() };
         let other = if not_imported > 0 { format!("; {not_imported} not imported (unreadable or unsupported protocol)") } else { String::new() };
-        self.notify(format!("Imported {added} sessions from {}{existed}{other}.", root.display()));
+        // Button bars and keyword lists sit beside the Sessions folder; ones already here are kept.
+        let home = std::env::home_dir().map(|h| h.display().to_string()).unwrap_or_default();
+        let found = sessions::securecrt_extras(root.parent().unwrap_or(&root), &home);
+        // The same button imported again (even with another colour) is not added twice.
+        let have = |b: &config::BarButton| self.options.buttons.iter().any(|o| (&o.bar, &o.label, o.kind, &o.text) == (&b.bar, &b.label, b.kind, &b.text));
+        let buttons: Vec<_> = found.buttons.into_iter().filter(|b| !have(b)).collect();
+        let known_bars = self.bar_names();
+        let bars: Vec<_> = found.bars.into_iter().filter(|b| !known_bars.iter().any(|k| k.eq_ignore_ascii_case(b))).collect();
+        let known = render::keyword_set_names(&self.options.keywords);
+        let sets: Vec<_> = found.keyword_sets.into_iter().filter(|(name, _)| !known.contains(name)).collect();
+        let mut extras = String::new();
+        if !buttons.is_empty() || !bars.is_empty() || !sets.is_empty() {
+            let plural = |n: usize, word: &str| format!("{n} {word}{}", if n == 1 { "" } else { "s" });
+            extras = format!(
+                " Added {}, {} and {}",
+                plural(bars.len(), "button bar"),
+                plural(buttons.len(), "button"),
+                plural(sets.len(), "keyword list")
+            );
+            if found.left_out > 0 {
+                extras += &format!(" ({} left out: SecureCRT menu functions)", plural(found.left_out, "button"));
+            }
+            extras.push('.');
+            self.options.button_bars.extend(bars);
+            self.options.buttons.extend(buttons);
+            for (name, lines) in sets {
+                self.options.keywords.push(format!("[{name}]"));
+                self.options.keywords.extend(lines);
+            }
+            self.renderer.set_keywords(&self.options.keywords);
+            self.shown_bar = None;
+            self.save_options();
+        }
+        self.notify(format!("Imported {added} sessions from {}{existed}{other}.{extras}", root.display()));
     }
 
     /// Script > Run: run a script file in the active session.
@@ -6744,6 +6825,30 @@ impl App {
         }
     }
 
+    /// The named Button Bars: kept ones and the ones buttons are on, A to Z.
+    fn bar_names(&self) -> Vec<String> {
+        let buttons = self.options.buttons.iter().map(|b| &b.bar);
+        let mut names: Vec<String> = self.options.button_bars.iter().chain(buttons).filter(|b| !b.is_empty()).cloned().collect();
+        names.sort_by_key(|b| b.to_lowercase());
+        names.dedup_by(|a, b| a.eq_ignore_ascii_case(b));
+        names
+    }
+
+    /// Show `bar` (empty: the default) on the Button Bar for the active tab,
+    /// and keep it as that tab's saved session's bar; with no tab, until one opens.
+    fn pick_bar(&mut self, bar: String) {
+        self.shown_bar = None;
+        let Some(tab) = self.tabs.get_mut(self.active) else {
+            self.idle_bar = bar;
+            return;
+        };
+        tab.button_bar = bar.clone();
+        if let Some(session) = tab.session.as_ref().and_then(|path| self.store.sessions.iter_mut().find(|s| s.path() == *path)) {
+            session.button_bar = bar;
+            self.save_store();
+        }
+    }
+
     fn show_buttons(&self, ui: &MainWindow) {
         let bar = self.shown_bar.clone().unwrap_or_default();
         let buttons: Vec<BarRow> = self
@@ -6752,9 +6857,11 @@ impl App {
             .iter()
             .enumerate()
             .filter(|(_, b)| b.bar.eq_ignore_ascii_case(&bar))
-            .map(|(i, b)| BarRow { label: b.label.as_str().into(), color: tab_color(&b.color), index: i as i32 })
+            .map(|(i, b)| BarRow { label: b.label.as_str().into(), color: tab_color(&b.color), has_color: !b.color.is_empty(), index: i as i32 })
             .collect();
         ui.set_bar_buttons(ModelRc::new(VecModel::from(buttons)));
+        let names = self.bar_names();
+        ui.set_bar_choices(ModelRc::new(VecModel::from(std::iter::once("Default".to_string()).chain(names).map(SharedString::from).collect::<Vec<_>>())));
         ui.set_bar_name(bar.into());
         let rows: Vec<CommandRow> = command_rows(&self.options.commands, &self.collapsed_commands, &self.command_filter)
             .into_iter()
@@ -7721,6 +7828,11 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
     on!(on_browse, |app, ui, field| app.browse(&field, &ui));
     on!(on_bar_button, |app, ui, index| app.bar_button(Commands::Bar, index as usize, &ui));
     on!(on_bar_button_edit, |app, ui, index| app.bar_button_edit(Commands::Bar, index, &ui));
+    // 0 is the default bar, then the named bars in bar_names' order.
+    on!(on_bar_pick, |app, _ui, index| {
+        let bar = usize::try_from(index - 1).ok().and_then(|i| app.bar_names().into_iter().nth(i)).unwrap_or_default();
+        app.pick_bar(bar);
+    });
     on!(on_bar_button_delete, |app, ui, index| app.bar_button_delete(Commands::Bar, index as usize, &ui));
     on!(on_bar_button_ok, |app, ui| app.bar_button_ok(&ui));
     on!(on_keygen_ok, |app, ui| app.keygen_ok(&ui));

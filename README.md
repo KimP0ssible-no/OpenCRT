@@ -153,6 +153,8 @@ automatic check off in Options > Global Options > General.
   sessions; SSH keepalive and per-session anti-idle; Global Options, Button
   Bar, Command Manager (with folders), Command Window, keyword
   highlighting, Edit > Send Input to All Tabs; import from `~/.ssh/config`,
+  from SecureCRT (sessions with their button bar and keyword list, the button
+  bars' send and run-script buttons, and keyword lists with their colours),
   export/import of sessions, and Remote Desktop Connection `.rdp` files as RDP
   sessions (Tools > Import Sessions, several at once).
 - **Settings Sync**: keep sessions, options, host keys and scripts in a
@@ -202,6 +204,8 @@ automatic check off in Options > Global Options > General.
 
 Help > Keyboard Shortcuts shows the main ones in OpenCRT. F1 stays with the
 host; map it with `F1 = menu: shortcuts` to open that list instead.
+`Alt+R = menu: focus-connect-bar` puts the keyboard in the toolbar's quick
+connect box, as Alt+R does in SecureCRT (Alt+R stays with the host unless mapped).
 
 ## Command-line tools
 `ocrt` (installed beside OpenCRT) uses OpenCRT's known host keys and SSH code:
@@ -284,7 +288,7 @@ if crt.Screen.WaitForString("#", 10) {
 | Object | Members |
 | --- | --- |
 | `crt` | `Screen`, `Session`, `Dialog`, `Clipboard`, `FileTransfer`, `Window`, `Arguments`, `ScriptFullName`, `Version`, `Sleep(ms)`, `GetScriptTab()`, `GetActiveTab()`, `GetTab(n)` (from 1), `GetTabCount()`, `GetLastError()` (0 when the last call worked), `GetLastErrorMessage()`, `ClearLastError()`, `OpenSessionConfiguration(session)`, `Quit()` |
-| `Screen` | `Send(text)`; `WaitForString(text[, timeout[, ms]])`, `WaitForStrings([a, b, ...][, timeout[, ms]])` (the number of the text seen, from 1; 0 on timeout), `ReadString(text or [a, b, ...][, timeout[, ms]])` (the output before it); `MatchIndex`, `Synchronous`, `IgnoreCase`, `IgnoreEscape` (waits skip escape sequences); `Get(row1, col1, row2, col2)`, `Get2(...)` (rows joined by CR LF), `CurrentRow`, `CurrentColumn`, `Rows`, `Columns`, `WaitForCursor([timeout[, ms]])`, `Clear()` |
+| `Screen` | `Send(text)`; `WaitForString(text[, timeout[, ms]])`, `WaitForStrings([a, b, ...][, timeout[, ms]])` (the number of the text seen, from 1; 0 on timeout), `ReadString(text or [a, b, ...][, timeout[, ms]])` (the output before it); `MatchIndex`, `Synchronous`, `IgnoreCase`, `IgnoreEscape` (waits skip escape sequences); `Get(row1, col1, row2, col2)`, `Get2(...)` (rows joined by CR LF), `CurrentRow`, `CurrentColumn`, `Rows`, `Columns`, `Selection` (the selected text), `WaitForCursor([timeout[, ms]])`, `Clear()` |
 | `Session` | `Connect(target)` (the script continues in the new tab), `ConnectInTab(target)` (returns the tab), `Disconnect()`, `Connected`, `SetStatusText(text)`, `Config` (the tab's saved session) |
 | Tab | `Screen`, `Session`, `Caption`, `Activate()` |
 | `Dialog` | `MessageBox(text[, title[, style]])`, `Prompt(text[, title[, default[, password]]])` ("" if cancelled), `FileOpenDialog(title[, button[, file[, filter]]])`, `FileSaveDialog(title[, file[, filter]])` |

@@ -547,6 +547,7 @@ pub fn register(engine: &mut Engine, ctx: &Rc<Ctx>, args: Vec<String>) {
         .register_get("CurrentColumn", |s: &mut Screen| s.0.ctx.screen(s.1).map(|i| i.col as i64))
         .register_get("Rows", |s: &mut Screen| s.0.ctx.screen(s.1).map(|i| i.rows as i64))
         .register_get("Columns", |s: &mut Screen| s.0.ctx.screen(s.1).map(|i| i.cols as i64))
+        .register_get("Selection", |s: &mut Screen| s.0.ctx.screen(s.1).map(|i| i.selection))
         .register_get("MatchIndex", |s: &mut Screen| s.0.flags(s.1).matched)
         .register_get_set("Synchronous", |s: &mut Screen| s.0.flags(s.1).sync, |s: &mut Screen, on: bool| s.0.set_flags(s.1, |f| f.sync = on))
         .register_get_set("IgnoreCase", |s: &mut Screen| s.0.flags(s.1).nocase, |s: &mut Screen, on: bool| s.0.set_flags(s.1, |f| f.nocase = on))
@@ -683,6 +684,7 @@ pub(crate) fn call(s: &S, tab: TabKey, name: &str, a: &[Value]) -> Res<Value> {
         "Screen.CurrentColumn" => s.ctx.screen(tab)?.col.into(),
         "Screen.Rows" => s.ctx.screen(tab)?.rows.into(),
         "Screen.Columns" => s.ctx.screen(tab)?.cols.into(),
+        "Screen.Selection" => s.ctx.screen(tab)?.selection.into(),
         "Screen.MatchIndex" => s.flags(tab).matched.into(),
         "Screen.Synchronous" => flags(|f, on| f.sync = on, |f| f.sync),
         "Screen.IgnoreCase" => flags(|f, on| f.nocase = on, |f| f.nocase),
@@ -786,7 +788,7 @@ mod tests {
             let other = crt.GetTab(2);
             other.Screen.Send("ls\r");
             if crt.Dialog.MessageBox("Reload?", "t", BUTTON_YESNO | ICON_QUESTION) == IDNO {
-                crt.Session.SetStatusText(other.Screen.Get(2, 2, 3, 3) + crt.Screen.CurrentRow + crt.Arguments[0] + crt.Arguments.Count);
+                crt.Session.SetStatusText(other.Screen.Get(2, 2, 3, 3) + crt.Screen.CurrentRow + crt.Screen.Selection + crt.Arguments[0] + crt.Arguments.Count);
             }
         "#;
         let s = Script::start("t", None, source.into(), vec!["a".into()], vec![]);
@@ -803,16 +805,20 @@ mod tests {
             }
             _ => panic!("expected a message box"),
         }
-        let screen = |reply: Sender<ScreenInfo>| reply.send(ScreenInfo { text: "abcd\nefgh\nij".into(), rows: 3, cols: 4, row: 3, col: 1 }).unwrap();
+        let screen = |reply: Sender<ScreenInfo>| {
+            reply.send(ScreenInfo { text: "abcd\nefgh\nij".into(), rows: 3, cols: 4, row: 3, col: 1, selection: "mac".into() }).unwrap()
+        };
         match next(&s) {
             (Some(11), Request::Screen(reply)) => screen(reply),
             _ => panic!("expected the other tab's screen"),
         }
-        match next(&s) {
-            (None, Request::Screen(reply)) => screen(reply),
-            _ => panic!("expected the script tab's screen"),
+        for _ in 0..2 {
+            match next(&s) {
+                (None, Request::Screen(reply)) => screen(reply),
+                _ => panic!("expected the script tab's screen"),
+            }
         }
-        assert!(matches!(next(&s), (None, Request::Status(t)) if t == "fgj 3a1"));
+        assert!(matches!(next(&s), (None, Request::Status(t)) if t == "fgj 3maca1"));
     }
 
     #[test]

@@ -3,7 +3,7 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-use crate::config::{FlowControl, Parity, Protocol, SerialLine, Session, SessionStore};
+use crate::config::{BarButton, FlowControl, Parity, Protocol, SerialLine, Session, SessionStore};
 use crate::forward::Forward;
 use crate::terminal::SCHEMES;
 
@@ -472,6 +472,104 @@ fn securecrt_path(path: &str, config_dir: &str) -> String {
     path.replace("${VDS_CONFIG_PATH}", config_dir)
 }
 
+/// A keyword set's name and its keyword list lines.
+pub type KeywordSet = (String, Vec<String>);
+
+/// What a SecureCRT Config folder holds besides sessions.
+pub struct SecureCrtExtras {
+    pub buttons: Vec<BarButton>,
+    /// Buttons left out: SecureCRT's own menu functions have no OpenCRT counterpart.
+    pub left_out: usize,
+    /// The named button bars, empty ones included.
+    pub bars: Vec<String>,
+    pub keyword_sets: Vec<KeywordSet>,
+}
+
+/// SecureCRT's button bars (`ButtonBarV5.ini`, else V4 or V3) and keyword
+/// lists (`Keywords/*.ini`) in `config_dir`, as OpenCRT buttons, bar names
+/// and keyword sets (name, `word = colour` lines).
+pub fn securecrt_extras(config_dir: &Path, home: &str) -> SecureCrtExtras {
+    let bars = ["ButtonBarV5.ini", "ButtonBarV4.ini", "ButtonBarV3.ini"].iter().find_map(|n| std::fs::read_to_string(config_dir.join(n)).ok());
+    let bars = bars.unwrap_or_default();
+    let (buttons, left_out) = securecrt_buttons(&bars, &config_dir.display().to_string(), home);
+    // From the `Z:"name"=count` lines, so bars without buttons count too.
+    let mut names: Vec<String> = bars
+        .lines()
+        .filter_map(|l| l.trim_start_matches('\u{feff}').strip_prefix("Z:\"")?.split_once("\"=").map(|(n, _)| n.to_string()))
+        .filter(|n| n != "Default")
+        .collect();
+    names.sort();
+    let mut files: Vec<PathBuf> = std::fs::read_dir(config_dir.join("Keywords")).into_iter().flatten().flatten().map(|e| e.path()).collect();
+    files.retain(|p| p.extension().is_some_and(|e| e == "ini"));
+    files.sort();
+    let keyword_sets = files
+        .iter()
+        .filter_map(|p| Some(securecrt_keywords(&std::fs::read_to_string(p).ok()?, &p.file_stem()?.to_string_lossy())))
+        .collect();
+    SecureCrtExtras { buttons, left_out, bars: names, keyword_sets }
+}
+
+/// Buttons from a ButtonBar `.ini`: one `Z:` list per bar, a button per line as
+/// `FUNCTION,argument,label` and six more fields, the icon colour third from
+/// the end (the argument may hold commas).
+fn securecrt_buttons(text: &str, config_dir: &str, home: &str) -> (Vec<BarButton>, usize) {
+    let (_, lists) = securecrt_entries(text);
+    let mut bars: Vec<_> = lists.into_iter().collect();
+    bars.sort();
+    let (mut buttons, mut left_out) = (Vec::new(), 0);
+    for (bar, lines) in bars {
+        for line in lines {
+            let fields: Vec<&str> = line.split(',').collect();
+            let Some(label) = fields.len().checked_sub(7).filter(|&i| i >= 2).map(|i| fields[i]) else {
+                left_out += 1;
+                continue;
+            };
+            let argument = fields[1..fields.len() - 7].join(",");
+            let (kind, text) = match fields[0] {
+                // SecureCRT doubles the backslash of its \r-style escapes.
+                "SEND" => (crate::input::ActionKind::Send, argument.replace("\\\\", "\\")),
+                "RUN" => (crate::input::ActionKind::Script, securecrt_path(&argument, config_dir).replace("${VDS_USER_DATA_PATH}", home)),
+                _ => {
+                    left_out += 1;
+                    continue;
+                }
+            };
+            // SecureCRT's colour numbers: 0 black, 1 green, 2 blue, 3 cyan, 4 magenta,
+            // 5 orange, 6 purple, 7 red, 8 white, 9 yellow, 10 grey; OpenCRT's nearest.
+            let color = match fields[fields.len() - 3] {
+                "1" => "green",
+                "2" | "3" => "blue",
+                "4" | "6" => "purple",
+                "5" => "orange",
+                "7" => "red",
+                "9" => "yellow",
+                _ => "",
+            };
+            let bar = if bar == "Default" { String::new() } else { bar.to_string() };
+            buttons.push(BarButton { label: label.into(), text, kind, bar, color: color.into(), ..Default::default() });
+        }
+    }
+    (buttons, left_out)
+}
+
+/// A keyword list (`Keywords/<name>.ini`): its name and `word = colour` lines.
+/// Entries are `"word",colour,background,flags`, colours as Windows COLORREFs
+/// (0x00BBGGRR), matched to the nearest OpenCRT keyword colour.
+fn securecrt_keywords(text: &str, file_stem: &str) -> KeywordSet {
+    let (values, lists) = securecrt_entries(text);
+    let name = values.get("List Name").copied().unwrap_or(file_stem).to_string();
+    let mut lines = Vec::new();
+    for entry in lists.get("Keyword List V3").into_iter().flatten() {
+        let Some((word, rest)) = entry.strip_prefix('"').and_then(|e| e.rsplit_once("\",")) else { continue };
+        let colour = rest.split(',').next().and_then(|c| u32::from_str_radix(c, 16).ok());
+        lines.push(match colour {
+            Some(c) => format!("{word} = {}", crate::render::nearest_keyword_colour([c as u8, (c >> 8) as u8, (c >> 16) as u8])),
+            None => word.to_string(),
+        });
+    }
+    (name, lines)
+}
+
 /// The global public key from SecureCRT's `SSH2.ini`; empty for none.
 /// The VanDyke settings folder, where SecureCRT keeps `Config` by default.
 pub fn vandyke_dir() -> Option<PathBuf> {
@@ -562,6 +660,10 @@ pub fn from_securecrt(text: &str, folder: &str, name: &str, config_dir: &str, gl
         pre_connect: if dword("Use Shell Command") == Some(1) { text("Local Shell Command Pre-connect V2").into() } else { String::new() },
         encoding: crate::codec::label_for(text("Output Transformer Name")).unwrap_or_default().to_string(),
         notes: lists.get("Description").map(|lines| lines.join("\n").trim().to_string()).unwrap_or_default(),
+        // SecureCRT's "Default" bar is OpenCRT's default (unnamed) one.
+        button_bar: Some(text("User Button Bar Name")).filter(|b| *b != "Default").unwrap_or_default().into(),
+        // SecureCRT writes "<None>" for no keyword list.
+        keyword_set: Some(text("Keyword Set")).filter(|k| *k != "<None>").unwrap_or_default().into(),
         ..Default::default()
     };
     if protocol == Protocol::Ssh2 {
@@ -626,6 +728,40 @@ pub fn from_securecrt(text: &str, folder: &str, name: &str, config_dir: &str, gl
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn securecrt_button_bars_and_keyword_lists() {
+        // As SecureCRT 9.7 writes them.
+        let bars = "\u{feff}Z:\"Default\"=00000003\r\n SEND,echo \"hello world\"\\\\r,Send String,,,0,1,,\r\n MENU_HELP_UPDATE,,menu ,,,0,4,,\r\n RUN,${VDS_USER_DATA_PATH}/test.sh,Run Script,,,0,5,,\r\nZ:\"Lab\"=00000001\r\n SEND,a,b\\\\r,two,,,0,1,,\r\n";
+        let (buttons, left_out) = securecrt_buttons(bars, "/cfg", "/home/kim");
+        assert_eq!(left_out, 1, "the menu function");
+        let shown: Vec<_> = buttons.iter().map(|b| (b.bar.as_str(), b.label.as_str(), b.kind, b.text.as_str(), b.color.as_str())).collect();
+        use crate::input::ActionKind::{Script, Send};
+        assert_eq!(shown, [
+            ("", "Send String", Send, "echo \"hello world\"\\r", "green"),
+            ("", "Run Script", Script, "/home/kim/test.sh", "orange"),
+            ("Lab", "two", Send, "a,b\\r", "green"),
+        ]);
+        let dir = std::env::temp_dir().join(format!("opencrt-scrt-bars-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("ButtonBarV5.ini"), format!("{bars}Z:\"Empty\"=00000000\r\n")).unwrap();
+        let extras = securecrt_extras(&dir, "/home/kim");
+        assert_eq!(extras.bars, ["Empty", "Lab"], "every named bar, empty ones too");
+        assert_eq!((extras.buttons.len(), extras.left_out), (3, 1));
+        std::fs::remove_dir_all(&dir).unwrap();
+        let colours = " SEND,x,c,,,0,3,,\r\n SEND,x,c,,,0,4,,\r\n SEND,x,c,,,0,8,,\r\n SEND,x,c,,,0,9,,\r\n";
+        let (buttons, _) = securecrt_buttons(&format!("Z:\"T\"=00000004\r\n{colours}"), "/cfg", "/home/kim");
+        assert_eq!(buttons.iter().map(|b| b.color.as_str()).collect::<Vec<_>>(), ["blue", "purple", "", "yellow"], "cyan, magenta, white, yellow");
+        let list = "\u{feff}S:\"List Name\"=Test\r\nD:\"Regex Line Mode\"=00000001\r\nD:\"Match Case\"=00000000\r\nZ:\"Keyword List V3\"=00000003\r\n \"error\",000000ff,00000000,00000001\r\n \"warning\",00ff4b2b,00000000,00000001\r\n \"whatheheck\",0000ff7b,00000000,00000001\r\n";
+        assert_eq!(securecrt_keywords(list, "file"), ("Test".to_string(), vec!["error = red".to_string(), "warning = blue".into(), "whatheheck = green".into()]));
+        let session = "S:\"Protocol Name\"=SSH2\r\nS:\"Hostname\"=web1\r\nS:\"User Button Bar Name\"=Lab\r\nS:\"Keyword Set\"=Test\r\n";
+        let s = from_securecrt(session, "SecureCRT", "web1", "/cfg", "").unwrap();
+        assert_eq!((s.button_bar.as_str(), s.keyword_set.as_str()), ("Lab", "Test"));
+        let s = from_securecrt(&session.replace("=Lab", "=Default"), "SecureCRT", "web1", "/cfg", "").unwrap();
+        assert_eq!(s.button_bar, "", "SecureCRT's Default bar is OpenCRT's default");
+        let s = from_securecrt(&session.replace("=Test", "=<None>"), "SecureCRT", "web1", "/cfg", "").unwrap();
+        assert_eq!(s.keyword_set, "");
+    }
 
     #[test]
     fn rdp_files() {

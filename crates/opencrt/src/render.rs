@@ -51,6 +51,12 @@ const KEYWORD_COLORS: [(&str, Rgb, Rgb); 5] = [
     ("purple", [0xff, 0xff, 0xff], [0x88, 0x17, 0x98]),
 ];
 
+/// The keyword colour name nearest to `rgb`, for keyword lists from elsewhere.
+pub fn nearest_keyword_colour(rgb: Rgb) -> &'static str {
+    let distance = |c: &Rgb| (0..3).map(|i| (i32::from(c[i]) - i32::from(rgb[i])).pow(2)).sum::<i32>();
+    KEYWORD_COLORS.iter().min_by_key(|(_, _, bg)| distance(bg)).map_or("red", |(name, ..)| name)
+}
+
 #[derive(Clone, Debug)]
 enum Pattern {
     /// Lowercased; matched ignoring case.
@@ -441,23 +447,13 @@ const FALLBACKS: &[&str] = &[
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
 ];
 
-#[cfg(windows)]
-const UI_FONTS: &[&str] = &["segoeui.ttf", "tahoma.ttf", "arial.ttf"];
-#[cfg(target_os = "macos")]
-const UI_FONTS: &[&str] = &["/System/Library/Fonts/SFNS.ttf", "/System/Library/Fonts/Helvetica.ttc"];
-#[cfg(all(unix, not(target_os = "macos")))]
-const UI_FONTS: &[&str] = &[
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    "/usr/share/fonts/dejavu-sans-fonts/DejaVuSans.ttf",
-    "/usr/share/fonts/TTF/DejaVuSans.ttf",
-    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-];
 
-/// Render `text` in the UI font rotated 90° clockwise (reading top to bottom),
-/// as (width, height, RGBA) with a transparent background. The software renderer
+/// Render `text` in the UI font (the bundled IBM Plex Sans, so it never depends
+/// on what is installed) rotated 90° clockwise (reading top to bottom), as
+/// (width, height, RGBA) with a transparent background. The software renderer
 /// cannot rotate text itself; this feeds the vertical dock tabs.
 pub fn vertical_label(text: &str, px: f32, color: Rgb) -> Option<(usize, usize, Vec<u8>)> {
-    let font = load_first(UI_FONTS)?;
+    let font = Font::from_bytes(include_bytes!("../ui/fonts/IBMPlexSans-Regular.ttf") as &[u8], FontSettings::default()).ok()?;
     let line = font.horizontal_line_metrics(px)?;
     let ascent = line.ascent.round() as i32;
     let h = (line.ascent - line.descent).ceil() as usize;
@@ -661,10 +657,7 @@ mod tests {
 
     #[test]
     fn vertical_label_is_taller_than_wide() {
-        let Some((w, h, rgba)) = vertical_label("Session Manager", 12.0, [0, 0, 0]) else {
-            eprintln!("skipped: no UI font");
-            return;
-        };
+        let (w, h, rgba) = vertical_label("Session Manager", 12.0, [0, 0, 0]).expect("the bundled UI font");
         assert!(h > 3 * w, "rotated label should be tall and thin: {w}x{h}");
         assert_eq!(rgba.len(), w * h * 4);
         assert!(rgba.chunks(4).any(|p| p[3] > 128), "some glyph coverage");

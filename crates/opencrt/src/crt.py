@@ -99,6 +99,7 @@ class Screen(_Part):
     CurrentColumn = _prop("Screen.CurrentColumn")
     Rows = _prop("Screen.Rows")
     Columns = _prop("Screen.Columns")
+    Selection = _prop("Screen.Selection")
     MatchIndex = _prop("Screen.MatchIndex")
     Synchronous = _prop("Screen.Synchronous", True)
     IgnoreCase = _prop("Screen.IgnoreCase", True)

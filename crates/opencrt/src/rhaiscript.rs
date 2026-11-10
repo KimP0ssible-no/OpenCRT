@@ -80,6 +80,8 @@ pub struct ScreenInfo {
     pub cols: usize,
     pub row: usize,
     pub col: usize,
+    /// The text selected on it; empty for none.
+    pub selection: String,
 }
 
 /// Every tab as (id, caption, connected), in order, and which are active and

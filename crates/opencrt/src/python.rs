@@ -344,7 +344,7 @@ mod tests {
     use std::time::Duration;
 
     use super::*;
-    use crate::rhaiscript::{Request, TabKey, Tabs};
+    use crate::rhaiscript::{Request, ScreenInfo, TabKey, Tabs};
 
     /// A Python 3 to test with; None (the test is skipped) without one.
     fn python() -> Option<PathBuf> {
@@ -394,7 +394,7 @@ if crt.Dialog.MessageBox("Reload?", "t", BUTTON_YESNO) == IDYES:
 config = crt.OpenSessionConfiguration("Default")
 config.SetOption("Username", "admin")
 config.Save()
-crt.Session.SetStatusText("%s %d" % (crt.Arguments[0], len(crt.Arguments)))
+crt.Session.SetStatusText("%s %d %s" % (crt.Arguments[0], len(crt.Arguments), crt.Screen.Selection.strip()))
 crt.Screen.Nope()
 "##;
         let Some(s) = run("main", source, vec!["a".into()]) else {
@@ -428,7 +428,13 @@ crt.Screen.Nope()
             }
             _ => panic!("expected a save"),
         }
-        assert!(matches!(next(&s), (None, Request::Status(t)) if t == "a 1"));
+        match next(&s) {
+            (None, Request::Screen(reply)) => {
+                reply.send(ScreenInfo { text: String::new(), rows: 24, cols: 80, row: 1, col: 1, selection: " 00:1b:21:aa:bb:cc\n".into() }).unwrap()
+            }
+            _ => panic!("expected the screen"),
+        }
+        assert!(matches!(next(&s), (None, Request::Status(t)) if t == "a 1 00:1b:21:aa:bb:cc"));
         match next(&s) {
             (None, Request::Done(Err(e))) => assert!(e.starts_with("AttributeError: OpenCRT's Screen has no Nope (line 12)"), "{e}"),
             _ => panic!("expected the script to fail"),

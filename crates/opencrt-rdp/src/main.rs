@@ -202,7 +202,9 @@ async fn connect(
         connector.attach_static_channel(rdpdr);
     }
     let mut framed = TokioFramed::new(stream);
-    let should_upgrade = ironrdp_tokio::connect_begin(&mut framed, &mut connector).await?;
+    let should_upgrade = ironrdp_tokio::connect_begin(&mut framed, &mut connector)
+        .await
+        .map_err(|e| anyhow!("{}", connect_error(&format!("{e:#}"))))?;
     // NLA when the server chose CredSSP; otherwise TLS alone.
     let nla = matches!(&connector.state, ClientConnectorState::EnhancedSecurityUpgrade { selected_protocol }
         if selected_protocol.intersects(SecurityProtocol::HYBRID | SecurityProtocol::HYBRID_EX));
@@ -229,16 +231,21 @@ async fn connect(
         None,
     )
     .await
-    .map_err(|e| anyhow!("{}", login_error(&e)))?;
+    .map_err(|e| anyhow!("{}", connect_error(&format!("{e:#}"))))?;
     Ok((result, framed, security))
 }
 
-/// A plain-language reason for the usual login failures.
-fn login_error(e: &connector::ConnectorError) -> String {
-    let text = format!("{e:#}");
+/// A plain-language reason for the usual connection and login failures.
+fn connect_error(text: &str) -> String {
     // NLA (CredSSP) is where the user name and password are checked.
     if text.contains("CredSSP") || text.to_lowercase().contains("logon failure") {
         "Login failed: the server did not accept the user name or password.".into()
+    } else if text.contains("server selected STANDARD_RDP_SECURITY") {
+        // xrdp falls back to it when it cannot use its TLS certificate.
+        "The server offers only the old Standard RDP Security, which is not secure and which OpenCRT does not use. \
+         On xrdp, let it use TLS: give it access to its certificate (sudo adduser xrdp ssl-cert, then restart xrdp), \
+         or set security_layer=tls in /etc/xrdp/xrdp.ini."
+            .into()
     } else {
         format!("RDP connection failed: {text}")
     }
@@ -665,6 +672,14 @@ fn display_control_ready(stage: &mut ActiveStage) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn connection_errors_in_plain_words() {
+        let xrdp = "[Initiation @ vendor/ironrdp-connector/src/connection.rs:362] reason: client advertised SSL | HYBRID | HYBRID_EX, but server selected STANDARD_RDP_SECURITY";
+        assert!(connect_error(xrdp).contains("security_layer=tls"));
+        assert!(connect_error("CredSSP: logon failure").starts_with("Login failed"));
+        assert_eq!(connect_error("boom"), "RDP connection failed: boom");
+    }
 
     #[test]
     fn changes_are_found_per_band() {

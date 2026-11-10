@@ -3348,7 +3348,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                     font-size: 11px * Theme.ui-scale;
                 }
                 if root.category == 4: Text {
-                    text: "Highlight keywords, one per line, any case: a word or a /regular expression/. Add = red, orange, green, blue or purple for a colour other than amber, and \"line\" to mark the whole line (error = red line). A [name] line starts a named set that a session can choose (Session Options > Appearance) in place of the Default set: the lines above the first [name].";
+                    text: "Highlight keywords, one per line, any case: a word or a /regular expression/. After =, add red, orange, green, blue or purple for a colour other than amber, \"text\" to colour the letters instead of the background, \"bold\", \"word\" to match whole words only, and \"line\" to mark the whole line (error = red text bold word; down = red line). A [name] line starts a named set that a session can choose (Session Options > Appearance) in place of the Default set: the lines above the first [name].";
                     wrap: word-wrap;
                 }
                 if root.category == 4: TextEdit {

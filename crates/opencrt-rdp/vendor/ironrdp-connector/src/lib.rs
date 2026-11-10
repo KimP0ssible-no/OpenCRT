@@ -264,6 +264,10 @@ pub struct Config {
     /// Data's early capability flags. Upstream IronRDP has the same field
     /// (unreleased after 0.10.0); this copy goes once a release has it.
     pub support_dyn_vc_gfx_protocol: bool,
+
+    /// OpenCRT: ask for the console (administrative) session, like
+    /// `mstsc /admin`: the Client Cluster Data names session 0 as valid.
+    pub admin_session: bool,
 }
 
 ironrdp_core::assert_impl!(Config: Send, Sync);

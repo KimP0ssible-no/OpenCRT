@@ -120,7 +120,8 @@ automatic check off in Options > Global Options > General.
   Telnet, RLogin, raw TCP, serial (COM / tty, modem dialling, VM consoles),
   local shell, and RDP (remote desktop
   in a tab that follows the tab's size, keyboard and mouse, clipboard text
-  both ways; NLA with user name and password), and VNC (RFB 3.3 to 3.8: no
+  both ways; NLA with user name and password; the console (administrative)
+  session like `mstsc /admin`), and VNC (RFB 3.3 to 3.8: no
   password, a VNC password, TightVNC's login, a Mac's own account, or
   VeNCrypt TLS with a certificate checked like RDP's; Tight with JPEG
   quality for slow links, ZRLE; the desktop is shown whole or scaled to the
@@ -194,6 +195,9 @@ automatic check off in Options > Global Options > General.
 | Dialog lists: Up / Down, Home / End | Move through colour schemes and option pages |
 | F1 … F12 (with Ctrl/Alt/Shift) | Your text, if mapped in Global Options > Keyboard |
 | Ctrl+C or Esc during a transfer | Cancel it |
+
+Help > Keyboard Shortcuts shows the main ones in OpenCRT. F1 stays with the
+host; map it with `F1 = menu: shortcuts` to open that list instead.
 
 ## Command-line tools
 `ocrt` (installed beside OpenCRT) uses OpenCRT's known host keys and SSH code:

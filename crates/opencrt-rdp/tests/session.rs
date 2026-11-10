@@ -97,6 +97,7 @@ fn connect(port: u16, password: &str) -> ToHelper {
         sound: true,
         share: String::new(),
         h264: true,
+        admin: false,
     }
 }
 

@@ -1697,6 +1697,7 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <bool> rdp-sound;
     in-out property <string> rdp-share;
     in-out property <bool> rdp-h264;
+    in-out property <bool> rdp-admin;
     in-out property <string> terminal-type;
     // Index into codec::ENCODINGS.
     in-out property <int> encoding;
@@ -2188,6 +2189,11 @@ component SessionOptionsDialog inherits DialogFrame {
                     CheckBox {
                         text: "Use H.264 when the server offers it (much faster; turn off if the desktop stays black)";
                         checked <=> root.rdp-h264;
+                        enabled: root.protocol == 5;
+                    }
+                    CheckBox {
+                        text: "Connect to the console (administrative) session, like mstsc /admin";
+                        checked <=> root.rdp-admin;
                         enabled: root.protocol == 5;
                     }
                     CheckBox {
@@ -3570,6 +3576,56 @@ component ScriptEditor inherits DialogFrame {
     }
 }
 
+component ShortcutsDialog inherits DialogFrame {
+    callback close();
+    // Slint reports macOS Command as control, so these keys use Command there.
+    property <bool> mac: Platform.os == OperatingSystemType.macos;
+    property <[{keys: string, what: string}]> rows: [
+        { keys: root.mac ? "Cmd+T" : "Ctrl+Shift+T", what: "Quick Open: find a saved session or type a host" },
+        { keys: root.mac ? "Cmd+C" : "Ctrl+C, Ctrl+Insert", what: root.mac ? "Copy the selection" : "Copy the selection (with none, Ctrl+C goes to the host)" },
+        { keys: root.mac ? "Cmd+V" : "Ctrl+V, Shift+Insert", what: "Paste" },
+        { keys: "Middle click", what: "Paste" },
+        { keys: "Ctrl+Tab", what: "Next tab" },
+        { keys: "Ctrl+Shift+Tab", what: "Previous tab" },
+        { keys: root.mac ? "Cmd+1 ... Cmd+9" : "Alt+1 ... Alt+9", what: "Go to tab 1 to 9" },
+        { keys: root.mac ? "Option+Return" : "Alt+Enter", what: "Full screen" },
+        { keys: "Shift+PageUp, Shift+PageDown", what: "Scroll back or forward a page" },
+        { keys: root.mac ? "Cmd+wheel" : "Ctrl+wheel", what: "Font size" },
+        { keys: root.mac ? "Cmd+click" : "Ctrl+click", what: "Open a web address in the browser" },
+        { keys: "Enter", what: "Reconnect a disconnected tab" },
+        { keys: "Ctrl+C, Escape", what: "Cancel a file transfer" },
+    ];
+    title: "Keyboard Shortcuts";
+    dialog-width: 600px * Theme.ui-scale;
+    VerticalLayout {
+        spacing: 4px;
+        for row in root.rows: HorizontalLayout {
+            spacing: 16px;
+            Text {
+                text: row.keys;
+                width: 230px * Theme.ui-scale;
+                font-family: "IBM Plex Mono";
+            }
+            Text {
+                text: row.what;
+                wrap: word-wrap;
+            }
+        }
+    }
+    Text {
+        text: "Add your own in Global Options > Keyboard, or per session in Session Options > Keyboard. For example, F1 = menu: shortcuts opens this list.";
+        wrap: word-wrap;
+        color: Theme.text-secondary;
+    }
+    DialogButtons {
+        DialogButton {
+            text: "OK";
+            primary: true;
+            clicked => { root.close(); }
+        }
+    }
+}
+
 component AboutDialog inherits DialogFrame {
     in property <string> version;
     in property <string> settings-dir;
@@ -4469,6 +4525,7 @@ export component MainWindow inherits Window {
     in-out property <bool> so-rdp-sound;
     in-out property <string> so-rdp-share;
     in-out property <bool> so-rdp-h264;
+    in-out property <bool> so-rdp-admin;
     in-out property <string> so-term;
     in-out property <int> so-encoding;
     in property <[string]> encoding-names;
@@ -5185,6 +5242,10 @@ export component MainWindow inherits Window {
         }
         Menu {
             title: "Help";
+            MenuItem {
+                title: "Keyboard Shortcuts";
+                activated => { root.menu("shortcuts"); }
+            }
             MenuItem {
                 title: "Check for Updates";
                 activated => { root.menu("check-updates"); }
@@ -6056,6 +6117,7 @@ export component MainWindow inherits Window {
         rdp-sound <=> root.so-rdp-sound;
         rdp-share <=> root.so-rdp-share;
         rdp-h264 <=> root.so-rdp-h264;
+        rdp-admin <=> root.so-rdp-admin;
         terminal-type <=> root.so-term;
         encoding <=> root.so-encoding;
         encoding-names: root.encoding-names;
@@ -6671,6 +6733,12 @@ export component MainWindow inherits Window {
                     root.focus-terminal();
                 }
             }
+        }
+    }
+    if root.dialog == 21: ShortcutsDialog {
+        close => {
+            root.dialog = 0;
+            root.focus-terminal();
         }
     }
     if root.dialog == 4: AboutDialog {

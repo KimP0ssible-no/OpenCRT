@@ -107,6 +107,7 @@ const DIALOG_PASTE: i32 = 17;
 const DIALOG_DROP: i32 = 18;
 const DIALOG_SCRIPT_EDITOR: i32 = 19;
 const DIALOG_QUICK_OPEN: i32 = 20;
+const DIALOG_SHORTCUTS: i32 = 21;
 /// File > Auto Print collects at most this much output.
 const AUTO_PRINT_LIMIT: usize = 4 << 20;
 /// How dropped files are sent (Global Options > File Transfer); "" asks.
@@ -171,6 +172,8 @@ pub struct Target {
     pub rdp_share: String,
     /// RDP: H.264 when the server offers it; None for yes.
     pub rdp_h264: Option<bool>,
+    /// RDP: the console (administrative) session.
+    pub rdp_admin: bool,
 }
 
 /// A remembered secret; kept out of debug output.
@@ -223,6 +226,7 @@ impl Target {
             rdp_sound: Some(s.rdp_sound),
             rdp_share: config::expand_env(&s.rdp_share),
             rdp_h264: Some(s.rdp_h264),
+            rdp_admin: s.rdp_admin,
         }
     }
 
@@ -339,6 +343,7 @@ impl Target {
             sound: self.rdp_sound.unwrap_or(true),
             share: self.rdp_share.clone(),
             h264: self.rdp_h264.unwrap_or(true),
+            admin: self.rdp_admin,
             credential: self.credential.clone(),
             password: self.cached_password.as_ref().map(|s| s.0.clone()),
             jump: (!self.hops.is_empty()).then(|| self.credentials()),
@@ -2608,6 +2613,7 @@ impl App {
             "export-sessions" => self.export_sessions(),
             "import-sessions" => self.import_sessions(),
             "global-options" => return self.show_global_options(ui),
+            "shortcuts" => return ui.set_dialog(DIALOG_SHORTCUTS),
             "check-updates" => {
                 ui.set_dialog(DIALOG_ABOUT);
                 return self.check_updates(ui, true);
@@ -4640,6 +4646,7 @@ impl App {
         ui.set_so_rdp_sound(session.rdp_sound);
         ui.set_so_rdp_share(session.rdp_share.clone().into());
         ui.set_so_rdp_h264(session.rdp_h264);
+        ui.set_so_rdp_admin(session.rdp_admin);
         ui.set_so_term(session.terminal_type.clone().into());
         let names: Vec<SharedString> = crate::codec::ENCODINGS.iter().map(|(_, name)| SharedString::from(*name)).collect();
         ui.set_encoding_names(ModelRc::new(VecModel::from(names)));
@@ -4736,6 +4743,7 @@ impl App {
             rdp_sound: ui.get_so_rdp_sound(),
             rdp_share: ui.get_so_rdp_share().trim().to_string(),
             rdp_h264: ui.get_so_rdp_h264(),
+            rdp_admin: ui.get_so_rdp_admin(),
             terminal_type: ui.get_so_term().trim().to_string(),
             latin1: false,
             encoding: crate::codec::ENCODINGS.get(ui.get_so_encoding().max(0) as usize).map_or("", |(label, _)| label).to_string(),
@@ -6855,7 +6863,7 @@ impl App {
             );
         };
         let global_key = ui.get_go_global_key().trim().to_string();
-        if !global_key.is_empty() && !Path::new(&global_key).is_file() {
+        if !global_key.is_empty() && !Path::new(&config::expand_env(&global_key)).is_file() {
             return ui.set_go_error("Connection: the default SSH2 key file does not exist.".into());
         }
         let (print_font, print_margin) = (ui.get_go_print_font(), ui.get_go_print_margin());

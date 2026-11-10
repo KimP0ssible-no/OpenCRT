@@ -29,7 +29,8 @@ pub enum ToHelper {
     /// effects the server may use: [`SPEED_BEST`], [`SPEED_BALANCED`],
     /// [`SPEED_FASTEST`]; `sound` plays the remote computer's sound here;
     /// `share` is a local folder to offer the remote computer as a drive ("" for none);
-    /// `h264` uses the Graphics Pipeline (H.264) when the server offers it.
+    /// `h264` uses the Graphics Pipeline (H.264) when the server offers it;
+    /// `admin` asks for the console (administrative) session.
     Connect {
         host: String,
         port: u16,
@@ -42,6 +43,7 @@ pub enum ToHelper {
         sound: bool,
         share: String,
         h264: bool,
+        admin: bool,
     },
     /// Answer to [`FromHelper::Certificate`]: continue (true) or abort.
     Trust(bool),
@@ -192,7 +194,7 @@ fn read_message(input: &mut impl Read) -> io::Result<Option<(u8, Vec<u8>)>> {
 impl ToHelper {
     pub fn write(&self, out: &mut impl Write) -> io::Result<()> {
         let (tag, body) = match self {
-            ToHelper::Connect { host, port, user, domain, password, width, height, speed, sound, share, h264 } => (
+            ToHelper::Connect { host, port, user, domain, password, width, height, speed, sound, share, h264, admin } => (
                 1,
                 Body::default()
                     .str(host)
@@ -205,7 +207,8 @@ impl ToHelper {
                     .u8(*speed)
                     .u8(*sound as u8)
                     .str(share)
-                    .u8(*h264 as u8),
+                    .u8(*h264 as u8)
+                    .u8(*admin as u8),
             ),
             ToHelper::Trust(yes) => (2, Body::default().u8(*yes as u8)),
             ToHelper::Key { scancode, extended, down } => {
@@ -243,6 +246,7 @@ impl ToHelper {
                 sound: f.u8()? != 0,
                 share: f.str()?,
                 h264: f.u8()? != 0,
+                admin: f.u8()? != 0,
             },
             2 => ToHelper::Trust(f.u8()? != 0),
             3 => ToHelper::Key { scancode: f.u8()?, extended: f.u8()? != 0, down: f.u8()? != 0 },
@@ -333,6 +337,7 @@ mod tests {
                 sound: true,
                 share: "/home/kim/Shared".into(),
                 h264: true,
+                admin: true,
             },
             ToHelper::Trust(true),
             ToHelper::Key { scancode: 0x1d, extended: true, down: false },

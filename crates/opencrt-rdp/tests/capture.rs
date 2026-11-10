@@ -44,6 +44,7 @@ fn capture() {
         sound: false,
         share: String::new(),
         h264: true,
+        admin: false,
     };
     connect.write(&mut stdin).unwrap();
     let (tx, rx) = std::sync::mpsc::channel();

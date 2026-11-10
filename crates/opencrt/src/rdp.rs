@@ -90,6 +90,8 @@ pub struct Settings {
     pub share: String,
     /// Use H.264 (the Graphics Pipeline) when the server offers it.
     pub h264: bool,
+    /// Ask for the console (administrative) session, like `mstsc /admin`.
+    pub admin: bool,
     /// Saved credential whose password is used instead of asking.
     pub credential: Option<String>,
     /// A password remembered from an earlier login this run.
@@ -333,6 +335,7 @@ async fn attempt(
         sound: settings.sound,
         share: settings.share.clone(),
         h264: settings.h264,
+        admin: settings.admin,
     };
     tell(&mut stdin, &connect)?;
     drop(connect); // the password is not kept

@@ -547,6 +547,8 @@ pub struct Options {
     pub web_search: String,
     /// Reconnect sessions whose connection drops.
     pub auto_reconnect: bool,
+    /// SSH2: offer the old algorithms to every host, not only sessions set to.
+    pub legacy_algorithms: bool,
     /// Keep typed passwords and key passphrases in memory until exit, so
     /// reconnects and new tabs to the same host do not ask again.
     pub remember_secrets: bool,
@@ -919,6 +921,7 @@ impl Default for Options {
             send_wait_prompt: String::new(),
             web_search: "https://duckduckgo.com/?q=%s".into(),
             auto_reconnect: false,
+            legacy_algorithms: false,
             remember_secrets: false,
             reopen_sessions: false,
             server_load: true,

@@ -2903,6 +2903,7 @@ component GlobalOptionsDialog inherits DialogFrame {
     in-out property <string> wait-prompt;
     in-out property <string> web-search;
     in-out property <bool> auto-reconnect;
+    in-out property <bool> legacy;
     in-out property <bool> remember-secrets;
     in-out property <bool> reopen;
     in-out property <bool> server-load;
@@ -3246,6 +3247,10 @@ component GlobalOptionsDialog inherits DialogFrame {
                 if root.category == 3: CheckBox {
                     text: "Reconnect automatically when a connection drops";
                     checked <=> root.auto-reconnect;
+                }
+                if root.category == 3: CheckBox {
+                    text: "Allow legacy SSH2 algorithms for every host (old network devices; modern ones still come first)";
+                    checked <=> root.legacy;
                 }
                 if root.category == 3: CheckBox {
                     text: "Remember passwords and key passphrases until OpenCRT closes";
@@ -4648,6 +4653,7 @@ export component MainWindow inherits Window {
     in-out property <string> go-wait-prompt;
     in-out property <string> go-web-search;
     in-out property <bool> go-auto-reconnect;
+    in-out property <bool> go-legacy;
     in-out property <bool> go-remember-secrets;
     in-out property <bool> go-reopen;
     in-out property <bool> go-server-load;
@@ -6270,6 +6276,7 @@ export component MainWindow inherits Window {
         wait-prompt <=> root.go-wait-prompt;
         web-search <=> root.go-web-search;
         auto-reconnect <=> root.go-auto-reconnect;
+        legacy <=> root.go-legacy;
         remember-secrets <=> root.go-remember-secrets;
         reopen <=> root.go-reopen;
         server-load <=> root.go-server-load;

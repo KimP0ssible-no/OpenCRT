@@ -182,7 +182,8 @@ automatic check off in Options > Global Options > General.
 - **SSH port forwarding**: local, remote and dynamic (SOCKS4/5); jump hosts
   (connect through a gateway, set per session); SOCKS5 or HTTP proxies (SSH2,
   Telnet, raw); agent and X11 forwarding; optional compression;
-  legacy algorithms for old devices.
+  legacy algorithms for old devices, per session or for every host (Global
+  Options > Connection).
 
 ## Keyboard
 | Keys | Action |

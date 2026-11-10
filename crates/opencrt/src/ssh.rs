@@ -3,7 +3,7 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 use anyhow::{Context, anyhow};
 use russh::client::{self, AuthResult, KeyboardInteractiveAuthResponse};
@@ -19,6 +19,8 @@ use crate::forward::{self, Forward, RemoteTargets};
 /// SSH keepalive interval in seconds for new connections (0 = off); set from
 /// Global Options.
 pub static KEEPALIVE_SECS: AtomicU64 = AtomicU64::new(0);
+/// Global Options: offer the old algorithms to every host (old network gear).
+pub static LEGACY_EVERYWHERE: AtomicBool = AtomicBool::new(false);
 
 /// A logged-in SSH connection that other tabs can open channels on; it stays
 /// up while any clone is held.
@@ -606,16 +608,20 @@ async fn login(
         x11: creds.x11_display.as_deref().and_then(x11_target).map(|(target, _)| target),
     };
     let keepalive = KEEPALIVE_SECS.load(Ordering::Relaxed);
+    let legacy = creds.legacy || LEGACY_EVERYWHERE.load(Ordering::Relaxed);
     let config = Arc::new(client::Config {
         keepalive_interval: (keepalive > 0).then(|| std::time::Duration::from_secs(keepalive)),
         keepalive_max: 3,
-        preferred: preferred(creds.legacy, creds.compression),
+        preferred: preferred(legacy, creds.compression),
         ..Default::default()
     });
     // Old devices fail negotiation with modern defaults; say what to change.
     let hint = |e: anyhow::Error| {
-        if !creds.legacy && matches!(e.downcast_ref::<russh::Error>(), Some(russh::Error::NoCommonAlgo { .. })) {
-            e.context("The host only offers older algorithms: tick \"Allow legacy algorithms\" in Session Options > Authentication.")
+        if !legacy && matches!(e.downcast_ref::<russh::Error>(), Some(russh::Error::NoCommonAlgo { .. })) {
+            e.context(
+                "The host only offers older algorithms: tick \"Allow legacy algorithms\" in Session Options > Authentication, \
+                 or for every host in Global Options > Connection.",
+            )
         } else {
             e
         }

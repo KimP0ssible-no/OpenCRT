@@ -51,6 +51,12 @@ const KEYWORD_COLORS: [(&str, Rgb, Rgb); 5] = [
     ("purple", [0xff, 0xff, 0xff], [0x88, 0x17, 0x98]),
 ];
 
+/// The keyword colour name nearest to `rgb`, for keyword lists from elsewhere.
+pub fn nearest_keyword_colour(rgb: Rgb) -> &'static str {
+    let distance = |c: &Rgb| (0..3).map(|i| (i32::from(c[i]) - i32::from(rgb[i])).pow(2)).sum::<i32>();
+    KEYWORD_COLORS.iter().min_by_key(|(_, _, bg)| distance(bg)).map_or("red", |(name, ..)| name)
+}
+
 #[derive(Clone, Debug)]
 enum Pattern {
     /// Lowercased; matched ignoring case.

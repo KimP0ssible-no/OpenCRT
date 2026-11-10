@@ -6297,7 +6297,29 @@ impl App {
         self.save_store();
         let existed = if skipped > 0 { format!("; {skipped} already existed") } else { String::new() };
         let other = if not_imported > 0 { format!("; {not_imported} not imported (unreadable or unsupported protocol)") } else { String::new() };
-        self.notify(format!("Imported {added} sessions from {}{existed}{other}.", root.display()));
+        // Button bars and keyword lists sit beside the Sessions folder; ones already here are kept.
+        let home = std::env::home_dir().map(|h| h.display().to_string()).unwrap_or_default();
+        let (buttons, left_out, sets) = sessions::securecrt_extras(root.parent().unwrap_or(&root), &home);
+        let buttons: Vec<_> = buttons.into_iter().filter(|b| !self.options.buttons.contains(b)).collect();
+        let known = render::keyword_set_names(&self.options.keywords);
+        let sets: Vec<_> = sets.into_iter().filter(|(name, _)| !known.contains(name)).collect();
+        let mut extras = String::new();
+        if !buttons.is_empty() || !sets.is_empty() {
+            extras = format!(" Added {} buttons and {} keyword lists", buttons.len(), sets.len());
+            if left_out > 0 {
+                extras += &format!(" ({left_out} SecureCRT menu-function buttons left out)");
+            }
+            extras.push('.');
+            self.options.buttons.extend(buttons);
+            for (name, lines) in sets {
+                self.options.keywords.push(format!("[{name}]"));
+                self.options.keywords.extend(lines);
+            }
+            self.renderer.set_keywords(&self.options.keywords);
+            self.shown_bar = None;
+            self.save_options();
+        }
+        self.notify(format!("Imported {added} sessions from {}{existed}{other}.{extras}", root.display()));
     }
 
     /// Script > Run: run a script file in the active session.

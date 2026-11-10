@@ -153,6 +153,8 @@ automatic check off in Options > Global Options > General.
   sessions; SSH keepalive and per-session anti-idle; Global Options, Button
   Bar, Command Manager (with folders), Command Window, keyword
   highlighting, Edit > Send Input to All Tabs; import from `~/.ssh/config`,
+  from SecureCRT (sessions with their button bar and keyword list, the button
+  bars' send and run-script buttons, and keyword lists with their colours),
   export/import of sessions, and Remote Desktop Connection `.rdp` files as RDP
   sessions (Tools > Import Sessions, several at once).
 - **Settings Sync**: keep sessions, options, host keys and scripts in a

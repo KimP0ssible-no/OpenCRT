@@ -1,6 +1,6 @@
 name: Runner specs
 
-# One-off: the hardware of the hosted runners CI uses, in the run summary.
+# One-off: the hardware of the hosted runners CI uses, in the run summary and log.
 on:
   push:
     branches: [runner-specs]
@@ -27,7 +27,7 @@ jobs:
             free -h | head -2
             df -h / "$GITHUB_WORKSPACE" | uniq
             echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Windows
         if: runner.os == 'Windows'
         shell: pwsh
@@ -45,6 +45,7 @@ jobs:
           }
           $out += '```'
           $out | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          $out
       - name: macOS
         if: runner.os == 'macOS'
         run: |
@@ -56,4 +57,4 @@ jobs:
             echo "RAM: $(( $(sysctl -n hw.memsize) / 1073741824 )) GB"
             df -h / "$GITHUB_WORKSPACE" | uniq
             echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"

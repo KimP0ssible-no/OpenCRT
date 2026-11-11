@@ -128,7 +128,9 @@ automatic check off in Options > Global Options > General.
   quality for slow links, ZRLE; the desktop is shown whole or scaled to the
   tab; without VeNCrypt, set a jump host to tunnel it over SSH).
 - **Security**: host keys checked against OpenCRT's own `known_hosts`; unknown
-  keys are confirmed by the user, changed keys block the connection; saved keys
+  keys are confirmed by the user (or, if Global Options > Connection says so,
+  saved without asking, as OpenSSH's `accept-new`), changed keys block the
+  connection; saved keys
   can be reviewed and removed in Tools > Host Keys. RDP server certificates
   are checked the same way (`rdp_known_certs`) before any password is sent.
 - **Terminal**: xterm emulation (256 colours, truecolour, mouse reporting,
@@ -152,7 +154,8 @@ automatic check off in Options > Global Options > General.
   connection, no second login); automatic reconnect; reopening last time's
   sessions; SSH keepalive and per-session anti-idle; Global Options, Button
   Bar, Command Manager (with folders), Command Window, keyword
-  highlighting, Edit > Send Input to All Tabs; import from `~/.ssh/config`,
+  highlighting (background or text colour, bold, whole words, whole lines),
+  Edit > Send Input to All Tabs; import from `~/.ssh/config`,
   from SecureCRT (sessions with their button bar and keyword list, the button
   bars' send and run-script buttons, and keyword lists with their colours),
   export/import of sessions, and Remote Desktop Connection `.rdp` files as RDP
@@ -182,7 +185,8 @@ automatic check off in Options > Global Options > General.
 - **SSH port forwarding**: local, remote and dynamic (SOCKS4/5); jump hosts
   (connect through a gateway, set per session); SOCKS5 or HTTP proxies (SSH2,
   Telnet, raw); agent and X11 forwarding; optional compression;
-  legacy algorithms for old devices.
+  legacy algorithms for old devices, per session or for every host (Global
+  Options > Connection).
 
 ## Keyboard
 | Keys | Action |

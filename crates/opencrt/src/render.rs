@@ -42,19 +42,22 @@ pub struct Renderer {
 const HIGHLIGHT_FG: Rgb = [0x1a, 0x1a, 0x1a];
 const HIGHLIGHT_BG: Rgb = [0xff, 0xc8, 0x3d];
 
-/// Other keyword colours (`error = red`): name, text, background.
-const KEYWORD_COLORS: [(&str, Rgb, Rgb); 5] = [
-    ("red", [0xff, 0xff, 0xff], [0xd1, 0x34, 0x38]),
-    ("orange", [0x1a, 0x1a, 0x1a], [0xf7, 0x8c, 0x30]),
-    ("green", [0xff, 0xff, 0xff], [0x10, 0x7c, 0x10]),
-    ("blue", [0xff, 0xff, 0xff], [0x00, 0x78, 0xd4]),
-    ("purple", [0xff, 0xff, 0xff], [0x88, 0x17, 0x98]),
+/// Other keyword colours (`error = red`): name, text, background, and the
+/// colour for `text` style (letters only), mid-tone so it reads on dark and light.
+const KEYWORD_COLORS: [(&str, Rgb, Rgb, Rgb); 5] = [
+    ("red", [0xff, 0xff, 0xff], [0xd1, 0x34, 0x38], [0xe5, 0x48, 0x4d]),
+    ("orange", [0x1a, 0x1a, 0x1a], [0xf7, 0x8c, 0x30], [0xe8, 0x7b, 0x1e]),
+    ("green", [0xff, 0xff, 0xff], [0x10, 0x7c, 0x10], [0x2e, 0xa0, 0x43]),
+    ("blue", [0xff, 0xff, 0xff], [0x00, 0x78, 0xd4], [0x3b, 0x8e, 0xea]),
+    ("purple", [0xff, 0xff, 0xff], [0x88, 0x17, 0x98], [0xa3, 0x71, 0xf7]),
 ];
+/// The default amber, for `text` style.
+const HIGHLIGHT_TEXT: Rgb = [0xd2, 0x99, 0x22];
 
 /// The keyword colour name nearest to `rgb`, for keyword lists from elsewhere.
 pub fn nearest_keyword_colour(rgb: Rgb) -> &'static str {
     let distance = |c: &Rgb| (0..3).map(|i| (i32::from(c[i]) - i32::from(rgb[i])).pow(2)).sum::<i32>();
-    KEYWORD_COLORS.iter().min_by_key(|(_, _, bg)| distance(bg)).map_or("red", |(name, ..)| name)
+    KEYWORD_COLORS.iter().min_by_key(|(_, _, bg, _)| distance(bg)).map_or("red", |(name, ..)| name)
 }
 
 #[derive(Clone, Debug)]
@@ -64,33 +67,48 @@ enum Pattern {
     Regex(regex::Regex),
 }
 
-/// Something to highlight, its colours, and whether the whole line is marked.
+/// How a match is drawn: its letters, its background (None keeps the cell's), bold.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Paint {
+    fg: Rgb,
+    bg: Option<Rgb>,
+    bold: bool,
+}
+
+/// Something to highlight, how, whether the whole line is marked, and
+/// whether only whole words match.
 #[derive(Clone, Debug)]
 pub struct Keyword {
     pattern: Pattern,
-    fg: Rgb,
-    bg: Rgb,
+    paint: Paint,
     line: bool,
+    word: bool,
 }
 
 /// A keyword line: `word` or `/regex/` (both ignore case), optionally
-/// followed by `= colour` (from KEYWORD_COLORS) and/or `line` to mark the
-/// whole line: `/link (down|flap)/ = red line`. Invalid regexes are skipped.
+/// followed by `=` and options: a colour (from KEYWORD_COLORS), `text` to
+/// colour the letters instead of the background, `bold`, `word` to match
+/// whole words only, `line` to mark the whole line:
+/// `/link (down|flap)/ = red line`, `error = red text bold word`.
+/// Invalid regexes are skipped.
 fn parse_keyword(line: &str) -> Option<Keyword> {
     let colour = |w: &str| KEYWORD_COLORS.iter().find(|(n, ..)| n.eq_ignore_ascii_case(w));
+    let flag = |w: &str| ["line", "text", "bold", "word"].iter().any(|f| f.eq_ignore_ascii_case(w));
     let (pattern, options) = match line.rsplit_once('=') {
-        Some((p, o)) if !o.trim().is_empty() && o.split_whitespace().all(|w| w.eq_ignore_ascii_case("line") || colour(w).is_some()) => (p, o),
+        Some((p, o)) if !o.trim().is_empty() && o.split_whitespace().all(|w| flag(w) || colour(w).is_some()) => (p, o),
         _ => (line, ""),
     };
-    let (fg, bg) = options.split_whitespace().find_map(colour).map_or((HIGHLIGHT_FG, HIGHLIGHT_BG), |(_, fg, bg)| (*fg, *bg));
+    let has = |f: &str| options.split_whitespace().any(|w| w.eq_ignore_ascii_case(f));
+    let (fg, bg, text) = options.split_whitespace().find_map(colour).map_or((HIGHLIGHT_FG, HIGHLIGHT_BG, HIGHLIGHT_TEXT), |(_, fg, bg, text)| (*fg, *bg, *text));
+    // Text style: the colour goes on the letters and the cell keeps its background.
+    let paint = if has("text") { Paint { fg: text, bg: None, bold: has("bold") } } else { Paint { fg, bg: Some(bg), bold: has("bold") } };
     let pattern = pattern.trim();
     let pattern = match pattern.strip_prefix('/').and_then(|p| p.strip_suffix('/')) {
         Some(re) if !re.is_empty() => Pattern::Regex(regex::RegexBuilder::new(re).case_insensitive(true).build().ok()?),
         _ if pattern.is_empty() => return None,
         _ => Pattern::Word(pattern.chars().flat_map(char::to_lowercase).collect()),
     };
-    let line = options.split_whitespace().any(|w| w.eq_ignore_ascii_case("line"));
-    Some(Keyword { pattern, fg, bg, line })
+    Some(Keyword { pattern, paint, line: has("line"), word: has("word") })
 }
 
 /// Keyword list lines (see `parse_keyword`) by set: a `[name]` line starts a
@@ -130,8 +148,9 @@ fn find_spans(line: &[char], needle: &[char], exact: bool) -> Vec<(usize, usize)
 }
 
 /// Column ranges in `line` where any keyword matches (case-insensitive), with
-/// that keyword's colours; whole-line marks come first so matches show over them.
-fn keyword_spans<'a>(line: &[char], keywords: impl IntoIterator<Item = &'a Keyword>) -> Vec<((usize, usize), Rgb, Rgb)> {
+/// how to draw them; whole-line marks come first so matches show over them.
+fn keyword_spans<'a>(line: &[char], keywords: impl IntoIterator<Item = &'a Keyword>) -> Vec<((usize, usize), Paint)> {
+    let in_word = |i: usize| line.get(i).is_some_and(|c| c.is_alphanumeric() || *c == '_');
     let lower: Vec<char> = line.iter().map(|c| c.to_lowercase().next().unwrap_or(*c)).collect();
     let text: String = line.iter().collect();
     let (mut lines, mut spans) = (Vec::new(), Vec::new());
@@ -146,10 +165,15 @@ fn keyword_spans<'a>(line: &[char], keywords: impl IntoIterator<Item = &'a Keywo
                 .map(|m| (text[..m.start()].chars().count(), text[..m.end()].chars().count()))
                 .collect(),
         };
-        if k.line && !found.is_empty() {
-            lines.push(((0, line.len()), k.fg, k.bg));
+        let found: Vec<(usize, usize)> = if k.word {
+            found.into_iter().filter(|&(s, e)| !(s > 0 && in_word(s - 1)) && !in_word(e)).collect()
         } else {
-            spans.extend(found.into_iter().map(|s| (s, k.fg, k.bg)));
+            found
+        };
+        if k.line && !found.is_empty() {
+            lines.push(((0, line.len()), k.paint));
+        } else {
+            spans.extend(found.into_iter().map(|s| (s, k.paint)));
         }
     }
     spans.sort_by_key(|(s, ..)| *s);
@@ -277,10 +301,13 @@ impl Renderer {
                 }
                 let found = self.find.as_ref().map(|(needle, exact)| find_spans(&line, needle, *exact)).unwrap_or_default();
                 let marks = keyword_spans(&line, keywords.iter().chain(&self.adhoc));
-                for ((start, end), fg, bg) in marks.into_iter().chain(found.into_iter().map(|s| (s, FIND_FG, FIND_BG))) {
+                let find = Paint { fg: FIND_FG, bg: Some(FIND_BG), bold: false };
+                for ((start, end), paint) in marks.into_iter().chain(found.into_iter().map(|s| (s, find))) {
                     // The selection (e.g. the current Find match) keeps its own colours.
                     for cell in row.iter_mut().filter(|c| (start..end).contains(&c.col) && !c.selected) {
-                        (cell.fg, cell.bg) = (fg, bg);
+                        cell.fg = paint.fg;
+                        cell.bg = paint.bg.unwrap_or(cell.bg);
+                        cell.bold |= paint.bold;
                     }
                 }
             }
@@ -614,7 +641,7 @@ mod tests {
         assert!(find_spans(&line, &[], false).is_empty());
     }
 
-    fn spans(line: &str, keywords: &[&str]) -> Vec<((usize, usize), Rgb, Rgb)> {
+    fn spans(line: &str, keywords: &[&str]) -> Vec<((usize, usize), Paint)> {
         let line: Vec<char> = line.chars().collect();
         let keywords: Vec<Keyword> = keywords.iter().filter_map(|w| parse_keyword(w)).collect();
         keyword_spans(&line, &keywords)
@@ -628,12 +655,21 @@ mod tests {
         assert_eq!(at, [(5, 9), (11, 16), (27, 32)]);
         assert!(spans(line, &[]).is_empty());
         // "error = red" is red; a plain word keeps the default amber.
-        assert_eq!((found[1].2, found[0].2), (KEYWORD_COLORS[0].2, HIGHLIGHT_BG));
+        assert_eq!((found[1].1.bg, found[0].1.bg), (Some(KEYWORD_COLORS[0].2), Some(HIGHLIGHT_BG)));
 
         // Regexes and whole lines; the line mark comes first so words show over it.
         let found = spans("é Gi0/12 is down", &[r"/gi\d+/\d+/ = blue", "/DOWN$/ = red line", "/(/"]);
         assert_eq!(found.iter().map(|(s, ..)| *s).collect::<Vec<_>>(), [(0, 16), (2, 8)]);
-        assert_eq!((found[0].2, found[1].2), (KEYWORD_COLORS[0].2, KEYWORD_COLORS[3].2));
+        assert_eq!((found[0].1.bg, found[1].1.bg), (Some(KEYWORD_COLORS[0].2), Some(KEYWORD_COLORS[3].2)));
+    }
+
+    #[test]
+    fn text_colour_bold_and_whole_words() {
+        let found = spans("error: errors, Error_1 error", &["error = red text bold word"]);
+        assert_eq!(found.iter().map(|(s, ..)| *s).collect::<Vec<_>>(), [(0, 5), (23, 28)], "not errors or Error_1");
+        assert_eq!(found[0].1, Paint { fg: KEYWORD_COLORS[0].3, bg: None, bold: true });
+        // Without `word`, substrings still match; without `text`, the background is painted.
+        assert_eq!(spans("errors", &["error = red"])[0].1, Paint { fg: KEYWORD_COLORS[0].1, bg: Some(KEYWORD_COLORS[0].2), bold: false });
     }
 
     #[test]
@@ -641,7 +677,7 @@ mod tests {
         let k = parse_keyword("  Error ").unwrap();
         assert!(matches!(k.pattern, Pattern::Word(w) if w == "error".chars().collect::<Vec<_>>()));
         let k = parse_keyword("up = GREEN line").unwrap();
-        assert_eq!((k.bg, k.line), (KEYWORD_COLORS[2].2, true));
+        assert_eq!((k.paint.bg, k.line), (Some(KEYWORD_COLORS[2].2), true));
         // An unknown colour is part of the word; blank lines are skipped.
         assert!(matches!(parse_keyword("a=b").unwrap().pattern, Pattern::Word(w) if w.len() == 3));
         assert!(parse_keyword("   ").is_none() && parse_keyword(" = red").is_none());

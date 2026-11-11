@@ -280,6 +280,7 @@ impl Target {
             proxy: self.proxy.clone(),
             saved: self.credential.clone(),
             cert_path: self.cert_path.clone(),
+            accept_new_keys: ssh::ACCEPT_NEW_HOST_KEYS.load(std::sync::atomic::Ordering::Relaxed),
         }
     }
 
@@ -1903,6 +1904,8 @@ impl App {
         let mut renderer = Renderer::new(&options.font, FONT_PX)?;
         renderer.set_keywords(&options.keywords);
         ssh::KEEPALIVE_SECS.store(options.keepalive_secs, std::sync::atomic::Ordering::Relaxed);
+        ssh::LEGACY_EVERYWHERE.store(options.legacy_algorithms, std::sync::atomic::Ordering::Relaxed);
+        ssh::ACCEPT_NEW_HOST_KEYS.store(options.accept_new_host_keys, std::sync::atomic::Ordering::Relaxed);
         // A hand-edited options.toml with a bad line just maps nothing.
         let key_map = input::parse_key_map(&options.key_map).unwrap_or_default();
         Ok(Self {
@@ -7003,6 +7006,8 @@ impl App {
         ui.set_go_wait_prompt(self.options.send_wait_prompt.clone().into());
         ui.set_go_web_search(self.options.web_search.clone().into());
         ui.set_go_auto_reconnect(self.options.auto_reconnect);
+        ui.set_go_legacy(self.options.legacy_algorithms);
+        ui.set_go_accept_new_keys(self.options.accept_new_host_keys);
         ui.set_go_remember_secrets(self.options.remember_secrets);
         ui.set_go_reopen(self.options.reopen_sessions);
         ui.set_go_server_load(self.options.server_load);
@@ -7110,6 +7115,10 @@ impl App {
             url => url.to_string(),
         };
         self.options.auto_reconnect = ui.get_go_auto_reconnect();
+        self.options.legacy_algorithms = ui.get_go_legacy();
+        ssh::LEGACY_EVERYWHERE.store(self.options.legacy_algorithms, std::sync::atomic::Ordering::Relaxed);
+        self.options.accept_new_host_keys = ui.get_go_accept_new_keys();
+        ssh::ACCEPT_NEW_HOST_KEYS.store(self.options.accept_new_host_keys, std::sync::atomic::Ordering::Relaxed);
         self.options.remember_secrets = ui.get_go_remember_secrets();
         if !self.options.remember_secrets {
             self.secrets.clear();

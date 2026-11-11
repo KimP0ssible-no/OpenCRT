@@ -552,20 +552,34 @@ fn securecrt_buttons(text: &str, config_dir: &str, home: &str) -> (Vec<BarButton
     (buttons, left_out)
 }
 
-/// A keyword list (`Keywords/<name>.ini`): its name and `word = colour` lines.
-/// Entries are `"word",colour,background,flags`, colours as Windows COLORREFs
-/// (0x00BBGGRR), matched to the nearest OpenCRT keyword colour.
+/// A keyword list (`Keywords/<name>.ini`): its name and `word = colour ...`
+/// lines. Entries are `"word",colour,style,flags`: the colour a Windows
+/// COLORREF (0x00BBGGRR), matched to the nearest OpenCRT colour; the style
+/// bits 2 reverse video, 4 bold, 8 colour, or 0 for the session's style
+/// (SecureCRT's default: colour).
 fn securecrt_keywords(text: &str, file_stem: &str) -> KeywordSet {
     let (values, lists) = securecrt_entries(text);
     let name = values.get("List Name").copied().unwrap_or(file_stem).to_string();
     let mut lines = Vec::new();
     for entry in lists.get("Keyword List V3").into_iter().flatten() {
         let Some((word, rest)) = entry.strip_prefix('"').and_then(|e| e.rsplit_once("\",")) else { continue };
-        let colour = rest.split(',').next().and_then(|c| u32::from_str_radix(c, 16).ok());
-        lines.push(match colour {
-            Some(c) => format!("{word} = {}", crate::render::nearest_keyword_colour([c as u8, (c >> 8) as u8, (c >> 16) as u8])),
-            None => word.to_string(),
-        });
+        let mut fields = rest.split(',').map(|f| u32::from_str_radix(f, 16).ok());
+        let (colour, style) = (fields.next().flatten(), fields.next().flatten().unwrap_or(0));
+        let Some(c) = colour else {
+            lines.push(word.to_string());
+            continue;
+        };
+        let mut line = format!("{word} = {}", crate::render::nearest_keyword_colour([c as u8, (c >> 8) as u8, (c >> 16) as u8]));
+        // Reverse video paints the background, as OpenCRT's plain keywords do;
+        // otherwise the colour goes on the letters.
+        // shortcut: bold alone (no colour) still colours the letters; OpenCRT has no plain bold.
+        if style & 2 == 0 {
+            line += " text";
+        }
+        if style & 4 != 0 {
+            line += " bold";
+        }
+        lines.push(line);
     }
     (name, lines)
 }
@@ -752,8 +766,10 @@ mod tests {
         let colours = " SEND,x,c,,,0,3,,\r\n SEND,x,c,,,0,4,,\r\n SEND,x,c,,,0,8,,\r\n SEND,x,c,,,0,9,,\r\n";
         let (buttons, _) = securecrt_buttons(&format!("Z:\"T\"=00000004\r\n{colours}"), "/cfg", "/home/kim");
         assert_eq!(buttons.iter().map(|b| b.color.as_str()).collect::<Vec<_>>(), ["blue", "purple", "", "yellow"], "cyan, magenta, white, yellow");
-        let list = "\u{feff}S:\"List Name\"=Test\r\nD:\"Regex Line Mode\"=00000001\r\nD:\"Match Case\"=00000000\r\nZ:\"Keyword List V3\"=00000003\r\n \"error\",000000ff,00000000,00000001\r\n \"warning\",00ff4b2b,00000000,00000001\r\n \"whatheheck\",0000ff7b,00000000,00000001\r\n";
-        assert_eq!(securecrt_keywords(list, "file"), ("Test".to_string(), vec!["error = red".to_string(), "warning = blue".into(), "whatheheck = green".into()]));
+        // Reverse video only, bold only, bold and colour, and the session's style.
+        let list = "\u{feff}S:\"List Name\"=Test\r\nD:\"Regex Line Mode\"=00000001\r\nD:\"Match Case\"=00000000\r\nZ:\"Keyword List V3\"=00000004\r\n \"error\",000000ff,00000002,00000003\r\n \"warning\",00ff4b2b,00000004,00000005\r\n \"whatheheck\",0000ff7b,0000000c,0000000f\r\n \"plain\",0000ff7b,00000000,00000001\r\n";
+        let lines = ["error = red", "warning = blue text bold", "whatheheck = green text bold", "plain = green text"].map(String::from);
+        assert_eq!(securecrt_keywords(list, "file"), ("Test".to_string(), lines.to_vec()));
         let session = "S:\"Protocol Name\"=SSH2\r\nS:\"Hostname\"=web1\r\nS:\"User Button Bar Name\"=Lab\r\nS:\"Keyword Set\"=Test\r\n";
         let s = from_securecrt(session, "SecureCRT", "web1", "/cfg", "").unwrap();
         assert_eq!((s.button_bar.as_str(), s.keyword_set.as_str()), ("Lab", "Test"));

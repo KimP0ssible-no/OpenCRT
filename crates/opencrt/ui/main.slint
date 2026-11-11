@@ -3479,25 +3479,29 @@ component NameDialog inherits DialogFrame {
 
 // The master password: 0 unlock (enter it), 1 set a new one, 2 change or remove it.
 component MasterPasswordDialog inherits DialogFrame {
+    // 3: SecureCRT's Config Passphrase, to import `count` saved passwords.
     in property <int> mode;
+    in property <int> count;
     in property <string> error;
     in-out property <string> current;
     in-out property <string> new;
     in-out property <string> confirm;
     // 0 cancel, 1 OK, 2 remove the master password.
     callback answer(int);
-    title: root.mode == 0 ? "Unlock Saved Passwords" : "Master Password";
+    title: root.mode == 0 ? "Unlock Saved Passwords" : root.mode == 3 ? "Import SecureCRT Passwords" : "Master Password";
     dialog-width: 460px * Theme.ui-scale;
     Text {
         text: root.mode == 0
             ? "Saved passwords and key passphrases are protected by the master password. Enter it to use them until OpenCRT closes."
+            : root.mode == 3
+                ? "\{root.count} imported sessions have saved passwords. Enter SecureCRT's Config Passphrase (SecureCRT asks for it when it starts) to import them. If SecureCRT has none, set one with Change Passphrase... in its start-up window, then import again."
             : root.mode == 1
                 ? "Keep saved passwords and key passphrases in the settings folder, encrypted with a master password, instead of this computer's keychain. Settings Sync carries them, still encrypted. A forgotten master password cannot be recovered: the saved passwords would have to be entered again."
                 : "Change the master password, or remove it to move the saved passwords back to this computer's keychain.";
         wrap: word-wrap;
     }
     if root.mode != 1: FieldRow {
-        label: root.mode == 0 ? "Master password:" : "Current password:";
+        label: root.mode == 0 ? "Master password:" : root.mode == 3 ? "Config passphrase:" : "Current password:";
         LineEdit {
             text <=> root.current;
             input-type: password;
@@ -3505,7 +3509,7 @@ component MasterPasswordDialog inherits DialogFrame {
             accepted => { root.answer(1); }
         }
     }
-    if root.mode != 0: FieldRow {
+    if root.mode == 1 || root.mode == 2: FieldRow {
         label: "New password:";
         LineEdit {
             text <=> root.new;
@@ -3518,7 +3522,7 @@ component MasterPasswordDialog inherits DialogFrame {
             accepted => { root.answer(1); }
         }
     }
-    if root.mode != 0: FieldRow {
+    if root.mode == 1 || root.mode == 2: FieldRow {
         label: "Confirm:";
         LineEdit {
             text <=> root.confirm;
@@ -3537,12 +3541,12 @@ component MasterPasswordDialog inherits DialogFrame {
             clicked => { root.answer(2); }
         }
         DialogButton {
-            text: root.mode == 0 ? "Unlock" : root.mode == 1 ? "Set" : "Change";
+            text: root.mode == 0 ? "Unlock" : root.mode == 1 ? "Set" : root.mode == 3 ? "Import" : "Change";
             primary: true;
             clicked => { root.answer(1); }
         }
         DialogButton {
-            text: "Cancel";
+            text: root.mode == 3 ? "Skip" : "Cancel";
             clicked => { root.answer(0); }
         }
     }
@@ -4788,6 +4792,7 @@ export component MainWindow inherits Window {
     in-out property <string> name-value;
     // Master password dialog (22).
     in property <int> mp-mode;
+    in property <int> mp-count;
     in property <string> mp-error;
     in-out property <string> mp-current;
     in-out property <string> mp-new;
@@ -6457,6 +6462,7 @@ export component MainWindow inherits Window {
     }
     if root.dialog == 22: MasterPasswordDialog {
         mode: root.mp-mode;
+        count: root.mp-count;
         error: root.mp-error;
         current <=> root.mp-current;
         new <=> root.mp-new;

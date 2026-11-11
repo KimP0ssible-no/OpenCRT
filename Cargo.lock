@@ -4098,6 +4098,7 @@ dependencies = [
  "arboard",
  "argon2",
  "base64 0.23.1",
+ "bcrypt-pbkdf",
  "chrono",
  "crossterm",
  "des",

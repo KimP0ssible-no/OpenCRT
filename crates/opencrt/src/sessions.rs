@@ -598,7 +598,42 @@ pub fn vandyke_dir() -> Option<PathBuf> {
 /// Read the SecureCRT session files under `picked` (a Config folder, or its
 /// Sessions folder), keeping their folder tree under "SecureCRT". Returns the
 /// sessions root, the sessions found and how many files could not be imported.
-pub fn scan_securecrt(picked: &Path) -> Result<(PathBuf, SessionStore, usize), String> {
+/// Saved session passwords as SecureCRT keeps them: (session path, `Password V2`).
+pub type SecureCrtPasswords = Vec<(String, String)>;
+
+/// A SecureCRT `Password V2` value in the `03:` form, decrypted with the
+/// Config Passphrase: hex of a 16-byte salt and AES-256-CBC data whose key and
+/// IV are bcrypt_pbkdf(passphrase, salt, 16 rounds); the data is the length
+/// (u32, little-endian), the password and its SHA-256. None for a wrong
+/// passphrase or any other form (`02:` and older ones need SecureCRT's own
+/// keys, which a clean-room importer does not have).
+pub fn securecrt_password(value: &str, passphrase: &str) -> Option<String> {
+    use aes::cipher::{Block, BlockCipherDecrypt, KeyInit};
+    use sha2::Digest as _;
+    let hex = value.trim().strip_prefix("03:")?;
+    let blob: Vec<u8> = (0..hex.len()).step_by(2).map(|i| u8::from_str_radix(hex.get(i..i + 2)?, 16).ok()).collect::<Option<_>>()?;
+    if passphrase.is_empty() || blob.len() < 32 || !blob.len().is_multiple_of(16) {
+        return None;
+    }
+    let (salt, sealed) = blob.split_at(16);
+    let mut derived = [0u8; 48];
+    bcrypt_pbkdf::bcrypt_pbkdf(passphrase, salt, 16, &mut derived).ok()?;
+    let cipher = aes::Aes256::new_from_slice(&derived[..32]).ok()?;
+    let mut previous: [u8; 16] = derived[32..].try_into().ok()?;
+    let mut plain = Vec::with_capacity(sealed.len());
+    for chunk in sealed.as_chunks::<16>().0 {
+        let mut block = Block::<aes::Aes256>::from(*chunk);
+        cipher.decrypt_block(&mut block);
+        plain.extend(block.iter().zip(previous).map(|(b, p)| b ^ p));
+        previous = *chunk;
+    }
+    let len = u32::from_le_bytes(plain.get(..4)?.try_into().ok()?) as usize;
+    let password = plain.get(4..4usize.checked_add(len)?)?;
+    let check = plain.get(4 + len..4 + len + 32)?;
+    (sha2::Sha256::digest(password).as_slice() == check).then(|| String::from_utf8(password.to_vec()).ok()).flatten()
+}
+
+pub fn scan_securecrt(picked: &Path) -> Result<(PathBuf, SessionStore, usize, SecureCrtPasswords), String> {
     let (config_dir, root) = if picked.join("Sessions").is_dir() {
         (picked.to_path_buf(), picked.join("Sessions"))
     } else {
@@ -610,6 +645,7 @@ pub fn scan_securecrt(picked: &Path) -> Result<(PathBuf, SessionStore, usize), S
         .unwrap_or_default();
     let mut found = SessionStore::default();
     let mut not_imported = 0;
+    let mut passwords = Vec::new();
     let mut dirs = vec![(root.clone(), "SecureCRT".to_string())];
     while let Some((dir, folder)) = dirs.pop() {
         found.folders.push(folder.clone());
@@ -627,8 +663,14 @@ pub fn scan_securecrt(picked: &Path) -> Result<(PathBuf, SessionStore, usize), S
             if stem.starts_with("__FolderData__") || stem.contains("conflicted copy") || template {
                 continue;
             }
-            match std::fs::read_to_string(&path).ok().and_then(|text| from_securecrt(&text, &folder, stem, &config_str, &global_key)) {
-                Some(session) => found.sessions.push(session),
+            let text = std::fs::read_to_string(&path).unwrap_or_default();
+            match from_securecrt(&text, &folder, stem, &config_str, &global_key) {
+                Some(session) => {
+                    if let Some(saved) = securecrt_entries(&text).0.get("Password V2").filter(|p| !p.is_empty()) {
+                        passwords.push((session.path(), saved.to_string()));
+                    }
+                    found.sessions.push(session);
+                }
                 None => not_imported += 1,
             }
         }
@@ -636,7 +678,7 @@ pub fn scan_securecrt(picked: &Path) -> Result<(PathBuf, SessionStore, usize), S
     if found.sessions.is_empty() {
         return Err(format!("No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder.", picked.display()));
     }
-    Ok((root, found, not_imported))
+    Ok((root, found, not_imported, passwords))
 }
 
 pub fn securecrt_global_key(ssh2_ini: &str, config_dir: &str) -> String {
@@ -742,6 +784,18 @@ pub fn from_securecrt(text: &str, folder: &str, name: &str, config_dir: &str, gl
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn securecrt_passwords_with_the_config_passphrase() {
+        // Written by SecureCRT 9.7.2 for test sessions, Config Passphrase "test-passphrase".
+        let saved = "03:5562feb2ae4f386aef6db7bc9cfcd3fbbfde307b04cbcd174a9c5999b728522a5ccb800821434c892db1eee1e470e24338daf6f3a879964dda6ebcc0cdaf8fea21b72e31f9bb97954ec1f46136c07a15";
+        assert_eq!(securecrt_password(saved, "test-passphrase").as_deref(), Some("Secret-02!"));
+        assert_eq!(securecrt_password("03:3c9379f8b747a8025bbc93db20849c4bc3d7186522c349877ef9ca6f492425e444b9c873ce6584a4bea09bfe4bdd053b3a9db019c68a0616105c871e0194c8f7bb08d18574effe5877d51f3a1da85e24", "test-passphrase").as_deref(), Some("Secret-03!"));
+        assert_eq!(securecrt_password(saved, "wrong"), None, "a wrong passphrase fails the checksum");
+        assert_eq!(securecrt_password(saved, ""), None);
+        assert_eq!(securecrt_password("02:00ff", "x"), None);
+        assert_eq!(securecrt_password("03:zz", "x"), None);
+    }
 
     #[test]
     fn securecrt_button_bars_and_keyword_lists() {
@@ -955,7 +1009,8 @@ Match host foo
         std::fs::create_dir_all(config.join("Sessions/Lab")).unwrap();
         std::fs::write(config.join("Sessions/Lab/web1.ini"), "S:\"Protocol Name\"=SSH2\r\nS:\"Hostname\"=web1\r\n").unwrap();
         std::fs::write(config.join("Sessions/Default.ini"), "S:\"Protocol Name\"=SSH2\r\n").unwrap();
-        let (root, found, not_imported) = scan_securecrt(&config).unwrap();
+        let (root, found, not_imported, passwords) = scan_securecrt(&config).unwrap();
+        assert!(passwords.is_empty());
         assert_eq!((root, not_imported), (config.join("Sessions"), 0));
         assert_eq!(found.sessions.iter().map(Session::path).collect::<Vec<_>>(), ["SecureCRT/Lab/web1"]);
         std::fs::remove_dir_all(config.parent().unwrap()).unwrap();

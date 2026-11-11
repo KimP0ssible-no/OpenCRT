@@ -1715,6 +1715,9 @@ struct App {
     naming_snapshot: bool,
     /// A menu command to run once the master password has been entered.
     after_unlock: Option<&'static str>,
+    /// SecureCRT sessions just imported with saved passwords, waiting for the
+    /// Config Passphrase to decrypt them.
+    securecrt_passwords: sessions::SecureCrtPasswords,
     /// The name dialog is for a new Button Bar.
     naming_bar: bool,
     /// Folder (full path) whose new name the name dialog is asking for.
@@ -1977,6 +1980,7 @@ impl App {
             renaming_tab: None,
             naming_snapshot: false,
             after_unlock: None,
+            securecrt_passwords: Vec::new(),
             naming_bar: false,
             renaming_folder: None,
             editing_many: None,
@@ -2613,6 +2617,13 @@ impl App {
                 return;
             }
             "master-password" => return self.show_master_password(ui, if config::master_password_set() { 2 } else { 1 }),
+            "securecrt-passwords" if !self.securecrt_passwords.is_empty() => {
+                if !self.unlock_first(ui, "securecrt-passwords") {
+                    ui.set_mp_count(self.securecrt_passwords.len() as i32);
+                    self.show_master_password(ui, 3);
+                }
+                return;
+            }
             "credentials" => {
                 self.show_credential_rows(ui);
                 ui.set_credential_selected(-1);
@@ -4070,20 +4081,25 @@ impl App {
         let (mode, current) = (ui.get_mp_mode(), ui.get_mp_current().to_string());
         let (new, confirm) = (ui.get_mp_new().to_string(), ui.get_mp_confirm().to_string());
         let result = match (choice, mode) {
+            (0, 3) => {
+                self.securecrt_passwords.clear();
+                Ok(Some("The SecureCRT sessions were imported without their passwords.".to_string()))
+            }
+            (_, 3) => self.import_securecrt_passwords(&current).map(Some),
             (0, _) => Ok(None),
             (1, 0) => config::unlock_secrets(&current).and_then(|()| config::adopt_keychain_secrets(&self.secret_accounts())).map(|()| None),
             (1, _) if new.is_empty() => Err("Type the new master password.".to_string()),
             (1, _) if new != confirm => Err("The new password and its confirmation differ.".to_string()),
             (1, 1) => {
                 config::set_master_password(&new, &self.secret_accounts())
-                    .map(|()| Some("Saved passwords and key passphrases are now kept under the master password."))
+                    .map(|()| Some("Saved passwords and key passphrases are now kept under the master password.".to_string()))
             }
             (1, _) => config::unlock_secrets(&current)
                 .and_then(|()| config::change_master_password(&new))
-                .map(|()| Some("Changed the master password.")),
+                .map(|()| Some("Changed the master password.".to_string())),
             _ => config::unlock_secrets(&current)
                 .and_then(|()| config::remove_master_password())
-                .map(|()| Some("Removed the master password: saved passwords are back in this computer's keychain.")),
+                .map(|()| Some("Removed the master password: saved passwords are back in this computer's keychain.".to_string())),
         };
         match result {
             Err(e) => ui.set_mp_error(e.into()),
@@ -4103,6 +4119,40 @@ impl App {
                 }
             }
         }
+    }
+
+    /// Decrypt the imported SecureCRT passwords with its Config Passphrase and
+    /// keep each as a credential of its session. Err keeps the dialog open.
+    fn import_securecrt_passwords(&mut self, passphrase: &str) -> Result<String, String> {
+        if passphrase.is_empty() {
+            return Err("Type SecureCRT's Config Passphrase.".into());
+        }
+        let opened: Vec<(String, String)> = self
+            .securecrt_passwords
+            .iter()
+            .filter_map(|(path, saved)| Some((path.clone(), sessions::securecrt_password(saved, passphrase)?)))
+            .collect();
+        if opened.is_empty() {
+            return Err("That passphrase opens none of the saved passwords. Check it in SecureCRT (it asks for it when it starts).".into());
+        }
+        let unread = self.securecrt_passwords.len() - opened.len();
+        let mut saved = 0;
+        for (path, password) in opened {
+            let name = unused_credential_name(&self.options.credentials, &path);
+            if let Err(e) = config::set_credential_password(&name, &password) {
+                return Err(format!("Cannot save the password of {path}: {e}"));
+            }
+            self.options.credentials.push(Credential { name: name.clone(), user: String::new() });
+            if let Some(session) = self.store.sessions.iter_mut().find(|s| s.path() == path) {
+                session.credential = name;
+            }
+            saved += 1;
+        }
+        self.securecrt_passwords.clear();
+        self.save_options();
+        self.save_store();
+        let unread = if unread > 0 { format!(" {unread} could not be read (saved before the passphrase was set, or in an older form).") } else { String::new() };
+        Ok(format!("Imported {saved} saved SecureCRT passwords as credentials of their sessions.{unread}"))
     }
 
     fn answer_auth(&mut self, ok: bool, ui: &MainWindow) {
@@ -6465,7 +6515,7 @@ impl App {
         let Some(picked) = dialog.pick_folder() else {
             return;
         };
-        let (root, found, not_imported) = match sessions::scan_securecrt(&picked) {
+        let (root, found, not_imported, passwords) = match sessions::scan_securecrt(&picked) {
             Ok(scan) => scan,
             Err(e) => return self.notify(e),
         };
@@ -6508,6 +6558,14 @@ impl App {
             self.save_options();
         }
         self.notify(format!("Imported {added} sessions from {}{existed}{other}.{extras}", root.display()));
+        // Saved passwords of sessions that have no credential yet: ask for SecureCRT's passphrase.
+        self.securecrt_passwords = passwords
+            .into_iter()
+            .filter(|(path, _)| self.store.sessions.iter().any(|s| s.path() == *path && s.credential.is_empty()))
+            .collect();
+        if !self.securecrt_passwords.is_empty() {
+            self.pending_menus.push("securecrt-passwords".into());
+        }
     }
 
     /// Script > Run: run a script file in the active session.

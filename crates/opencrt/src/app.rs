@@ -2463,6 +2463,11 @@ impl App {
                 self.save_options();
             }
             "local-shell" => self.open_tab(Target { protocol: Protocol::Local, ..Default::default() }, None),
+            // Open a saved session from the keyboard: the Session Manager's filter.
+            "open-session" => {
+                ui.set_sessions_open(true);
+                return ui.set_session_filter_wanted(true);
+            }
             "local-cmd" | "local-powershell" => {
                 let command = if name == "local-cmd" { "cmd.exe" } else { "powershell.exe" };
                 self.open_tab(Target { protocol: Protocol::Local, command: command.into(), ..Default::default() }, None);
@@ -2892,6 +2897,10 @@ impl App {
         let mods = Mods { ctrl, alt, shift };
         if input::is_quick_open(text, mods, cmd) {
             self.want_quick_open = true;
+            return true;
+        }
+        if let Some(name) = input::mac_command(text, mods, cmd) {
+            self.pending_menus.push(name.to_string());
             return true;
         }
         // Mapped keys (the session's map first, then the global one) do their action instead.

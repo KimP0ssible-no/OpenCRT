@@ -1,0 +1,59 @@
+name: Runner specs
+
+# One-off: the hardware of the hosted runners CI uses, in the run summary.
+on:
+  push:
+    branches: [runner-specs]
+
+permissions:
+  contents: read
+
+jobs:
+  specs:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Linux
+        if: runner.os == 'Linux'
+        run: |
+          {
+            echo "### ${{ matrix.os }} ($ImageOS $ImageVersion)"
+            echo '```'
+            lscpu | grep -E '^(Architecture|Model name|CPU\(s\)|Thread\(s\) per core|Core\(s\) per socket|Socket\(s\)|Hypervisor vendor)'
+            echo "nproc: $(nproc)"
+            free -h | head -2
+            df -h / "$GITHUB_WORKSPACE" | uniq
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $cpu = Get-CimInstance Win32_Processor
+          $cs = Get-CimInstance Win32_ComputerSystem
+          $out = @(
+            "### ${{ matrix.os }} ($env:ImageOS $env:ImageVersion)", '```',
+            "CPU: $($cpu.Name)",
+            "Cores: $(($cpu | Measure-Object NumberOfCores -Sum).Sum), logical processors: $($cs.NumberOfLogicalProcessors)",
+            ("RAM: {0:N1} GB" -f ($cs.TotalPhysicalMemory / 1GB))
+          )
+          foreach ($d in Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3") {
+            $out += ("Disk {0} {1:N1} GB free of {2:N1} GB" -f $d.DeviceID, ($d.FreeSpace / 1GB), ($d.Size / 1GB))
+          }
+          $out += '```'
+          $out | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+      - name: macOS
+        if: runner.os == 'macOS'
+        run: |
+          {
+            echo "### ${{ matrix.os }} ($ImageOS $ImageVersion)"
+            echo '```'
+            echo "CPU: $(sysctl -n machdep.cpu.brand_string) ($(uname -m))"
+            echo "Cores: $(sysctl -n hw.physicalcpu) physical, $(sysctl -n hw.logicalcpu) logical"
+            echo "RAM: $(( $(sysctl -n hw.memsize) / 1073741824 )) GB"
+            df -h / "$GITHUB_WORKSPACE" | uniq
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

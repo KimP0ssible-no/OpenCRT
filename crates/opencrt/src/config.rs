@@ -702,30 +702,137 @@ fn keychain_delete(account: &str) -> Result<(), String> {
     }
 }
 
+/// With a master password set (Tools > Master Password), saved secrets live
+/// in the settings folder's encrypted `secrets` file; otherwise in the keychain.
+fn vault_dir() -> Option<PathBuf> {
+    dir().filter(|d| crate::vault::exists(d))
+}
+
+fn secret_get(account: &str) -> Result<Option<String>, String> {
+    match vault_dir() {
+        Some(dir) => crate::vault::get(&dir, account),
+        None => keychain_get(account),
+    }
+}
+
+fn secret_set(account: &str, secret: &str) -> Result<(), String> {
+    match vault_dir() {
+        Some(dir) => crate::vault::set(&dir, account, Some(secret)),
+        None => keychain_entry(account)?.set_password(secret).map_err(|e| e.to_string()),
+    }
+}
+
+fn secret_delete(account: &str) -> Result<(), String> {
+    match vault_dir() {
+        Some(dir) => crate::vault::set(&dir, account, None),
+        None => keychain_delete(account),
+    }
+}
+
+/// The keychain names of the saved secrets OpenCRT knows of: credentials,
+/// firewalls and key files (from these options and the sessions' keys).
+pub fn secret_accounts(options: &Options, key_paths: &[String]) -> Vec<String> {
+    let credentials = options.credentials.iter().map(|c| format!("credential:{}", c.name));
+    let firewalls = options.firewalls.iter().map(|f| format!("firewall:{}", f.name));
+    let global = expand_env(&options.global_key);
+    let keys = key_paths.iter().chain([&global]).filter(|k| !k.is_empty()).map(|k| format!("keypass:{k}"));
+    credentials.chain(firewalls).chain(keys).collect()
+}
+
+/// Set a master password: the keychain's saved secrets (`accounts`) move into
+/// the encrypted file, which is kept unlocked for this run.
+pub fn set_master_password(password: &str, accounts: &[String]) -> Result<(), String> {
+    let dir = dir().ok_or("no settings folder")?;
+    let mut moved = Vec::new();
+    for account in accounts {
+        if let Some(secret) = keychain_get(account)? {
+            moved.push((account.clone(), secret));
+        }
+    }
+    crate::vault::create(&dir, password, &moved)?;
+    for (account, _) in &moved {
+        let _ = keychain_delete(account);
+    }
+    Ok(())
+}
+
+/// After unlocking: secrets this computer still keeps in its keychain (the
+/// master password was set on another computer) move into the encrypted file.
+pub fn adopt_keychain_secrets(accounts: &[String]) -> Result<(), String> {
+    let dir = vault_dir().ok_or("no master password is set")?;
+    let have = crate::vault::all(&dir)?;
+    for account in accounts.iter().filter(|a| !have.iter().any(|(h, _)| h == *a)) {
+        if let Some(secret) = keychain_get(account).ok().flatten() {
+            crate::vault::set(&dir, account, Some(&secret))?;
+            let _ = keychain_delete(account);
+        }
+    }
+    Ok(())
+}
+
+/// Remove the master password: the secrets go back to the keychain.
+pub fn remove_master_password() -> Result<(), String> {
+    let dir = vault_dir().ok_or("no master password is set")?;
+    for (account, secret) in crate::vault::all(&dir)? {
+        keychain_entry(&account)?.set_password(&secret).map_err(|e| e.to_string())?;
+    }
+    crate::vault::remove(&dir).map(|_| ())
+}
+
+/// Change the master password: the same secrets under the new one.
+pub fn change_master_password(password: &str) -> Result<(), String> {
+    let dir = vault_dir().ok_or("no master password is set")?;
+    let secrets = crate::vault::all(&dir)?;
+    crate::vault::create(&dir, password, &secrets)
+}
+
+/// A master password is set but not entered yet this run.
+pub fn secrets_locked() -> bool {
+    vault_dir().is_some() && !crate::vault::unlocked()
+}
+
+pub fn master_password_set() -> bool {
+    vault_dir().is_some()
+}
+
+/// Enter the master password for this run.
+pub fn unlock_secrets(password: &str) -> Result<(), String> {
+    crate::vault::unlock(&vault_dir().ok_or("no master password is set")?, password)
+}
+
 /// The saved password of credential `name`; None when it has none.
 pub fn credential_password(name: &str) -> Result<Option<String>, String> {
-    keychain_get(&format!("credential:{name}"))
+    secret_get(&format!("credential:{name}"))
 }
 
 pub fn set_credential_password(name: &str, password: &str) -> Result<(), String> {
-    keychain_entry(&format!("credential:{name}"))?.set_password(password).map_err(|e| e.to_string())
+    secret_set(&format!("credential:{name}"), password)
 }
 
 pub fn delete_credential_password(name: &str) -> Result<(), String> {
-    keychain_delete(&format!("credential:{name}"))
+    secret_delete(&format!("credential:{name}"))
 }
 
 /// The proxy login password of firewall `name` (Options > Firewalls).
 pub fn firewall_password(name: &str) -> Result<Option<String>, String> {
-    keychain_get(&format!("firewall:{name}"))
+    secret_get(&format!("firewall:{name}"))
 }
 
 pub fn set_firewall_password(name: &str, password: &str) -> Result<(), String> {
-    keychain_entry(&format!("firewall:{name}"))?.set_password(password).map_err(|e| e.to_string())
+    secret_set(&format!("firewall:{name}"), password)
 }
 
 pub fn delete_firewall_password(name: &str) -> Result<(), String> {
-    keychain_delete(&format!("firewall:{name}"))
+    secret_delete(&format!("firewall:{name}"))
+}
+
+/// The saved passphrase of the private key file at `path` (as the session names it).
+pub fn key_passphrase(path: &str) -> Result<Option<String>, String> {
+    secret_get(&format!("keypass:{path}"))
+}
+
+pub fn set_key_passphrase(path: &str, passphrase: &str) -> Result<(), String> {
+    secret_set(&format!("keypass:{path}"), passphrase)
 }
 
 /// The password or access token for the settings repository (HTTPS).

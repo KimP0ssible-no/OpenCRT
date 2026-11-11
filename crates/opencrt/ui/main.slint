@@ -1387,6 +1387,8 @@ component AuthDialog inherits DialogFrame {
     in-out property <[string]> answers;
     // Offer "Save password" (a login password for a saved session).
     in property <bool> can-save;
+    // The prompt is for a private key's passphrase.
+    in property <bool> passphrase;
     in-out property <bool> save;
     // "Type the password" then the saved credentials, for a password prompt.
     in property <[string]> credentials;
@@ -1430,7 +1432,9 @@ component AuthDialog inherits DialogFrame {
         }
     }
     if root.can-save: CheckBox {
-        text: root.credential > 0 ? "Use this credential for the session from now on" : "Save password (in the system keychain, once the login works)";
+        text: root.credential > 0
+            ? "Use this credential for the session from now on"
+            : root.passphrase ? "Save the passphrase (once the key works)" : "Save the password (once the login works)";
         checked <=> root.save;
     }
     if root.error != "": Text {
@@ -3473,6 +3477,81 @@ component NameDialog inherits DialogFrame {
     }
 }
 
+// The master password: 0 unlock (enter it), 1 set a new one, 2 change or remove it.
+component MasterPasswordDialog inherits DialogFrame {
+    // 3: SecureCRT's Config Passphrase, to import `count` saved passwords.
+    in property <int> mode;
+    in property <int> count;
+    in property <string> error;
+    in-out property <string> current;
+    in-out property <string> new;
+    in-out property <string> confirm;
+    // 0 cancel, 1 OK, 2 remove the master password.
+    callback answer(int);
+    title: root.mode == 0 ? "Unlock Saved Passwords" : root.mode == 3 ? "Import SecureCRT Passwords" : "Master Password";
+    dialog-width: 460px * Theme.ui-scale;
+    Text {
+        text: root.mode == 0
+            ? "Saved passwords and key passphrases are protected by the master password. Enter it to use them until OpenCRT closes."
+            : root.mode == 3
+                ? "\{root.count} imported sessions have saved passwords. Enter SecureCRT's Config Passphrase (SecureCRT asks for it when it starts) to import them. If SecureCRT has none, set one with Change Passphrase... in its start-up window, then import again."
+            : root.mode == 1
+                ? "Keep saved passwords and key passphrases in the settings folder, encrypted with a master password, instead of this computer's keychain. Settings Sync carries them, still encrypted. A forgotten master password cannot be recovered: the saved passwords would have to be entered again."
+                : "Change the master password, or remove it to move the saved passwords back to this computer's keychain.";
+        wrap: word-wrap;
+    }
+    if root.mode != 1: FieldRow {
+        label: root.mode == 0 ? "Master password:" : root.mode == 3 ? "Config passphrase:" : "Current password:";
+        LineEdit {
+            text <=> root.current;
+            input-type: password;
+            init => { self.focus(); }
+            accepted => { root.answer(1); }
+        }
+    }
+    if root.mode == 1 || root.mode == 2: FieldRow {
+        label: "New password:";
+        LineEdit {
+            text <=> root.new;
+            input-type: password;
+            init => {
+                if root.mode == 1 {
+                    self.focus();
+                }
+            }
+            accepted => { root.answer(1); }
+        }
+    }
+    if root.mode == 1 || root.mode == 2: FieldRow {
+        label: "Confirm:";
+        LineEdit {
+            text <=> root.confirm;
+            input-type: password;
+            accepted => { root.answer(1); }
+        }
+    }
+    if root.error != "": Text {
+        text: root.error;
+        color: Theme.status-error;
+        wrap: word-wrap;
+    }
+    DialogButtons {
+        if root.mode == 2: DialogButton {
+            text: "Remove";
+            clicked => { root.answer(2); }
+        }
+        DialogButton {
+            text: root.mode == 0 ? "Unlock" : root.mode == 1 ? "Set" : root.mode == 3 ? "Import" : "Change";
+            primary: true;
+            clicked => { root.answer(1); }
+        }
+        DialogButton {
+            text: root.mode == 3 ? "Skip" : "Cancel";
+            clicked => { root.answer(0); }
+        }
+    }
+}
+
 // Several lines about to be pasted, editable before they are sent.
 component PasteDialog inherits DialogFrame {
     in property <string> message;
@@ -4711,6 +4790,14 @@ export component MainWindow inherits Window {
     in property <string> name-title;
     in property <string> name-label;
     in-out property <string> name-value;
+    // Master password dialog (22).
+    in property <int> mp-mode;
+    in property <int> mp-count;
+    in property <string> mp-error;
+    in-out property <string> mp-current;
+    in-out property <string> mp-new;
+    in-out property <string> mp-confirm;
+    callback mp-answer(int);
     in property <string> hostkey-host;
     in property <string> hostkey-type;
     in property <string> hostkey-fingerprint;
@@ -4719,6 +4806,7 @@ export component MainWindow inherits Window {
     in property <[PromptField]> auth-fields;
     in-out property <[string]> auth-answers;
     in property <bool> auth-can-save;
+    in property <bool> auth-passphrase;
     in property <[string]> auth-credentials;
     in-out property <int> auth-credential;
     in property <string> auth-error;
@@ -5228,6 +5316,10 @@ export component MainWindow inherits Window {
             MenuItem {
                 title: "Credentials Manager...";
                 activated => { root.menu("credentials"); }
+            }
+            MenuItem {
+                title: "Master Password...";
+                activated => { root.menu("master-password"); }
             }
             MenuItem {
                 title: "Agent Keys...";
@@ -6144,6 +6236,7 @@ export component MainWindow inherits Window {
         fields: root.auth-fields;
         answers <=> root.auth-answers;
         can-save: root.auth-can-save;
+        passphrase: root.auth-passphrase;
         save <=> root.auth-save;
         credentials: root.auth-credentials;
         credential <=> root.auth-credential;
@@ -6366,6 +6459,15 @@ export component MainWindow inherits Window {
         message: root.paste-message;
         value <=> root.paste-value;
         answer(ok) => { root.paste-answer(ok); }
+    }
+    if root.dialog == 22: MasterPasswordDialog {
+        mode: root.mp-mode;
+        count: root.mp-count;
+        error: root.mp-error;
+        current <=> root.mp-current;
+        new <=> root.mp-new;
+        confirm <=> root.mp-confirm;
+        answer(choice) => { root.mp-answer(choice); }
     }
     if root.dialog == 8: NameDialog {
         title: root.name-title;

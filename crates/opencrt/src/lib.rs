@@ -37,6 +37,7 @@ mod telnet;
 mod terminal;
 mod tftp;
 mod update;
+mod vault;
 mod xymodem;
 mod zmodem;
 

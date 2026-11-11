@@ -133,6 +133,10 @@ automatic check off in Options > Global Options > General.
   connection; saved keys
   can be reviewed and removed in Tools > Host Keys. RDP server certificates
   are checked the same way (`rdp_known_certs`) before any password is sent.
+  Saved passwords and key passphrases live in the system keychain, or, with a
+  master password (Tools > Master Password), in the settings folder encrypted
+  (Argon2id, AES-256-GCM), entered once per run when first needed and carried
+  by Settings Sync.
 - **Terminal**: xterm emulation (256 colours, truecolour, mouse reporting,
   bracketed paste), scrollback with Find, selection and copy (optionally copy
   on select, paste on right- or middle-click, ask before multi-line pastes),

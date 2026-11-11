@@ -4,8 +4,9 @@
 //! change back. The installed `git` program does the work, so every way git
 //! logs in works: tokens, credential managers, SSH keys and agents.
 //!
-//! Passwords never go there (they stay in each computer's keychain), nor do
-//! machine-specific options (`config::MACHINE_OPTIONS`). Changes made on two
+//! Passwords go there only encrypted under a master password (the `secrets`
+//! file, see `vault`); without one they stay in each computer's keychain.
+//! Machine-specific options (`config::MACHINE_OPTIONS`) stay local too. Changes made on two
 //! computers are merged by content: sessions, credentials and the like by
 //! name, host keys and trusted scripts by line, scripts by file; where both
 //! changed the same thing, this computer wins (the other version stays in the
@@ -49,7 +50,7 @@ impl Remote {
 const REMOTE_FILE: &str = "git-sync.toml";
 
 /// The files the repository holds; everything else in the folder stays here.
-const SHARED: &[&str] = &["sessions.toml", "options.toml", "known_hosts", "rdp_known_certs", "telnet_known_certs", "vnc_known_certs", "trusted_scripts"];
+const SHARED: &[&str] = &["sessions.toml", "options.toml", "known_hosts", "rdp_known_certs", "telnet_known_certs", "vnc_known_certs", "trusted_scripts", crate::vault::FILE];
 
 /// The settings repository this computer uses, if any.
 pub fn remote() -> Option<Remote> {

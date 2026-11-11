@@ -253,6 +253,20 @@ component PanelHeader inherits Rectangle {
 
 component SessionManagerPanel inherits Rectangle {
     in property <[SessionRow]> rows;
+    // Set to put the keyboard in the filter box, whether the panel is new or already open.
+    in-out property <bool> filter-wanted;
+    init => {
+        if self.filter-wanted {
+            self.filter-wanted = false;
+            filter-input.focus-input();
+        }
+    }
+    changed filter-wanted => {
+        if self.filter-wanted {
+            self.filter-wanted = false;
+            filter-input.focus-input();
+        }
+    }
     in-out property <int> selected: -1;
     // Sessions have been cut or copied.
     in property <bool> can-paste;
@@ -329,7 +343,7 @@ component SessionManagerPanel inherits Rectangle {
         }
         Rectangle {
             height: 28px * Theme.ui-scale;
-            CompactInput {
+            filter-input := CompactInput {
                 x: 4px;
                 width: parent.width - 8px;
                 placeholder: "Filter by name or host";
@@ -3607,7 +3621,7 @@ component ShortcutsDialog inherits DialogFrame {
     // Slint reports macOS Command as control, so these keys use Command there.
     property <bool> mac: Platform.os == OperatingSystemType.macos;
     property <[{keys: string, what: string}]> rows: [
-        { keys: root.mac ? "Cmd+T" : "Ctrl+Shift+T", what: "Quick Open: find a saved session or type a host" },
+        { keys: root.mac ? "Cmd+O" : "Ctrl+Shift+T", what: "Quick Open: find a saved session or type a host" },
         { keys: root.mac ? "Cmd+C" : "Ctrl+C, Ctrl+Insert", what: root.mac ? "Copy the selection" : "Copy the selection (with none, Ctrl+C goes to the host)" },
         { keys: root.mac ? "Cmd+V" : "Ctrl+V, Shift+Insert", what: "Paste" },
         { keys: "Middle click", what: "Paste" },
@@ -3620,6 +3634,10 @@ component ShortcutsDialog inherits DialogFrame {
         { keys: root.mac ? "Cmd+click" : "Ctrl+click", what: "Open a web address in the browser" },
         { keys: "Enter", what: "Reconnect a disconnected tab" },
         { keys: "Ctrl+C, Escape", what: "Cancel a file transfer" },
+        // macOS only (Ctrl+K and Ctrl+L belong to shells elsewhere); empty rows are not shown.
+        { keys: root.mac ? "Cmd+K, Cmd+T" : "", what: "Quick Connect, Connect in Tab" },
+        { keys: root.mac ? "Cmd+E" : "", what: "Open a saved session (the Session Manager's filter)" },
+        { keys: root.mac ? "Cmd+L" : "", what: "Connect a local shell" },
     ];
     title: "Keyboard Shortcuts";
     dialog-width: 600px * Theme.ui-scale;
@@ -3627,6 +3645,8 @@ component ShortcutsDialog inherits DialogFrame {
         spacing: 4px;
         for row in root.rows: HorizontalLayout {
             spacing: 16px;
+            visible: row.keys != "";
+            height: self.visible ? self.preferred-height : 0px;
             Text {
                 text: row.keys;
                 width: 230px * Theme.ui-scale;
@@ -4439,6 +4459,7 @@ export component MainWindow inherits Window {
     in property <[string]> recent-sessions;
     in property <[string]> snapshots;
     in-out property <bool> sessions-open: false;
+    in-out property <bool> session-filter-wanted;
     in-out property <length> dock-width: 240px;
     in-out property <bool> active-open: false;
     in-out property <bool> commands-open: false;
@@ -4853,7 +4874,7 @@ export component MainWindow inherits Window {
                 activated => { root.menu("quick-connect"); }
             }
             MenuItem {
-                title: "Quick Open... (Ctrl+Shift+T)";
+                title: Platform.os == OperatingSystemType.macos ? "Quick Open... (Cmd+O)" : "Quick Open... (Ctrl+Shift+T)";
                 activated => { root.menu("quick-open"); }
             }
             MenuItem {
@@ -5499,6 +5520,7 @@ export component MainWindow inherits Window {
                 rows: root.session-rows;
                 can-paste: root.session-can-paste;
                 selected <=> root.session-selected;
+                filter-wanted <=> root.session-filter-wanted;
                 activate(i) => { root.session-activate(i); }
                 toggle(i) => { root.session-toggle(i); }
                 pick(i, add) => { root.session-pick(i, add); }

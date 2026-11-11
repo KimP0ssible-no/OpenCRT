@@ -473,9 +473,24 @@ pub fn mouse_report(code: u8, col: usize, row: usize, pressed: bool, sgr: bool) 
     Some(vec![0x1b, b'[', b'M', code + 32, x, y])
 }
 
-/// Ctrl+Shift+T (Command+T on macOS) opens Quick Open.
+/// Ctrl+Shift+T (Command+O on macOS) opens Quick Open.
 pub fn is_quick_open(text: &str, mods: Mods, cmd: bool) -> bool {
-    text.eq_ignore_ascii_case("t") && !mods.alt && if cmd { !mods.shift } else { mods.ctrl && mods.shift }
+    !mods.alt && if cmd { text.eq_ignore_ascii_case("o") && !mods.shift } else { text.eq_ignore_ascii_case("t") && mods.ctrl && mods.shift }
+}
+
+/// macOS Command shortcuts for File menu commands: Command+K Quick Connect,
+/// Command+T Connect in Tab, Command+L local shell, Command+E open a saved
+/// session (the Session Manager's filter). Elsewhere Ctrl+K and Ctrl+L stay with the shell.
+pub fn mac_command(text: &str, mods: Mods, cmd: bool) -> Option<&'static str> {
+    if !cmd || mods.shift || mods.alt || mods.ctrl {
+        return None;
+    }
+    Some(match text.to_ascii_lowercase().as_str() {
+        "k" | "t" => "quick-connect",
+        "l" => "local-shell",
+        "e" => "open-session",
+        _ => return None,
+    })
 }
 
 #[cfg(test)]
@@ -487,8 +502,21 @@ mod tests {
         let m = |ctrl, shift| Mods { ctrl, alt: false, shift };
         assert!(is_quick_open("T", m(true, true), false));
         assert!(!is_quick_open("t", m(true, false), false), "Ctrl+T stays with the shell");
-        assert!(is_quick_open("t", m(false, false), true));
-        assert!(!is_quick_open("T", m(false, true), true));
+        assert!(is_quick_open("o", m(false, false), true));
+        assert!(!is_quick_open("t", m(false, false), true), "Command+T is Connect in Tab now");
+        assert!(!is_quick_open("O", m(false, true), true));
+    }
+
+    #[test]
+    fn mac_command_keys() {
+        let none = Mods { ctrl: false, alt: false, shift: false };
+        assert_eq!(mac_command("K", none, true), Some("quick-connect"));
+        assert_eq!(mac_command("t", none, true), Some("quick-connect"));
+        assert_eq!(mac_command("l", none, true), Some("local-shell"));
+        assert_eq!(mac_command("e", none, true), Some("open-session"));
+        assert_eq!(mac_command("l", none, false), None, "Ctrl+L stays with the shell off macOS");
+        assert_eq!(mac_command("l", Mods { shift: true, ..none }, true), None);
+        assert_eq!(mac_command("c", none, true), None);
     }
 
     #[test]

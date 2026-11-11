@@ -948,6 +948,22 @@ pub struct BarButton {
     pub bar: String,
 }
 
+/// Rename the Button Bar `old` to `new`, or delete it when `new` is empty:
+/// its buttons go and the sessions that used it fall back to the default bar.
+pub fn move_bar(options: &mut Options, store: &mut SessionStore, old: &str, new: &str) {
+    let same = |bar: &str| bar.eq_ignore_ascii_case(old);
+    options.button_bars.retain(|b| !same(b));
+    if new.is_empty() {
+        options.buttons.retain(|b| !same(&b.bar));
+    } else {
+        options.button_bars.push(new.to_string());
+    }
+    let sessions = store.sessions.iter_mut().chain([&mut store.default_session]).map(|s| &mut s.button_bar);
+    for bar in options.buttons.iter_mut().map(|b| &mut b.bar).chain(sessions).filter(|b| same(b)) {
+        *bar = new.to_string();
+    }
+}
+
 impl Options {
     /// The interface font size against the 12px the window was laid out for.
     pub fn ui_scale(&self) -> f32 {
@@ -1359,6 +1375,30 @@ mod tests {
         let old = toml::from_str::<Options>("show_toolbar = true\n").unwrap();
         assert_eq!(old.ui_font_size, Options::default().ui_font_size);
         assert_eq!(toml::from_str::<Options>("ui_font_size = 15.0\n").unwrap().ui_scale(), 1.25);
+    }
+
+    #[test]
+    fn button_bars_rename_and_delete() {
+        let button = |label: &str, bar: &str| BarButton { label: label.into(), bar: bar.into(), ..Default::default() };
+        let mut options = Options {
+            button_bars: vec!["Lab".into(), "Empty".into()],
+            buttons: vec![button("a", "lab"), button("b", ""), button("c", "Cisco")],
+            ..Default::default()
+        };
+        let mut store = SessionStore {
+            sessions: vec![Session { name: "r1".into(), button_bar: "Lab".into(), ..Default::default() }],
+            default_session: Session { button_bar: "Lab".into(), ..Default::default() },
+            ..Default::default()
+        };
+        move_bar(&mut options, &mut store, "Lab", "Routers");
+        assert_eq!(options.button_bars, ["Empty", "Routers"]);
+        assert_eq!(options.buttons.iter().map(|b| b.bar.as_str()).collect::<Vec<_>>(), ["Routers", "", "Cisco"]);
+        assert_eq!((store.sessions[0].button_bar.as_str(), store.default_session.button_bar.as_str()), ("Routers", "Routers"));
+
+        move_bar(&mut options, &mut store, "routers", "");
+        assert_eq!(options.button_bars, ["Empty"]);
+        assert_eq!(options.buttons.iter().map(|b| b.label.as_str()).collect::<Vec<_>>(), ["b", "c"]);
+        assert_eq!((store.sessions[0].button_bar.as_str(), store.default_session.button_bar.as_str()), ("", ""));
     }
 
     #[test]

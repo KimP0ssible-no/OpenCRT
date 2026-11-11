@@ -10,6 +10,45 @@ import "fonts/IBMPlexSans-Medium.ttf";
 import "fonts/IBMPlexSans-SemiBold.ttf";
 import "fonts/IBMPlexMono-Regular.ttf";
 
+export struct KeywordRowView {
+    pattern: string,
+    colour: string,
+    style: string,
+    // How the terminal draws it.
+    fg: color,
+    bg: color,
+    has-bg: bool,
+    bold: bool,
+}
+
+// Global Options > Keywords: the lists being edited live in the app until OK.
+export global KeywordEditor {
+    in property <[string]> lists;
+    in-out property <int> list;
+    in-out property <string> list-name;
+    in property <string> list-error;
+    in property <[KeywordRowView]> rows;
+    in-out property <int> row: -1;
+    in property <[string]> colours;
+    in property <[color]> colour-dots;
+    // The selected keyword's fields.
+    in-out property <string> pattern;
+    in-out property <bool> regex;
+    in-out property <int> colour;
+    in-out property <bool> text;
+    in-out property <bool> bold;
+    in-out property <bool> word;
+    in-out property <bool> line;
+    callback pick-list(int);
+    callback new-list();
+    callback rename-list(string);
+    callback delete-list();
+    callback pick-row(int);
+    callback add-row();
+    callback remove-row();
+    callback edit-row();
+}
+
 export struct TabData {
     title: string,
     // Tab group (0 leftmost), and whether it is the tab its group shows.
@@ -2710,6 +2749,92 @@ component FirewallDialog inherits DialogFrame {
 }
 
 // A colour field: a swatch and its #rrggbb text.
+// A dropdown of named colours, each with a dot of its colour.
+component ColourDropdown inherits Rectangle {
+    in property <[string]> names;
+    in property <[color]> dots;
+    in property <bool> enabled: true;
+    in-out property <int> current-index;
+    callback selected();
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: Theme.border;
+    background: touch.has-hover && root.enabled ? Theme.hover-bg : Theme.input-bg;
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        spacing: 6px;
+        VerticalLayout {
+            alignment: center;
+            Rectangle {
+                width: 10px * Theme.ui-scale;
+                height: self.width;
+                border-radius: self.width / 2;
+                background: root.dots[root.current-index];
+                opacity: root.enabled ? 1 : 0.4;
+            }
+        }
+        Text {
+            text: root.names[root.current-index];
+            horizontal-stretch: 1;
+            vertical-alignment: center;
+            color: root.enabled ? Theme.text : Theme.text-disabled;
+        }
+        Text {
+            text: "▾";
+            vertical-alignment: center;
+            color: root.enabled ? Theme.text-secondary : Theme.text-disabled;
+        }
+    }
+    touch := TouchArea {
+        enabled: root.enabled;
+        clicked => { popup.show(); }
+    }
+    popup := PopupWindow {
+        x: 0;
+        y: root.height;
+        width: root.width;
+        Rectangle {
+            background: Theme.panel-bg;
+            border-width: 1px;
+            border-color: Theme.border;
+            border-radius: 4px;
+            VerticalLayout {
+                padding: 3px;
+                for name[i] in root.names: Rectangle {
+                    height: 24px * Theme.ui-scale;
+                    border-radius: 3px;
+                    background: item.has-hover ? Theme.hover-bg : i == root.current-index ? Theme.active-row-bg : transparent;
+                    HorizontalLayout {
+                        padding-left: 6px;
+                        spacing: 6px;
+                        VerticalLayout {
+                            alignment: center;
+                            Rectangle {
+                                width: 10px * Theme.ui-scale;
+                                height: self.width;
+                                border-radius: self.width / 2;
+                                background: root.dots[i];
+                            }
+                        }
+                        Text {
+                            text: name;
+                            vertical-alignment: center;
+                            color: Theme.text;
+                        }
+                    }
+                    item := TouchArea {
+                        clicked => {
+                            root.current-index = i;
+                            root.selected();
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 component ColourField inherits HorizontalLayout {
     in-out property <string> value;
     in property <brush> swatch;
@@ -2888,7 +3013,6 @@ component GlobalOptionsDialog inherits DialogFrame {
     in-out property <int> font-index;
     in-out property <string> font-size;
     in-out property <string> scrollback;
-    in-out property <string> keywords;
     in-out property <string> keepalive;
     in-out property <bool> copy-on-select;
     in-out property <string> word-delimiters;
@@ -3365,14 +3489,174 @@ component GlobalOptionsDialog inherits DialogFrame {
                     color: Theme.text-secondary;
                     font-size: 11px * Theme.ui-scale;
                 }
-                if root.category == 4: Text {
-                    text: "Highlight keywords, one per line, any case: a word or a /regular expression/. After =, add red, orange, green, blue or purple for a colour other than amber, \"text\" to colour the letters instead of the background, \"bold\", \"word\" to match whole words only, and \"line\" to mark the whole line (error = red text bold word; down = red line). A [name] line starts a named set that a session can choose (Session Options > Appearance) in place of the Default set: the lines above the first [name].";
-                    wrap: word-wrap;
-                }
-                if root.category == 4: TextEdit {
-                    text <=> root.keywords;
-                    height: 160px * Theme.ui-scale;
-                    font-size: 12px * Theme.ui-scale;
+                if root.category == 4: VerticalLayout {
+                    spacing: 8px;
+                    Text {
+                        text: "Keywords are highlighted in any case. A session uses the Default list unless it chooses a named one (Session Options > Appearance).";
+                        wrap: word-wrap;
+                        color: Theme.text-secondary;
+                        font-size: 11px * Theme.ui-scale;
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        FormLabel { text: "List:"; width: 50px * Theme.ui-scale; }
+                        ComboBox {
+                            horizontal-stretch: 1;
+                            model: KeywordEditor.lists;
+                            current-index <=> KeywordEditor.list;
+                            selected => { KeywordEditor.pick-list(self.current-index); }
+                        }
+                        Button {
+                            text: "New List";
+                            clicked => { KeywordEditor.new-list(); }
+                        }
+                        Button {
+                            text: "Delete List";
+                            enabled: KeywordEditor.list > 0;
+                            clicked => { KeywordEditor.delete-list(); }
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        FormLabel { text: "Name:"; width: 50px * Theme.ui-scale; }
+                        LineEdit {
+                            horizontal-stretch: 1;
+                            enabled: KeywordEditor.list > 0;
+                            text <=> KeywordEditor.list-name;
+                            placeholder-text: "the Default list has no name";
+                            edited(name) => { KeywordEditor.rename-list(name); }
+                        }
+                    }
+                    if KeywordEditor.list-error != "": Text {
+                        text: KeywordEditor.list-error;
+                        color: Theme.status-error;
+                        font-size: 11px * Theme.ui-scale;
+                    }
+                    Rectangle {
+                        height: 130px * Theme.ui-scale;
+                        background: Theme.input-bg;
+                        border-width: 1px;
+                        border-color: Theme.border;
+                        VerticalLayout {
+                            padding: 1px;
+                            Rectangle {
+                                height: 22px * Theme.ui-scale;
+                                background: Theme.toolbar-bg;
+                                HorizontalLayout {
+                                    padding-left: 6px;
+                                    spacing: 6px;
+                                    TableCell { text: "Keyword"; horizontal-stretch: 1; preferred-width: 10px * Theme.ui-scale; color: Theme.text-secondary; }
+                                    TableCell { text: "Colour"; width: 70px * Theme.ui-scale; color: Theme.text-secondary; }
+                                    TableCell { text: "Style"; width: 180px * Theme.ui-scale; color: Theme.text-secondary; }
+                                }
+                            }
+                            ListView {
+                                for row[i] in KeywordEditor.rows: Rectangle {
+                                    height: 21px * Theme.ui-scale;
+                                    background: i == KeywordEditor.row ? Theme.active-row-bg : kw-touch.has-hover ? Theme.hover-bg : transparent;
+                                    kw-touch := TouchArea {
+                                        clicked => { KeywordEditor.pick-row(i); }
+                                    }
+                                    HorizontalLayout {
+                                        padding-left: 6px;
+                                        spacing: 6px;
+                                        HorizontalLayout {
+                                            horizontal-stretch: 1;
+                                            preferred-width: 10px * Theme.ui-scale;
+                                            alignment: start;
+                                            padding-top: 2px;
+                                            padding-bottom: 2px;
+                                            Rectangle {
+                                                background: row.has-bg ? row.bg : transparent;
+                                                border-radius: 2px;
+                                                HorizontalLayout {
+                                                    padding-left: 3px;
+                                                    padding-right: 3px;
+                                                    TableCell {
+                                                        text: row.pattern;
+                                                        color: row.fg;
+                                                        font-weight: row.bold ? 700 : 400;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        TableCell { text: row.colour; width: 70px * Theme.ui-scale; }
+                                        TableCell { text: row.style; width: 180px * Theme.ui-scale; }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        FormLabel { text: "Keyword:"; }
+                        LineEdit {
+                            horizontal-stretch: 1;
+                            enabled: KeywordEditor.row >= 0;
+                            text <=> KeywordEditor.pattern;
+                            placeholder-text: KeywordEditor.regex ? "regular expression" : "word or phrase";
+                            edited => { KeywordEditor.edit-row(); }
+                        }
+                        ColourDropdown {
+                            width: 110px * Theme.ui-scale;
+                            enabled: KeywordEditor.row >= 0;
+                            names: KeywordEditor.colours;
+                            dots: KeywordEditor.colour-dots;
+                            current-index <=> KeywordEditor.colour;
+                            selected => { KeywordEditor.edit-row(); }
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 12px;
+                        alignment: start;
+                        CheckBox {
+                            text: "Regular expression";
+                            enabled: KeywordEditor.row >= 0;
+                            checked <=> KeywordEditor.regex;
+                            toggled => { KeywordEditor.edit-row(); }
+                        }
+                        CheckBox {
+                            text: "Whole words";
+                            enabled: KeywordEditor.row >= 0;
+                            checked <=> KeywordEditor.word;
+                            toggled => { KeywordEditor.edit-row(); }
+                        }
+                        CheckBox {
+                            text: "Whole line";
+                            enabled: KeywordEditor.row >= 0;
+                            checked <=> KeywordEditor.line;
+                            toggled => { KeywordEditor.edit-row(); }
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 12px;
+                        alignment: start;
+                        CheckBox {
+                            text: "Colour the text only";
+                            enabled: KeywordEditor.row >= 0;
+                            checked <=> KeywordEditor.text;
+                            toggled => { KeywordEditor.edit-row(); }
+                        }
+                        CheckBox {
+                            text: "Bold";
+                            enabled: KeywordEditor.row >= 0;
+                            checked <=> KeywordEditor.bold;
+                            toggled => { KeywordEditor.edit-row(); }
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        alignment: start;
+                        Button {
+                            text: "Add";
+                            clicked => { KeywordEditor.add-row(); }
+                        }
+                        Button {
+                            text: "Remove";
+                            enabled: KeywordEditor.row >= 0;
+                            clicked => { KeywordEditor.remove-row(); }
+                        }
+                    }
                 }
                 if root.category == 5: HorizontalLayout {
                     spacing: 8px;
@@ -4721,7 +5005,6 @@ export component MainWindow inherits Window {
     in property <string> so-error;
     in-out property <string> go-font-size;
     in-out property <string> go-scrollback;
-    in-out property <string> go-keywords;
     in-out property <string> go-key-map;
     in property <[string]> font-names;
     in-out property <int> go-font;
@@ -6371,7 +6654,6 @@ export component MainWindow inherits Window {
         font-index <=> root.go-font;
         font-size <=> root.go-font-size;
         scrollback <=> root.go-scrollback;
-        keywords <=> root.go-keywords;
         key-map <=> root.go-key-map;
         keepalive <=> root.go-keepalive;
         copy-on-select <=> root.go-copy-on-select;

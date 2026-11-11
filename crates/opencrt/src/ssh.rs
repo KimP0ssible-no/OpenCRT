@@ -37,6 +37,9 @@ pub enum SshEvent {
     UnknownHostKey(HostKeyPrompt),
     /// The server wants answers (password, OTP, ...) the UI must collect.
     AuthPrompt(AuthPrompt),
+    /// A saved secret is needed but the master password has not been entered
+    /// this run: the UI asks for it and answers whether it is now unlocked.
+    Unlock(oneshot::Sender<bool>),
     /// The negotiated SSH cipher, e.g. `aes256-gcm@openssh.com`.
     Cipher(String),
     /// The logged-in connection, for opening an SFTP tab on it (weak: the
@@ -120,6 +123,12 @@ pub struct Credentials {
 /// terminal if the keychain failed). Call it on the connection's own thread
 /// before its runtime starts, since the keychain may ask to be unlocked.
 pub(crate) fn saved_password(name: &str, io: &Io) -> Option<String> {
+    if crate::config::secrets_locked() {
+        let (reply, unlocked) = oneshot::channel();
+        if io.output.send(SshEvent::Unlock(reply)).is_ok() {
+            let _ = unlocked.blocking_recv();
+        }
+    }
     crate::config::credential_password(name).unwrap_or_else(|e| {
         let note = format!("\x1b[33mCredential \"{name}\": {e}; asking for the password instead.\x1b[0m\r\n");
         let _ = io.output.send(SshEvent::Data(note.into_bytes()));
@@ -927,6 +936,7 @@ async fn load_key(
     let text = std::fs::read_to_string(path).map_err(|e| anyhow!("failed to read key {path}: {e}"))?;
     let mut passphrase = passphrase.filter(|p| !p.is_empty());
     let mut asked = 0;
+    let mut tried_saved = false;
     loop {
         let err = match keys::decode_secret_key(&text, passphrase.as_deref()) {
             Ok(key) => return Ok(key),
@@ -938,6 +948,19 @@ async fn load_key(
         // Once a passphrase was given, a decode failure means it was wrong.
         if !(encrypted || passphrase.is_some()) || asked == AUTH_ATTEMPTS {
             return Err(anyhow!("failed to load key {path}: {err}"));
+        }
+        // A saved passphrase first (once), unlocking the saved secrets if needed.
+        if !std::mem::replace(&mut tried_saved, true) && passphrase.is_none() {
+            if crate::config::secrets_locked() {
+                let (reply, unlocked) = oneshot::channel();
+                if events.send(SshEvent::Unlock(reply)).is_ok() {
+                    let _ = unlocked.await;
+                }
+            }
+            if let Ok(Some(saved)) = crate::config::key_passphrase(path) {
+                passphrase = Some(saved);
+                continue;
+            }
         }
         asked += 1;
         let fields = vec![("Passphrase:".to_string(), false)];

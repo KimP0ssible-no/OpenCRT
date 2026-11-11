@@ -108,6 +108,7 @@ const DIALOG_DROP: i32 = 18;
 const DIALOG_SCRIPT_EDITOR: i32 = 19;
 const DIALOG_QUICK_OPEN: i32 = 20;
 const DIALOG_SHORTCUTS: i32 = 21;
+const DIALOG_MASTER: i32 = 22;
 /// File > Auto Print collects at most this much output.
 const AUTO_PRINT_LIMIT: usize = 4 << 20;
 /// How dropped files are sent (Global Options > File Transfer); "" asks.
@@ -546,12 +547,18 @@ struct Tab {
     state: State,
     host_key: Option<HostKeyPrompt>,
     auth: Option<AuthPrompt>,
+    /// The connection waits for the master password (answered: unlocked or not).
+    unlock: Vec<tokio::sync::oneshot::Sender<bool>>,
     /// A password the user asked to save, kept until the login works; then
     /// moved to `password_to_save` for the app to store.
     pending_password: Option<String>,
     password_to_save: Option<String>,
     /// A credential picked at the prompt, to link to the session once the login works.
     pending_credential: Option<String>,
+    /// A key passphrase the user asked to save, kept until the key works
+    /// (the login goes on); then moved to `passphrase_to_save`.
+    pending_passphrase: Option<String>,
+    passphrase_to_save: Option<String>,
     credential_to_link: Option<String>,
     /// Secrets typed at prompts, to remember once the login works.
     pending_secrets: Vec<(ssh::PromptKind, String)>,
@@ -767,9 +774,12 @@ impl Tab {
             state: State::Connecting,
             host_key: None,
             auth: None,
+            unlock: Vec::new(),
             pending_password: None,
             password_to_save: None,
             pending_credential: None,
+            pending_passphrase: None,
+            passphrase_to_save: None,
             credential_to_link: None,
             pending_secrets: Vec::new(),
             secrets_ready: Vec::new(),
@@ -1393,6 +1403,7 @@ impl Tab {
                     }
                     self.password_to_save = self.pending_password.take();
                     self.credential_to_link = self.pending_credential.take();
+                    self.passphrase_to_save = self.pending_passphrase.take();
                     self.secrets_ready = std::mem::take(&mut self.pending_secrets);
                     self.state = State::Connected;
                     self.status = "Ready".into();
@@ -1428,6 +1439,7 @@ impl Tab {
                 }
                 SshEvent::UnknownHostKey(prompt) => self.host_key = Some(prompt),
                 SshEvent::AuthPrompt(prompt) => self.auth = Some(prompt),
+                SshEvent::Unlock(reply) => self.unlock.push(reply),
                 SshEvent::Cipher(name) => self.cipher = name,
                 SshEvent::Data(bytes) => {
                     let eat_over_and_out = std::mem::take(&mut self.eat_over_and_out);
@@ -1701,6 +1713,8 @@ struct App {
     renaming_tab: Option<usize>,
     /// The name dialog is asking for a snapshot's name.
     naming_snapshot: bool,
+    /// A menu command to run once the master password has been entered.
+    after_unlock: Option<&'static str>,
     /// The name dialog is for a new Button Bar.
     naming_bar: bool,
     /// Folder (full path) whose new name the name dialog is asking for.
@@ -1962,6 +1976,7 @@ impl App {
             editing_button: None,
             renaming_tab: None,
             naming_snapshot: false,
+            after_unlock: None,
             naming_bar: false,
             renaming_folder: None,
             editing_many: None,
@@ -2547,6 +2562,7 @@ impl App {
                 ui.set_dialog(DIALOG_SCHEMES);
                 return;
             }
+            "credentials" | "firewalls" if self.unlock_first(ui, if name == "credentials" { "credentials" } else { "firewalls" }) => return,
             "firewalls" => {
                 self.show_firewall_rows(ui);
                 ui.set_firewall_selected(-1);
@@ -2596,6 +2612,7 @@ impl App {
                 ui.invoke_focus_terminal();
                 return;
             }
+            "master-password" => return self.show_master_password(ui, if config::master_password_set() { 2 } else { 1 }),
             "credentials" => {
                 self.show_credential_rows(ui);
                 ui.set_credential_selected(-1);
@@ -3494,6 +3511,14 @@ impl App {
                 remember(&mut tab.target, &self.secrets);
             }
         }
+        // Key passphrases saved once the key worked, under the key file's path.
+        let keys: Vec<(String, String)> =
+            self.tabs.iter_mut().filter_map(|t| Some((t.target.key_path.clone()?, t.passphrase_to_save.take()?))).collect();
+        for (path, passphrase) in keys {
+            if let Err(e) = config::set_key_passphrase(&path, &passphrase) {
+                self.notify(format!("Cannot save the passphrase of {path}: {e}"));
+            }
+        }
         let picked: Vec<(usize, String)> =
             self.tabs.iter_mut().enumerate().filter_map(|(i, t)| t.credential_to_link.take().map(|c| (i, c))).collect();
         for (i, name) in picked {
@@ -3944,6 +3969,13 @@ impl App {
         if ui.get_dialog() != DIALOG_NONE {
             return;
         }
+        // A connection needs the master password first.
+        if self.tabs.iter().any(|t| !t.unlock.is_empty()) {
+            if config::secrets_locked() {
+                return self.show_master_password(ui, 0);
+            }
+            return self.answer_unlock(true);
+        }
         let Some(index) = self.tabs.iter().position(|t| t.host_key.is_some() || t.auth.is_some()) else {
             return;
         };
@@ -3966,7 +3998,9 @@ impl App {
             ui.set_auth_instructions(prompt.instructions.clone().into());
             ui.set_auth_fields(ModelRc::new(VecModel::from(fields)));
             ui.set_auth_answers(ModelRc::new(VecModel::from(answers)));
-            ui.set_auth_can_save(prompt.kind == ssh::PromptKind::Password && tab.session.is_some());
+            let passphrase = prompt.kind == ssh::PromptKind::Passphrase && tab.target.key_path.is_some();
+            ui.set_auth_can_save((prompt.kind == ssh::PromptKind::Password && tab.session.is_some()) || passphrase);
+            ui.set_auth_passphrase(passphrase);
             ui.set_auth_save(false);
             let choices: Vec<SharedString> = if prompt.kind == ssh::PromptKind::Password {
                 std::iter::once("Type the password".into()).chain(self.options.credentials.iter().map(|c| c.name.clone().into())).collect()
@@ -3993,10 +4027,93 @@ impl App {
         ui.invoke_focus_terminal();
     }
 
+    /// Every saved secret OpenCRT may hold: credentials, firewalls and the
+    /// sessions' key files.
+    fn secret_accounts(&self) -> Vec<String> {
+        let keys: Vec<String> = self.store.sessions.iter().chain([&self.store.default_session]).map(|s| config::expand_env(&s.key_path)).collect();
+        config::secret_accounts(&self.options, &keys)
+    }
+
+    /// A dialog that edits saved secrets: with the master password not yet
+    /// entered, ask for it first and open the dialog afterwards.
+    fn unlock_first(&mut self, ui: &MainWindow, then: &'static str) -> bool {
+        if !config::secrets_locked() {
+            return false;
+        }
+        self.after_unlock = Some(then);
+        self.show_master_password(ui, 0);
+        true
+    }
+
+    /// Tools > Master Password (mode 1 set, 2 change or remove), or 0 to
+    /// enter it when a saved secret is needed.
+    fn show_master_password(&mut self, ui: &MainWindow, mode: i32) {
+        ui.set_mp_mode(mode);
+        ui.set_mp_error(SharedString::new());
+        for clear in [MainWindow::set_mp_current, MainWindow::set_mp_new, MainWindow::set_mp_confirm] {
+            clear(ui, SharedString::new());
+        }
+        ui.set_dialog(DIALOG_MASTER);
+    }
+
+    /// Tell the connections waiting for the master password whether they can go on.
+    fn answer_unlock(&mut self, unlocked: bool) {
+        for tab in &mut self.tabs {
+            for reply in tab.unlock.drain(..) {
+                let _ = reply.send(unlocked);
+            }
+        }
+    }
+
+    /// The master password dialog: 0 cancel, 1 OK (unlock, set or change), 2 remove.
+    fn master_password_answer(&mut self, choice: i32, ui: &MainWindow) {
+        let (mode, current) = (ui.get_mp_mode(), ui.get_mp_current().to_string());
+        let (new, confirm) = (ui.get_mp_new().to_string(), ui.get_mp_confirm().to_string());
+        let result = match (choice, mode) {
+            (0, _) => Ok(None),
+            (1, 0) => config::unlock_secrets(&current).and_then(|()| config::adopt_keychain_secrets(&self.secret_accounts())).map(|()| None),
+            (1, _) if new.is_empty() => Err("Type the new master password.".to_string()),
+            (1, _) if new != confirm => Err("The new password and its confirmation differ.".to_string()),
+            (1, 1) => {
+                config::set_master_password(&new, &self.secret_accounts())
+                    .map(|()| Some("Saved passwords and key passphrases are now kept under the master password."))
+            }
+            (1, _) => config::unlock_secrets(&current)
+                .and_then(|()| config::change_master_password(&new))
+                .map(|()| Some("Changed the master password.")),
+            _ => config::unlock_secrets(&current)
+                .and_then(|()| config::remove_master_password())
+                .map(|()| Some("Removed the master password: saved passwords are back in this computer's keychain.")),
+        };
+        match result {
+            Err(e) => ui.set_mp_error(e.into()),
+            Ok(note) => {
+                for clear in [MainWindow::set_mp_current, MainWindow::set_mp_new, MainWindow::set_mp_confirm] {
+                    clear(ui, SharedString::new());
+                }
+                self.answer_unlock(!config::secrets_locked());
+                let then = self.after_unlock.take().filter(|_| choice == 1 && mode == 0);
+                if let Some(note) = note {
+                    self.notify(note);
+                }
+                ui.set_dialog(DIALOG_NONE);
+                ui.invoke_focus_terminal();
+                if let Some(then) = then {
+                    self.pending_menus.push(then.to_string());
+                }
+            }
+        }
+    }
+
     fn answer_auth(&mut self, ok: bool, ui: &MainWindow) {
         let mut answers: Vec<String> = ui.get_auth_answers().iter().map(|s| s.to_string()).collect();
         // A saved credential picked instead of typing: its password from the keychain.
         let chosen = usize::try_from(ui.get_auth_credential() - 1).ok().and_then(|i| self.options.credentials.get(i)).map(|c| c.name.clone());
+        if ok && chosen.is_some() && config::secrets_locked() {
+            // The login prompt stays pending and comes back once unlocked.
+            self.dialog_tab = None;
+            return self.show_master_password(ui, 0);
+        }
         if ok && let Some(name) = &chosen {
             match config::credential_password(name) {
                 Ok(Some(password)) => answers = vec![password],
@@ -4013,6 +4130,9 @@ impl App {
             let keepable = matches!(prompt.kind, ssh::PromptKind::Password | ssh::PromptKind::Passphrase);
             if ok && self.options.remember_secrets && keepable && chosen.is_none() {
                 tab.pending_secrets.extend(answers.first().map(|a| (prompt.kind, a.clone())));
+            }
+            if ok && save && prompt.kind == ssh::PromptKind::Passphrase {
+                tab.pending_passphrase = answers.first().cloned();
             }
             if ok && save && prompt.kind == ssh::PromptKind::Password && tab.session.is_some() {
                 match chosen {
@@ -7974,6 +8094,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
     on!(on_go_get_git, |app, ui| app.get_git(&ui));
     on!(on_confirm_answer, |app, ui, yes| app.confirm_answer(yes, &ui));
     on!(on_name_answer, |app, ui, ok| app.name_answer(ok, &ui));
+    on!(on_mp_answer, |app, ui, choice| app.master_password_answer(choice, &ui));
     on!(on_files_click, |app, _ui, tab, side, row, ctrl, shift| {
         if let Some(files) = app.tabs.get_mut(tab as usize).and_then(|t| t.files.as_mut()) {
             files.click(side as usize, row.max(-1) as usize, ctrl, shift);

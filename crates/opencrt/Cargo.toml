@@ -130,6 +130,10 @@ slint-build = "1.18.1"
 # and terminal fonts are built in).
 [target.'cfg(target_os = "linux")'.dependencies]
 fontique = { version = "0.11", default-features = false, features = ["fontconfig-dlopen"] }
+# KWin's title bar colours on Plasma Wayland (already in the lockfile through winit).
+wayland-backend = { version = "0.3.17", features = ["client_system"] }
+wayland-client = "0.31.15"
+wayland-protocols-plasma = { version = "0.3.12", features = ["client"] }
 
 # Python scripts' process group and seccomp filter (already in the lockfile).
 [target.'cfg(unix)'.dependencies]

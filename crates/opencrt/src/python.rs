@@ -70,6 +70,9 @@ const RUNTIME: Option<Runtime> = None;
 /// Where the downloaded Python lives: this computer's own application data,
 /// not the (possibly synced) configuration folder.
 fn runtime_dir() -> Option<PathBuf> {
+    if let Some(portable) = crate::config::portable_dir() {
+        return Some(portable.join(format!("python-{VERSION}")));
+    }
     let base = if cfg!(windows) {
         PathBuf::from(std::env::var_os("LOCALAPPDATA")?)
     } else {

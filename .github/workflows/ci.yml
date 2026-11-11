@@ -382,6 +382,22 @@ jobs:
           choco install wixtoolset -y --no-progress
           cargo install cargo-wix --locked
           cargo wix -p opencrt --no-build --nocapture --bin-path "C:\Program Files (x86)\WiX Toolset v3.14\bin" -o target\wix\
+      # The portable version: the signed programs, the notices and portable.txt
+      # (which keeps the settings beside the program), unpacked anywhere.
+      - name: Windows portable zip
+        if: runner.os == 'Windows'
+        run: |
+          $v = (Select-String -Path crates\opencrt\Cargo.toml -Pattern '^version = "(.*)"').Matches[0].Groups[1].Value
+          $dir = 'target\portable\OpenCRT'
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          Copy-Item target\release\opencrt.exe, target\release\opencrt-rdp.exe, target\release\ocrt.exe, packaging\windows\portable.txt, SLINT-LICENSE.md, crates\opencrt\ui\fonts\OFL.txt, target\THIRD-PARTY-NOTICES.html, target\THIRD-PARTY-NOTICES-RDP.html $dir
+          Copy-Item LICENSE "$dir\LICENSE.txt"
+          Copy-Item NOTICE "$dir\NOTICE.txt"
+          Compress-Archive -Path $dir -DestinationPath "target\portable\opencrt-$v-x64-portable.zip" -Force
+          Expand-Archive "target\portable\opencrt-$v-x64-portable.zip" target\portable\check
+          foreach ($f in 'opencrt.exe', 'opencrt-rdp.exe', 'ocrt.exe', 'portable.txt', 'LICENSE.txt') {
+            if (-not (Test-Path "target\portable\check\OpenCRT\$f")) { throw "the portable zip lacks $f" }
+          }
       - name: Sign the MSI, check every signature
         if: env.SIGN == 'true'
         run: |
@@ -472,6 +488,7 @@ jobs:
           path: |
             packaging/windows/Output/*.exe
             target/wix/*.msi
+            target/portable/*.zip
             target/release/OpenCRT.dmg
           if-no-files-found: ignore
 

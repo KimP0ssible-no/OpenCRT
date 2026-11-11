@@ -147,8 +147,27 @@ pub fn in_folder(path: &Path, folder: &Path) -> Option<String> {
     Some(inner.components().map(|c| c.as_os_str().to_string_lossy()).collect::<Vec<_>>().join("/"))
 }
 
-/// The per-user configuration folder following each platform's convention.
+/// The portable version: a `portable.txt` beside the program keeps all its
+/// settings in the `settings` folder next to it, instead of the user's profile.
+pub fn portable_dir() -> Option<PathBuf> {
+    static PORTABLE: std::sync::OnceLock<Option<PathBuf>> = std::sync::OnceLock::new();
+    PORTABLE
+        .get_or_init(|| {
+            let exe = std::env::current_exe().ok()?;
+            let dir = exe.parent()?;
+            dir.join(PORTABLE_FILE).is_file().then(|| dir.join("settings"))
+        })
+        .clone()
+}
+
+pub const PORTABLE_FILE: &str = "portable.txt";
+
+/// The per-user configuration folder following each platform's convention
+/// (in the portable version, its own `settings` folder).
 pub(crate) fn default_dir() -> Option<PathBuf> {
+    if let Some(portable) = portable_dir() {
+        return Some(portable);
+    }
     #[cfg(windows)]
     return std::env::var_os("APPDATA").map(|d| PathBuf::from(d).join("OpenCRT"));
 
@@ -708,9 +727,14 @@ fn vault_dir() -> Option<PathBuf> {
     dir().filter(|d| crate::vault::exists(d))
 }
 
+// The portable version never uses the host computer's keychain: its saved
+// secrets travel with it, under a master password, or are not saved.
+const PORTABLE_NEEDS_MASTER: &str = "the portable version saves passwords only under a master password (Tools > Master Password)";
+
 fn secret_get(account: &str) -> Result<Option<String>, String> {
     match vault_dir() {
         Some(dir) => crate::vault::get(&dir, account),
+        None if portable_dir().is_some() => Ok(None),
         None => keychain_get(account),
     }
 }
@@ -718,6 +742,7 @@ fn secret_get(account: &str) -> Result<Option<String>, String> {
 fn secret_set(account: &str, secret: &str) -> Result<(), String> {
     match vault_dir() {
         Some(dir) => crate::vault::set(&dir, account, Some(secret)),
+        None if portable_dir().is_some() => Err(PORTABLE_NEEDS_MASTER.into()),
         None => keychain_entry(account)?.set_password(secret).map_err(|e| e.to_string()),
     }
 }
@@ -725,6 +750,7 @@ fn secret_set(account: &str, secret: &str) -> Result<(), String> {
 fn secret_delete(account: &str) -> Result<(), String> {
     match vault_dir() {
         Some(dir) => crate::vault::set(&dir, account, None),
+        None if portable_dir().is_some() => Ok(()),
         None => keychain_delete(account),
     }
 }
@@ -744,7 +770,7 @@ pub fn secret_accounts(options: &Options, key_paths: &[String]) -> Vec<String> {
 pub fn set_master_password(password: &str, accounts: &[String]) -> Result<(), String> {
     let dir = dir().ok_or("no settings folder")?;
     let mut moved = Vec::new();
-    for account in accounts {
+    for account in accounts.iter().filter(|_| portable_dir().is_none()) {
         if let Some(secret) = keychain_get(account)? {
             moved.push((account.clone(), secret));
         }
@@ -760,6 +786,9 @@ pub fn set_master_password(password: &str, accounts: &[String]) -> Result<(), St
 /// master password was set on another computer) move into the encrypted file.
 pub fn adopt_keychain_secrets(accounts: &[String]) -> Result<(), String> {
     let dir = vault_dir().ok_or("no master password is set")?;
+    if portable_dir().is_some() {
+        return Ok(());
+    }
     let have = crate::vault::all(&dir)?;
     for account in accounts.iter().filter(|a| !have.iter().any(|(h, _)| h == *a)) {
         if let Some(secret) = keychain_get(account).ok().flatten() {
@@ -772,6 +801,9 @@ pub fn adopt_keychain_secrets(accounts: &[String]) -> Result<(), String> {
 
 /// Remove the master password: the secrets go back to the keychain.
 pub fn remove_master_password() -> Result<(), String> {
+    if portable_dir().is_some() {
+        return Err("The portable version keeps saved passwords only under its master password; change it instead.".into());
+    }
     let dir = vault_dir().ok_or("no master password is set")?;
     for (account, secret) in crate::vault::all(&dir)? {
         keychain_entry(&account)?.set_password(&secret).map_err(|e| e.to_string())?;

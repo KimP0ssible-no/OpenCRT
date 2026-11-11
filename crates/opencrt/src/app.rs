@@ -177,6 +177,20 @@ pub struct Target {
     pub rdp_admin: bool,
 }
 
+/// A password or key passphrase to save once the master password allows it.
+enum WaitingSecret {
+    Session { tab: u64, password: String },
+    Key { tab: u64, path: String, passphrase: String },
+}
+
+impl WaitingSecret {
+    fn tab(&self) -> u64 {
+        match self {
+            Self::Session { tab, .. } | Self::Key { tab, .. } => *tab,
+        }
+    }
+}
+
 /// A remembered secret; kept out of debug output.
 #[derive(Clone, Default, PartialEq)]
 pub struct Secret(String);
@@ -1715,6 +1729,8 @@ struct App {
     naming_snapshot: bool,
     /// A menu command to run once the master password has been entered.
     after_unlock: Option<&'static str>,
+    /// Secrets the user asked to save, waiting for the master password.
+    secrets_waiting: Vec<WaitingSecret>,
     /// Remove was clicked once and its Settings Sync warning shown.
     remove_warned: bool,
     /// SecureCRT sessions just imported with saved passwords, waiting for the
@@ -1982,6 +1998,7 @@ impl App {
             renaming_tab: None,
             naming_snapshot: false,
             after_unlock: None,
+            secrets_waiting: Vec::new(),
             remove_warned: false,
             securecrt_passwords: Vec::new(),
             naming_bar: false,
@@ -3505,11 +3522,17 @@ impl App {
                 Err(e) => format!("Could not add the public key on {host}: {e}"),
             });
         }
-        let logged_in: Vec<(usize, String)> =
-            self.tabs.iter_mut().enumerate().filter_map(|(i, t)| t.password_to_save.take().map(|p| (i, p))).collect();
-        for (i, password) in logged_in {
-            self.save_session_password(i, password);
+        // Passwords and key passphrases to save once logged in; they wait for
+        // the master password when needed (see `save_waiting_secrets`).
+        for tab in &mut self.tabs {
+            if let Some(password) = tab.password_to_save.take() {
+                self.secrets_waiting.push(WaitingSecret::Session { tab: tab.id, password });
+            }
+            if let (Some(path), Some(passphrase)) = (tab.target.key_path.clone(), tab.passphrase_to_save.take()) {
+                self.secrets_waiting.push(WaitingSecret::Key { tab: tab.id, path, passphrase });
+            }
         }
+        self.save_waiting_secrets(ui);
         let ready: Vec<(Target, ssh::PromptKind, String)> = self
             .tabs
             .iter_mut()
@@ -3523,14 +3546,6 @@ impl App {
         if !self.secrets.is_empty() {
             for tab in &mut self.tabs {
                 remember(&mut tab.target, &self.secrets);
-            }
-        }
-        // Key passphrases saved once the key worked, under the key file's path.
-        let keys: Vec<(String, String)> =
-            self.tabs.iter_mut().filter_map(|t| Some((t.target.key_path.clone()?, t.passphrase_to_save.take()?))).collect();
-        for (path, passphrase) in keys {
-            if let Err(e) = config::set_key_passphrase(&path, &passphrase) {
-                self.notify(format!("Cannot save the passphrase of {path}: {e}"));
             }
         }
         let picked: Vec<(usize, String)> =
@@ -4059,6 +4074,48 @@ impl App {
         true
     }
 
+    /// Save the waiting passwords and passphrases, first asking for the master
+    /// password (or, in the portable version without one, to set one).
+    fn save_waiting_secrets(&mut self, ui: &MainWindow) {
+        if self.secrets_waiting.is_empty() {
+            return;
+        }
+        let ask = if config::secrets_locked() {
+            Some(0)
+        } else {
+            (config::portable_dir().is_some() && !config::master_password_set()).then_some(1)
+        };
+        if let Some(mode) = ask {
+            if ui.get_dialog() == DIALOG_NONE {
+                self.show_master_password(ui, mode);
+            }
+            return;
+        }
+        for waiting in std::mem::take(&mut self.secrets_waiting) {
+            let (tab, error) = match waiting {
+                WaitingSecret::Session { tab, password } => match self.tabs.iter().position(|t| t.id == tab) {
+                    Some(i) => (tab, self.save_session_password(i, password).err()),
+                    None => continue,
+                },
+                WaitingSecret::Key { tab, path, passphrase } => {
+                    (tab, config::set_key_passphrase(&path, &passphrase).err().map(|e| format!("Cannot save the passphrase of {path}: {e}")))
+                }
+            };
+            if let Some(e) = error {
+                self.tab_note(tab, &e);
+            }
+        }
+    }
+
+    /// A note in a tab's terminal (and the status bar), for what must not go unseen.
+    fn tab_note(&mut self, tab: u64, text: &str) {
+        if let Some(t) = self.tabs.iter_mut().find(|t| t.id == tab) {
+            t.terminal.feed(format!("\r\n\x1b[33m{text}\x1b[0m\r\n").as_bytes());
+            t.dirty = true;
+        }
+        self.notify(text.to_string());
+    }
+
     /// Tools > Master Password (mode 1 set, 2 change or remove), or 0 to
     /// enter it when a saved secret is needed.
     fn show_master_password(&mut self, ui: &MainWindow, mode: i32) {
@@ -4090,6 +4147,13 @@ impl App {
                 Ok(Some("The SecureCRT sessions were imported without their passwords.".to_string()))
             }
             (_, 3) => self.import_securecrt_passwords(&current).map(Some),
+            (0, _) if !self.secrets_waiting.is_empty() => {
+                let tabs: Vec<u64> = std::mem::take(&mut self.secrets_waiting).into_iter().map(|w| w.tab()).collect();
+                for tab in tabs {
+                    self.tab_note(tab, "The password was not saved.");
+                }
+                Ok(None)
+            }
             (0, _) => Ok(None),
             (1, 0) => config::unlock_secrets(&current).and_then(|()| config::adopt_keychain_secrets(&self.secret_accounts())).map(|()| None),
             (1, _) if new.is_empty() => Err("Type the new master password.".to_string()),
@@ -5482,12 +5546,13 @@ impl App {
     /// "Save password" at a login prompt, once that login worked: keep the
     /// password in the keychain as the session's credential, creating and
     /// linking one named after the session if it has none.
-    fn save_session_password(&mut self, tab: usize, password: String) {
+    /// Keep `password` as the saved credential of tab `tab`'s session.
+    fn save_session_password(&mut self, tab: usize, password: String) -> Result<(), String> {
         let Some(path) = self.tabs.get(tab).and_then(|t| t.session.clone()) else {
-            return;
+            return Ok(());
         };
         let Some(index) = self.store.sessions.iter().position(|s| s.path() == path) else {
-            return;
+            return Ok(());
         };
         let linked = &self.store.sessions[index].credential;
         let name = if self.options.credentials.iter().any(|c| !linked.is_empty() && c.name == *linked) {
@@ -5495,9 +5560,7 @@ impl App {
         } else {
             unused_credential_name(&self.options.credentials, &path)
         };
-        if let Err(e) = config::set_credential_password(&name, &password) {
-            return self.notify(format!("Cannot save the password: {e}"));
-        }
+        config::set_credential_password(&name, &password).map_err(|e| format!("Cannot save the password: {e}"))?;
         if !self.options.credentials.iter().any(|c| c.name == name) {
             self.options.credentials.push(Credential { name: name.clone(), user: String::new() });
             self.save_options();
@@ -5509,7 +5572,9 @@ impl App {
         for t in self.tabs.iter_mut().filter(|t| t.session.as_deref() == Some(path.as_str())) {
             t.target.credential = Some(name.clone());
         }
-        self.notify(format!("Password for {path} saved in the system keychain."));
+        let place = if config::master_password_set() { "under the master password" } else { "in the system keychain" };
+        self.notify(format!("Password for {path} saved {place}."));
+        Ok(())
     }
 
     /// Show scheme `index` (of `schemes()`) in the Colour Schemes editor.

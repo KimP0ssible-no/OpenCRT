@@ -22,6 +22,7 @@ files are signed as the [Code signing policy](#code-signing-policy) describes):
 | Platform | Package |
 | --- | --- |
 | Windows 10/11 (x64) | `opencrt-<version>-x64-setup.exe`, or the `.msi` for unattended and Group Policy installs |
+| Windows, portable (x64) | `opencrt-<version>-x64-portable.zip`: unpack anywhere (a USB stick), nothing installed |
 | macOS (Apple silicon and Intel) | `OpenCRT.dmg` |
 | Debian / Ubuntu | `opencrt_<version>-1_amd64.deb` |
 | RHEL / Rocky / Alma / Fedora / SUSE | `opencrt-<version>-1.x86_64.rpm` |
@@ -29,6 +30,12 @@ files are signed as the [Code signing policy](#code-signing-policy) describes):
 
 The Linux packages need nothing beyond glibc 2.28 (RHEL 8, Debian 10, Ubuntu
 20.04 and newer). `SHA256SUMS` lists the checksum of every file.
+
+The portable zip carries a `portable.txt` beside `opencrt.exe`: while it is
+there, OpenCRT keeps its settings, sessions and host keys in a `settings`
+folder next to the program and nothing in the Windows profile. Saved passwords
+are kept only under a master password (Tools > Master Password), encrypted in
+that folder. The same file works next to any OpenCRT program, on any system.
 
 ### Mac users: install how-to
 OpenCRT is not notarised by Apple yet. Install it from Terminal

@@ -1,0 +1,102 @@
+name: Bug report
+description: Something in OpenCRT does not work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting it. The details below help us reproduce the problem.
+  - type: input
+    id: version
+    attributes:
+      label: OpenCRT version
+      description: Help > About shows it.
+      placeholder: "0.6.7"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS
+        - Linux (Debian / Ubuntu)
+        - Linux (Fedora / RHEL / Rocky / Alma)
+        - Linux (openSUSE)
+        - Linux (Arch)
+        - Linux (other)
+    validations:
+      required: true
+  - type: input
+    id: os-version
+    attributes:
+      label: Operating system version
+      description: For example Windows 11 24H2, macOS 15.3 or Ubuntu 24.04; on Linux, the desktop too (KDE, GNOME...).
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How OpenCRT was installed
+      options:
+        - Windows setup (.exe)
+        - Windows MSI
+        - Windows portable zip
+        - macOS disk image (.dmg)
+        - Linux package (.deb, .rpm or Arch)
+        - Built from source
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where the problem is
+      multiple: true
+      options:
+        - SSH2
+        - SFTP
+        - Telnet, RLogin or raw TCP
+        - Serial
+        - Local shell
+        - RDP
+        - VNC
+        - File transfer (Zmodem, Xmodem, Ymodem, Kermit)
+        - Scripts
+        - SecureCRT import
+        - Settings Sync
+        - Interface
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Include any error message as OpenCRT shows it.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+  - type: input
+    id: server
+    attributes:
+      label: The other end
+      description: For connection problems, the server or device, for example OpenSSH 9.6 on Ubuntu, Cisco IOS 15.2, xrdp 0.10 or Windows Server 2022.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and screenshots
+      description: Drag files here. After a crash, crash.log from the settings folder (Help > About shows where) helps; for RDP, rdp.log beside it. Remove passwords and anything else you would rather not share.

@@ -971,6 +971,34 @@ impl Options {
     }
 }
 
+/// The desktop's display scale when it is published through XSettings instead
+/// of the Wayland output (UKUI's 200% setting, for example). Returns nothing on
+/// desktops that let the compositor report the scale itself.
+#[cfg(all(unix, not(target_os = "macos")))]
+pub fn desktop_scale() -> Option<f32> {
+    for (schema, key) in [
+        ("org.ukui.SettingsDaemon.plugins.xsettings", "scaling-factor"),
+        ("org.gnome.desktop.interface", "scaling-factor"),
+        ("org.mate.interface", "window-scaling-factor"),
+    ] {
+        let Ok(out) = std::process::Command::new("gsettings").args(["get", schema, key]).output() else {
+            continue;
+        };
+        if !out.status.success() {
+            continue;
+        }
+        let value = String::from_utf8_lossy(&out.stdout);
+        // gsettings prints "2.0" for doubles and "uint32 2" for integers.
+        let Ok(scale) = value.trim().trim_start_matches("uint32 ").parse::<f32>() else {
+            continue;
+        };
+        if (1.0..=4.0).contains(&scale) {
+            return Some(scale);
+        }
+    }
+    None
+}
+
 /// The Linux desktop's interface font size in pixels (KDE or GNOME), if it has one.
 #[cfg(all(unix, not(target_os = "macos")))]
 fn desktop_font_px() -> Option<f32> {

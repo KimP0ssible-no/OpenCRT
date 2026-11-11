@@ -1715,6 +1715,8 @@ struct App {
     naming_snapshot: bool,
     /// A menu command to run once the master password has been entered.
     after_unlock: Option<&'static str>,
+    /// Remove was clicked once and its Settings Sync warning shown.
+    remove_warned: bool,
     /// SecureCRT sessions just imported with saved passwords, waiting for the
     /// Config Passphrase to decrypt them.
     securecrt_passwords: sessions::SecureCrtPasswords,
@@ -1980,6 +1982,7 @@ impl App {
             renaming_tab: None,
             naming_snapshot: false,
             after_unlock: None,
+            remove_warned: false,
             securecrt_passwords: Vec::new(),
             naming_bar: false,
             renaming_folder: None,
@@ -4059,6 +4062,7 @@ impl App {
     /// Tools > Master Password (mode 1 set, 2 change or remove), or 0 to
     /// enter it when a saved secret is needed.
     fn show_master_password(&mut self, ui: &MainWindow, mode: i32) {
+        self.remove_warned = false;
         ui.set_mp_mode(mode);
         ui.set_mp_error(SharedString::new());
         for clear in [MainWindow::set_mp_current, MainWindow::set_mp_new, MainWindow::set_mp_confirm] {
@@ -4094,6 +4098,11 @@ impl App {
                 config::set_master_password(&new, &self.secret_accounts())
                     .map(|()| Some("Saved passwords and key passphrases are now kept under the master password.".to_string()))
             }
+            // Removing deletes the synced file, so other computers lose these passwords: say so first.
+            (2, _) if !std::mem::replace(&mut self.remove_warned, true) && crate::gitsync::local_copy().is_some_and(|d| Some(d) == config::dir()) => Err(
+                "Settings Sync shares these passwords: removing the master password moves them into this computer's keychain only, and the other computers that sync these settings will need their saved passwords entered again. Click Remove again to go ahead."
+                    .to_string(),
+            ),
             (1, _) => config::unlock_secrets(&current)
                 .and_then(|()| config::change_master_password(&new))
                 .map(|()| Some("Changed the master password.".to_string())),

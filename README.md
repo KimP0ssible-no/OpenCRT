@@ -195,6 +195,10 @@ automatic check off in Options > Global Options > General.
 | Ctrl+Insert / Shift+Insert | Copy / paste |
 | Shift+PgUp / Shift+PgDn | Scroll back / forward |
 | Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |
+| Ctrl+Shift+T (Command+O on macOS) | Quick Open: find a saved session or type a host |
+| macOS: Command+K / Command+T | Quick Connect / Connect in Tab |
+| macOS: Command+E | Open a saved session (the Session Manager's filter) |
+| macOS: Command+L | Connect a local shell |
 | Alt+1 … Alt+9 | Go to tab 1 … 9 (Command+n on macOS) |
 | Alt+key | Sent as Esc+key (Meta), e.g. Alt+B / Alt+F in shells |
 | Alt+Enter | Full screen on / off |
@@ -210,6 +214,9 @@ Help > Keyboard Shortcuts shows the main ones in OpenCRT. F1 stays with the
 host; map it with `F1 = menu: shortcuts` to open that list instead.
 `Alt+R = menu: focus-connect-bar` puts the keyboard in the toolbar's quick
 connect box, as Alt+R does in SecureCRT (Alt+R stays with the host unless mapped).
+On Windows and Linux, the macOS Command keys' actions can be mapped too, e.g.
+`F2 = menu: open-session` or `F3 = menu: local-shell` (Ctrl+K and Ctrl+L stay
+with the shell).
 
 ## Command-line tools
 `ocrt` (installed beside OpenCRT) uses OpenCRT's known host keys and SSH code:

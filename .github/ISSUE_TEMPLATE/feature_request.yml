@@ -1,0 +1,34 @@
+name: Feature request
+description: Something OpenCRT should do, or do differently.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: want
+    attributes:
+      label: What you would like
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What it is for
+      description: How you would use it helps us get it right.
+  - type: textarea
+    id: elsewhere
+    attributes:
+      label: How SecureCRT (or another client) does it
+      description: Screenshots welcome.
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      multiple: true
+      options:
+        - Windows
+        - macOS
+        - Linux
+  - type: input
+    id: version
+    attributes:
+      label: OpenCRT version
+      description: Help > About shows it.

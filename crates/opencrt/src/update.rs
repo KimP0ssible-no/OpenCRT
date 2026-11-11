@@ -292,6 +292,8 @@ pub enum InstallKind {
     /// A .deb, .rpm or Arch package: the package manager owns it, and gets
     /// new versions if the OpenCRT repository is set up (`repo`).
     Package { repo: bool },
+    /// The Windows portable zip (`portable.txt` beside the program).
+    Portable,
     /// The MSI, a copied folder or a development build.
     Manual,
 }
@@ -299,7 +301,9 @@ pub enum InstallKind {
 impl InstallKind {
     pub fn of(exe: &Path) -> Self {
         let dir = exe.parent().unwrap_or(Path::new(""));
-        if dir.join("unins000.exe").is_file() {
+        if dir.join(crate::config::PORTABLE_FILE).is_file() {
+            Self::Portable
+        } else if dir.join("unins000.exe").is_file() {
             Self::InnoSetup
         } else if dir.ends_with("Contents/MacOS") && dir.parent().and_then(Path::parent).is_some_and(|app| app.extension().is_some_and(|e| e == "app")) {
             Self::MacBundle
@@ -318,6 +322,7 @@ impl InstallKind {
             Self::Package { repo: false } => {
                 "To get it, and later versions, with your system's updates, set up the OpenCRT package repository once: kimp0ssible-no.github.io/OpenCRT"
             }
+            Self::Portable => "Download the portable zip from the release page and replace the program files in this folder; the settings folder stays as it is.",
             Self::Manual => "Download it from the release page.",
         }
     }
@@ -327,7 +332,7 @@ impl InstallKind {
         match self {
             Self::InnoSetup => Some(format!("opencrt-{version}-x64-setup.exe")),
             Self::MacBundle => Some("OpenCRT.dmg".to_string()),
-            Self::Package { .. } | Self::Manual => None,
+            Self::Package { .. } | Self::Portable | Self::Manual => None,
         }
     }
 }
@@ -366,6 +371,10 @@ mod tests {
         std::fs::create_dir_all(&mac).unwrap();
         std::fs::write(inno.join("unins000.exe"), b"").unwrap();
         assert_eq!(InstallKind::of(&inno.join("opencrt.exe")), InstallKind::InnoSetup);
+        let stick = dir.join("E/OpenCRT");
+        std::fs::create_dir_all(&stick).unwrap();
+        std::fs::write(stick.join("portable.txt"), b"").unwrap();
+        assert_eq!(InstallKind::of(&stick.join("opencrt.exe")), InstallKind::Portable);
         assert_eq!(InstallKind::of(&mac.join("opencrt")), InstallKind::MacBundle);
         assert!(matches!(InstallKind::of(Path::new("/usr/bin/opencrt")), InstallKind::Package { .. }));
         assert_eq!(InstallKind::of(&dir.join("target/release/opencrt")), InstallKind::Manual);

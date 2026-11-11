@@ -1,0 +1,12 @@
+OpenCRT portable
+
+While this file sits next to opencrt.exe, OpenCRT keeps all its settings,
+sessions and host keys in the "settings" folder beside it, and nothing in
+your Windows profile: the whole folder can go on a USB stick or a share.
+
+Saved passwords and key passphrases are kept only under a master password
+(Tools > Master Password), encrypted in that same settings folder; without
+one, OpenCRT asks for them each time.
+
+To update, unpack the new portable zip over these files; the settings folder
+stays as it is. Delete this file to use the normal per-user settings instead.

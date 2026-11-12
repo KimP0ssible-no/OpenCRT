@@ -6229,6 +6229,16 @@ export component MainWindow inherits Window {
                                 title: "New Bar...";
                                 activated => { root.menu("button-bar-new"); }
                             }
+                            MenuItem {
+                                title: "Rename Bar...";
+                                enabled: root.bar-name != "";
+                                activated => { root.menu("button-bar-rename"); }
+                            }
+                            MenuItem {
+                                title: "Delete Bar...";
+                                enabled: root.bar-name != "";
+                                activated => { root.menu("button-bar-delete"); }
+                            }
                         }
                     }
                 }

@@ -70,6 +70,8 @@ enum Deletion {
     /// A folder with its subfolders and the sessions in them.
     Folder(String),
     Button(Commands, usize),
+    /// A named Button Bar with its buttons.
+    Bar(String),
     /// Quit while sessions are connected.
     Exit,
     /// Close a connected tab.
@@ -1738,6 +1740,8 @@ struct App {
     securecrt_passwords: sessions::SecureCrtPasswords,
     /// The name dialog is for a new Button Bar.
     naming_bar: bool,
+    /// Button Bar whose new name the name dialog is asking for.
+    renaming_bar: Option<String>,
     /// Folder (full path) whose new name the name dialog is asking for.
     renaming_folder: Option<String>,
     /// Session Options is editing the default session (the template).
@@ -2006,6 +2010,7 @@ impl App {
             remove_warned: false,
             securecrt_passwords: Vec::new(),
             naming_bar: false,
+            renaming_bar: None,
             renaming_folder: None,
             editing_many: None,
             editing_default: false,
@@ -2484,6 +2489,25 @@ impl App {
             ui.set_name_label("Bar name:".into());
             ui.set_name_value(SharedString::new());
             ui.set_dialog(DIALOG_NAME);
+            return;
+        }
+        let bar = self.shown_bar.clone().unwrap_or_default();
+        if name == "button-bar-rename" && !bar.is_empty() {
+            ui.set_name_title("Rename Button Bar".into());
+            ui.set_name_label("Bar name:".into());
+            ui.set_name_value(bar.as_str().into());
+            self.renaming_bar = Some(bar);
+            ui.set_dialog(DIALOG_NAME);
+            return;
+        }
+        if name == "button-bar-delete" && !bar.is_empty() {
+            let buttons = match self.options.buttons.iter().filter(|b| b.bar.eq_ignore_ascii_case(&bar)).count() {
+                0 => String::new(),
+                1 => " and its button".to_string(),
+                n => format!(" and its {n} buttons"),
+            };
+            let message = format!("Delete the button bar \"{bar}\"{buttons}? Sessions that use it go back to the Default bar.");
+            self.ask_confirm(ui, &message, Deletion::Bar(bar));
             return;
         }
         if name == "snapshot-save" {
@@ -4728,6 +4752,10 @@ impl App {
                 self.save_options();
                 self.show_buttons(ui);
             }
+            Some(Deletion::Bar(bar)) if yes => {
+                self.move_bar(&bar, "");
+                self.notify(format!("Deleted the button bar \"{bar}\"."));
+            }
             Some(Deletion::Exit) if yes => {
                 let _ = slint::quit_event_loop();
             }
@@ -4859,6 +4887,23 @@ impl App {
                         return;
                     }
                 }
+            }
+            ui.set_dialog(DIALOG_NONE);
+            ui.invoke_focus_terminal();
+            return;
+        }
+        if let Some(old) = self.renaming_bar.take() {
+            let name = ui.get_name_value().trim().to_string();
+            if ok && !name.is_empty() && name != old {
+                let taken = name.eq_ignore_ascii_case("default")
+                    || self.bar_names().iter().any(|b| b.eq_ignore_ascii_case(&name) && !b.eq_ignore_ascii_case(&old));
+                if taken {
+                    // Keep the dialog open to choose another name.
+                    self.renaming_bar = Some(old);
+                    ui.set_name_title(format!("\"{name}\" is already a bar").into());
+                    return;
+                }
+                self.move_bar(&old, &name);
             }
             ui.set_dialog(DIALOG_NONE);
             ui.invoke_focus_terminal();
@@ -7118,6 +7163,18 @@ impl App {
             session.button_bar = bar;
             self.save_store();
         }
+    }
+
+    /// Rename the Button Bar `old` to `new`, or delete it when `new` is empty,
+    /// in the options, the saved sessions and the open tabs.
+    fn move_bar(&mut self, old: &str, new: &str) {
+        config::move_bar(&mut self.options, &mut self.store, old, new);
+        for bar in self.tabs.iter_mut().map(|t| &mut t.button_bar).chain([&mut self.idle_bar]).filter(|b| b.eq_ignore_ascii_case(old)) {
+            *bar = new.to_string();
+        }
+        self.shown_bar = None;
+        self.save_options();
+        self.save_store();
     }
 
     fn show_buttons(&self, ui: &MainWindow) {

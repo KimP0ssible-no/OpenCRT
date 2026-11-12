@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OpenCRT VERSION\n"
-"POT-Creation-Date: 2026-11-12 14:12+0000\n"
+"POT-Creation-Date: 2026-11-12 15:48+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4038,31 +4038,75 @@ msgstr ""
 msgid "For a proxy that needs a login, add a firewall in Options > Firewalls."
 msgstr ""
 
+#: crates/opencrt/src/python.rs:245
+msgid "load native code (ctypes)"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:246
+msgid "use the Windows registry"
+msgstr ""
+
 #: crates/opencrt/src/python.rs:247
+msgid "change its limits"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:248
+msgid "look through Python's memory"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:255
+msgid "signal another program (process {})"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:258
+msgid "use the network ({})"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:261
+msgid "write to {}"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:262
+msgid "list the folder {}"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:263
+msgid "run a program: {}"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:264
+msgid "read {}"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:265
+msgid "change {}"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:277
 msgid "{} wants to {}.\n\nUntil you trust a script, it may use files only in its own folder, the download folder and the log folder, and may not run programs or use the network.\n\nAllow once lets this run go on; Always trust lets the script do anything from now on, until it is changed."
 msgstr ""
 
-#: crates/opencrt/src/python.rs:248
+#: crates/opencrt/src/python.rs:278
 msgid "Allow once"
 msgstr ""
 
-#: crates/opencrt/src/python.rs:248
+#: crates/opencrt/src/python.rs:278
 msgid "Always trust this script"
 msgstr ""
 
-#: crates/opencrt/src/python.rs:248
+#: crates/opencrt/src/python.rs:278
 msgid "Stop"
 msgstr ""
 
-#: crates/opencrt/src/python.rs:250
+#: crates/opencrt/src/python.rs:280
 msgid "Script Wants More Access"
 msgstr ""
 
-#: crates/opencrt/src/python.rs:256
+#: crates/opencrt/src/python.rs:286
 msgid "Stopped: {} wanted to {}."
 msgstr ""
 
-#: crates/opencrt/src/python.rs:339
+#: crates/opencrt/src/python.rs:369
 msgid "Python stopped ({})"
 msgstr ""
 

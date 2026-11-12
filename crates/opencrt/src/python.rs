@@ -238,12 +238,42 @@ fn backstop(command: &mut Command) {
     unsafe { std::os::unix::process::CommandExt::pre_exec(command, apply) };
 }
 
+/// crt.py's English description of what a script wants, in the interface
+/// language; the file, process or address in it stays as it is.
+fn action_text(what: &str) -> String {
+    let fixed = [
+        ("load native code (ctypes)", tr!("load native code (ctypes)")),
+        ("use the Windows registry", tr!("use the Windows registry")),
+        ("change its limits", tr!("change its limits")),
+        ("look through Python's memory", tr!("look through Python's memory")),
+    ];
+    if let Some((_, text)) = fixed.iter().find(|(english, _)| *english == what) {
+        return text.clone();
+    }
+    let inner = |s: &str, open: &str, close: &str| s.strip_prefix(open).and_then(|s| s.strip_suffix(close)).map(str::to_string);
+    if let Some(p) = inner(what, "signal another program (process ", ")") {
+        return tr!("signal another program (process {})", p);
+    }
+    if let Some(a) = inner(what, "use the network (", ")") {
+        return tr!("use the network ({})", a);
+    }
+    match what.split_once(' ') {
+        _ if what.starts_with("write to ") => tr!("write to {}", &what[9..]),
+        _ if what.starts_with("list the folder ") => tr!("list the folder {}", &what[16..]),
+        _ if what.starts_with("run a program: ") => tr!("run a program: {}", &what[15..]),
+        Some(("read", rest)) => tr!("read {}", rest),
+        Some(("change", rest)) => tr!("change {}", rest),
+        _ => what.to_string(),
+    }
+}
+
 /// A locked script wants to `what`: let it (once or from now on) or stop it.
 /// Trust is kept in `trusted` as `entry`, the script's SHA-256 and path
 /// (relative to `trusted`'s folder when inside it), so an edited script asks
 /// again.
 fn ask(ctx: &Ctx, path: &Path, what: &str, trusted: Option<&Path>, entry: &str) -> Result<Value, String> {
     let name = path.file_name().unwrap_or_default().to_string_lossy();
+    let what = action_text(what);
     let text = tr!("{} wants to {}.\n\nUntil you trust a script, it may use files only in its own folder, the download folder and the log folder, and may not run programs or use the network.\n\nAllow once lets this run go on; Always trust lets the script do anything from now on, until it is changed.", name, what);
     let buttons = [tr!("Allow once"), tr!("Always trust this script"), tr!("Stop")];
     let buttons: Vec<&str> = buttons.iter().map(String::as_str).collect();

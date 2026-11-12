@@ -1499,9 +1499,11 @@ component AuthDialog inherits DialogFrame {
 }
 
 
+// Wraps rather than pushing its field away when a translation is long.
 component FormLabel inherits Text {
     vertical-alignment: center;
     color: Theme.text;
+    wrap: word-wrap;
 }
 
 component TableCell inherits Text {
@@ -1837,9 +1839,11 @@ component SessionOptionsDialog inherits DialogFrame {
                     background: i == root.category ? Theme.active-row-bg : page-touch.has-hover ? Theme.hover-bg : transparent;
                     Text {
                         x: 8px;
+                        width: parent.width - 12px;
                         height: parent.height;
                         text: page;
                         vertical-alignment: center;
+                        overflow: elide;
                     }
                     page-touch := TouchArea {
                         clicked => {
@@ -3247,9 +3251,11 @@ component GlobalOptionsDialog inherits DialogFrame {
                     background: i == root.category ? Theme.active-row-bg : page-touch.has-hover ? Theme.hover-bg : transparent;
                     Text {
                         x: 8px;
+                        width: parent.width - 12px;
                         height: parent.height;
                         text: page;
                         vertical-alignment: center;
+                        overflow: elide;
                     }
                     page-touch := TouchArea {
                         clicked => {

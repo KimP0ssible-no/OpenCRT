@@ -14,7 +14,7 @@ native speakers are welcome as issues or pull requests that change the
 `msgstr` lines.
 
 The build compiles every `.po` file in this folder into OpenCRT. A new
-language then shows in Global Options > General > Language. With "Follow the
+language then shows in the Language menu. With "Follow the
 system", OpenCRT uses the language that matches the system locale, else
 English. A text without a translation shows in English.
 
@@ -24,7 +24,7 @@ English. A text without a translation shows in English.
 2. In the header, set `Language: <locale>` and `charset=UTF-8`.
 3. Fill in each `msgstr`. Keep `{}` and `{n}` placeholders, `\r` and `%h`
    style codes, and product names such as SSH2, SFTP or OpenCRT as they are.
-4. Build OpenCRT and choose the language in Global Options.
+4. Build OpenCRT and choose the language in the Language menu.
 
 ## Update the template
 

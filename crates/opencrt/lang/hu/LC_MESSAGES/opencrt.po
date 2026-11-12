@@ -7,8 +7,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5604
-#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5604
+#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5601
+#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5601
 msgid "Session Manager"
 msgstr "Munkamenet-kezelő"
 
@@ -17,7 +17,7 @@ msgstr "Munkamenet-kezelő"
 msgid "Connect"
 msgstr "Csatlakozás"
 
-#: crates/opencrt/ui/main.slint:364 crates/opencrt/ui/main.slint:6740
+#: crates/opencrt/ui/main.slint:364 crates/opencrt/ui/main.slint:6747
 msgid "New Session"
 msgstr "Új munkamenet"
 
@@ -30,8 +30,8 @@ msgid "Properties"
 msgstr "Tulajdonságok"
 
 #: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508
-#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3138
-#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3138 crates/opencrt/ui/main.slint:5504
+#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142
+#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142 crates/opencrt/ui/main.slint:5501
 msgid "Delete"
 msgstr "Törlés"
 
@@ -79,15 +79,15 @@ msgstr "Kettőzés..."
 msgid "Cut"
 msgstr "Kivágás"
 
-#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5525
-#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5525 crates/opencrt/ui/main.slint:6270
+#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5522
+#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5522 crates/opencrt/ui/main.slint:6277
 msgid "Copy"
 msgstr "Másolás"
 
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4015
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4015 crates/opencrt/ui/main.slint:4162
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4015 crates/opencrt/ui/main.slint:4162 crates/opencrt/ui/main.slint:5535
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4015 crates/opencrt/ui/main.slint:4162 crates/opencrt/ui/main.slint:5535 crates/opencrt/ui/main.slint:6285
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5532
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5532 crates/opencrt/ui/main.slint:6292
 msgid "Paste"
 msgstr "Beillesztés"
 
@@ -100,7 +100,7 @@ msgstr "Átnevezés..."
 msgid "New Session..."
 msgstr "Új munkamenet..."
 
-#: crates/opencrt/ui/main.slint:517 crates/opencrt/ui/main.slint:4385
+#: crates/opencrt/ui/main.slint:517 crates/opencrt/ui/main.slint:4381
 msgid "New Folder..."
 msgstr "Új mappa..."
 
@@ -113,12 +113,12 @@ msgid "Filter (Ctrl+click picks several)"
 msgstr "Szűrő (Ctrl+kattintással több is választható)"
 
 #: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897
-#: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897 crates/opencrt/ui/main.slint:5951
+#: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897 crates/opencrt/ui/main.slint:5958
 msgid "Reconnect"
 msgstr "Újracsatlakozás"
 
 #: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902
-#: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902 crates/opencrt/ui/main.slint:5958
+#: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902 crates/opencrt/ui/main.slint:5965
 msgid "Disconnect"
 msgstr "Kapcsolat bontása"
 
@@ -127,13 +127,13 @@ msgid "Lock"
 msgstr "Zárolás"
 
 #: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4147
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4147 crates/opencrt/ui/main.slint:7079
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4147 crates/opencrt/ui/main.slint:7079 crates/opencrt/ui/main.slint:7256
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7084
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7084 crates/opencrt/ui/main.slint:7261
 msgid "Close"
 msgstr "Bezárás"
 
-#: crates/opencrt/ui/main.slint:717 crates/opencrt/ui/main.slint:5609
+#: crates/opencrt/ui/main.slint:717 crates/opencrt/ui/main.slint:5606
 msgid "Command Manager"
 msgstr "Parancskezelő"
 
@@ -167,8 +167,8 @@ msgstr "Nincsenek parancsok (vagy egyik sem egyezik). Az Új gombbal menthet egy
 msgid "Send"
 msgstr "Küldés"
 
-#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2410
-#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2410 crates/opencrt/ui/main.slint:7140
+#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414
+#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414 crates/opencrt/ui/main.slint:7145
 msgid "Edit..."
 msgstr "Szerkesztés..."
 
@@ -180,7 +180,7 @@ msgstr "Másolás a gombsorra"
 msgid "New Command..."
 msgstr "Új parancs..."
 
-#: crates/opencrt/ui/main.slint:907 crates/opencrt/ui/main.slint:5438
+#: crates/opencrt/ui/main.slint:907 crates/opencrt/ui/main.slint:5435
 msgid "Clone Session"
 msgstr "Munkamenet klónozása"
 
@@ -196,7 +196,7 @@ msgstr "Ctrl+Alt+Del küldése"
 msgid "Send Windows Key"
 msgstr "Windows billentyű küldése"
 
-#: crates/opencrt/ui/main.slint:935 crates/opencrt/ui/main.slint:5659
+#: crates/opencrt/ui/main.slint:935 crates/opencrt/ui/main.slint:5656
 msgid "Session Options..."
 msgstr "Munkamenet-beállítások..."
 
@@ -240,19 +240,19 @@ msgstr "Többi lap bezárása"
 msgid "Scratchpad"
 msgstr "Jegyzetlap"
 
-#: crates/opencrt/ui/main.slint:1115 crates/opencrt/ui/main.slint:6503
+#: crates/opencrt/ui/main.slint:1115 crates/opencrt/ui/main.slint:6510
 msgid "Send to"
 msgstr "Küldés ide"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6510
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6517
 msgid "the active tab"
 msgstr "az aktív lap"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6510
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6517
 msgid "all tabs"
 msgstr "minden lap"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6510
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6517
 msgid "tabs on screen"
 msgstr "a képernyőn látható lapok"
 
@@ -268,7 +268,7 @@ msgstr "Következő sor küldése"
 msgid "Send All"
 msgstr "Összes küldése"
 
-#: crates/opencrt/ui/main.slint:1148 crates/opencrt/ui/main.slint:4124
+#: crates/opencrt/ui/main.slint:1148 crates/opencrt/ui/main.slint:4120
 msgid "Open..."
 msgstr "Megnyitás..."
 
@@ -311,13 +311,13 @@ msgid "Accept Once"
 msgstr "Elfogadás egyszer"
 
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2436
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2436 crates/opencrt/ui/main.slint:2635
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2436 crates/opencrt/ui/main.slint:2635 crates/opencrt/ui/main.slint:3874
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2436 crates/opencrt/ui/main.slint:2635 crates/opencrt/ui/main.slint:3874 crates/opencrt/ui/main.slint:4004
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2436 crates/opencrt/ui/main.slint:2635 crates/opencrt/ui/main.slint:3874 crates/opencrt/ui/main.slint:4004 crates/opencrt/ui/main.slint:4095
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2436 crates/opencrt/ui/main.slint:2635 crates/opencrt/ui/main.slint:3874 crates/opencrt/ui/main.slint:4004 crates/opencrt/ui/main.slint:4095 crates/opencrt/ui/main.slint:7337
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2436 crates/opencrt/ui/main.slint:2635 crates/opencrt/ui/main.slint:3874 crates/opencrt/ui/main.slint:4004 crates/opencrt/ui/main.slint:4095 crates/opencrt/ui/main.slint:7337
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7342
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7342
 msgid "Cancel"
 msgstr "Mégse"
 
@@ -338,335 +338,335 @@ msgid "Save the password (once the login works)"
 msgstr "Jelszó mentése (ha a bejelentkezés sikerül)"
 
 #. The first is the default; answer gives the index of the one clicked.
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2431
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2431 crates/opencrt/ui/main.slint:2630
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2431 crates/opencrt/ui/main.slint:2630 crates/opencrt/ui/main.slint:2744
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2431 crates/opencrt/ui/main.slint:2630 crates/opencrt/ui/main.slint:2744 crates/opencrt/ui/main.slint:3924
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2431 crates/opencrt/ui/main.slint:2630 crates/opencrt/ui/main.slint:2744 crates/opencrt/ui/main.slint:3924 crates/opencrt/ui/main.slint:4289
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2431 crates/opencrt/ui/main.slint:2630 crates/opencrt/ui/main.slint:2744 crates/opencrt/ui/main.slint:3924 crates/opencrt/ui/main.slint:4289 crates/opencrt/ui/main.slint:7405
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285 crates/opencrt/ui/main.slint:7410
 msgid "OK"
 msgstr "OK"
 
-#: crates/opencrt/ui/main.slint:1544
+#: crates/opencrt/ui/main.slint:1546
 msgid "Protocol:"
 msgstr "Protokoll:"
 
-#: crates/opencrt/ui/main.slint:1546
+#: crates/opencrt/ui/main.slint:1548
 msgid "SSH2"
 msgstr "SSH2"
 
-#: crates/opencrt/ui/main.slint:1546
+#: crates/opencrt/ui/main.slint:1548
 msgid "Telnet"
 msgstr "Telnet"
 
-#: crates/opencrt/ui/main.slint:1546
+#: crates/opencrt/ui/main.slint:1548
 msgid "Raw"
 msgstr "Nyers"
 
-#: crates/opencrt/ui/main.slint:1546
+#: crates/opencrt/ui/main.slint:1548
 msgid "Serial"
 msgstr "Soros"
 
-#: crates/opencrt/ui/main.slint:1546
+#: crates/opencrt/ui/main.slint:1548
 msgid "Local Shell"
 msgstr "Helyi shell"
 
-#: crates/opencrt/ui/main.slint:1546
+#: crates/opencrt/ui/main.slint:1548
 msgid "RDP"
 msgstr "RDP"
 
-#: crates/opencrt/ui/main.slint:1546
+#: crates/opencrt/ui/main.slint:1548
 msgid "RLogin"
 msgstr "RLogin"
 
-#: crates/opencrt/ui/main.slint:1546
+#: crates/opencrt/ui/main.slint:1548
 msgid "VNC"
 msgstr "VNC"
 
-#: crates/opencrt/ui/main.slint:1557 crates/opencrt/ui/main.slint:2511
+#: crates/opencrt/ui/main.slint:1559 crates/opencrt/ui/main.slint:2515
 msgid "Hostname:"
 msgstr "Gazdagépnév:"
 
-#: crates/opencrt/ui/main.slint:1569 crates/opencrt/ui/main.slint:2491
-#: crates/opencrt/ui/main.slint:1569 crates/opencrt/ui/main.slint:2491 crates/opencrt/ui/main.slint:2705
+#: crates/opencrt/ui/main.slint:1571 crates/opencrt/ui/main.slint:2495
+#: crates/opencrt/ui/main.slint:1571 crates/opencrt/ui/main.slint:2495 crates/opencrt/ui/main.slint:2709
 msgid "Port:"
 msgstr "Port:"
 
-#: crates/opencrt/ui/main.slint:1576 crates/opencrt/ui/main.slint:2593
-#: crates/opencrt/ui/main.slint:1576 crates/opencrt/ui/main.slint:2593 crates/opencrt/ui/main.slint:3368
+#: crates/opencrt/ui/main.slint:1578 crates/opencrt/ui/main.slint:2597
+#: crates/opencrt/ui/main.slint:1578 crates/opencrt/ui/main.slint:2597 crates/opencrt/ui/main.slint:3364
 msgid "Username:"
 msgstr "Felhasználónév:"
 
 #. RDP accepts a Windows domain this way; VNC mostly needs none.
-#: crates/opencrt/ui/main.slint:1580
+#: crates/opencrt/ui/main.slint:1582
 msgid "user, DOMAIN\\user or user@domain"
 msgstr "user, DOMAIN\\user vagy user@domain"
 
 #. RDP accepts a Windows domain this way; VNC mostly needs none.
-#: crates/opencrt/ui/main.slint:1580
+#: crates/opencrt/ui/main.slint:1582
 msgid "only for a Mac (its account) or a VeNCrypt Plain login"
 msgstr "csak Mac (annak fiókja) vagy VeNCrypt Plain bejelentkezés esetén"
 
-#: crates/opencrt/ui/main.slint:1585
+#: crates/opencrt/ui/main.slint:1587
 msgid "Private key:"
 msgstr "Titkos kulcs:"
 
-#: crates/opencrt/ui/main.slint:1588
+#: crates/opencrt/ui/main.slint:1590
 msgid "optional, path to key file"
 msgstr "nem kötelező, a kulcsfájl elérési útja"
 
-#: crates/opencrt/ui/main.slint:1597
+#: crates/opencrt/ui/main.slint:1599
 msgid "Port name:"
 msgstr "Port neve:"
 
-#: crates/opencrt/ui/main.slint:1600
+#: crates/opencrt/ui/main.slint:1602
 msgid "e.g. COM3 or /dev/ttyUSB0"
 msgstr "pl. COM3 vagy /dev/ttyUSB0"
 
-#: crates/opencrt/ui/main.slint:1605
+#: crates/opencrt/ui/main.slint:1607
 msgid "Detected:"
 msgstr "Észlelt:"
 
-#: crates/opencrt/ui/main.slint:1612
+#: crates/opencrt/ui/main.slint:1614
 msgid "Baud rate:"
 msgstr "Átviteli sebesség (baud):"
 
-#: crates/opencrt/ui/main.slint:1619
+#: crates/opencrt/ui/main.slint:1621
 msgid "Data bits:"
 msgstr "Adatbitek:"
 
-#: crates/opencrt/ui/main.slint:1626
+#: crates/opencrt/ui/main.slint:1628
 msgid "Parity:"
 msgstr "Paritás:"
 
-#: crates/opencrt/ui/main.slint:1628 crates/opencrt/ui/main.slint:1642
-#: crates/opencrt/ui/main.slint:1628 crates/opencrt/ui/main.slint:1642 crates/opencrt/ui/main.slint:7374
+#: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644
+#: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644 crates/opencrt/ui/main.slint:7379
 msgid "None"
 msgstr "Nincs"
 
-#: crates/opencrt/ui/main.slint:1628
+#: crates/opencrt/ui/main.slint:1630
 msgid "Odd"
 msgstr "Páratlan"
 
-#: crates/opencrt/ui/main.slint:1628
+#: crates/opencrt/ui/main.slint:1630
 msgid "Even"
 msgstr "Páros"
 
-#: crates/opencrt/ui/main.slint:1633
+#: crates/opencrt/ui/main.slint:1635
 msgid "Stop bits:"
 msgstr "Stopbitek:"
 
-#: crates/opencrt/ui/main.slint:1640
+#: crates/opencrt/ui/main.slint:1642
 msgid "Flow control:"
 msgstr "Forgalomvezérlés:"
 
-#: crates/opencrt/ui/main.slint:1642
+#: crates/opencrt/ui/main.slint:1644
 msgid "XON/XOFF"
 msgstr "XON/XOFF"
 
-#: crates/opencrt/ui/main.slint:1642
+#: crates/opencrt/ui/main.slint:1644
 msgid "RTS/CTS"
 msgstr "RTS/CTS"
 
-#: crates/opencrt/ui/main.slint:1647
+#: crates/opencrt/ui/main.slint:1649
 msgid "Opens your default shell (PowerShell on Windows, $SHELL elsewhere)."
 msgstr "Megnyitja az alapértelmezett shellt (Windowson PowerShell, máshol $SHELL)."
 
-#: crates/opencrt/ui/main.slint:1672 crates/opencrt/ui/main.slint:5909
+#: crates/opencrt/ui/main.slint:1674 crates/opencrt/ui/main.slint:5916
 msgid "Quick Connect"
 msgstr "Gyors csatlakozás"
 
-#: crates/opencrt/ui/main.slint:1692
+#: crates/opencrt/ui/main.slint:1694
 msgid "Save session"
 msgstr "Munkamenet mentése"
 
-#: crates/opencrt/ui/main.slint:1696
+#: crates/opencrt/ui/main.slint:1698
 msgid "Passwords and passphrases are asked for when the server needs them."
 msgstr "A jelszavakat és jelmondatokat akkor kéri a program, amikor a kiszolgálónak szüksége van rájuk."
 
-#: crates/opencrt/ui/main.slint:1814
+#: crates/opencrt/ui/main.slint:1816
 msgid "Session Options ({} sessions)"
 msgstr "Munkamenet-beállítások ({} munkamenet)"
 
-#: crates/opencrt/ui/main.slint:1814 crates/opencrt/ui/main.slint:6009
+#: crates/opencrt/ui/main.slint:1816 crates/opencrt/ui/main.slint:6016
 msgid "Session Options"
 msgstr "Munkamenet-beállítások"
 
-#: crates/opencrt/ui/main.slint:1834 crates/opencrt/ui/main.slint:3237
+#: crates/opencrt/ui/main.slint:1836 crates/opencrt/ui/main.slint:3239
 msgid "Connection"
 msgstr "Kapcsolat"
 
-#: crates/opencrt/ui/main.slint:1834
+#: crates/opencrt/ui/main.slint:1836
 msgid "Authentication"
 msgstr "Hitelesítés"
 
-#: crates/opencrt/ui/main.slint:1834 crates/opencrt/ui/main.slint:3237
+#: crates/opencrt/ui/main.slint:1836 crates/opencrt/ui/main.slint:3239
 msgid "Terminal"
 msgstr "Terminál"
 
-#: crates/opencrt/ui/main.slint:1834
+#: crates/opencrt/ui/main.slint:1836
 msgid "Appearance"
 msgstr "Megjelenés"
 
-#: crates/opencrt/ui/main.slint:1834
+#: crates/opencrt/ui/main.slint:1836
 msgid "Log File"
 msgstr "Naplófájl"
 
-#: crates/opencrt/ui/main.slint:1834
+#: crates/opencrt/ui/main.slint:1836
 msgid "Port Forwarding"
 msgstr "Porttovábbítás"
 
-#: crates/opencrt/ui/main.slint:1834
+#: crates/opencrt/ui/main.slint:1836
 msgid "Logon Script"
 msgstr "Bejelentkezési szkript"
 
-#: crates/opencrt/ui/main.slint:1834 crates/opencrt/ui/main.slint:3237
+#: crates/opencrt/ui/main.slint:1836 crates/opencrt/ui/main.slint:3239
 msgid "Keyboard"
 msgstr "Billentyűzet"
 
-#: crates/opencrt/ui/main.slint:1834
+#: crates/opencrt/ui/main.slint:1836
 msgid "Remote Desktop"
 msgstr "Távoli asztal"
 
-#: crates/opencrt/ui/main.slint:1862
+#: crates/opencrt/ui/main.slint:1866
 msgid "Session name:"
 msgstr "Munkamenet neve:"
 
-#: crates/opencrt/ui/main.slint:1870 crates/opencrt/ui/main.slint:7387
+#: crates/opencrt/ui/main.slint:1874 crates/opencrt/ui/main.slint:7392
 msgid "Folder:"
 msgstr "Mappa:"
 
-#: crates/opencrt/ui/main.slint:1874
+#: crates/opencrt/ui/main.slint:1878
 msgid "e.g. Production/Web (blank for top level)"
 msgstr "pl. Production/Web (üres: legfelső szint)"
 
-#: crates/opencrt/ui/main.slint:1894
+#: crates/opencrt/ui/main.slint:1898
 msgid "Dial number:"
 msgstr "Tárcsázandó szám:"
 
-#: crates/opencrt/ui/main.slint:1897
+#: crates/opencrt/ui/main.slint:1901
 msgid "blank for a direct line; a number, or a dial command such as ATDP123"
 msgstr "üres: közvetlen vonal; telefonszám vagy tárcsázási parancs, pl. ATDP123"
 
-#: crates/opencrt/ui/main.slint:1902
+#: crates/opencrt/ui/main.slint:1906
 msgid "Modem init:"
 msgstr "Modem inicializálása:"
 
-#: crates/opencrt/ui/main.slint:1906
+#: crates/opencrt/ui/main.slint:1910
 msgid "ATZ"
 msgstr "ATZ"
 
-#: crates/opencrt/ui/main.slint:1911
+#: crates/opencrt/ui/main.slint:1915
 msgid "Jump host:"
 msgstr "Közvetítő gazdagép:"
 
-#: crates/opencrt/ui/main.slint:1914
+#: crates/opencrt/ui/main.slint:1918
 msgid ""
 "optional SSH hosts to tunnel through: [user@]host[:port] or a saved session, "
 "comma-separated"
 msgstr "nem kötelező; SSH-gazdagépek, amelyeken át az alagút vezet: [user@]host[:port] vagy mentett munkamenet, vesszővel elválasztva"
 
-#: crates/opencrt/ui/main.slint:1914
+#: crates/opencrt/ui/main.slint:1918
 msgid ""
 "optional hosts to go through: [user@]host[:port] or a saved session, comma-"
 "separated"
 msgstr "nem kötelező; gazdagépek, amelyeken át a kapcsolat halad: [user@]host[:port] vagy mentett munkamenet, vesszővel elválasztva"
 
-#: crates/opencrt/ui/main.slint:1919
+#: crates/opencrt/ui/main.slint:1923
 msgid "Before connecting:"
 msgstr "Csatlakozás előtt:"
 
-#: crates/opencrt/ui/main.slint:1922
+#: crates/opencrt/ui/main.slint:1926
 msgid "optional local command, e.g. port knocking (must finish within 60 s)"
 msgstr "nem kötelező helyi parancs, pl. port knocking (60 mp-en belül be kell fejeződnie)"
 
-#: crates/opencrt/ui/main.slint:1927
+#: crates/opencrt/ui/main.slint:1931
 msgid "Remote command:"
 msgstr "Távoli parancs:"
 
-#: crates/opencrt/ui/main.slint:1931
+#: crates/opencrt/ui/main.slint:1935
 msgid "optional, run instead of the login shell"
 msgstr "nem kötelező; a bejelentkezési shell helyett fut"
 
-#: crates/opencrt/ui/main.slint:1938
+#: crates/opencrt/ui/main.slint:1942
 msgid "Open as an SFTP tab (file transfer commands, no shell)"
 msgstr "Megnyitás SFTP-lapként (fájlátviteli parancsok, shell nélkül)"
 
-#: crates/opencrt/ui/main.slint:1945
+#: crates/opencrt/ui/main.slint:1949
 msgid "Encrypt with TLS (Telnet/TLS, usually port 992)"
 msgstr "Titkosítás TLS-sel (Telnet/TLS, általában a 992-es port)"
 
-#: crates/opencrt/ui/main.slint:1950
+#: crates/opencrt/ui/main.slint:1954
 msgid "Proxy:"
 msgstr "Proxy:"
 
-#: crates/opencrt/ui/main.slint:1953
+#: crates/opencrt/ui/main.slint:1957
 msgid ""
 "optional: a firewall name (Options > Firewalls) or socks5:// socks4:// "
 "http://host[:port]"
 msgstr "nem kötelező: tűzfal neve (Beállítások > Tűzfalak) vagy socks5:// socks4:// http://host[:port]"
 
-#: crates/opencrt/ui/main.slint:1958
+#: crates/opencrt/ui/main.slint:1962
 msgid "Notes:"
 msgstr "Megjegyzések:"
 
-#: crates/opencrt/ui/main.slint:1963
+#: crates/opencrt/ui/main.slint:1967
 msgid "optional; the first line shows in the Session Manager"
 msgstr "nem kötelező; az első sor megjelenik a Munkamenet-kezelőben"
 
-#: crates/opencrt/ui/main.slint:1970
+#: crates/opencrt/ui/main.slint:1974
 msgid "Credential:"
 msgstr "Hitelesítő adat:"
 
-#: crates/opencrt/ui/main.slint:1979
+#: crates/opencrt/ui/main.slint:1983
 msgid ""
 "No saved credentials yet. Tick \"Save password\" when you are asked for the "
 "password, or create one in Tools > Credentials Manager."
 msgstr "Még nincsenek mentett hitelesítő adatok. Jelölje be a „Jelszó mentése” lehetőséget, amikor a program jelszót kér, vagy hozzon létre egyet az Eszközök > Hitelesítőadat-kezelő menüpontban."
 
-#: crates/opencrt/ui/main.slint:1986
+#: crates/opencrt/ui/main.slint:1990
 msgid ""
 "OpenCRT answers the host's first login and password prompts with this "
 "credential, unless you start typing first. Manage credentials in Tools > "
 "Credentials Manager."
 msgstr "Az OpenCRT ezzel a hitelesítő adattal válaszol a gazdagép első bejelentkezési és jelszókérésére, hacsak Ön előbb el nem kezd gépelni. A hitelesítő adatokat az Eszközök > Hitelesítőadat-kezelő menüpontban kezelheti."
 
-#: crates/opencrt/ui/main.slint:1987
+#: crates/opencrt/ui/main.slint:1991
 msgid ""
 "The username (if the credential has one) and the saved password come from "
 "this credential. Manage credentials in Tools > Credentials Manager."
 msgstr "A felhasználónév (ha a hitelesítő adat tartalmaz ilyet) és a mentett jelszó ebből a hitelesítő adatból származik. A hitelesítő adatokat az Eszközök > Hitelesítőadat-kezelő menüpontban kezelheti."
 
-#: crates/opencrt/ui/main.slint:1993
+#: crates/opencrt/ui/main.slint:1997
 msgid "Private key file:"
 msgstr "Titkoskulcs-fájl:"
 
-#: crates/opencrt/ui/main.slint:1996
+#: crates/opencrt/ui/main.slint:2000
 msgid "blank to use password authentication"
 msgstr "üres: jelszavas hitelesítés"
 
-#: crates/opencrt/ui/main.slint:2004
+#: crates/opencrt/ui/main.slint:2008
 msgid "Certificate:"
 msgstr "Tanúsítvány:"
 
-#: crates/opencrt/ui/main.slint:2008
+#: crates/opencrt/ui/main.slint:2012
 msgid "optional; <key file>-cert.pub is used if it exists"
 msgstr "nem kötelező; ha létezik, a <kulcsfájl>-cert.pub lesz használva"
 
-#: crates/opencrt/ui/main.slint:2017
+#: crates/opencrt/ui/main.slint:2021
 msgid ""
 "Allow legacy algorithms (SHA-1 key exchange, CBC ciphers) for old devices"
 msgstr "Régi algoritmusok engedélyezése (SHA-1 kulcscsere, CBC titkosítók) régi eszközökhöz"
 
-#: crates/opencrt/ui/main.slint:2022
+#: crates/opencrt/ui/main.slint:2026
 msgid "Enable compression (for slow links)"
 msgstr "Tömörítés engedélyezése (lassú kapcsolatokhoz)"
 
-#: crates/opencrt/ui/main.slint:2027
+#: crates/opencrt/ui/main.slint:2031
 msgid "Forward the SSH agent (only to hosts you trust)"
 msgstr "SSH-ügynök továbbítása (csak megbízható gazdagépekre)"
 
-#: crates/opencrt/ui/main.slint:2032
+#: crates/opencrt/ui/main.slint:2036
 msgid ""
 "Order tried: public key (the key file if set, otherwise keys in a running "
 "SSH agent such as Pageant), then keyboard-interactive or password. Passwords "
@@ -674,185 +674,185 @@ msgid ""
 "asked for them when needed."
 msgstr "Próbálkozási sorrend: nyilvános kulcs (a kulcsfájl, ha meg van adva, különben egy futó SSH-ügynök, pl. a Pageant kulcsai), majd keyboard-interactive vagy jelszó. Jelszó csak hitelesítő adatban, a rendszer kulcstartójában tárolódik; egyébként a program szükség esetén kéri."
 
-#: crates/opencrt/ui/main.slint:2042
+#: crates/opencrt/ui/main.slint:2046
 msgid "Emulation:"
 msgstr "Emuláció:"
 
-#: crates/opencrt/ui/main.slint:2044
+#: crates/opencrt/ui/main.slint:2048
 msgid "Xterm"
 msgstr "Xterm"
 
-#: crates/opencrt/ui/main.slint:2044
+#: crates/opencrt/ui/main.slint:2048
 msgid "VT100"
 msgstr "VT100"
 
-#: crates/opencrt/ui/main.slint:2044
+#: crates/opencrt/ui/main.slint:2048
 msgid "VT102"
 msgstr "VT102"
 
-#: crates/opencrt/ui/main.slint:2044
+#: crates/opencrt/ui/main.slint:2048
 msgid "VT220"
 msgstr "VT220"
 
-#: crates/opencrt/ui/main.slint:2044
+#: crates/opencrt/ui/main.slint:2048
 msgid "VT320"
 msgstr "VT320"
 
-#: crates/opencrt/ui/main.slint:2044
+#: crates/opencrt/ui/main.slint:2048
 msgid "ANSI"
 msgstr "ANSI"
 
-#: crates/opencrt/ui/main.slint:2044
+#: crates/opencrt/ui/main.slint:2048
 msgid "Linux console"
 msgstr "Linux-konzol"
 
-#: crates/opencrt/ui/main.slint:2049
+#: crates/opencrt/ui/main.slint:2053
 msgid "Terminal type:"
 msgstr "Terminál típusa:"
 
-#: crates/opencrt/ui/main.slint:2052
+#: crates/opencrt/ui/main.slint:2056
 msgid "blank for the emulation's (xterm-256color, vt100...)"
 msgstr "üres: az emuláció alapértéke (xterm-256color, vt100...)"
 
-#: crates/opencrt/ui/main.slint:2056
+#: crates/opencrt/ui/main.slint:2060
 msgid "Size:"
 msgstr "Méret:"
 
-#: crates/opencrt/ui/main.slint:2063
+#: crates/opencrt/ui/main.slint:2067
 msgid "cols"
 msgstr "oszlop"
 
-#: crates/opencrt/ui/main.slint:2069
+#: crates/opencrt/ui/main.slint:2073
 msgid "rows"
 msgstr "sor"
 
-#: crates/opencrt/ui/main.slint:2071
+#: crates/opencrt/ui/main.slint:2075
 msgid "blank fits the window"
 msgstr "üres: igazodik az ablakhoz"
 
-#: crates/opencrt/ui/main.slint:2077
+#: crates/opencrt/ui/main.slint:2081
 msgid "Let the host switch between 80 and 132 columns"
 msgstr "A gazdagép válthat 80 és 132 oszlop között"
 
-#: crates/opencrt/ui/main.slint:2082
+#: crates/opencrt/ui/main.slint:2086
 msgid "Scrollback:"
 msgstr "Visszagörgetés:"
 
-#: crates/opencrt/ui/main.slint:2083
+#: crates/opencrt/ui/main.slint:2087
 msgid "Set in Options > Global Options."
 msgstr "Beállítás helye: Beállítások > Globális beállítások."
 
-#: crates/opencrt/ui/main.slint:2086
+#: crates/opencrt/ui/main.slint:2090
 msgid "Character encoding:"
 msgstr "Karakterkódolás:"
 
-#: crates/opencrt/ui/main.slint:2093
+#: crates/opencrt/ui/main.slint:2097
 msgid "Backspace:"
 msgstr "Backspace:"
 
-#: crates/opencrt/ui/main.slint:2095
+#: crates/opencrt/ui/main.slint:2099
 msgid "Sends Ctrl+H (^H) instead of DEL"
 msgstr "Ctrl+H (^H) küldése DEL helyett"
 
-#: crates/opencrt/ui/main.slint:2100
+#: crates/opencrt/ui/main.slint:2104
 msgid "Anti-idle text:"
 msgstr "Tétlenség elleni szöveg:"
 
-#: crates/opencrt/ui/main.slint:2104
+#: crates/opencrt/ui/main.slint:2108
 msgid "e.g. \\r, sent when no key is pressed for a while"
 msgstr "pl. \\r, akkor küldi, ha egy ideig nincs billentyűleütés"
 
-#: crates/opencrt/ui/main.slint:2110
+#: crates/opencrt/ui/main.slint:2114
 msgid "Send an SSH keepalive or Telnet NOP instead of text"
 msgstr "SSH keepalive vagy Telnet NOP küldése szöveg helyett"
 
-#: crates/opencrt/ui/main.slint:2115
+#: crates/opencrt/ui/main.slint:2119
 msgid "Anti-idle every:"
 msgstr "Tétlenség elleni küldés:"
 
-#: crates/opencrt/ui/main.slint:2118
+#: crates/opencrt/ui/main.slint:2122
 msgid "seconds (blank for off)"
 msgstr "másodpercenként (üres: kikapcsolva)"
 
-#: crates/opencrt/ui/main.slint:2125
+#: crates/opencrt/ui/main.slint:2129
 msgid "Colour scheme:"
 msgstr "Színséma:"
 
-#: crates/opencrt/ui/main.slint:2132
+#: crates/opencrt/ui/main.slint:2136
 msgid "Keyword set:"
 msgstr "Kulcsszólista:"
 
-#: crates/opencrt/ui/main.slint:2139
+#: crates/opencrt/ui/main.slint:2143
 msgid "Tab colour:"
 msgstr "Lap színe:"
 
-#: crates/opencrt/ui/main.slint:2141 crates/opencrt/ui/main.slint:7374
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
 msgid "Red"
 msgstr "Piros"
 
-#: crates/opencrt/ui/main.slint:2141 crates/opencrt/ui/main.slint:7374
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
 msgid "Orange"
 msgstr "Narancs"
 
-#: crates/opencrt/ui/main.slint:2141 crates/opencrt/ui/main.slint:7374
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
 msgid "Yellow"
 msgstr "Sárga"
 
-#: crates/opencrt/ui/main.slint:2141 crates/opencrt/ui/main.slint:7374
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
 msgid "Green"
 msgstr "Zöld"
 
-#: crates/opencrt/ui/main.slint:2141 crates/opencrt/ui/main.slint:7374
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
 msgid "Blue"
 msgstr "Kék"
 
-#: crates/opencrt/ui/main.slint:2141 crates/opencrt/ui/main.slint:7374
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
 msgid "Purple"
 msgstr "Lila"
 
-#: crates/opencrt/ui/main.slint:2146
+#: crates/opencrt/ui/main.slint:2150
 msgid "Button bar:"
 msgstr "Gombsor:"
 
-#: crates/opencrt/ui/main.slint:2156
+#: crates/opencrt/ui/main.slint:2160
 msgid "Log file name:"
 msgstr "Naplófájl neve:"
 
-#: crates/opencrt/ui/main.slint:2159
+#: crates/opencrt/ui/main.slint:2163
 msgid "blank for no logging"
 msgstr "üres: nincs naplózás"
 
-#: crates/opencrt/ui/main.slint:2167
+#: crates/opencrt/ui/main.slint:2171
 msgid "Start each line with the date and time"
 msgstr "Minden sor kezdődjön dátummal és idővel"
 
-#: crates/opencrt/ui/main.slint:2171
+#: crates/opencrt/ui/main.slint:2175
 msgid ""
 "Also keep a raw log (.raw beside it): the bytes as received, escape "
 "sequences included"
 msgstr "Nyers napló is (.raw fájl mellette): a bájtok úgy, ahogy érkeztek, vezérlősorozatokkal együtt"
 
-#: crates/opencrt/ui/main.slint:2175
+#: crates/opencrt/ui/main.slint:2179
 msgid "On connect:"
 msgstr "Csatlakozáskor:"
 
-#: crates/opencrt/ui/main.slint:2178
+#: crates/opencrt/ui/main.slint:2182
 msgid "e.g. === %S connected %Y-%M-%D %h:%m:%s ==="
 msgstr "pl. === %S csatlakozott %Y-%M-%D %h:%m:%s ==="
 
-#: crates/opencrt/ui/main.slint:2182
+#: crates/opencrt/ui/main.slint:2186
 msgid "On disconnect:"
 msgstr "Bontáskor:"
 
-#: crates/opencrt/ui/main.slint:2186
+#: crates/opencrt/ui/main.slint:2190
 msgid "Each line:"
 msgstr "Minden sor:"
 
-#: crates/opencrt/ui/main.slint:2189
+#: crates/opencrt/ui/main.slint:2193
 msgid "e.g. %H: "
 msgstr "pl. %H: "
 
-#: crates/opencrt/ui/main.slint:2193
+#: crates/opencrt/ui/main.slint:2197
 msgid ""
 "Session output is appended as plain text while connected. %S expands to the "
 "session name, %H to the hostname, %Y %M %D to the date and %h %m %s to the "
@@ -860,7 +860,7 @@ msgid ""
 "log named with the date starts a new file at midnight."
 msgstr "A munkamenet kimenete egyszerű szövegként íródik a fájl végére, amíg a kapcsolat él. A %S a munkamenet nevére, a %H a gazdagépnévre, a %Y %M %D a dátumra, a %h %m %s pedig az időre cserélődik (a fájlnévben a csatlakozás, a fenti szövegekben az írás időpontjára). A dátummal elnevezett napló éjfélkor új fájlt kezd."
 
-#: crates/opencrt/ui/main.slint:2202
+#: crates/opencrt/ui/main.slint:2206
 msgid ""
 "A VNC desktop is the size the server sets: shown whole, scaled down when the "
 "tab is smaller, or with Scale to window stretched to fill the tab. "
@@ -869,114 +869,114 @@ msgid ""
 "tunnel it through SSH."
 msgstr "A VNC-asztal méretét a kiszolgáló határozza meg: teljes egészében látszik, kicsinyítve, ha a lap kisebb, vagy az Igazítás az ablakhoz beállítással a lapot kitöltve. A kapcsolat sebessége a képminőséget állítja; az itteni többi beállítás RDP-munkamenetekre vonatkozik. A VNC nem titkosított: állítson be közvetítő gazdagépet (Kapcsolat oldal), hogy SSH-alagúton át haladjon."
 
-#: crates/opencrt/ui/main.slint:2207
+#: crates/opencrt/ui/main.slint:2211
 msgid "These settings are for RDP sessions."
 msgstr "Ezek a beállítások RDP-munkamenetekre vonatkoznak."
 
-#: crates/opencrt/ui/main.slint:2212
+#: crates/opencrt/ui/main.slint:2216
 msgid "Desktop size:"
 msgstr "Asztal mérete:"
 
-#: crates/opencrt/ui/main.slint:2216
+#: crates/opencrt/ui/main.slint:2220
 msgid "width"
 msgstr "szélesség"
 
-#: crates/opencrt/ui/main.slint:2220
+#: crates/opencrt/ui/main.slint:2224
 msgid "x"
 msgstr "x"
 
-#: crates/opencrt/ui/main.slint:2226
+#: crates/opencrt/ui/main.slint:2230
 msgid "height"
 msgstr "magasság"
 
-#: crates/opencrt/ui/main.slint:2231
+#: crates/opencrt/ui/main.slint:2235
 msgid "Scale to window"
 msgstr "Igazítás az ablakhoz"
 
-#: crates/opencrt/ui/main.slint:2236
+#: crates/opencrt/ui/main.slint:2240
 msgid ""
 "Blank: the remote desktop follows the tab's size. A fixed size (in pixels) "
 "stays the same whatever the window does: shown whole, scaled down when the "
 "tab is smaller, or with Scale to window stretched to fill the tab."
 msgstr "Üres: a távoli asztal a lap méretét követi. A rögzített méret (képpontban) az ablaktól függetlenül ugyanaz marad: teljes egészében látszik, kicsinyítve, ha a lap kisebb, vagy az Igazítás az ablakhoz beállítással a lapot kitöltve."
 
-#: crates/opencrt/ui/main.slint:2243
+#: crates/opencrt/ui/main.slint:2247
 msgid "Connection speed:"
 msgstr "Kapcsolat sebessége:"
 
-#: crates/opencrt/ui/main.slint:2246
+#: crates/opencrt/ui/main.slint:2250
 msgid "Best quality: lossless (fast network)"
 msgstr "Legjobb minőség: veszteségmentes (gyors hálózat)"
 
-#: crates/opencrt/ui/main.slint:2246
+#: crates/opencrt/ui/main.slint:2250
 msgid "Balanced: photos and video as JPEG"
 msgstr "Kiegyensúlyozott: fotók és videó JPEG-ként"
 
-#: crates/opencrt/ui/main.slint:2246
+#: crates/opencrt/ui/main.slint:2250
 msgid "Fastest: lower JPEG quality (slow links)"
 msgstr "Leggyorsabb: gyengébb JPEG-minőség (lassú kapcsolat)"
 
-#: crates/opencrt/ui/main.slint:2247
+#: crates/opencrt/ui/main.slint:2251
 msgid "Best appearance (fast network)"
 msgstr "Legjobb megjelenés (gyors hálózat)"
 
-#: crates/opencrt/ui/main.slint:2247
+#: crates/opencrt/ui/main.slint:2251
 msgid "Balanced: no wallpaper or animations"
 msgstr "Kiegyensúlyozott: háttérkép és animációk nélkül"
 
-#: crates/opencrt/ui/main.slint:2247
+#: crates/opencrt/ui/main.slint:2251
 msgid "Fastest: no visual effects (slow links)"
 msgstr "Leggyorsabb: vizuális effektusok nélkül (lassú kapcsolat)"
 
-#: crates/opencrt/ui/main.slint:2254
+#: crates/opencrt/ui/main.slint:2258
 msgid ""
 "VNC servers with the Tight encoding (TightVNC, TigerVNC, x11vnc) send "
 "pictures and video as JPEG when this is Balanced or Fastest; text and flat "
 "areas stay exact. Others always send the exact picture."
 msgstr "A Tight kódolást ismerő VNC-kiszolgálók (TightVNC, TigerVNC, x11vnc) Kiegyensúlyozott vagy Leggyorsabb beállításnál JPEG-ként küldik a képeket és a videót; a szöveg és az egyszínű területek pontosak maradnak. A többi kiszolgáló mindig a pontos képet küldi."
 
-#: crates/opencrt/ui/main.slint:2255
+#: crates/opencrt/ui/main.slint:2259
 msgid ""
 "The less the server draws, the less it sends: leaving out the wallpaper and "
 "animations makes the desktop noticeably quicker over the internet or a VPN."
 msgstr "Minél kevesebbet rajzol a kiszolgáló, annál kevesebbet küld: a háttérkép és az animációk elhagyása érezhetően gyorsítja az asztalt interneten vagy VPN-en keresztül."
 
-#: crates/opencrt/ui/main.slint:2261
+#: crates/opencrt/ui/main.slint:2265
 msgid ""
 "Use H.264 when the server offers it (much faster; turn off if the desktop "
 "stays black)"
 msgstr "H.264 használata, ha a kiszolgáló kínálja (sokkal gyorsabb; kapcsolja ki, ha az asztal fekete marad)"
 
-#: crates/opencrt/ui/main.slint:2266
+#: crates/opencrt/ui/main.slint:2270
 msgid "Connect to the console (administrative) session, like mstsc /admin"
 msgstr "Csatlakozás a konzol- (adminisztratív) munkamenethez, mint az mstsc /admin"
 
-#: crates/opencrt/ui/main.slint:2271
+#: crates/opencrt/ui/main.slint:2275
 msgid "Play the remote computer's sound on this computer"
 msgstr "A távoli számítógép hangjának lejátszása ezen a számítógépen"
 
-#: crates/opencrt/ui/main.slint:2276
+#: crates/opencrt/ui/main.slint:2280
 msgid "Share a local folder:"
 msgstr "Helyi mappa megosztása:"
 
-#: crates/opencrt/ui/main.slint:2280
+#: crates/opencrt/ui/main.slint:2284
 msgid "none"
 msgstr "nincs"
 
-#: crates/opencrt/ui/main.slint:2289
+#: crates/opencrt/ui/main.slint:2293
 msgid ""
 "The folder appears on the remote computer as a drive (under This PC), named "
 "after the folder: copy files to and from it there. The remote computer can "
 "read, change and delete everything in it."
 msgstr "A mappa meghajtóként jelenik meg a távoli számítógépen (az Ez a gép alatt), a mappa nevével: ott másolhat fájlokat bele és ki belőle. A távoli számítógép mindent olvashat, módosíthat és törölhet benne."
 
-#: crates/opencrt/ui/main.slint:2298
+#: crates/opencrt/ui/main.slint:2302
 msgid ""
 "Keys mapped for this session (tried before Global Options > Keyboard), one "
 "per line:"
 msgstr "Ehhez a munkamenethez rendelt billentyűk (a Globális beállítások > Billentyűzet előtt érvényesek), soronként egy:"
 
-#: crates/opencrt/ui/main.slint:2307
+#: crates/opencrt/ui/main.slint:2311
 msgid ""
 "Key = what it does. Keys: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, "
 "Enter, Escape, Space or a character, with Ctrl+ Alt+ Shift+ (characters need "
@@ -984,19 +984,19 @@ msgid ""
 "run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
 msgstr "Billentyű = művelet. Billentyűk: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, Enter, Escape, Space vagy egy karakter, Ctrl+ Alt+ Shift+ módosítóval (karakterhez Ctrl vagy Alt kell). A szöveget elküldi (\\r az Enter); vagy script: fájl, menu: parancs, run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
 
-#: crates/opencrt/ui/main.slint:2316 crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:2320 crates/opencrt/ui/main.slint:7369
 msgid "Script file:"
 msgstr "Szkriptfájl:"
 
-#: crates/opencrt/ui/main.slint:2319 crates/opencrt/ui/main.slint:2712
+#: crates/opencrt/ui/main.slint:2323 crates/opencrt/ui/main.slint:2716
 msgid "blank for none"
 msgstr "üres: nincs"
 
-#: crates/opencrt/ui/main.slint:2327
+#: crates/opencrt/ui/main.slint:2331
 msgid "Or write the script here (used when no file is set):"
 msgstr "Vagy írja ide a szkriptet (akkor használatos, ha nincs megadva fájl):"
 
-#: crates/opencrt/ui/main.slint:2335
+#: crates/opencrt/ui/main.slint:2339
 msgid ""
 "Runs each time the session connects. A .rhai file runs as a Rhai script and "
 "a .py file as a SecureCRT Python script (see the README). Otherwise one "
@@ -1004,447 +1004,443 @@ msgid ""
 "is Enter), sleep <ms>, timeout <s> (for later waits; default 30), # comment."
 msgstr "Minden csatlakozáskor lefut. A .rhai fájl Rhai-szkriptként, a .py fájl SecureCRT Python-szkriptként fut (lásd a README-t). Egyébként soronként egy parancs: wait <text> (amíg a gazdagép ki nem írja), send <text> (\\r az Enter), sleep <ms>, timeout <s> (a későbbi várakozásokhoz; alapérték 30), # megjegyzés."
 
-#: crates/opencrt/ui/main.slint:2344
+#: crates/opencrt/ui/main.slint:2348
 msgid "Forward X11 to the local X server"
 msgstr "X11 továbbítása a helyi X-kiszolgálóra"
 
-#: crates/opencrt/ui/main.slint:2349
+#: crates/opencrt/ui/main.slint:2353
 msgid ""
 "Uses $DISPLAY, else display 0 on this machine. The X server must accept "
 "clients without its own cookie (e.g. VcXsrv with access control disabled)."
 msgstr "A $DISPLAY értékét használja, ennek hiányában ezen a gépen a 0-s kijelzőt. Az X-kiszolgálónak saját cookie nélkül is el kell fogadnia a klienseket (pl. VcXsrv kikapcsolt hozzáférés-vezérléssel)."
 
-#: crates/opencrt/ui/main.slint:2355
+#: crates/opencrt/ui/main.slint:2359
 msgid "Port forwards (SSH2 only):"
 msgstr "Porttovábbítások (csak SSH2):"
 
-#: crates/opencrt/ui/main.slint:2370 crates/opencrt/ui/main.slint:7038
-#: crates/opencrt/ui/main.slint:2370 crates/opencrt/ui/main.slint:7038
+#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7043
+#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7043
 msgid "Name"
 msgstr "Név"
 
-#: crates/opencrt/ui/main.slint:2371
+#: crates/opencrt/ui/main.slint:2375
 msgid "Type"
 msgstr "Típus"
 
-#: crates/opencrt/ui/main.slint:2372 crates/opencrt/ui/main.slint:2477
+#: crates/opencrt/ui/main.slint:2376 crates/opencrt/ui/main.slint:2481
 msgid "Listen"
 msgstr "Figyelés"
 
-#: crates/opencrt/ui/main.slint:2373 crates/opencrt/ui/main.slint:2505
+#: crates/opencrt/ui/main.slint:2377 crates/opencrt/ui/main.slint:2509
 msgid "Destination"
 msgstr "Cél"
 
-#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:2524
+#: crates/opencrt/ui/main.slint:2378 crates/opencrt/ui/main.slint:2528
 msgid "Application"
 msgstr "Alkalmazás"
 
-#: crates/opencrt/ui/main.slint:2405 crates/opencrt/ui/main.slint:7065
-#: crates/opencrt/ui/main.slint:2405 crates/opencrt/ui/main.slint:7065 crates/opencrt/ui/main.slint:7247
+#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7070
+#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7070 crates/opencrt/ui/main.slint:7252
 msgid "Add..."
 msgstr "Hozzáadás..."
 
-#: crates/opencrt/ui/main.slint:2415 crates/opencrt/ui/main.slint:3826
-#: crates/opencrt/ui/main.slint:2415 crates/opencrt/ui/main.slint:3826 crates/opencrt/ui/main.slint:4617
-#: crates/opencrt/ui/main.slint:2415 crates/opencrt/ui/main.slint:3826 crates/opencrt/ui/main.slint:4617 crates/opencrt/ui/main.slint:7074
-#: crates/opencrt/ui/main.slint:2415 crates/opencrt/ui/main.slint:3826 crates/opencrt/ui/main.slint:4617 crates/opencrt/ui/main.slint:7074 crates/opencrt/ui/main.slint:7251
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7079
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7079 crates/opencrt/ui/main.slint:7256
 msgid "Remove"
 msgstr "Eltávolítás"
 
-#: crates/opencrt/ui/main.slint:2460
+#: crates/opencrt/ui/main.slint:2464
 msgid "Port Forward Properties"
 msgstr "Porttovábbítás tulajdonságai"
 
-#: crates/opencrt/ui/main.slint:2463 crates/opencrt/ui/main.slint:2584
-#: crates/opencrt/ui/main.slint:2463 crates/opencrt/ui/main.slint:2584 crates/opencrt/ui/main.slint:3077
-#: crates/opencrt/ui/main.slint:2463 crates/opencrt/ui/main.slint:2584 crates/opencrt/ui/main.slint:3077
+#: crates/opencrt/ui/main.slint:2467 crates/opencrt/ui/main.slint:2588
+#: crates/opencrt/ui/main.slint:2467 crates/opencrt/ui/main.slint:2588 crates/opencrt/ui/main.slint:3081
+#: crates/opencrt/ui/main.slint:2467 crates/opencrt/ui/main.slint:2588 crates/opencrt/ui/main.slint:3081
 msgid "Name:"
 msgstr "Név:"
 
-#: crates/opencrt/ui/main.slint:2466
+#: crates/opencrt/ui/main.slint:2470
 msgid "a descriptive name for this forward"
 msgstr "a továbbítás leíró neve"
 
-#: crates/opencrt/ui/main.slint:2471 crates/opencrt/ui/main.slint:2694
-#: crates/opencrt/ui/main.slint:2471 crates/opencrt/ui/main.slint:2694
+#: crates/opencrt/ui/main.slint:2475 crates/opencrt/ui/main.slint:2698
+#: crates/opencrt/ui/main.slint:2475 crates/opencrt/ui/main.slint:2698
 msgid "Type:"
 msgstr "Típus:"
 
-#: crates/opencrt/ui/main.slint:2473
+#: crates/opencrt/ui/main.slint:2477
 msgid "Local - a port on this machine"
 msgstr "Helyi - port ezen a gépen"
 
-#: crates/opencrt/ui/main.slint:2473
+#: crates/opencrt/ui/main.slint:2477
 msgid "Remote - a port on the server"
 msgstr "Távoli - port a kiszolgálón"
 
-#: crates/opencrt/ui/main.slint:2473
+#: crates/opencrt/ui/main.slint:2477
 msgid "Dynamic - SOCKS 4/5 proxy on this machine"
 msgstr "Dinamikus - SOCKS 4/5 proxy ezen a gépen"
 
-#: crates/opencrt/ui/main.slint:2479
+#: crates/opencrt/ui/main.slint:2483
 msgid "Manually select the address the server listens on"
 msgstr "A kiszolgáló figyelési címének kézi megadása"
 
-#: crates/opencrt/ui/main.slint:2479
+#: crates/opencrt/ui/main.slint:2483
 msgid "Manually select the local IP address to listen on"
 msgstr "A figyelési helyi IP-cím kézi megadása"
 
-#: crates/opencrt/ui/main.slint:2483
+#: crates/opencrt/ui/main.slint:2487
 msgid "IP address:"
 msgstr "IP-cím:"
 
-#: crates/opencrt/ui/main.slint:2487
+#: crates/opencrt/ui/main.slint:2491
 msgid "e.g. 0.0.0.0 (the server must allow it)"
 msgstr "pl. 0.0.0.0 (a kiszolgálónak engedélyeznie kell)"
 
-#: crates/opencrt/ui/main.slint:2487
+#: crates/opencrt/ui/main.slint:2491
 msgid "e.g. 0.0.0.0 for every interface"
 msgstr "pl. 0.0.0.0 minden interfészhez"
 
-#: crates/opencrt/ui/main.slint:2498
+#: crates/opencrt/ui/main.slint:2502
 msgid "Allow from:"
 msgstr "Engedélyezett forrás:"
 
-#: crates/opencrt/ui/main.slint:2501
+#: crates/opencrt/ui/main.slint:2505
 msgid "addresses or networks, e.g. 192.168.1.0/24 (blank: anyone)"
 msgstr "címek vagy hálózatok, pl. 192.168.1.0/24 (üres: bárki)"
 
-#: crates/opencrt/ui/main.slint:2507
+#: crates/opencrt/ui/main.slint:2511
 msgid "Destination host is different from the SSH server"
 msgstr "A célgazdagép nem azonos az SSH-kiszolgálóval"
 
-#: crates/opencrt/ui/main.slint:2507
+#: crates/opencrt/ui/main.slint:2511
 msgid "Destination host is different from this machine"
 msgstr "A célgazdagép nem azonos ezzel a géppel"
 
-#: crates/opencrt/ui/main.slint:2526
+#: crates/opencrt/ui/main.slint:2530
 msgid "Optionally start a program on this machine once the port is listening."
 msgstr "Program indítása ezen a gépen, amint a port figyel (nem kötelező)."
 
-#: crates/opencrt/ui/main.slint:2532
+#: crates/opencrt/ui/main.slint:2536
 msgid "Application:"
 msgstr "Alkalmazás:"
 
-#: crates/opencrt/ui/main.slint:2540
+#: crates/opencrt/ui/main.slint:2544
 msgid "Arguments:"
 msgstr "Argumentumok:"
 
-#: crates/opencrt/ui/main.slint:2544
+#: crates/opencrt/ui/main.slint:2548
 msgid "use \"quotes\" around arguments with spaces"
 msgstr "a szóközt tartalmazó argumentumokat tegye \"idézőjelek\" közé"
 
-#: crates/opencrt/ui/main.slint:2555
+#: crates/opencrt/ui/main.slint:2559
 msgid "Enabled"
 msgstr "Engedélyezve"
 
-#: crates/opencrt/ui/main.slint:2581
+#: crates/opencrt/ui/main.slint:2585
 msgid "Credential"
 msgstr "Hitelesítő adat"
 
-#: crates/opencrt/ui/main.slint:2587
+#: crates/opencrt/ui/main.slint:2591
 msgid "e.g. Network admin"
 msgstr "pl. Hálózati rendszergazda"
 
-#: crates/opencrt/ui/main.slint:2596
+#: crates/opencrt/ui/main.slint:2600
 msgid "blank to use each session's own username"
 msgstr "üres: minden munkamenet a saját felhasználónevét használja"
 
-#: crates/opencrt/ui/main.slint:2601 crates/opencrt/ui/main.slint:2716
+#: crates/opencrt/ui/main.slint:2605 crates/opencrt/ui/main.slint:2720
 msgid "Password:"
 msgstr "Jelszó:"
 
-#: crates/opencrt/ui/main.slint:2605 crates/opencrt/ui/main.slint:2721
+#: crates/opencrt/ui/main.slint:2609 crates/opencrt/ui/main.slint:2725
 msgid "blank to keep the saved password"
 msgstr "üres: a mentett jelszó megmarad"
 
-#: crates/opencrt/ui/main.slint:2605
+#: crates/opencrt/ui/main.slint:2609
 msgid "blank to be asked each time"
 msgstr "üres: minden alkalommal kérje"
 
-#: crates/opencrt/ui/main.slint:2610 crates/opencrt/ui/main.slint:3981
-#: crates/opencrt/ui/main.slint:2610 crates/opencrt/ui/main.slint:3981
+#: crates/opencrt/ui/main.slint:2614 crates/opencrt/ui/main.slint:3977
+#: crates/opencrt/ui/main.slint:2614 crates/opencrt/ui/main.slint:3977
 msgid "Confirm:"
 msgstr "Megerősítés:"
 
-#: crates/opencrt/ui/main.slint:2618
+#: crates/opencrt/ui/main.slint:2622
 msgid "The password is stored in the system keychain, never in OpenCRT's files."
 msgstr "A jelszó a rendszer kulcstartójában tárolódik, sosem az OpenCRT fájljaiban."
 
-#: crates/opencrt/ui/main.slint:2683
+#: crates/opencrt/ui/main.slint:2687
 msgid "Firewall"
 msgstr "Tűzfal"
 
-#: crates/opencrt/ui/main.slint:2689
+#: crates/opencrt/ui/main.slint:2693
 msgid "e.g. Office proxy (sessions use this name)"
 msgstr "pl. Irodai proxy (a munkamenetek ezt a nevet használják)"
 
-#: crates/opencrt/ui/main.slint:2696
+#: crates/opencrt/ui/main.slint:2700
 msgid "SOCKS5"
 msgstr "SOCKS5"
 
-#: crates/opencrt/ui/main.slint:2696
+#: crates/opencrt/ui/main.slint:2700
 msgid "SOCKS4 / 4a"
 msgstr "SOCKS4 / 4a"
 
-#: crates/opencrt/ui/main.slint:2696
+#: crates/opencrt/ui/main.slint:2700
 msgid "HTTP CONNECT"
 msgstr "HTTP CONNECT"
 
-#: crates/opencrt/ui/main.slint:2696
+#: crates/opencrt/ui/main.slint:2700
 msgid "Gateway (send text, e.g. Wingate/TIS)"
 msgstr "Átjáró (szöveget küld, pl. Wingate/TIS)"
 
-#: crates/opencrt/ui/main.slint:2696
+#: crates/opencrt/ui/main.slint:2700
 msgid "Local proxy command"
 msgstr "Helyi proxyparancs"
 
-#: crates/opencrt/ui/main.slint:2701
+#: crates/opencrt/ui/main.slint:2705
 msgid "Host:"
 msgstr "Gazdagép:"
 
-#: crates/opencrt/ui/main.slint:2709
+#: crates/opencrt/ui/main.slint:2713
 msgid "User ID:"
 msgstr "Felhasználói azonosító:"
 
-#: crates/opencrt/ui/main.slint:2721
+#: crates/opencrt/ui/main.slint:2725
 msgid "kept in the system keychain"
 msgstr "a rendszer kulcstartójában tárolva"
 
-#: crates/opencrt/ui/main.slint:2725 crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7369
 msgid "Send:"
 msgstr "Küldés:"
 
-#: crates/opencrt/ui/main.slint:2725 crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7369
 msgid "Command:"
 msgstr "Parancs:"
 
-#: crates/opencrt/ui/main.slint:2728
+#: crates/opencrt/ui/main.slint:2732
 msgid "e.g. %h %p\\r"
 msgstr "pl. %h %p\\r"
 
-#: crates/opencrt/ui/main.slint:2728
+#: crates/opencrt/ui/main.slint:2732
 msgid "e.g. nc -X connect -x proxy:8080 %h %p"
 msgstr "pl. nc -X connect -x proxy:8080 %h %p"
 
-#: crates/opencrt/ui/main.slint:2732
+#: crates/opencrt/ui/main.slint:2736
 msgid "%h and %p become the destination host and port. \\r is Enter."
 msgstr "A %h és a %p a célgazdagépre és a célportra cserélődik. A \\r az Enter."
 
-#: crates/opencrt/ui/main.slint:2732
+#: crates/opencrt/ui/main.slint:2736
 msgid ""
 "%h and %p become the destination host and port. The session talks over the "
 "command's input and output."
 msgstr "A %h és a %p a célgazdagépre és a célportra cserélődik. A munkamenet a parancs bemenetén és kimenetén keresztül kommunikál."
 
-#: crates/opencrt/ui/main.slint:3026
+#: crates/opencrt/ui/main.slint:3030
 msgid "Colour Schemes"
 msgstr "Színsémák"
 
-#: crates/opencrt/ui/main.slint:3087
+#: crates/opencrt/ui/main.slint:3091
 msgid "Foreground:"
 msgstr "Előtér:"
 
-#: crates/opencrt/ui/main.slint:3089
+#: crates/opencrt/ui/main.slint:3093
 msgid "Background:"
 msgstr "Háttér:"
 
-#: crates/opencrt/ui/main.slint:3093 crates/opencrt/ui/main.slint:3443
+#: crates/opencrt/ui/main.slint:3097 crates/opencrt/ui/main.slint:3439
 msgid "Cursor:"
 msgstr "Kurzor:"
 
-#: crates/opencrt/ui/main.slint:3094 crates/opencrt/ui/main.slint:3096
+#: crates/opencrt/ui/main.slint:3098 crates/opencrt/ui/main.slint:3100
 msgid "inverse"
 msgstr "inverz"
 
-#: crates/opencrt/ui/main.slint:3095
+#: crates/opencrt/ui/main.slint:3099
 msgid "Selection:"
 msgstr "Kijelölés:"
 
-#: crates/opencrt/ui/main.slint:3099
+#: crates/opencrt/ui/main.slint:3103
 msgid ""
 "ANSI colours (black, red, green, yellow, blue, magenta, cyan, white; then "
 "bright):"
 msgstr "ANSI-színek (fekete, piros, zöld, sárga, kék, bíbor, cián, fehér; majd a világos változatok):"
 
-#: crates/opencrt/ui/main.slint:3113
+#: crates/opencrt/ui/main.slint:3117
 msgid "Colours are #rrggbb. Cursor and selection may be left blank."
 msgstr "A színek formátuma #rrggbb. A kurzor és a kijelölés üresen hagyható."
 
-#: crates/opencrt/ui/main.slint:3113
+#: crates/opencrt/ui/main.slint:3117
 msgid "Built-in schemes cannot be changed: New makes an editable copy."
 msgstr "A beépített sémák nem módosíthatók: az Új gomb szerkeszthető másolatot készít."
 
-#: crates/opencrt/ui/main.slint:3127
+#: crates/opencrt/ui/main.slint:3131
 msgid "New"
 msgstr "Új"
 
-#: crates/opencrt/ui/main.slint:3143 crates/opencrt/ui/main.slint:4128
+#: crates/opencrt/ui/main.slint:3147 crates/opencrt/ui/main.slint:4124
 msgid "Save"
 msgstr "Mentés"
 
-#: crates/opencrt/ui/main.slint:3218
+#: crates/opencrt/ui/main.slint:3220
 msgid "Global Options"
 msgstr "Globális beállítások"
 
-#: crates/opencrt/ui/main.slint:3237
+#: crates/opencrt/ui/main.slint:3239
 msgid "General"
 msgstr "Általános"
 
-#: crates/opencrt/ui/main.slint:3237
+#: crates/opencrt/ui/main.slint:3239
 msgid "Mouse"
 msgstr "Egér"
 
-#: crates/opencrt/ui/main.slint:3237
+#: crates/opencrt/ui/main.slint:3239
 msgid "Highlighting"
 msgstr "Kiemelés"
 
-#: crates/opencrt/ui/main.slint:3237
+#: crates/opencrt/ui/main.slint:3239
 msgid "File Transfer"
 msgstr "Fájlátvitel"
 
-#: crates/opencrt/ui/main.slint:3237
+#: crates/opencrt/ui/main.slint:3239
 msgid "Printing"
 msgstr "Nyomtatás"
 
-#: crates/opencrt/ui/main.slint:3237
+#: crates/opencrt/ui/main.slint:3239
 msgid "Settings Sync"
 msgstr "Beállítások szinkronizálása"
 
-#: crates/opencrt/ui/main.slint:3263
+#: crates/opencrt/ui/main.slint:3267
 msgid "Theme:"
 msgstr "Téma:"
 
-#: crates/opencrt/ui/main.slint:3265 crates/opencrt/ui/main.slint:5241
+#: crates/opencrt/ui/main.slint:3269 crates/opencrt/ui/main.slint:5238
 msgid "Follow the system"
 msgstr "Rendszer szerint"
 
-#: crates/opencrt/ui/main.slint:3265
+#: crates/opencrt/ui/main.slint:3269
 msgid "Light"
 msgstr "Világos"
 
-#: crates/opencrt/ui/main.slint:3265
+#: crates/opencrt/ui/main.slint:3269
 msgid "Dark"
 msgstr "Sötét"
 
-#: crates/opencrt/ui/main.slint:3271
-msgid "Language:"
-msgstr "Nyelv:"
-
-#: crates/opencrt/ui/main.slint:3278
+#: crates/opencrt/ui/main.slint:3274
 msgid "Show menu bar (right-click the terminal to bring it back)"
 msgstr "Menüsor megjelenítése (a terminálra jobb gombbal kattintva visszahozható)"
 
-#: crates/opencrt/ui/main.slint:3282
+#: crates/opencrt/ui/main.slint:3278
 msgid "Show connect bar"
 msgstr "Csatlakozási sáv megjelenítése"
 
-#: crates/opencrt/ui/main.slint:3286
+#: crates/opencrt/ui/main.slint:3282
 msgid "Show the server's load in the status bar (Linux hosts over SSH)"
 msgstr "A kiszolgáló terhelésének megjelenítése az állapotsorban (Linux-gazdagépek SSH-n át)"
 
-#: crates/opencrt/ui/main.slint:3290
+#: crates/opencrt/ui/main.slint:3286
 msgid "Ask before closing a connected tab or exiting"
 msgstr "Kérdezzen rá csatlakoztatott lap bezárása vagy kilépés előtt"
 
-#: crates/opencrt/ui/main.slint:3294
+#: crates/opencrt/ui/main.slint:3290
 msgid "Check for a new version at start-up and once a day"
 msgstr "Új verzió keresése indításkor és naponta egyszer"
 
-#: crates/opencrt/ui/main.slint:3301
+#: crates/opencrt/ui/main.slint:3297
 msgid "Interface font size:"
 msgstr "Felület betűmérete:"
 
-#: crates/opencrt/ui/main.slint:3304
+#: crates/opencrt/ui/main.slint:3300
 msgid "9 to 20"
 msgstr "9 és 20 között"
 
-#: crates/opencrt/ui/main.slint:3308
+#: crates/opencrt/ui/main.slint:3304
 msgid "Recent sessions in the File menu:"
 msgstr "Legutóbbi munkamenetek a Fájl menüben:"
 
-#: crates/opencrt/ui/main.slint:3311
+#: crates/opencrt/ui/main.slint:3307
 msgid "0 to 16"
 msgstr "0 és 16 között"
 
-#: crates/opencrt/ui/main.slint:3315
+#: crates/opencrt/ui/main.slint:3311
 msgid "Ask before Connect All opens more than:"
 msgstr "Kérdezzen rá, ha az Összes csatlakoztatása többet nyitna meg, mint:"
 
-#: crates/opencrt/ui/main.slint:3318
+#: crates/opencrt/ui/main.slint:3314
 msgid "sessions; 0 = never ask"
 msgstr "munkamenet; 0 = sosem kérdez"
 
-#: crates/opencrt/ui/main.slint:3324
+#: crates/opencrt/ui/main.slint:3320
 msgid "Configuration folder:"
 msgstr "Konfigurációs mappa:"
 
-#: crates/opencrt/ui/main.slint:3327
+#: crates/opencrt/ui/main.slint:3323
 msgid "blank for the default"
 msgstr "üres: alapértelmezett"
 
-#: crates/opencrt/ui/main.slint:3335
+#: crates/opencrt/ui/main.slint:3331
 msgid ""
 "Used from the next start. Your settings are copied there if it has none yet. "
 "A settings repository (Settings Sync) takes its place."
 msgstr "A következő indítástól érvényes. Ha a mappában még nincsenek beállítások, a jelenlegiek odamásolódnak. Beállítástároló (Beállítások szinkronizálása) használata esetén az lép a helyébe."
 
-#: crates/opencrt/ui/main.slint:3342
+#: crates/opencrt/ui/main.slint:3338
 msgid "Python for .py scripts:"
 msgstr "Python a .py szkriptekhez:"
 
-#: crates/opencrt/ui/main.slint:3345
+#: crates/opencrt/ui/main.slint:3341
 msgid "blank: python3 on Linux, else downloaded on first use"
 msgstr "üres: Linuxon python3, máshol első használatkor letöltődik"
 
-#: crates/opencrt/ui/main.slint:3353
+#: crates/opencrt/ui/main.slint:3349
 msgid ""
 "Keep your sessions, options and host keys in a private git repository, "
 "shared by every computer that uses it. Passwords and this computer's own "
 "settings (window, folders, key files) stay here. Needs git installed."
 msgstr "Munkamenetek, beállítások és gazdagépkulcsok tárolása egy privát git-tárolóban, amelyen minden ezt használó számítógép osztozik. A jelszavak és a számítógép saját beállításai (ablak, mappák, kulcsfájlok) itt maradnak. Telepített git szükséges."
 
-#: crates/opencrt/ui/main.slint:3360
+#: crates/opencrt/ui/main.slint:3356
 msgid "Repository:"
 msgstr "Tároló:"
 
-#: crates/opencrt/ui/main.slint:3364
+#: crates/opencrt/ui/main.slint:3360
 msgid "blank: not used; https://... or git@host:user/repo.git"
 msgstr "üres: nincs használatban; https://... vagy git@host:user/repo.git"
 
-#: crates/opencrt/ui/main.slint:3372
+#: crates/opencrt/ui/main.slint:3368
 msgid "HTTPS: your username on the server"
 msgstr "HTTPS: az Ön felhasználóneve a kiszolgálón"
 
-#: crates/opencrt/ui/main.slint:3376
+#: crates/opencrt/ui/main.slint:3372
 msgid "Password or token:"
 msgstr "Jelszó vagy token:"
 
-#: crates/opencrt/ui/main.slint:3381
+#: crates/opencrt/ui/main.slint:3377
 msgid "saved; type to replace it"
 msgstr "mentve; a cseréhez írja be az újat"
 
-#: crates/opencrt/ui/main.slint:3381
+#: crates/opencrt/ui/main.slint:3377
 msgid "HTTPS: a personal access token"
 msgstr "HTTPS: személyes hozzáférési token"
 
-#: crates/opencrt/ui/main.slint:3385
+#: crates/opencrt/ui/main.slint:3381
 msgid "SSH key file:"
 msgstr "SSH-kulcsfájl:"
 
-#: crates/opencrt/ui/main.slint:3388
+#: crates/opencrt/ui/main.slint:3384
 msgid "SSH: blank for your SSH agent and ~/.ssh/config"
 msgstr "SSH: üres esetén az SSH-ügynök és a ~/.ssh/config"
 
-#: crates/opencrt/ui/main.slint:3399
+#: crates/opencrt/ui/main.slint:3395
 msgid "Git is not installed on this computer."
 msgstr "A git nincs telepítve ezen a számítógépen."
 
-#: crates/opencrt/ui/main.slint:3403
+#: crates/opencrt/ui/main.slint:3399
 msgid "Download Git for Windows"
 msgstr "Git for Windows letöltése"
 
-#: crates/opencrt/ui/main.slint:3412
+#: crates/opencrt/ui/main.slint:3408
 msgid ""
 "HTTPS: leave username and token blank to use git's own credential manager. "
 "The token is kept in the system keychain. Changes are sent as you make them; "
@@ -1452,335 +1448,335 @@ msgid ""
 "start: an empty repository gets your current settings."
 msgstr "HTTPS: hagyja üresen a felhasználónevet és a tokent a git saját hitelesítőadat-kezelőjének használatához. A token a rendszer kulcstartójában tárolódik. A módosítások azonnal elküldődnek; a többi számítógép módosításai az OpenCRT indításakor érkeznek meg. A következő indítástól érvényes: egy üres tároló megkapja a jelenlegi beállításokat."
 
-#: crates/opencrt/ui/main.slint:3421
+#: crates/opencrt/ui/main.slint:3417
 msgid "Font:"
 msgstr "Betűtípus:"
 
-#: crates/opencrt/ui/main.slint:3428
+#: crates/opencrt/ui/main.slint:3424
 msgid "Font size:"
 msgstr "Betűméret:"
 
-#: crates/opencrt/ui/main.slint:3432
+#: crates/opencrt/ui/main.slint:3428
 msgid "Scrollback lines:"
 msgstr "Visszagörgethető sorok:"
 
-#: crates/opencrt/ui/main.slint:3436
+#: crates/opencrt/ui/main.slint:3432
 msgid "Default colour scheme:"
 msgstr "Alapértelmezett színséma:"
 
-#: crates/opencrt/ui/main.slint:3445
+#: crates/opencrt/ui/main.slint:3441
 msgid "Block"
 msgstr "Blokk"
 
-#: crates/opencrt/ui/main.slint:3445
+#: crates/opencrt/ui/main.slint:3441
 msgid "Underline"
 msgstr "Aláhúzás"
 
-#: crates/opencrt/ui/main.slint:3445
+#: crates/opencrt/ui/main.slint:3441
 msgid "Vertical bar"
 msgstr "Függőleges vonal"
 
-#: crates/opencrt/ui/main.slint:3450
+#: crates/opencrt/ui/main.slint:3446
 msgid "Bell:"
 msgstr "Csengő:"
 
-#: crates/opencrt/ui/main.slint:3452
+#: crates/opencrt/ui/main.slint:3448
 msgid "Flash the window"
 msgstr "Ablak felvillantása"
 
-#: crates/opencrt/ui/main.slint:3452
+#: crates/opencrt/ui/main.slint:3448
 msgid "Play a sound"
 msgstr "Hang lejátszása"
 
-#: crates/opencrt/ui/main.slint:3452
+#: crates/opencrt/ui/main.slint:3448
 msgid "Off"
 msgstr "Ki"
 
-#: crates/opencrt/ui/main.slint:3458
+#: crates/opencrt/ui/main.slint:3454
 msgid "Copy on select"
 msgstr "Másolás kijelöléskor"
 
-#: crates/opencrt/ui/main.slint:3462
+#: crates/opencrt/ui/main.slint:3458
 msgid "Paste on right-click (instead of the menu)"
 msgstr "Beillesztés jobb kattintásra (a menü helyett)"
 
-#: crates/opencrt/ui/main.slint:3466
+#: crates/opencrt/ui/main.slint:3462
 msgid "Paste on middle-click"
 msgstr "Beillesztés középső kattintásra"
 
-#: crates/opencrt/ui/main.slint:3470
+#: crates/opencrt/ui/main.slint:3466
 msgid "Let programs on the host copy to the clipboard (OSC 52, e.g. tmux, vim)"
 msgstr "A gazdagépen futó programok a vágólapra másolhatnak (OSC 52, pl. tmux, vim)"
 
-#: crates/opencrt/ui/main.slint:3474
+#: crates/opencrt/ui/main.slint:3470
 msgid "Ask before pasting more than one line"
 msgstr "Kérdezzen rá egynél több sor beillesztése előtt"
 
-#: crates/opencrt/ui/main.slint:3480
+#: crates/opencrt/ui/main.slint:3476
 msgid "Send delays (ms):"
 msgstr "Küldési késleltetés (ms):"
 
-#: crates/opencrt/ui/main.slint:3487
+#: crates/opencrt/ui/main.slint:3483
 msgid "per character"
 msgstr "karakterenként"
 
-#: crates/opencrt/ui/main.slint:3496
+#: crates/opencrt/ui/main.slint:3492
 msgid "per line"
 msgstr "soronként"
 
-#: crates/opencrt/ui/main.slint:3502
+#: crates/opencrt/ui/main.slint:3498
 msgid "Wait for prompt:"
 msgstr "Várakozás promptra:"
 
-#: crates/opencrt/ui/main.slint:3505
+#: crates/opencrt/ui/main.slint:3501
 msgid "e.g. \"# \" before each next line (blank: do not wait)"
 msgstr "pl. \"# \" minden következő sor előtt (üres: nincs várakozás)"
 
-#: crates/opencrt/ui/main.slint:3510
+#: crates/opencrt/ui/main.slint:3506
 msgid "Web search:"
 msgstr "Webes keresés:"
 
-#: crates/opencrt/ui/main.slint:3513
+#: crates/opencrt/ui/main.slint:3509
 msgid "address with %s for the selected text"
 msgstr "cím, benne %s a kijelölt szöveg helyén"
 
-#: crates/opencrt/ui/main.slint:3518
+#: crates/opencrt/ui/main.slint:3514
 msgid "Word delimiters:"
 msgstr "Szóelválasztók:"
 
-#: crates/opencrt/ui/main.slint:3521
+#: crates/opencrt/ui/main.slint:3517
 msgid "e.g. ,:;\"'()[]{{}}<> (blank for default)"
 msgstr "pl. ,:;\"'()[]{{}}<> (üres: alapértelmezett)"
 
-#: crates/opencrt/ui/main.slint:3527
+#: crates/opencrt/ui/main.slint:3523
 msgid "SSH keepalive (seconds):"
 msgstr "SSH keepalive (másodperc):"
 
-#: crates/opencrt/ui/main.slint:3530
+#: crates/opencrt/ui/main.slint:3526
 msgid "0 = off"
 msgstr "0 = ki"
 
-#: crates/opencrt/ui/main.slint:3534
+#: crates/opencrt/ui/main.slint:3530
 msgid "Default SSH2 key file:"
 msgstr "Alapértelmezett SSH2-kulcsfájl:"
 
-#: crates/opencrt/ui/main.slint:3537
+#: crates/opencrt/ui/main.slint:3533
 msgid "blank = SSH agent"
 msgstr "üres = SSH-ügynök"
 
-#: crates/opencrt/ui/main.slint:3546
+#: crates/opencrt/ui/main.slint:3542
 msgid "Reconnect automatically when a connection drops"
 msgstr "Automatikus újracsatlakozás, ha a kapcsolat megszakad"
 
-#: crates/opencrt/ui/main.slint:3550
+#: crates/opencrt/ui/main.slint:3546
 msgid ""
 "Allow legacy SSH2 algorithms for every host (old network devices; modern "
 "ones still come first)"
 msgstr "Régi SSH2-algoritmusok engedélyezése minden gazdagéphez (régi hálózati eszközök; a modernek továbbra is elsőbbséget kapnak)"
 
-#: crates/opencrt/ui/main.slint:3554
+#: crates/opencrt/ui/main.slint:3550
 msgid "Save new SSH2 host keys without asking (a changed key is still refused)"
 msgstr "Új SSH2-gazdagépkulcsok mentése kérdés nélkül (a megváltozott kulcsot továbbra is elutasítja)"
 
-#: crates/opencrt/ui/main.slint:3558
+#: crates/opencrt/ui/main.slint:3554
 msgid ""
 "Not recommended: the first connection to a host can no longer be checked "
 "against its real fingerprint. Use it for lab networks or many new devices."
 msgstr "Nem ajánlott: a gazdagéphez való első csatlakozás így nem ellenőrizhető a valódi ujjlenyomattal. Laborhálózatokhoz vagy sok új eszközhöz használja."
 
-#: crates/opencrt/ui/main.slint:3564
+#: crates/opencrt/ui/main.slint:3560
 msgid "Remember passwords and key passphrases until OpenCRT closes"
 msgstr "Jelszavak és kulcsjelmondatok megjegyzése az OpenCRT bezárásáig"
 
-#: crates/opencrt/ui/main.slint:3568
+#: crates/opencrt/ui/main.slint:3564
 msgid "Reopen saved sessions that were open at exit"
 msgstr "A kilépéskor nyitott mentett munkamenetek újbóli megnyitása"
 
-#: crates/opencrt/ui/main.slint:3572
+#: crates/opencrt/ui/main.slint:3568
 msgid "Keepalive applies to sessions opened from now on."
 msgstr "A keepalive az ezután megnyitott munkamenetekre vonatkozik."
 
-#: crates/opencrt/ui/main.slint:3578
+#: crates/opencrt/ui/main.slint:3574
 msgid "Download folder:"
 msgstr "Letöltési mappa:"
 
-#: crates/opencrt/ui/main.slint:3581
+#: crates/opencrt/ui/main.slint:3577
 msgid "blank for your Downloads folder"
 msgstr "üres: a Letöltések mappa"
 
-#: crates/opencrt/ui/main.slint:3589
+#: crates/opencrt/ui/main.slint:3585
 msgid "Run a TFTP server on this folder (UDP port 69)"
 msgstr "TFTP-kiszolgáló futtatása ezen a mappán (69-es UDP-port)"
 
-#: crates/opencrt/ui/main.slint:3594
+#: crates/opencrt/ui/main.slint:3590
 msgid "TFTP clients:"
 msgstr "TFTP-kliensek:"
 
-#: crates/opencrt/ui/main.slint:3598
+#: crates/opencrt/ui/main.slint:3594
 msgid "e.g. 192.168.1.0/24, 10.0.0.5 (blank for any)"
 msgstr "pl. 192.168.1.0/24, 10.0.0.5 (üres: bármelyik)"
 
-#: crates/opencrt/ui/main.slint:3603
+#: crates/opencrt/ui/main.slint:3599
 msgid "Dropped files:"
 msgstr "Ráejtett fájlok:"
 
-#: crates/opencrt/ui/main.slint:3605
+#: crates/opencrt/ui/main.slint:3601
 msgid "Ask each time"
 msgstr "Kérdezzen rá minden alkalommal"
 
-#: crates/opencrt/ui/main.slint:3605 crates/opencrt/ui/main.slint:4056
+#: crates/opencrt/ui/main.slint:3601 crates/opencrt/ui/main.slint:4052
 msgid "Zmodem"
 msgstr "Zmodem"
 
-#: crates/opencrt/ui/main.slint:3605 crates/opencrt/ui/main.slint:4061
+#: crates/opencrt/ui/main.slint:3601 crates/opencrt/ui/main.slint:4057
 msgid "Xmodem"
 msgstr "Xmodem"
 
-#: crates/opencrt/ui/main.slint:3605 crates/opencrt/ui/main.slint:4065
+#: crates/opencrt/ui/main.slint:3601 crates/opencrt/ui/main.slint:4061
 msgid "Ymodem"
 msgstr "Ymodem"
 
-#: crates/opencrt/ui/main.slint:3605 crates/opencrt/ui/main.slint:4069
+#: crates/opencrt/ui/main.slint:3601 crates/opencrt/ui/main.slint:4065
 msgid "Kermit"
 msgstr "Kermit"
 
-#: crates/opencrt/ui/main.slint:3605 crates/opencrt/ui/main.slint:4077
+#: crates/opencrt/ui/main.slint:3601 crates/opencrt/ui/main.slint:4073
 msgid "ASCII"
 msgstr "ASCII"
 
-#: crates/opencrt/ui/main.slint:3605 crates/opencrt/ui/main.slint:4081
+#: crates/opencrt/ui/main.slint:3601 crates/opencrt/ui/main.slint:4077
 msgid "Binary"
 msgstr "Bináris"
 
-#: crates/opencrt/ui/main.slint:3605
+#: crates/opencrt/ui/main.slint:3601
 msgid "SFTP (SSH sessions)"
 msgstr "SFTP (SSH-munkamenetek)"
 
-#: crates/opencrt/ui/main.slint:3610
+#: crates/opencrt/ui/main.slint:3606
 msgid ""
 "Zmodem and Ymodem downloads are saved here, and TFTP clients such as routers "
 "can fetch files from it or upload into it. Existing files are never "
 "overwritten."
 msgstr "A Zmodem- és Ymodem-letöltések ide kerülnek, a TFTP-kliensek (pl. routerek) pedig innen tölthetnek le fájlokat, vagy ide tölthetnek fel. A meglévő fájlokat a program sosem írja felül."
 
-#: crates/opencrt/ui/main.slint:3617
+#: crates/opencrt/ui/main.slint:3613
 msgid "Printer:"
 msgstr "Nyomtató:"
 
-#: crates/opencrt/ui/main.slint:3620
+#: crates/opencrt/ui/main.slint:3616
 msgid "blank for the default printer"
 msgstr "üres: alapértelmezett nyomtató"
 
-#: crates/opencrt/ui/main.slint:3625
+#: crates/opencrt/ui/main.slint:3621
 msgid "Font size (points):"
 msgstr "Betűméret (pont):"
 
-#: crates/opencrt/ui/main.slint:3629 crates/opencrt/ui/main.slint:3638
+#: crates/opencrt/ui/main.slint:3625 crates/opencrt/ui/main.slint:3634
 msgid "default"
 msgstr "alapértelmezett"
 
-#: crates/opencrt/ui/main.slint:3632
+#: crates/opencrt/ui/main.slint:3628
 msgid "Margins (mm):"
 msgstr "Margók (mm):"
 
-#: crates/opencrt/ui/main.slint:3642
+#: crates/opencrt/ui/main.slint:3638
 msgid ""
 "File > Print Screen, Print Selection and Auto Print, and printing asked for "
 "by the host (CSI 5i / 4i), go to this printer. On Windows they print through "
 "Notepad, which uses its own font and margins."
 msgstr "A Fájl > Képernyő nyomtatása, Kijelölés nyomtatása és Automatikus nyomtatás, valamint a gazdagép által kért nyomtatás (CSI 5i / 4i) erre a nyomtatóra megy. Windowson a Jegyzettömbön keresztül nyomtat, amely saját betűtípust és margókat használ."
 
-#: crates/opencrt/ui/main.slint:3650
+#: crates/opencrt/ui/main.slint:3646
 msgid ""
 "Keywords are highlighted in any case. A session uses the Default list unless "
 "it chooses a named one (Session Options > Appearance)."
 msgstr "A kulcsszavak kis- és nagybetűtől függetlenül kiemelődnek. A munkamenet az Alapértelmezett listát használja, hacsak nem választ egy elnevezett listát (Munkamenet-beállítások > Megjelenés)."
 
-#: crates/opencrt/ui/main.slint:3657
+#: crates/opencrt/ui/main.slint:3653
 msgid "List:"
 msgstr "Lista:"
 
-#: crates/opencrt/ui/main.slint:3665
+#: crates/opencrt/ui/main.slint:3661
 msgid "New List"
 msgstr "Új lista"
 
-#: crates/opencrt/ui/main.slint:3669
+#: crates/opencrt/ui/main.slint:3665
 msgid "Delete List"
 msgstr "Lista törlése"
 
-#: crates/opencrt/ui/main.slint:3681
+#: crates/opencrt/ui/main.slint:3677
 msgid "the Default list has no name"
 msgstr "az Alapértelmezett listának nincs neve"
 
-#: crates/opencrt/ui/main.slint:3703
+#: crates/opencrt/ui/main.slint:3699
 msgid "Keyword"
 msgstr "Kulcsszó"
 
-#: crates/opencrt/ui/main.slint:3704
+#: crates/opencrt/ui/main.slint:3700
 msgid "Colour"
 msgstr "Szín"
 
-#: crates/opencrt/ui/main.slint:3705
+#: crates/opencrt/ui/main.slint:3701
 msgid "Style"
 msgstr "Stílus"
 
-#: crates/opencrt/ui/main.slint:3747
+#: crates/opencrt/ui/main.slint:3743
 msgid "Keyword:"
 msgstr "Kulcsszó:"
 
-#: crates/opencrt/ui/main.slint:3752
+#: crates/opencrt/ui/main.slint:3748
 msgid "regular expression"
 msgstr "reguláris kifejezés"
 
-#: crates/opencrt/ui/main.slint:3752
+#: crates/opencrt/ui/main.slint:3748
 msgid "word or phrase"
 msgstr "szó vagy kifejezés"
 
-#: crates/opencrt/ui/main.slint:3759 crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:3755 crates/opencrt/ui/main.slint:7377
 msgid "Colour:"
 msgstr "Szín:"
 
-#: crates/opencrt/ui/main.slint:3771
+#: crates/opencrt/ui/main.slint:3767
 msgid "#rrggbb"
 msgstr "#rrggbb"
 
-#: crates/opencrt/ui/main.slint:3784
+#: crates/opencrt/ui/main.slint:3780
 msgid "Regular expression"
 msgstr "Reguláris kifejezés"
 
-#: crates/opencrt/ui/main.slint:3790
+#: crates/opencrt/ui/main.slint:3786
 msgid "Whole words"
 msgstr "Teljes szavak"
 
-#: crates/opencrt/ui/main.slint:3796
+#: crates/opencrt/ui/main.slint:3792
 msgid "Whole line"
 msgstr "Teljes sor"
 
-#: crates/opencrt/ui/main.slint:3806
+#: crates/opencrt/ui/main.slint:3802
 msgid "Colour the text only"
 msgstr "Csak a szöveg színezése"
 
-#: crates/opencrt/ui/main.slint:3812
+#: crates/opencrt/ui/main.slint:3808
 msgid "Bold"
 msgstr "Félkövér"
 
-#: crates/opencrt/ui/main.slint:3822
+#: crates/opencrt/ui/main.slint:3818
 msgid "Add"
 msgstr "Hozzáadás"
 
-#: crates/opencrt/ui/main.slint:3835
+#: crates/opencrt/ui/main.slint:3831
 msgid "Mapped keys (one per line):"
 msgstr "Hozzárendelt billentyűk (soronként egy):"
 
-#: crates/opencrt/ui/main.slint:3840 crates/opencrt/ui/main.slint:6990
+#: crates/opencrt/ui/main.slint:3836 crates/opencrt/ui/main.slint:6995
 msgid "Import..."
 msgstr "Importálás..."
 
-#: crates/opencrt/ui/main.slint:3844 crates/opencrt/ui/main.slint:6998
+#: crates/opencrt/ui/main.slint:3840 crates/opencrt/ui/main.slint:7003
 msgid "Export..."
 msgstr "Exportálás..."
 
-#: crates/opencrt/ui/main.slint:3854
+#: crates/opencrt/ui/main.slint:3850
 msgid ""
 "Key = what it does, e.g. F5 = show running-config\\r, Ctrl+K = menu: clear-"
 "screen, Alt+F1 = run: wireshark. Keys: F1-F24, Up, Home, PageUp, Insert, "
@@ -1790,33 +1786,33 @@ msgid ""
 "their own (Session Options > Keyboard)."
 msgstr "Billentyű = művelet, pl. F5 = show running-config\\r, Ctrl+K = menu: clear-screen, Alt+F1 = run: wireshark. Billentyűk: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, Enter, Escape, Space vagy egy karakter (Ctrl vagy Alt módosítóval), továbbá Ctrl+ Alt+ Shift+. A szöveget elküldi (\\r az Enter); vagy script: fájl, menu: parancs, run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop. A munkamenetek sajátokat is hozzáadhatnak (Munkamenet-beállítások > Billentyűzet)."
 
-#: crates/opencrt/ui/main.slint:3897
+#: crates/opencrt/ui/main.slint:3893
 msgid "Yes"
 msgstr "Igen"
 
-#: crates/opencrt/ui/main.slint:3902
+#: crates/opencrt/ui/main.slint:3898
 msgid "No"
 msgstr "Nem"
 
-#: crates/opencrt/ui/main.slint:3946
+#: crates/opencrt/ui/main.slint:3942
 msgid "Unlock Saved Passwords"
 msgstr "Mentett jelszavak feloldása"
 
-#: crates/opencrt/ui/main.slint:3946
+#: crates/opencrt/ui/main.slint:3942
 msgid "Import SecureCRT Passwords"
 msgstr "SecureCRT-jelszavak importálása"
 
-#: crates/opencrt/ui/main.slint:3946
+#: crates/opencrt/ui/main.slint:3942
 msgid "Master Password"
 msgstr "Mesterjelszó"
 
-#: crates/opencrt/ui/main.slint:3950
+#: crates/opencrt/ui/main.slint:3946
 msgid ""
 "Saved passwords and key passphrases are protected by the master password. "
 "Enter it to use them until OpenCRT closes."
 msgstr "A mentett jelszavakat és kulcsjelmondatokat a mesterjelszó védi. Adja meg, hogy az OpenCRT bezárásáig használhassa őket."
 
-#: crates/opencrt/ui/main.slint:3952
+#: crates/opencrt/ui/main.slint:3948
 msgid ""
 "{} imported sessions have saved passwords. Enter SecureCRT's Config "
 "Passphrase (SecureCRT asks for it when it starts) to import them. If "
@@ -1824,7 +1820,7 @@ msgid ""
 "window, then import again."
 msgstr "Mentett jelszóval rendelkező importált munkamenetek: {}. Az importáláshoz adja meg a SecureCRT konfigurációs jelmondatát (Config Passphrase; a SecureCRT indításkor kéri). Ha a SecureCRT-ben nincs ilyen, állítson be egyet az indítóablak Change Passphrase... gombjával, majd importáljon újra."
 
-#: crates/opencrt/ui/main.slint:3954
+#: crates/opencrt/ui/main.slint:3950
 msgid ""
 "Keep saved passwords and key passphrases in the settings folder, encrypted "
 "with a master password, instead of this computer's keychain. Settings Sync "
@@ -1832,1068 +1828,1072 @@ msgid ""
 "recovered: the saved passwords would have to be entered again."
 msgstr "Mentett jelszavak és kulcsjelmondatok tárolása a beállítások mappájában, mesterjelszóval titkosítva, a számítógép kulcstartója helyett. A Beállítások szinkronizálása továbbra is titkosítva viszi át őket. Az elfelejtett mesterjelszó nem állítható helyre: a mentett jelszavakat újra meg kellene adni."
 
-#: crates/opencrt/ui/main.slint:3955
+#: crates/opencrt/ui/main.slint:3951
 msgid ""
 "Change the master password, or remove it to move the saved passwords back to "
 "this computer's keychain."
 msgstr "A mesterjelszó módosítása, vagy eltávolítása, hogy a mentett jelszavak visszakerüljenek a számítógép kulcstartójába."
 
-#: crates/opencrt/ui/main.slint:3959
+#: crates/opencrt/ui/main.slint:3955
 msgid "Master password:"
 msgstr "Mesterjelszó:"
 
-#: crates/opencrt/ui/main.slint:3959
+#: crates/opencrt/ui/main.slint:3955
 msgid "Config passphrase:"
 msgstr "Konfigurációs jelmondat:"
 
-#: crates/opencrt/ui/main.slint:3959
+#: crates/opencrt/ui/main.slint:3955
 msgid "Current password:"
 msgstr "Jelenlegi jelszó:"
 
-#: crates/opencrt/ui/main.slint:3968
+#: crates/opencrt/ui/main.slint:3964
 msgid "New password:"
 msgstr "Új jelszó:"
 
-#: crates/opencrt/ui/main.slint:3999
+#: crates/opencrt/ui/main.slint:3995
 msgid "Unlock"
 msgstr "Feloldás"
 
-#: crates/opencrt/ui/main.slint:3999
+#: crates/opencrt/ui/main.slint:3995
 msgid "Set"
 msgstr "Beállítás"
 
-#: crates/opencrt/ui/main.slint:3999
+#: crates/opencrt/ui/main.slint:3995
 msgid "Import"
 msgstr "Importálás"
 
-#: crates/opencrt/ui/main.slint:3999
+#: crates/opencrt/ui/main.slint:3995
 msgid "Change"
 msgstr "Módosítás"
 
-#: crates/opencrt/ui/main.slint:4004
+#: crates/opencrt/ui/main.slint:4000
 msgid "Skip"
 msgstr "Kihagyás"
 
-#: crates/opencrt/ui/main.slint:4046
+#: crates/opencrt/ui/main.slint:4042
 msgid "Send Files"
 msgstr "Fájlok küldése"
 
-#: crates/opencrt/ui/main.slint:4085
+#: crates/opencrt/ui/main.slint:4081
 msgid "SFTP"
 msgstr "SFTP"
 
-#: crates/opencrt/ui/main.slint:4090
+#: crates/opencrt/ui/main.slint:4086
 msgid "Always send dropped files this way (Global Options > File Transfer)"
 msgstr "A ráejtett fájlok küldése mindig így (Globális beállítások > Fájlátvitel)"
 
-#: crates/opencrt/ui/main.slint:4114
+#: crates/opencrt/ui/main.slint:4110
 msgid "wait_for(\"login:\", 10);\nsend(\"admin\\r\");"
 msgstr "wait_for(\"login:\", 10);\nsend(\"admin\\r\");"
 
-#: crates/opencrt/ui/main.slint:4132
+#: crates/opencrt/ui/main.slint:4128
 msgid "Save As..."
 msgstr "Mentés másként..."
 
-#: crates/opencrt/ui/main.slint:4136
+#: crates/opencrt/ui/main.slint:4132
 msgid "Check"
 msgstr "Ellenőrzés"
 
-#: crates/opencrt/ui/main.slint:4141
+#: crates/opencrt/ui/main.slint:4137
 msgid "Run"
 msgstr "Futtatás"
 
-#: crates/opencrt/ui/main.slint:4160
+#: crates/opencrt/ui/main.slint:4156
 msgid "Cmd+O"
 msgstr "Cmd+O"
 
-#: crates/opencrt/ui/main.slint:4160
+#: crates/opencrt/ui/main.slint:4156
 msgid "Ctrl+Shift+T"
 msgstr "Ctrl+Shift+T"
 
-#: crates/opencrt/ui/main.slint:4160
+#: crates/opencrt/ui/main.slint:4156
 msgid "Quick Open: find a saved session or type a host"
 msgstr "Gyors megnyitás: mentett munkamenet keresése vagy gazdagép beírása"
 
-#: crates/opencrt/ui/main.slint:4161
+#: crates/opencrt/ui/main.slint:4157
 msgid "Cmd+C"
 msgstr "Cmd+C"
 
-#: crates/opencrt/ui/main.slint:4161
+#: crates/opencrt/ui/main.slint:4157
 msgid "Ctrl+C, Ctrl+Insert"
 msgstr "Ctrl+C, Ctrl+Insert"
 
-#: crates/opencrt/ui/main.slint:4161
+#: crates/opencrt/ui/main.slint:4157
 msgid "Copy the selection"
 msgstr "A kijelölés másolása"
 
-#: crates/opencrt/ui/main.slint:4161
+#: crates/opencrt/ui/main.slint:4157
 msgid "Copy the selection (with none, Ctrl+C goes to the host)"
 msgstr "A kijelölés másolása (kijelölés nélkül a Ctrl+C a gazdagéphez megy)"
 
-#: crates/opencrt/ui/main.slint:4162
+#: crates/opencrt/ui/main.slint:4158
 msgid "Cmd+V"
 msgstr "Cmd+V"
 
-#: crates/opencrt/ui/main.slint:4162
+#: crates/opencrt/ui/main.slint:4158
 msgid "Ctrl+V, Shift+Insert"
 msgstr "Ctrl+V, Shift+Insert"
 
-#: crates/opencrt/ui/main.slint:4163
+#: crates/opencrt/ui/main.slint:4159
 msgid "Middle click"
 msgstr "Középső kattintás"
 
-#: crates/opencrt/ui/main.slint:4164
+#: crates/opencrt/ui/main.slint:4160
 msgid "Ctrl+Tab"
 msgstr "Ctrl+Tab"
 
-#: crates/opencrt/ui/main.slint:4164
+#: crates/opencrt/ui/main.slint:4160
 msgid "Next tab"
 msgstr "Következő lap"
 
-#: crates/opencrt/ui/main.slint:4165
+#: crates/opencrt/ui/main.slint:4161
 msgid "Ctrl+Shift+Tab"
 msgstr "Ctrl+Shift+Tab"
 
-#: crates/opencrt/ui/main.slint:4165
+#: crates/opencrt/ui/main.slint:4161
 msgid "Previous tab"
 msgstr "Előző lap"
 
-#: crates/opencrt/ui/main.slint:4166
+#: crates/opencrt/ui/main.slint:4162
 msgid "Cmd+1 ... Cmd+9"
 msgstr "Cmd+1 ... Cmd+9"
 
-#: crates/opencrt/ui/main.slint:4166
+#: crates/opencrt/ui/main.slint:4162
 msgid "Alt+1 ... Alt+9"
 msgstr "Alt+1 ... Alt+9"
 
-#: crates/opencrt/ui/main.slint:4166
+#: crates/opencrt/ui/main.slint:4162
 msgid "Go to tab 1 to 9"
 msgstr "Ugrás az 1-9. lapra"
 
-#: crates/opencrt/ui/main.slint:4167
+#: crates/opencrt/ui/main.slint:4163
 msgid "Option+Return"
 msgstr "Option+Return"
 
-#: crates/opencrt/ui/main.slint:4167
+#: crates/opencrt/ui/main.slint:4163
 msgid "Alt+Enter"
 msgstr "Alt+Enter"
 
-#: crates/opencrt/ui/main.slint:4167
+#: crates/opencrt/ui/main.slint:4163
 msgid "Full screen"
 msgstr "Teljes képernyő"
 
-#: crates/opencrt/ui/main.slint:4168
+#: crates/opencrt/ui/main.slint:4164
 msgid "Shift+PageUp, Shift+PageDown"
 msgstr "Shift+PageUp, Shift+PageDown"
 
-#: crates/opencrt/ui/main.slint:4168
+#: crates/opencrt/ui/main.slint:4164
 msgid "Scroll back or forward a page"
 msgstr "Görgetés egy oldallal vissza vagy előre"
 
-#: crates/opencrt/ui/main.slint:4169
+#: crates/opencrt/ui/main.slint:4165
 msgid "Cmd+wheel"
 msgstr "Cmd+görgő"
 
-#: crates/opencrt/ui/main.slint:4169
+#: crates/opencrt/ui/main.slint:4165
 msgid "Ctrl+wheel"
 msgstr "Ctrl+görgő"
 
-#: crates/opencrt/ui/main.slint:4169
+#: crates/opencrt/ui/main.slint:4165
 msgid "Font size"
 msgstr "Betűméret"
 
-#: crates/opencrt/ui/main.slint:4170
+#: crates/opencrt/ui/main.slint:4166
 msgid "Cmd+click"
 msgstr "Cmd+kattintás"
 
-#: crates/opencrt/ui/main.slint:4170
+#: crates/opencrt/ui/main.slint:4166
 msgid "Ctrl+click"
 msgstr "Ctrl+kattintás"
 
-#: crates/opencrt/ui/main.slint:4170
+#: crates/opencrt/ui/main.slint:4166
 msgid "Open a web address in the browser"
 msgstr "Webcím megnyitása a böngészőben"
 
-#: crates/opencrt/ui/main.slint:4171
+#: crates/opencrt/ui/main.slint:4167
 msgid "Enter"
 msgstr "Enter"
 
-#: crates/opencrt/ui/main.slint:4171
+#: crates/opencrt/ui/main.slint:4167
 msgid "Reconnect a disconnected tab"
 msgstr "Bontott kapcsolatú lap újracsatlakoztatása"
 
-#: crates/opencrt/ui/main.slint:4172
+#: crates/opencrt/ui/main.slint:4168
 msgid "Ctrl+C, Escape"
 msgstr "Ctrl+C, Escape"
 
-#: crates/opencrt/ui/main.slint:4172
+#: crates/opencrt/ui/main.slint:4168
 msgid "Cancel a file transfer"
 msgstr "Fájlátvitel megszakítása"
 
-#: crates/opencrt/ui/main.slint:4173
+#: crates/opencrt/ui/main.slint:4169
 msgid "Cmd+K, Cmd+T"
 msgstr "Cmd+K, Cmd+T"
 
-#: crates/opencrt/ui/main.slint:4173
+#: crates/opencrt/ui/main.slint:4169
 msgid "Quick Connect, Connect in Tab"
 msgstr "Gyors csatlakozás, Csatlakozás lapon"
 
-#: crates/opencrt/ui/main.slint:4174
+#: crates/opencrt/ui/main.slint:4170
 msgid "Cmd+E"
 msgstr "Cmd+E"
 
-#: crates/opencrt/ui/main.slint:4174
+#: crates/opencrt/ui/main.slint:4170
 msgid "Open a saved session (the Session Manager's filter)"
 msgstr "Mentett munkamenet megnyitása (a Munkamenet-kezelő szűrője)"
 
-#: crates/opencrt/ui/main.slint:4175
+#: crates/opencrt/ui/main.slint:4171
 msgid "Cmd+L"
 msgstr "Cmd+L"
 
-#: crates/opencrt/ui/main.slint:4175
+#: crates/opencrt/ui/main.slint:4171
 msgid "Connect a local shell"
 msgstr "Helyi shell csatlakoztatása"
 
-#: crates/opencrt/ui/main.slint:4177 crates/opencrt/ui/main.slint:5861
+#: crates/opencrt/ui/main.slint:4173 crates/opencrt/ui/main.slint:5868
 msgid "Keyboard Shortcuts"
 msgstr "Billentyűparancsok"
 
-#: crates/opencrt/ui/main.slint:4197
+#: crates/opencrt/ui/main.slint:4193
 msgid ""
 "Add your own in Global Options > Keyboard, or per session in Session Options "
 "> Keyboard. For example, F1 = menu: shortcuts opens this list."
 msgstr "Sajátokat a Globális beállítások > Billentyűzet oldalon, munkamenetenként a Munkamenet-beállítások > Billentyűzet oldalon adhat hozzá. Például az F1 = menu: shortcuts megnyitja ezt a listát."
 
-#: crates/opencrt/ui/main.slint:4221 crates/opencrt/ui/main.slint:5869
+#: crates/opencrt/ui/main.slint:4217 crates/opencrt/ui/main.slint:5876
 msgid "About OpenCRT"
 msgstr "Az OpenCRT névjegye"
 
-#: crates/opencrt/ui/main.slint:4233
+#: crates/opencrt/ui/main.slint:4229
 msgid "Version {}"
 msgstr "Verzió: {}"
 
-#: crates/opencrt/ui/main.slint:4238
+#: crates/opencrt/ui/main.slint:4234
 msgid "Secure terminal client for Windows, macOS and Linux."
 msgstr "Biztonságos terminálkliens Windowsra, macOS-re és Linuxra."
 
-#: crates/opencrt/ui/main.slint:4242
+#: crates/opencrt/ui/main.slint:4238
 msgid "© 2026 Kim Attree"
 msgstr "© 2026 Kim Attree"
 
-#: crates/opencrt/ui/main.slint:4250
+#: crates/opencrt/ui/main.slint:4246
 msgid "Protocols"
 msgstr "Protokollok"
 
-#: crates/opencrt/ui/main.slint:4251
+#: crates/opencrt/ui/main.slint:4247
 msgid "SSH2, SFTP, Telnet, RDP, VNC, serial, raw TCP, local shell"
 msgstr "SSH2, SFTP, Telnet, RDP, VNC, soros, nyers TCP, helyi shell"
 
-#: crates/opencrt/ui/main.slint:4254
+#: crates/opencrt/ui/main.slint:4250
 msgid "Config"
 msgstr "Konfiguráció"
 
-#: crates/opencrt/ui/main.slint:4258
+#: crates/opencrt/ui/main.slint:4254
 msgid "Licence"
 msgstr "Licenc"
 
-#: crates/opencrt/ui/main.slint:4259
+#: crates/opencrt/ui/main.slint:4255
 msgid "GPL-3.0-only, as built with Slint; source code Apache-2.0"
 msgstr "GPL-3.0-only, a Slinttel építve; a forráskód Apache-2.0"
 
-#: crates/opencrt/ui/main.slint:4262
+#: crates/opencrt/ui/main.slint:4258
 msgid "Fonts"
 msgstr "Betűtípusok"
 
-#: crates/opencrt/ui/main.slint:4263
+#: crates/opencrt/ui/main.slint:4259
 msgid "IBM Plex Sans and Mono, SIL Open Font License 1.1"
 msgstr "IBM Plex Sans és Mono, SIL Open Font License 1.1"
 
-#: crates/opencrt/ui/main.slint:4276 crates/opencrt/ui/main.slint:5865
+#: crates/opencrt/ui/main.slint:4272 crates/opencrt/ui/main.slint:5872
 msgid "Check for Updates"
 msgstr "Frissítések keresése"
 
-#: crates/opencrt/ui/main.slint:4280
+#: crates/opencrt/ui/main.slint:4276
 msgid "Release Notes"
 msgstr "Kiadási megjegyzések"
 
-#: crates/opencrt/ui/main.slint:4284
+#: crates/opencrt/ui/main.slint:4280
 msgid "Update Now"
 msgstr "Frissítés most"
 
-#: crates/opencrt/ui/main.slint:4376
+#: crates/opencrt/ui/main.slint:4372
 msgid "Download"
 msgstr "Letöltés"
 
-#: crates/opencrt/ui/main.slint:4376
+#: crates/opencrt/ui/main.slint:4372
 msgid "Upload"
 msgstr "Feltöltés"
 
-#: crates/opencrt/ui/main.slint:4380
+#: crates/opencrt/ui/main.slint:4376
 msgid "Edit (opens here, uploads on save)"
 msgstr "Szerkesztés (itt nyílik meg, mentéskor feltölti)"
 
-#: crates/opencrt/ui/main.slint:4397
+#: crates/opencrt/ui/main.slint:4393
 msgid "Copy Path"
 msgstr "Elérési út másolása"
 
-#: crates/opencrt/ui/main.slint:4402
+#: crates/opencrt/ui/main.slint:4398
 msgid "Refresh"
 msgstr "Újratöltés"
 
-#: crates/opencrt/ui/main.slint:4411
+#: crates/opencrt/ui/main.slint:4407
 msgid "Remote site:"
 msgstr "Távoli hely:"
 
-#: crates/opencrt/ui/main.slint:4411
+#: crates/opencrt/ui/main.slint:4407
 msgid "Local site:"
 msgstr "Helyi hely:"
 
-#: crates/opencrt/ui/main.slint:4419
+#: crates/opencrt/ui/main.slint:4415
 msgid "Up"
 msgstr "Fel"
 
-#: crates/opencrt/ui/main.slint:4429
+#: crates/opencrt/ui/main.slint:4425
 msgid "Filename"
 msgstr "Fájlnév"
 
-#: crates/opencrt/ui/main.slint:4437
+#: crates/opencrt/ui/main.slint:4433
 msgid "Filesize"
 msgstr "Fájlméret"
 
-#: crates/opencrt/ui/main.slint:4446
+#: crates/opencrt/ui/main.slint:4442
 msgid "Filetype"
 msgstr "Fájltípus"
 
-#: crates/opencrt/ui/main.slint:4454
+#: crates/opencrt/ui/main.slint:4450
 msgid "Last modified"
 msgstr "Utolsó módosítás"
 
-#: crates/opencrt/ui/main.slint:4462
+#: crates/opencrt/ui/main.slint:4458
 msgid "Permissions"
 msgstr "Jogosultságok"
 
-#: crates/opencrt/ui/main.slint:4470
+#: crates/opencrt/ui/main.slint:4466
 msgid "Owner/Group"
 msgstr "Tulajdonos/csoport"
 
-#: crates/opencrt/ui/main.slint:4568
+#: crates/opencrt/ui/main.slint:4564
 msgid "Filter"
 msgstr "Szűrő"
 
-#: crates/opencrt/ui/main.slint:4573
+#: crates/opencrt/ui/main.slint:4569
 msgid "Hidden"
 msgstr "Rejtett"
 
-#: crates/opencrt/ui/main.slint:4578
+#: crates/opencrt/ui/main.slint:4574
 msgid "Follow shell"
 msgstr "Shell követése"
 
-#: crates/opencrt/ui/main.slint:4609
+#: crates/opencrt/ui/main.slint:4605
 msgid "Cancel Transfer"
 msgstr "Átvitel megszakítása"
 
-#: crates/opencrt/ui/main.slint:4613
+#: crates/opencrt/ui/main.slint:4609
 msgid "Retry"
 msgstr "Újra"
 
-#: crates/opencrt/ui/main.slint:4621
+#: crates/opencrt/ui/main.slint:4617
 msgid "Clear List"
 msgstr "Lista törlése"
 
-#: crates/opencrt/ui/main.slint:4632
+#: crates/opencrt/ui/main.slint:4628
 msgid "Local file"
 msgstr "Helyi fájl"
 
-#: crates/opencrt/ui/main.slint:4637
+#: crates/opencrt/ui/main.slint:4633
 msgid "Direction"
 msgstr "Irány"
 
-#: crates/opencrt/ui/main.slint:4642
+#: crates/opencrt/ui/main.slint:4638
 msgid "Remote file"
 msgstr "Távoli fájl"
 
-#: crates/opencrt/ui/main.slint:4647
+#: crates/opencrt/ui/main.slint:4643
 msgid "Size"
 msgstr "Méret"
 
-#: crates/opencrt/ui/main.slint:4653
+#: crates/opencrt/ui/main.slint:4649
 msgid "Reason"
 msgstr "Ok"
 
-#: crates/opencrt/ui/main.slint:4653
+#: crates/opencrt/ui/main.slint:4649
 msgid "Status"
 msgstr "Állapot"
 
-#: crates/opencrt/ui/main.slint:4730
+#: crates/opencrt/ui/main.slint:4726
 msgid "Queued files ({})"
 msgstr "Várakozó fájlok ({})"
 
-#: crates/opencrt/ui/main.slint:4730
+#: crates/opencrt/ui/main.slint:4726
 msgid "Failed transfers ({})"
 msgstr "Sikertelen átvitelek ({})"
 
-#: crates/opencrt/ui/main.slint:4730
+#: crates/opencrt/ui/main.slint:4726
 msgid "Successful transfers ({})"
 msgstr "Sikeres átvitelek ({})"
 
-#: crates/opencrt/ui/main.slint:4832
+#: crates/opencrt/ui/main.slint:4828
 msgid "Quick Open"
 msgstr "Gyors megnyitás"
 
-#: crates/opencrt/ui/main.slint:4860
+#: crates/opencrt/ui/main.slint:4856
 msgid "Search saved sessions, or type user@host"
 msgstr "Mentett munkamenetek keresése, vagy írja be: user@host"
 
-#: crates/opencrt/ui/main.slint:4899
+#: crates/opencrt/ui/main.slint:4895
 msgid "No saved session matches."
 msgstr "Nincs egyező mentett munkamenet."
 
-#: crates/opencrt/ui/main.slint:4899
+#: crates/opencrt/ui/main.slint:4895
 msgid "Enter connects  ·  Shift+Enter opens an SFTP GUI tab  ·  Esc closes"
 msgstr "Enter: csatlakozás  ·  Shift+Enter: SFTP GUI-lap megnyitása  ·  Esc: bezárás"
 
-#: crates/opencrt/ui/main.slint:4969
+#: crates/opencrt/ui/main.slint:4965
 msgid "Ready"
 msgstr "Kész"
 
-#: crates/opencrt/ui/main.slint:5274 crates/opencrt/ui/main.slint:5745
+#: crates/opencrt/ui/main.slint:5271 crates/opencrt/ui/main.slint:5742
 msgid "Script"
 msgstr "Szkript"
 
-#: crates/opencrt/ui/main.slint:5420
+#: crates/opencrt/ui/main.slint:5417
 msgid "File"
 msgstr "Fájl"
 
-#: crates/opencrt/ui/main.slint:5422
+#: crates/opencrt/ui/main.slint:5419
 msgid "Quick Connect..."
 msgstr "Gyors csatlakozás..."
 
-#: crates/opencrt/ui/main.slint:5426
+#: crates/opencrt/ui/main.slint:5423
 msgid "Quick Open... (Cmd+O)"
 msgstr "Gyors megnyitás... (Cmd+O)"
 
-#: crates/opencrt/ui/main.slint:5426
+#: crates/opencrt/ui/main.slint:5423
 msgid "Quick Open... (Ctrl+Shift+T)"
 msgstr "Gyors megnyitás... (Ctrl+Shift+T)"
 
-#: crates/opencrt/ui/main.slint:5430
+#: crates/opencrt/ui/main.slint:5427
 msgid "Connect in Tab..."
 msgstr "Csatlakozás lapon..."
 
-#: crates/opencrt/ui/main.slint:5434 crates/opencrt/ui/main.slint:5921
+#: crates/opencrt/ui/main.slint:5431 crates/opencrt/ui/main.slint:5928
 msgid "Connect Local Shell"
 msgstr "Helyi shell csatlakoztatása"
 
-#: crates/opencrt/ui/main.slint:5454
+#: crates/opencrt/ui/main.slint:5451
 msgid "Disconnect All"
 msgstr "Összes kapcsolat bontása"
 
-#: crates/opencrt/ui/main.slint:5459
+#: crates/opencrt/ui/main.slint:5456
 msgid "Close Tab"
 msgstr "Lap bezárása"
 
-#: crates/opencrt/ui/main.slint:5465
+#: crates/opencrt/ui/main.slint:5462
 msgid "Stop Logging"
 msgstr "Naplózás leállítása"
 
-#: crates/opencrt/ui/main.slint:5465
+#: crates/opencrt/ui/main.slint:5462
 msgid "Log Session..."
 msgstr "Munkamenet naplózása..."
 
-#: crates/opencrt/ui/main.slint:5470
+#: crates/opencrt/ui/main.slint:5467
 msgid "Stop Recording"
 msgstr "Rögzítés leállítása"
 
-#: crates/opencrt/ui/main.slint:5470
+#: crates/opencrt/ui/main.slint:5467
 msgid "Record Session (asciicast)..."
 msgstr "Munkamenet rögzítése (asciicast)..."
 
-#: crates/opencrt/ui/main.slint:5476 crates/opencrt/ui/main.slint:6002
+#: crates/opencrt/ui/main.slint:5473 crates/opencrt/ui/main.slint:6009
 msgid "Print Screen"
 msgstr "Képernyő nyomtatása"
 
-#: crates/opencrt/ui/main.slint:5481
+#: crates/opencrt/ui/main.slint:5478
 msgid "Print Selection"
 msgstr "Kijelölés nyomtatása"
 
-#: crates/opencrt/ui/main.slint:5486
+#: crates/opencrt/ui/main.slint:5483
 msgid "Stop Auto Print"
 msgstr "Automatikus nyomtatás leállítása"
 
-#: crates/opencrt/ui/main.slint:5486
+#: crates/opencrt/ui/main.slint:5483
 msgid "Auto Print"
 msgstr "Automatikus nyomtatás"
 
-#: crates/opencrt/ui/main.slint:5492
+#: crates/opencrt/ui/main.slint:5489
 msgid "Snapshots"
 msgstr "Pillanatképek"
 
-#: crates/opencrt/ui/main.slint:5494
+#: crates/opencrt/ui/main.slint:5491
 msgid "Save Snapshot..."
 msgstr "Pillanatkép mentése..."
 
-#: crates/opencrt/ui/main.slint:5518
+#: crates/opencrt/ui/main.slint:5515
 msgid "Exit"
 msgstr "Kilépés"
 
-#: crates/opencrt/ui/main.slint:5523
+#: crates/opencrt/ui/main.slint:5520
 msgid "Edit"
 msgstr "Szerkesztés"
 
-#: crates/opencrt/ui/main.slint:5530 crates/opencrt/ui/main.slint:6275
+#: crates/opencrt/ui/main.slint:5527 crates/opencrt/ui/main.slint:6282
 msgid "Copy with Colours"
 msgstr "Másolás színekkel"
 
-#: crates/opencrt/ui/main.slint:5540
+#: crates/opencrt/ui/main.slint:5537
 msgid "Copy and Paste"
 msgstr "Másolás és beillesztés"
 
-#: crates/opencrt/ui/main.slint:5545 crates/opencrt/ui/main.slint:6291
+#: crates/opencrt/ui/main.slint:5542 crates/opencrt/ui/main.slint:6298
 msgid "Select All"
 msgstr "Összes kijelölése"
 
-#: crates/opencrt/ui/main.slint:5550
+#: crates/opencrt/ui/main.slint:5547
 msgid "Find..."
 msgstr "Keresés..."
 
-#: crates/opencrt/ui/main.slint:5560
+#: crates/opencrt/ui/main.slint:5557
 msgid "Clear Screen"
 msgstr "Képernyő törlése"
 
-#: crates/opencrt/ui/main.slint:5565 crates/opencrt/ui/main.slint:6295
+#: crates/opencrt/ui/main.slint:5562 crates/opencrt/ui/main.slint:6302
 msgid "Clear Scrollback"
 msgstr "Visszagörgetési puffer törlése"
 
-#: crates/opencrt/ui/main.slint:5570
+#: crates/opencrt/ui/main.slint:5567
 msgid "Clear Screen and Scrollback"
 msgstr "Képernyő és visszagörgetési puffer törlése"
 
-#: crates/opencrt/ui/main.slint:5575
+#: crates/opencrt/ui/main.slint:5572
 msgid "Reset Terminal"
 msgstr "Terminál alaphelyzetbe állítása"
 
-#: crates/opencrt/ui/main.slint:5580 crates/opencrt/ui/main.slint:6299
+#: crates/opencrt/ui/main.slint:5577 crates/opencrt/ui/main.slint:6306
 msgid "Send Break"
 msgstr "Break küldése"
 
-#: crates/opencrt/ui/main.slint:5586
+#: crates/opencrt/ui/main.slint:5583
 msgid "Send Input to All Tabs"
 msgstr "Bevitel küldése minden lapra"
 
-#: crates/opencrt/ui/main.slint:5592
+#: crates/opencrt/ui/main.slint:5589
 msgid "View"
 msgstr "Nézet"
 
-#: crates/opencrt/ui/main.slint:5594
+#: crates/opencrt/ui/main.slint:5591
 msgid "Toolbar"
 msgstr "Eszköztár"
 
-#: crates/opencrt/ui/main.slint:5599
+#: crates/opencrt/ui/main.slint:5596
 msgid "Status Bar"
 msgstr "Állapotsor"
 
-#: crates/opencrt/ui/main.slint:5614
+#: crates/opencrt/ui/main.slint:5611
 msgid "Command Window"
 msgstr "Parancsablak"
 
-#: crates/opencrt/ui/main.slint:5619
+#: crates/opencrt/ui/main.slint:5616
 msgid "Hex View"
 msgstr "Hexa nézet"
 
-#: crates/opencrt/ui/main.slint:5624
+#: crates/opencrt/ui/main.slint:5621
 msgid "Show Control Characters"
 msgstr "Vezérlőkarakterek megjelenítése"
 
-#: crates/opencrt/ui/main.slint:5630
+#: crates/opencrt/ui/main.slint:5627
 msgid "Button Bar"
 msgstr "Gombsor"
 
-#: crates/opencrt/ui/main.slint:5636
+#: crates/opencrt/ui/main.slint:5633
 msgid "Full Screen"
 msgstr "Teljes képernyő"
 
-#: crates/opencrt/ui/main.slint:5641
+#: crates/opencrt/ui/main.slint:5638
 msgid "Always on Top"
 msgstr "Mindig felül"
 
-#: crates/opencrt/ui/main.slint:5648
+#: crates/opencrt/ui/main.slint:5645
 msgid "Larger Font"
 msgstr "Nagyobb betű"
 
-#: crates/opencrt/ui/main.slint:5652
+#: crates/opencrt/ui/main.slint:5649
 msgid "Smaller Font"
 msgstr "Kisebb betű"
 
-#: crates/opencrt/ui/main.slint:5657
+#: crates/opencrt/ui/main.slint:5654
 msgid "Options"
 msgstr "Beállítások"
 
-#: crates/opencrt/ui/main.slint:5664
+#: crates/opencrt/ui/main.slint:5661
 msgid "Default Session..."
 msgstr "Alapértelmezett munkamenet..."
 
-#: crates/opencrt/ui/main.slint:5668
+#: crates/opencrt/ui/main.slint:5665
 msgid "Firewalls..."
 msgstr "Tűzfalak..."
 
-#: crates/opencrt/ui/main.slint:5672
+#: crates/opencrt/ui/main.slint:5669
 msgid "Colour Schemes..."
 msgstr "Színsémák..."
 
-#: crates/opencrt/ui/main.slint:5676
+#: crates/opencrt/ui/main.slint:5673
 msgid "Global Options..."
 msgstr "Globális beállítások..."
 
-#: crates/opencrt/ui/main.slint:5681
+#: crates/opencrt/ui/main.slint:5678
 msgid "Transfer"
 msgstr "Átvitel"
 
-#: crates/opencrt/ui/main.slint:5693
+#: crates/opencrt/ui/main.slint:5690
 msgid "Send ASCII File..."
 msgstr "ASCII-fájl küldése..."
 
-#: crates/opencrt/ui/main.slint:5698
+#: crates/opencrt/ui/main.slint:5695
 msgid "Send Binary File..."
 msgstr "Bináris fájl küldése..."
 
-#: crates/opencrt/ui/main.slint:5703
+#: crates/opencrt/ui/main.slint:5700
 msgid "Stop Receive ASCII"
 msgstr "ASCII fogadásának leállítása"
 
-#: crates/opencrt/ui/main.slint:5703
+#: crates/opencrt/ui/main.slint:5700
 msgid "Receive ASCII..."
 msgstr "ASCII fogadása..."
 
-#: crates/opencrt/ui/main.slint:5708
+#: crates/opencrt/ui/main.slint:5705
 msgid "Zmodem Upload..."
 msgstr "Zmodem-feltöltés..."
 
-#: crates/opencrt/ui/main.slint:5714
+#: crates/opencrt/ui/main.slint:5711
 msgid "Send Xmodem..."
 msgstr "Küldés Xmodemmel..."
 
-#: crates/opencrt/ui/main.slint:5719
+#: crates/opencrt/ui/main.slint:5716
 msgid "Receive Xmodem..."
 msgstr "Fogadás Xmodemmel..."
 
-#: crates/opencrt/ui/main.slint:5724
+#: crates/opencrt/ui/main.slint:5721
 msgid "Send Ymodem..."
 msgstr "Küldés Ymodemmel..."
 
-#: crates/opencrt/ui/main.slint:5729
+#: crates/opencrt/ui/main.slint:5726
 msgid "Receive Ymodem"
 msgstr "Fogadás Ymodemmel"
 
-#: crates/opencrt/ui/main.slint:5734
+#: crates/opencrt/ui/main.slint:5731
 msgid "Send Kermit..."
 msgstr "Küldés Kermittel..."
 
-#: crates/opencrt/ui/main.slint:5739
+#: crates/opencrt/ui/main.slint:5736
 msgid "Receive Kermit"
 msgstr "Fogadás Kermittel"
 
-#: crates/opencrt/ui/main.slint:5747
+#: crates/opencrt/ui/main.slint:5744
 msgid "Run..."
 msgstr "Futtatás..."
 
-#: crates/opencrt/ui/main.slint:5757
+#: crates/opencrt/ui/main.slint:5754
 msgid "Script Editor..."
 msgstr "Szkriptszerkesztő..."
 
-#: crates/opencrt/ui/main.slint:5762
+#: crates/opencrt/ui/main.slint:5759
 msgid "Stop Recording..."
 msgstr "Rögzítés leállítása..."
 
-#: crates/opencrt/ui/main.slint:5762
+#: crates/opencrt/ui/main.slint:5759
 msgid "Start Recording"
 msgstr "Rögzítés indítása"
 
-#: crates/opencrt/ui/main.slint:5768
+#: crates/opencrt/ui/main.slint:5765
 msgid "Tools"
 msgstr "Eszközök"
 
-#: crates/opencrt/ui/main.slint:5770
+#: crates/opencrt/ui/main.slint:5767
 msgid "Create Public Key..."
 msgstr "Nyilvános kulcs létrehozása..."
 
-#: crates/opencrt/ui/main.slint:5774
+#: crates/opencrt/ui/main.slint:5771
 msgid "Host Keys..."
 msgstr "Gazdagépkulcsok..."
 
-#: crates/opencrt/ui/main.slint:5778
+#: crates/opencrt/ui/main.slint:5775
 msgid "Credentials Manager..."
 msgstr "Hitelesítőadat-kezelő..."
 
-#: crates/opencrt/ui/main.slint:5782
+#: crates/opencrt/ui/main.slint:5779
 msgid "Master Password..."
 msgstr "Mesterjelszó..."
 
-#: crates/opencrt/ui/main.slint:5786
+#: crates/opencrt/ui/main.slint:5783
 msgid "Agent Keys..."
 msgstr "Ügynökkulcsok..."
 
-#: crates/opencrt/ui/main.slint:5790
+#: crates/opencrt/ui/main.slint:5787
 msgid "Public Key Assistant..."
 msgstr "Nyilvánoskulcs-segéd..."
 
-#: crates/opencrt/ui/main.slint:5794
+#: crates/opencrt/ui/main.slint:5791
 msgid "Convert Private Key to OpenSSH..."
 msgstr "Titkos kulcs konvertálása OpenSSH formátumba..."
 
-#: crates/opencrt/ui/main.slint:5799
+#: crates/opencrt/ui/main.slint:5796
 msgid "Import OpenSSH Config"
 msgstr "OpenSSH-konfiguráció importálása"
 
-#: crates/opencrt/ui/main.slint:5803
+#: crates/opencrt/ui/main.slint:5800
 msgid "Import SecureCRT Sessions..."
 msgstr "SecureCRT-munkamenetek importálása..."
 
-#: crates/opencrt/ui/main.slint:5807
+#: crates/opencrt/ui/main.slint:5804
 msgid "Import Sessions..."
 msgstr "Munkamenetek importálása..."
 
-#: crates/opencrt/ui/main.slint:5811
+#: crates/opencrt/ui/main.slint:5808
 msgid "Export Sessions..."
 msgstr "Munkamenetek exportálása..."
 
-#: crates/opencrt/ui/main.slint:5816
+#: crates/opencrt/ui/main.slint:5813
 msgid "Window"
 msgstr "Ablak"
 
-#: crates/opencrt/ui/main.slint:5818
+#: crates/opencrt/ui/main.slint:5815
 msgid "Next Tab"
 msgstr "Következő lap"
 
-#: crates/opencrt/ui/main.slint:5823
+#: crates/opencrt/ui/main.slint:5820
 msgid "Previous Tab"
 msgstr "Előző lap"
 
-#: crates/opencrt/ui/main.slint:5829
+#: crates/opencrt/ui/main.slint:5826
 msgid "Tile Vertically"
 msgstr "Függőleges mozaik"
 
-#: crates/opencrt/ui/main.slint:5834
+#: crates/opencrt/ui/main.slint:5831
 msgid "Tile Horizontally"
 msgstr "Vízszintes mozaik"
 
-#: crates/opencrt/ui/main.slint:5839
+#: crates/opencrt/ui/main.slint:5836
 msgid "Untile"
 msgstr "Mozaik megszüntetése"
 
-#: crates/opencrt/ui/main.slint:5843
+#: crates/opencrt/ui/main.slint:5840
 msgid "Merge Tab Groups"
 msgstr "Lapcsoportok egyesítése"
 
-#: crates/opencrt/ui/main.slint:5859
+#: crates/opencrt/ui/main.slint:5857
+msgid "Language"
+msgstr "Nyelv"
+
+#: crates/opencrt/ui/main.slint:5866
 msgid "Help"
 msgstr "Súgó"
 
-#: crates/opencrt/ui/main.slint:5915
+#: crates/opencrt/ui/main.slint:5922
 msgid "Connect in Tab"
 msgstr "Csatlakozás lapon"
 
-#: crates/opencrt/ui/main.slint:5935
+#: crates/opencrt/ui/main.slint:5942
 msgid "PowerShell"
 msgstr "PowerShell"
 
-#: crates/opencrt/ui/main.slint:5939
+#: crates/opencrt/ui/main.slint:5946
 msgid "Command Prompt (classic)"
 msgstr "Parancssor (klasszikus)"
 
-#: crates/opencrt/ui/main.slint:5944
+#: crates/opencrt/ui/main.slint:5951
 msgid "WSL: {}"
 msgstr "WSL: {}"
 
-#: crates/opencrt/ui/main.slint:5969
+#: crates/opencrt/ui/main.slint:5976
 msgid "Quick connect: user@host"
 msgstr "Gyors csatlakozás: user@host"
 
-#: crates/opencrt/ui/main.slint:5989
+#: crates/opencrt/ui/main.slint:5996
 msgid "Find"
 msgstr "Keresés"
 
-#: crates/opencrt/ui/main.slint:5997
+#: crates/opencrt/ui/main.slint:6004
 msgid "Highlight words"
 msgstr "Szavak kiemelése"
 
-#: crates/opencrt/ui/main.slint:6249 crates/opencrt/ui/main.slint:6904
+#: crates/opencrt/ui/main.slint:6256 crates/opencrt/ui/main.slint:6909
 msgid "OpenCRT"
 msgstr "OpenCRT"
 
-#: crates/opencrt/ui/main.slint:6255
+#: crates/opencrt/ui/main.slint:6262
 msgid "File > Quick Connect, or type user@host in the toolbar's connect bar."
 msgstr "Fájl > Gyors csatlakozás, vagy írja be: user@host az eszköztár csatlakozási sávjába."
 
-#: crates/opencrt/ui/main.slint:6265
+#: crates/opencrt/ui/main.slint:6272
 msgid "Show Menu Bar"
 msgstr "Menüsor megjelenítése"
 
-#: crates/opencrt/ui/main.slint:6280
+#: crates/opencrt/ui/main.slint:6287
 msgid "Search the Web"
 msgstr "Keresés a weben"
 
-#: crates/opencrt/ui/main.slint:6392
+#: crates/opencrt/ui/main.slint:6399
 msgid "Default"
 msgstr "Alapértelmezett"
 
-#: crates/opencrt/ui/main.slint:6407
+#: crates/opencrt/ui/main.slint:6414
 msgid "New Bar..."
 msgstr "Új sáv..."
 
-#: crates/opencrt/ui/main.slint:6411
+#: crates/opencrt/ui/main.slint:6418
 msgid "Rename Bar..."
 msgstr "Sáv átnevezése..."
 
-#: crates/opencrt/ui/main.slint:6416
+#: crates/opencrt/ui/main.slint:6423
 msgid "Delete Bar..."
 msgstr "Sáv törlése..."
 
-#: crates/opencrt/ui/main.slint:6447
+#: crates/opencrt/ui/main.slint:6454
 msgid "Add a button that sends a command, e.g. show version\\r"
 msgstr "Parancsot küldő gomb hozzáadása, pl. show version\\r"
 
-#: crates/opencrt/ui/main.slint:6470
+#: crates/opencrt/ui/main.slint:6477
 msgid "Nothing received yet in this tab."
 msgstr "Ezen a lapon még nem érkezett semmi."
 
-#: crates/opencrt/ui/main.slint:6518
+#: crates/opencrt/ui/main.slint:6525
 msgid "characters are sent as you type; Enter sends Enter"
 msgstr "a karakterek gépelés közben elküldődnek; az Enter Entert küld"
 
-#: crates/opencrt/ui/main.slint:6518
+#: crates/opencrt/ui/main.slint:6525
 msgid "type a command and press Enter"
 msgstr "írjon be egy parancsot, és nyomja meg az Entert"
 
-#: crates/opencrt/ui/main.slint:6534
+#: crates/opencrt/ui/main.slint:6541
 msgid "History"
 msgstr "Előzmények"
 
-#: crates/opencrt/ui/main.slint:6545
+#: crates/opencrt/ui/main.slint:6552
 msgid "Send characters immediately"
 msgstr "Karakterek azonnali küldése"
 
-#: crates/opencrt/ui/main.slint:6566
+#: crates/opencrt/ui/main.slint:6573
 msgid "Find:"
 msgstr "Keresés:"
 
-#: crates/opencrt/ui/main.slint:6573
+#: crates/opencrt/ui/main.slint:6580
 msgid "text to find (Enter = next)"
 msgstr "keresendő szöveg (Enter = következő)"
 
-#: crates/opencrt/ui/main.slint:6579
+#: crates/opencrt/ui/main.slint:6586
 msgid "Next"
 msgstr "Következő"
 
-#: crates/opencrt/ui/main.slint:6583
+#: crates/opencrt/ui/main.slint:6590
 msgid "Previous"
 msgstr "Előző"
 
-#: crates/opencrt/ui/main.slint:6587
+#: crates/opencrt/ui/main.slint:6594
 msgid "Match case"
 msgstr "Kis- és nagybetűk megkülönböztetése"
 
-#: crates/opencrt/ui/main.slint:6636
+#: crates/opencrt/ui/main.slint:6643
 msgid "OpenCRT {} available"
 msgstr "Elérhető: OpenCRT {}"
 
-#: crates/opencrt/ui/main.slint:6651
+#: crates/opencrt/ui/main.slint:6658
 msgid "{n} tunnel tab"
 msgid_plural "{n} tunnel tabs"
 msgstr[0] "{n} alagútlap"
 msgstr[1] "{n} alagútlap"
 
-#: crates/opencrt/ui/main.slint:6675
+#: crates/opencrt/ui/main.slint:6682
 msgid "ALL TABS"
 msgstr "MINDEN LAP"
 
-#: crates/opencrt/ui/main.slint:6680
+#: crates/opencrt/ui/main.slint:6687
 msgid "LOG"
 msgstr "NAPLÓ"
 
-#: crates/opencrt/ui/main.slint:6684
+#: crates/opencrt/ui/main.slint:6691
 msgid "CAP"
 msgstr "CAP"
 
-#: crates/opencrt/ui/main.slint:6689
+#: crates/opencrt/ui/main.slint:6696
 msgid "NUM"
 msgstr "NUM"
 
-#: crates/opencrt/ui/main.slint:6740
+#: crates/opencrt/ui/main.slint:6747
 msgid "Session Options - {}"
 msgstr "Munkamenet-beállítások - {}"
 
-#: crates/opencrt/ui/main.slint:6951
+#: crates/opencrt/ui/main.slint:6956
 msgid "Host Keys"
 msgstr "Gazdagépkulcsok"
 
-#: crates/opencrt/ui/main.slint:6954
+#: crates/opencrt/ui/main.slint:6959
 msgid ""
 "Keys of the SSH servers you have accepted. Remove one when a server's key "
 "has changed for a known reason (for example after a reinstall); you are "
 "asked to accept the new key at the next connection."
 msgstr "Az Ön által elfogadott SSH-kiszolgálók kulcsai. Távolítson el egyet, ha egy kiszolgáló kulcsa ismert okból megváltozott (például újratelepítés után); a következő csatlakozáskor a program kéri az új kulcs elfogadását."
 
-#: crates/opencrt/ui/main.slint:6964
+#: crates/opencrt/ui/main.slint:6969
 msgid "No saved host keys."
 msgstr "Nincsenek mentett gazdagépkulcsok."
 
-#: crates/opencrt/ui/main.slint:6994
+#: crates/opencrt/ui/main.slint:6999
 msgid "Import SecureCRT..."
 msgstr "SecureCRT importálása..."
 
-#: crates/opencrt/ui/main.slint:7018
+#: crates/opencrt/ui/main.slint:7023
 msgid "Credentials Manager"
 msgstr "Hitelesítőadat-kezelő"
 
-#: crates/opencrt/ui/main.slint:7021
+#: crates/opencrt/ui/main.slint:7026
 msgid ""
 "Saved logins for SSH2, Telnet, RDP and VNC sessions. Pick one in Session "
 "Options > Authentication; its password is kept in the system keychain."
 msgstr "Mentett bejelentkezések SSH2-, Telnet-, RDP- és VNC-munkamenetekhez. Válasszon egyet a Munkamenet-beállítások > Hitelesítés oldalon; a jelszava a rendszer kulcstartójában tárolódik."
 
-#: crates/opencrt/ui/main.slint:7039
+#: crates/opencrt/ui/main.slint:7044
 msgid "Username"
 msgstr "Felhasználónév"
 
-#: crates/opencrt/ui/main.slint:7089
+#: crates/opencrt/ui/main.slint:7094
 msgid "Firewalls"
 msgstr "Tűzfalak"
 
-#: crates/opencrt/ui/main.slint:7092
+#: crates/opencrt/ui/main.slint:7097
 msgid ""
 "Proxies and gateways defined once and used by name: type a firewall's name "
 "into a session's Proxy field (Session Options > Connection)."
 msgstr "Egyszer megadott, név szerint használt proxyk és átjárók: írja be a tűzfal nevét a munkamenet Proxy mezőjébe (Munkamenet-beállítások > Kapcsolat)."
 
-#: crates/opencrt/ui/main.slint:7110
+#: crates/opencrt/ui/main.slint:7115
 msgid "Proxy"
 msgstr "Proxy"
 
-#: crates/opencrt/ui/main.slint:7204
+#: crates/opencrt/ui/main.slint:7209
 msgid "Agent Keys"
 msgstr "Ügynökkulcsok"
 
-#: crates/opencrt/ui/main.slint:7207
+#: crates/opencrt/ui/main.slint:7212
 msgid ""
 "Keys held by OpenCRT's own SSH agent. While it holds keys, sessions without "
 "a key file log in with them and forwarded agents use them; otherwise the "
 "system's agent is used. Keys stay in memory until OpenCRT closes."
 msgstr "Az OpenCRT saját SSH-ügynökében lévő kulcsok. Amíg az ügynök kulcsokat tárol, a kulcsfájl nélküli munkamenetek ezekkel jelentkeznek be, és a továbbított ügynökök is ezeket használják; egyébként a rendszer ügynöke működik. A kulcsok az OpenCRT bezárásáig a memóriában maradnak."
 
-#: crates/opencrt/ui/main.slint:7217
+#: crates/opencrt/ui/main.slint:7222
 msgid "No keys loaded."
 msgstr "Nincsenek betöltött kulcsok."
 
-#: crates/opencrt/ui/main.slint:7242
+#: crates/opencrt/ui/main.slint:7247
 msgid ""
 "Load these keys when OpenCRT starts (their file names are saved; passphrases "
 "are asked for)"
 msgstr "Ezen kulcsok betöltése az OpenCRT indításakor (a fájlnevek mentődnek; a jelmondatokat a program kéri)"
 
-#: crates/opencrt/ui/main.slint:7273
+#: crates/opencrt/ui/main.slint:7278
 msgid "Create Public Key"
 msgstr "Nyilvános kulcs létrehozása"
 
-#: crates/opencrt/ui/main.slint:7276
+#: crates/opencrt/ui/main.slint:7281
 msgid ""
 "Creates a key pair in OpenSSH format. Add the public key (copied to the "
 "clipboard when done) to ~/.ssh/authorized_keys on the server, or use Tools > "
 "Public Key Assistant."
 msgstr "OpenSSH formátumú kulcspárt hoz létre. Adja hozzá a nyilvános kulcsot (befejezéskor a vágólapra kerül) a kiszolgálón a ~/.ssh/authorized_keys fájlhoz, vagy használja az Eszközök > Nyilvánoskulcs-segéd menüpontot."
 
-#: crates/opencrt/ui/main.slint:7289
+#: crates/opencrt/ui/main.slint:7294
 msgid "Passphrase:"
 msgstr "Jelmondat:"
 
-#: crates/opencrt/ui/main.slint:7293
+#: crates/opencrt/ui/main.slint:7298
 msgid "recommended"
 msgstr "ajánlott"
 
-#: crates/opencrt/ui/main.slint:7307
+#: crates/opencrt/ui/main.slint:7312
 msgid "Comment:"
 msgstr "Megjegyzés:"
 
-#: crates/opencrt/ui/main.slint:7314
+#: crates/opencrt/ui/main.slint:7319
 msgid "Save as:"
 msgstr "Mentés ide:"
 
-#: crates/opencrt/ui/main.slint:7331
+#: crates/opencrt/ui/main.slint:7336
 msgid "Creating..."
 msgstr "Létrehozás..."
 
-#: crates/opencrt/ui/main.slint:7331
+#: crates/opencrt/ui/main.slint:7336
 msgid "Create"
 msgstr "Létrehozás"
 
-#: crates/opencrt/ui/main.slint:7349
+#: crates/opencrt/ui/main.slint:7354
 msgid "Label:"
 msgstr "Felirat:"
 
-#: crates/opencrt/ui/main.slint:7357
+#: crates/opencrt/ui/main.slint:7362
 msgid "Action:"
 msgstr "Művelet:"
 
-#: crates/opencrt/ui/main.slint:7359
+#: crates/opencrt/ui/main.slint:7364
 msgid "Send text"
 msgstr "Szöveg küldése"
 
-#: crates/opencrt/ui/main.slint:7359
+#: crates/opencrt/ui/main.slint:7364
 msgid "Run a script"
 msgstr "Szkript futtatása"
 
-#: crates/opencrt/ui/main.slint:7359
+#: crates/opencrt/ui/main.slint:7364
 msgid "Menu command"
 msgstr "Menüparancs"
 
-#: crates/opencrt/ui/main.slint:7359
+#: crates/opencrt/ui/main.slint:7364
 msgid "Run a program"
 msgstr "Program futtatása"
 
-#: crates/opencrt/ui/main.slint:7359
+#: crates/opencrt/ui/main.slint:7364
 msgid "Telnet command"
 msgstr "Telnet-parancs"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7369
 msgid "Menu command:"
 msgstr "Menüparancs:"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7369
 msgid "Program:"
 msgstr "Program:"
 
-#: crates/opencrt/ui/main.slint:7367
+#: crates/opencrt/ui/main.slint:7372
 msgid "e.g. show version\\r"
 msgstr "pl. show version\\r"
 
-#: crates/opencrt/ui/main.slint:7367
+#: crates/opencrt/ui/main.slint:7372
 msgid "e.g. /home/me/scripts/login.rhai"
 msgstr "pl. /home/me/scripts/login.rhai"
 
-#: crates/opencrt/ui/main.slint:7367
+#: crates/opencrt/ui/main.slint:7372
 msgid "e.g. clear-screen, reconnect, sftp-tab"
 msgstr "pl. clear-screen, reconnect, sftp-tab"
 
-#: crates/opencrt/ui/main.slint:7367
+#: crates/opencrt/ui/main.slint:7372
 msgid "e.g. wireshark -k"
 msgstr "pl. wireshark -k"
 
-#: crates/opencrt/ui/main.slint:7367
+#: crates/opencrt/ui/main.slint:7372
 msgid "brk, ip, ao, ayt, ec, el, ga or nop"
 msgstr "brk, ip, ao, ayt, ec, el, ga vagy nop"
 
-#: crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:7384
 msgid "Bar:"
 msgstr "Sáv:"
 
-#: crates/opencrt/ui/main.slint:7382
+#: crates/opencrt/ui/main.slint:7387
 msgid "blank: the default bar (sessions choose theirs)"
 msgstr "üres: az alapértelmezett sáv (a munkamenetek a sajátjukat választják)"
 
-#: crates/opencrt/ui/main.slint:7390
+#: crates/opencrt/ui/main.slint:7395
 msgid "optional, e.g. Cisco"
 msgstr "nem kötelező, pl. Cisco"
 
-#: crates/opencrt/ui/main.slint:7395
+#: crates/opencrt/ui/main.slint:7400
 msgid "\\r is Enter, \\n a line feed, \\t Tab, \\e Escape and \\\\ a backslash."
 msgstr "A \\r az Enter, a \\n soremelés, a \\t Tab, a \\e Escape, a \\\\ pedig fordított perjel."
 
@@ -2961,7 +2961,7 @@ msgstr "Zmodem: fogadás ide: {}"
 msgid "Zmodem: sending {}"
 msgstr "Zmodem: küldés: {}"
 
-#: crates/opencrt/src/app.rs:1101 crates/opencrt/src/app.rs:7059 crates/opencrt/src/app.rs:7137
+#: crates/opencrt/src/app.rs:1101 crates/opencrt/src/app.rs:7062 crates/opencrt/src/app.rs:7140
 msgid "Run rz on the host to receive {}."
 msgstr "Futtassa az rz parancsot a gazdagépen a fogadáshoz: {}."
 
@@ -2997,7 +2997,7 @@ msgstr "Csatlakozás: {}..."
 msgid "Logon script {}: {}"
 msgstr "Bejelentkezési szkript ({}): {}"
 
-#: crates/opencrt/src/app.rs:1355 crates/opencrt/src/app.rs:5179
+#: crates/opencrt/src/app.rs:1355 crates/opencrt/src/app.rs:5182
 msgid "Logon script: {}"
 msgstr "Bejelentkezési szkript: {}"
 
@@ -3009,7 +3009,7 @@ msgstr "Csatlakozás előtti parancs: {}"
 msgid "Press Enter to reconnect."
 msgstr "Nyomja meg az Entert az újracsatlakozáshoz."
 
-#: crates/opencrt/src/app.rs:1512 crates/opencrt/src/app.rs:3821
+#: crates/opencrt/src/app.rs:1512 crates/opencrt/src/app.rs:3824
 msgid "Recording to {} stopped: {}"
 msgstr "A rögzítés ({}) leállt: {}"
 
@@ -3097,819 +3097,819 @@ msgstr "Nem lehet nyomtatni: {}"
 msgid "Deleted the snapshot \"{}\"."
 msgstr "Pillanatkép törölve: „{}”."
 
-#: crates/opencrt/src/app.rs:2496 crates/opencrt/src/app.rs:2504
+#: crates/opencrt/src/app.rs:2499 crates/opencrt/src/app.rs:2507
 msgid "Bar name:"
 msgstr "Sáv neve:"
 
-#: crates/opencrt/src/app.rs:2512
+#: crates/opencrt/src/app.rs:2515
 msgid "Delete the button bar \"{}\"? Sessions that use it go back to the Default bar."
 msgstr "Törli a(z) „{}” gombsort? Az ezt használó munkamenetek visszatérnek az Alapértelmezett sávra."
 
-#: crates/opencrt/src/app.rs:2513
+#: crates/opencrt/src/app.rs:2516
 msgid "Delete the button bar \"{}\" and its buttons ({})? Sessions that use it go back to the Default bar."
 msgstr "Törli a(z) „{}” gombsort és gombjait ({})? Az ezt használó munkamenetek visszatérnek az Alapértelmezett sávra."
 
-#: crates/opencrt/src/app.rs:2521
+#: crates/opencrt/src/app.rs:2524
 msgid "Snapshot name:"
 msgstr "Pillanatkép neve:"
 
-#: crates/opencrt/src/app.rs:2593
+#: crates/opencrt/src/app.rs:2596
 msgid "Send Break works in connected serial and Telnet sessions."
 msgstr "A Break küldése csatlakoztatott soros és Telnet-munkamenetekben működik."
 
-#: crates/opencrt/src/app.rs:2599
+#: crates/opencrt/src/app.rs:2602
 msgid "Script cancelled."
 msgstr "A szkript megszakítva."
 
-#: crates/opencrt/src/app.rs:2605
+#: crates/opencrt/src/app.rs:2608
 msgid "Convert Private Key to OpenSSH"
 msgstr "Titkos kulcs konvertálása OpenSSH formátumba"
 
-#: crates/opencrt/src/app.rs:2642 crates/opencrt/src/app.rs:5578
+#: crates/opencrt/src/app.rs:2645 crates/opencrt/src/app.rs:5581
 msgid "Add Key to Agent"
 msgstr "Kulcs hozzáadása az ügynökhöz"
 
-#: crates/opencrt/src/app.rs:2695
+#: crates/opencrt/src/app.rs:2698
 msgid "Import known_hosts"
 msgstr "known_hosts importálása"
 
-#: crates/opencrt/src/app.rs:2700
+#: crates/opencrt/src/app.rs:2703
 msgid "Import SecureCRT Host Keys (pick its KnownHosts folder)"
 msgstr "SecureCRT-gazdagépkulcsok importálása (válassza ki a KnownHosts mappát)"
 
-#: crates/opencrt/src/app.rs:2716
+#: crates/opencrt/src/app.rs:2719
 msgid "Imported {} host keys ({} found)."
 msgstr "Importált gazdagépkulcsok: {} (talált: {})."
 
-#: crates/opencrt/src/app.rs:2717
+#: crates/opencrt/src/app.rs:2720
 msgid "Cannot update known_hosts: {}"
 msgstr "A known_hosts nem frissíthető: {}"
 
-#: crates/opencrt/src/app.rs:2727
+#: crates/opencrt/src/app.rs:2730
 msgid "Exported the host keys to {}."
 msgstr "A gazdagépkulcsok exportálva ide: {}."
 
-#: crates/opencrt/src/app.rs:2728 crates/opencrt/src/app.rs:6550
+#: crates/opencrt/src/app.rs:2731 crates/opencrt/src/app.rs:6553
 msgid "Cannot export to {}: {}"
 msgstr "Nem sikerült az exportálás ide: {}: {}"
 
-#: crates/opencrt/src/app.rs:2738
+#: crates/opencrt/src/app.rs:2741
 msgid "Cannot update {}: {}"
 msgstr "Nem frissíthető: {}: {}"
 
-#: crates/opencrt/src/app.rs:2756
+#: crates/opencrt/src/app.rs:2759
 msgid "Updating restarts OpenCRT and disconnects the connected session. Update now?"
 msgstr "A frissítés újraindítja az OpenCRT-t, és bontja a csatlakoztatott munkamenetet. Frissít most?"
 
-#: crates/opencrt/src/app.rs:2757
+#: crates/opencrt/src/app.rs:2760
 msgid "Updating restarts OpenCRT and disconnects {} connected sessions. Update now?"
 msgstr "A frissítés újraindítja az OpenCRT-t, és bontja a csatlakoztatott munkameneteket ({}). Frissít most?"
 
-#: crates/opencrt/src/app.rs:2764 crates/opencrt/src/app.rs:2820 crates/opencrt/src/app.rs:2942 crates/opencrt/src/app.rs:3314 crates/opencrt/src/app.rs:3614 crates/opencrt/src/app.rs:6458 crates/opencrt/src/app.rs:6515 crates/opencrt/src/app.rs:6938
+#: crates/opencrt/src/app.rs:2767 crates/opencrt/src/app.rs:2823 crates/opencrt/src/app.rs:2945 crates/opencrt/src/app.rs:3317 crates/opencrt/src/app.rs:3617 crates/opencrt/src/app.rs:6461 crates/opencrt/src/app.rs:6518 crates/opencrt/src/app.rs:6941
 msgid "Cannot open {}: {}"
 msgstr "Nem nyitható meg: {}: {}"
 
-#: crates/opencrt/src/app.rs:2771 crates/opencrt/src/app.rs:2867
+#: crates/opencrt/src/app.rs:2774 crates/opencrt/src/app.rs:2870
 msgid "Disconnected."
 msgstr "Bontva."
 
-#: crates/opencrt/src/app.rs:2811
+#: crates/opencrt/src/app.rs:2814
 msgid "Auto Print: output is collected and printed when you turn it off."
 msgstr "Automatikus nyomtatás: a kimenet gyűjtése folyik, és kikapcsoláskor kinyomtatódik."
 
-#: crates/opencrt/src/app.rs:2938
+#: crates/opencrt/src/app.rs:2941
 msgid "No local port forward to open: SOCKS and remote forwards have no page."
 msgstr "Nincs megnyitható helyi porttovábbítás: a SOCKS- és a távoli továbbításoknak nincs oldaluk."
 
-#: crates/opencrt/src/app.rs:3061
+#: crates/opencrt/src/app.rs:3064
 msgid "Stopped sending the pasted text."
 msgstr "A beillesztett szöveg küldése leállítva."
 
-#: crates/opencrt/src/app.rs:3376
+#: crates/opencrt/src/app.rs:3379
 msgid "Font size {}"
 msgstr "Betűméret: {}"
 
-#: crates/opencrt/src/app.rs:3499
+#: crates/opencrt/src/app.rs:3502
 msgid "Do the same for the rest of the queue"
 msgstr "Ugyanez a sor többi elemére"
 
-#: crates/opencrt/src/app.rs:3506
+#: crates/opencrt/src/app.rs:3509
 msgid "These {} lines will be pasted into every connected tab. Change them first if needed."
 msgstr "Ez a(z) {} sor minden csatlakoztatott lapra be lesz illesztve. Szükség esetén előbb módosítsa."
 
-#: crates/opencrt/src/app.rs:3507
+#: crates/opencrt/src/app.rs:3510
 msgid "These {} lines will be pasted. Change them first if needed."
 msgstr "Ez a(z) {} sor be lesz illesztve. Szükség esetén előbb módosítsa."
 
-#: crates/opencrt/src/app.rs:3562
+#: crates/opencrt/src/app.rs:3565
 msgid "Public key added to authorized_keys on {}."
 msgstr "A nyilvános kulcs hozzáadva az authorized_keys fájlhoz itt: {}."
 
-#: crates/opencrt/src/app.rs:3564
+#: crates/opencrt/src/app.rs:3567
 msgid "Could not add the public key on {}: {}"
 msgstr "Nem sikerült hozzáadni a nyilvános kulcsot itt: {}: {}"
 
-#: crates/opencrt/src/app.rs:4068
+#: crates/opencrt/src/app.rs:4071
 msgid "Log in to {}"
 msgstr "Bejelentkezés: {}"
 
-#: crates/opencrt/src/app.rs:4077
+#: crates/opencrt/src/app.rs:4080
 msgid "Type the password"
 msgstr "Írja be a jelszót"
 
-#: crates/opencrt/src/app.rs:4143
+#: crates/opencrt/src/app.rs:4146
 msgid "Cannot save the passphrase of {}: {}"
 msgstr "Nem menthető a jelmondat ({}): {}"
 
-#: crates/opencrt/src/app.rs:4189
+#: crates/opencrt/src/app.rs:4192
 msgid "The SecureCRT sessions were imported without their passwords."
 msgstr "A SecureCRT-munkamenetek jelszavak nélkül lettek importálva."
 
-#: crates/opencrt/src/app.rs:4195
+#: crates/opencrt/src/app.rs:4198
 msgid "The password was not saved."
 msgstr "A jelszó nincs mentve."
 
-#: crates/opencrt/src/app.rs:4201
+#: crates/opencrt/src/app.rs:4204
 msgid "Type the new master password."
 msgstr "Írja be az új mesterjelszót."
 
-#: crates/opencrt/src/app.rs:4202
+#: crates/opencrt/src/app.rs:4205
 msgid "The new password and its confirmation differ."
 msgstr "Az új jelszó és a megerősítése eltér."
 
-#: crates/opencrt/src/app.rs:4205
+#: crates/opencrt/src/app.rs:4208
 msgid "Saved passwords and key passphrases are now kept under the master password."
 msgstr "A mentett jelszavakat és kulcsjelmondatokat mostantól a mesterjelszó védi."
 
-#: crates/opencrt/src/app.rs:4209
+#: crates/opencrt/src/app.rs:4212
 msgid "Settings Sync shares these passwords: removing the master password moves them into this computer's keychain only, and the other computers that sync these settings will need their saved passwords entered again. Click Remove again to go ahead."
 msgstr "A Beállítások szinkronizálása megosztja ezeket a jelszavakat: a mesterjelszó eltávolítása csak ennek a számítógépnek a kulcstartójába helyezi át őket, és a beállításokat szinkronizáló többi számítógépen újra meg kell adni a mentett jelszavakat. A folytatáshoz kattintson ismét az Eltávolítás gombra."
 
-#: crates/opencrt/src/app.rs:4214
+#: crates/opencrt/src/app.rs:4217
 msgid "Changed the master password."
 msgstr "A mesterjelszó módosítva."
 
-#: crates/opencrt/src/app.rs:4217
+#: crates/opencrt/src/app.rs:4220
 msgid "Removed the master password: saved passwords are back in this computer's keychain."
 msgstr "A mesterjelszó eltávolítva: a mentett jelszavak visszakerültek a számítógép kulcstartójába."
 
-#: crates/opencrt/src/app.rs:4243
+#: crates/opencrt/src/app.rs:4246
 msgid "Type SecureCRT's Config Passphrase."
 msgstr "Írja be a SecureCRT konfigurációs jelmondatát (Config Passphrase)."
 
-#: crates/opencrt/src/app.rs:4251
+#: crates/opencrt/src/app.rs:4254
 msgid "That passphrase opens none of the saved passwords. Check it in SecureCRT (it asks for it when it starts)."
 msgstr "Ez a jelmondat egyik mentett jelszót sem nyitja meg. Ellenőrizze a SecureCRT-ben (indításkor kéri)."
 
-#: crates/opencrt/src/app.rs:4258
+#: crates/opencrt/src/app.rs:4261
 msgid "Cannot save the password of {}: {}"
 msgstr "Nem menthető a jelszó ({}): {}"
 
-#: crates/opencrt/src/app.rs:4269
+#: crates/opencrt/src/app.rs:4272
 msgid " Not read: {} (saved before the passphrase was set, or in an older form)."
 msgstr " Nem olvasható: {} (a jelmondat beállítása előtt vagy régebbi formában mentve)."
 
-#: crates/opencrt/src/app.rs:4270
+#: crates/opencrt/src/app.rs:4273
 msgid "Imported {} saved SecureCRT passwords as credentials of their sessions.{}"
 msgstr "Importált mentett SecureCRT-jelszavak a munkamenetek hitelesítő adataiként: {}.{}"
 
-#: crates/opencrt/src/app.rs:4398
+#: crates/opencrt/src/app.rs:4401
 msgid "Connect to {}"
 msgstr "Csatlakozás: {}"
 
-#: crates/opencrt/src/app.rs:4618
+#: crates/opencrt/src/app.rs:4621
 msgid "Connect {} sessions in \"{}\"?"
 msgstr "Csatlakoztat {} munkamenetet ebben: „{}”?"
 
-#: crates/opencrt/src/app.rs:4643 crates/opencrt/src/app.rs:4695 crates/opencrt/src/app.rs:4834
+#: crates/opencrt/src/app.rs:4646 crates/opencrt/src/app.rs:4698 crates/opencrt/src/app.rs:4837
 msgid "Folder name:"
 msgstr "Mappa neve:"
 
-#: crates/opencrt/src/app.rs:4702
+#: crates/opencrt/src/app.rs:4705
 msgid "Delete the session \"{}\"?"
 msgstr "Törli a(z) „{}” munkamenetet?"
 
-#: crates/opencrt/src/app.rs:4703
+#: crates/opencrt/src/app.rs:4706
 msgid "Delete {} sessions?"
 msgstr "Töröl {} munkamenetet?"
 
-#: crates/opencrt/src/app.rs:4709
+#: crates/opencrt/src/app.rs:4712
 msgid "Delete the folder \"{}\"?"
 msgstr "Törli a(z) „{}” mappát?"
 
-#: crates/opencrt/src/app.rs:4710
+#: crates/opencrt/src/app.rs:4713
 msgid "Delete the folder \"{}\" and the session in it?"
 msgstr "Törli a(z) „{}” mappát és a benne lévő munkamenetet?"
 
-#: crates/opencrt/src/app.rs:4711
+#: crates/opencrt/src/app.rs:4714
 msgid "Delete the folder \"{}\" and the {} sessions in it?"
 msgstr "Törli a(z) „{}” mappát és a benne lévő {} munkamenetet?"
 
-#: crates/opencrt/src/app.rs:4768
+#: crates/opencrt/src/app.rs:4771
 msgid "Deleted the button bar \"{}\"."
 msgstr "Gombsor törölve: „{}”."
 
-#: crates/opencrt/src/app.rs:4782
+#: crates/opencrt/src/app.rs:4785
 msgid "The new configuration folder is used from the next start."
 msgstr "Az új konfigurációs mappa a következő indítástól érvényes."
 
-#: crates/opencrt/src/app.rs:4822
+#: crates/opencrt/src/app.rs:4825
 msgid "Pick the files or folders whose paths to copy."
 msgstr "Válassza ki a fájlokat vagy mappákat, amelyek elérési útját másolni szeretné."
 
-#: crates/opencrt/src/app.rs:4826
+#: crates/opencrt/src/app.rs:4829
 msgid "The clipboard is not available."
 msgstr "A vágólap nem érhető el."
 
-#: crates/opencrt/src/app.rs:4829
+#: crates/opencrt/src/app.rs:4832
 msgid "Pick one file or folder to rename."
 msgstr "Válasszon ki egy átnevezendő fájlt vagy mappát."
 
-#: crates/opencrt/src/app.rs:4830
+#: crates/opencrt/src/app.rs:4833
 msgid "Pick the files or folders to delete."
 msgstr "Válassza ki a törlendő fájlokat vagy mappákat."
 
-#: crates/opencrt/src/app.rs:4833
+#: crates/opencrt/src/app.rs:4836
 msgid "Rename"
 msgstr "Átnevezés"
 
-#: crates/opencrt/src/app.rs:4834
+#: crates/opencrt/src/app.rs:4837
 msgid "New name:"
 msgstr "Új név:"
 
-#: crates/opencrt/src/app.rs:4841
+#: crates/opencrt/src/app.rs:4844
 msgid "Delete \"{}\" from this computer?"
 msgstr "Törli erről a számítógépről: „{}”?"
 
-#: crates/opencrt/src/app.rs:4842
+#: crates/opencrt/src/app.rs:4845
 msgid "Delete \"{}\" from the server?"
 msgstr "Törli a kiszolgálóról: „{}”?"
 
-#: crates/opencrt/src/app.rs:4843
+#: crates/opencrt/src/app.rs:4846
 msgid "Delete the folder \"{}\" and everything in it from this computer?"
 msgstr "Törli a(z) „{}” mappát és teljes tartalmát erről a számítógépről?"
 
-#: crates/opencrt/src/app.rs:4844
+#: crates/opencrt/src/app.rs:4847
 msgid "Delete the folder \"{}\" and everything in it from the server?"
 msgstr "Törli a(z) „{}” mappát és teljes tartalmát a kiszolgálóról?"
 
-#: crates/opencrt/src/app.rs:4845
+#: crates/opencrt/src/app.rs:4848
 msgid "Delete {} items (folders with everything in them) from this computer?"
 msgstr "Töröl {} elemet (a mappákat teljes tartalmukkal) erről a számítógépről?"
 
-#: crates/opencrt/src/app.rs:4846
+#: crates/opencrt/src/app.rs:4849
 msgid "Delete {} items (folders with everything in them) from the server?"
 msgstr "Töröl {} elemet (a mappákat teljes tartalmukkal) a kiszolgálóról?"
 
-#: crates/opencrt/src/app.rs:4865
+#: crates/opencrt/src/app.rs:4868
 msgid "Tab name:"
 msgstr "Lap neve:"
 
-#: crates/opencrt/src/app.rs:5181
+#: crates/opencrt/src/app.rs:5184
 msgid "Anti-idle: the interval must be a whole number of seconds."
 msgstr "Tétlenség elleni küldés: az időköznek egész számú másodpercnek kell lennie."
 
-#: crates/opencrt/src/app.rs:5186
+#: crates/opencrt/src/app.rs:5189
 msgid "Remote Desktop: {} is not a folder on this computer."
 msgstr "Távoli asztal: ez nem mappa ezen a számítógépen: {}"
 
-#: crates/opencrt/src/app.rs:5199
+#: crates/opencrt/src/app.rs:5202
 msgid "Cannot change \"{}\": {}"
 msgstr "Nem módosítható: „{}”: {}"
 
-#: crates/opencrt/src/app.rs:5237
+#: crates/opencrt/src/app.rs:5240
 msgid "Enter a session name (without \"/\")."
 msgstr "Adja meg a munkamenet nevét („/” nélkül)."
 
-#: crates/opencrt/src/app.rs:5241
+#: crates/opencrt/src/app.rs:5244
 msgid "A session with that name already exists in this folder."
 msgstr "Ebben a mappában már van ilyen nevű munkamenet."
 
-#: crates/opencrt/src/app.rs:5331
+#: crates/opencrt/src/app.rs:5334
 msgid "Disconnected by the script."
 msgstr "A szkript bontotta a kapcsolatot."
 
-#: crates/opencrt/src/app.rs:5416
+#: crates/opencrt/src/app.rs:5419
 msgid "Running script..."
 msgstr "Szkript futtatása..."
 
-#: crates/opencrt/src/app.rs:5425
+#: crates/opencrt/src/app.rs:5428
 msgid "Script {} finished."
 msgstr "A szkript befejeződött: {}."
 
-#: crates/opencrt/src/app.rs:5428
+#: crates/opencrt/src/app.rs:5431
 msgid "Script {} stopped: {}"
 msgstr "A szkript leállt ({}): {}"
 
-#: crates/opencrt/src/app.rs:5534
+#: crates/opencrt/src/app.rs:5537
 msgid "Public Key Assistant: open an SSH2 session first."
 msgstr "Nyilvánoskulcs-segéd: előbb nyisson meg egy SSH2-munkamenetet."
 
-#: crates/opencrt/src/app.rs:5538
+#: crates/opencrt/src/app.rs:5541
 msgid "Public Key Assistant: the active tab must be a connected SSH2 session."
 msgstr "Nyilvánoskulcs-segéd: az aktív lapnak csatlakoztatott SSH2-munkamenetnek kell lennie."
 
-#: crates/opencrt/src/app.rs:5542
+#: crates/opencrt/src/app.rs:5545
 msgid "Public Key to Add"
 msgstr "Hozzáadandó nyilvános kulcs"
 
-#: crates/opencrt/src/app.rs:5542
+#: crates/opencrt/src/app.rs:5545
 msgid "Public keys"
 msgstr "Nyilvános kulcsok"
 
-#: crates/opencrt/src/app.rs:5554
+#: crates/opencrt/src/app.rs:5557
 msgid "Adding the public key on {}..."
 msgstr "A nyilvános kulcs hozzáadása itt: {}..."
 
-#: crates/opencrt/src/app.rs:5578 crates/opencrt/src/app.rs:6340
+#: crates/opencrt/src/app.rs:5581 crates/opencrt/src/app.rs:6343
 msgid "Passphrase for {}:"
 msgstr "Jelmondat ({}):"
 
-#: crates/opencrt/src/app.rs:5581 crates/opencrt/src/app.rs:5593 crates/opencrt/src/lang.rs:14
+#: crates/opencrt/src/app.rs:5584 crates/opencrt/src/app.rs:5596 crates/opencrt/src/lang.rs:14
 msgid "Cannot load {}: {}"
 msgstr "Nem tölthető be: {}: {}"
 
-#: crates/opencrt/src/app.rs:5628 crates/opencrt/src/app.rs:5822 crates/opencrt/src/app.rs:5913
+#: crates/opencrt/src/app.rs:5631 crates/opencrt/src/app.rs:5825 crates/opencrt/src/app.rs:5916
 msgid "Cannot save the password: {}"
 msgstr "Nem menthető a jelszó: {}"
 
-#: crates/opencrt/src/app.rs:5640
+#: crates/opencrt/src/app.rs:5643
 msgid "under the master password"
 msgstr "a mesterjelszó alatt"
 
-#: crates/opencrt/src/app.rs:5640
+#: crates/opencrt/src/app.rs:5643
 msgid "in the system keychain"
 msgstr "a rendszer kulcstartójában"
 
-#: crates/opencrt/src/app.rs:5641
+#: crates/opencrt/src/app.rs:5644
 msgid "Password for {} saved {}."
 msgstr "A jelszó ({}) mentve {}."
 
-#: crates/opencrt/src/app.rs:5694
+#: crates/opencrt/src/app.rs:5697
 msgid "Fix the colours first (#rrggbb)."
 msgstr "Előbb javítsa a színeket (#rrggbb)."
 
-#: crates/opencrt/src/app.rs:5709
+#: crates/opencrt/src/app.rs:5712
 msgid "Enter a name for the scheme."
 msgstr "Adjon nevet a sémának."
 
-#: crates/opencrt/src/app.rs:5711
+#: crates/opencrt/src/app.rs:5714
 msgid "A scheme with that name already exists."
 msgstr "Már van ilyen nevű séma."
 
-#: crates/opencrt/src/app.rs:5713
+#: crates/opencrt/src/app.rs:5716
 msgid "Every colour must be #rrggbb (cursor and selection may be blank)."
 msgstr "Minden színnek #rrggbb formátumúnak kell lennie (a kurzor és a kijelölés üres lehet)."
 
-#: crates/opencrt/src/app.rs:5724
+#: crates/opencrt/src/app.rs:5727
 msgid "Colour scheme saved."
 msgstr "Színséma mentve."
 
-#: crates/opencrt/src/app.rs:5807
+#: crates/opencrt/src/app.rs:5810
 msgid "A firewall with that name already exists."
 msgstr "Már van ilyen nevű tűzfal."
 
-#: crates/opencrt/src/app.rs:5893
+#: crates/opencrt/src/app.rs:5896
 msgid "Enter a name for the credential."
 msgstr "Adjon nevet a hitelesítő adatnak."
 
-#: crates/opencrt/src/app.rs:5895
+#: crates/opencrt/src/app.rs:5898
 msgid "A credential with that name already exists."
 msgstr "Már van ilyen nevű hitelesítő adat."
 
-#: crates/opencrt/src/app.rs:5897
+#: crates/opencrt/src/app.rs:5900
 msgid "The passwords do not match."
 msgstr "A jelszavak nem egyeznek."
 
-#: crates/opencrt/src/app.rs:5943
+#: crates/opencrt/src/app.rs:5946
 msgid "The password of \"{}\" could not be removed from the keychain: {}"
 msgstr "A(z) „{}” jelszava nem távolítható el a kulcstartóból: {}"
 
-#: crates/opencrt/src/app.rs:6037
+#: crates/opencrt/src/app.rs:6040
 msgid "Import Key Map"
 msgstr "Billentyűtérkép importálása"
 
-#: crates/opencrt/src/app.rs:6037
+#: crates/opencrt/src/app.rs:6040
 msgid "Key maps"
 msgstr "Billentyűtérképek"
 
-#: crates/opencrt/src/app.rs:6040 crates/opencrt/src/app.rs:6342 crates/opencrt/src/app.rs:6619 crates/opencrt/src/app.rs:6836 crates/opencrt/src/sessions.rs:673
+#: crates/opencrt/src/app.rs:6043 crates/opencrt/src/app.rs:6345 crates/opencrt/src/app.rs:6622 crates/opencrt/src/app.rs:6839 crates/opencrt/src/sessions.rs:673
 msgid "Cannot read {}: {}"
 msgstr "Nem olvasható: {}: {}"
 
-#: crates/opencrt/src/app.rs:6049 crates/opencrt/src/app.rs:6844
+#: crates/opencrt/src/app.rs:6052 crates/opencrt/src/app.rs:6847
 msgid "Cannot write {}: {}"
 msgstr "Nem írható: {}: {}"
 
-#: crates/opencrt/src/app.rs:6055 crates/opencrt/src/app.rs:6502
+#: crates/opencrt/src/app.rs:6058 crates/opencrt/src/app.rs:6505
 msgid "Log files"
 msgstr "Naplófájlok"
 
-#: crates/opencrt/src/app.rs:6057
+#: crates/opencrt/src/app.rs:6060
 msgid "OpenSSH Certificate"
 msgstr "OpenSSH-tanúsítvány"
 
-#: crates/opencrt/src/app.rs:6057
+#: crates/opencrt/src/app.rs:6060
 msgid "Certificates"
 msgstr "Tanúsítványok"
 
-#: crates/opencrt/src/app.rs:6062
+#: crates/opencrt/src/app.rs:6065
 msgid "Folder to Share with the Remote Computer"
 msgstr "A távoli számítógéppel megosztandó mappa"
 
-#: crates/opencrt/src/app.rs:6112
+#: crates/opencrt/src/app.rs:6115
 msgid "The passphrases do not match."
 msgstr "A jelmondatok nem egyeznek."
 
-#: crates/opencrt/src/app.rs:6114
+#: crates/opencrt/src/app.rs:6117
 msgid "Enter where to save the private key."
 msgstr "Adja meg, hová mentse a titkos kulcsot."
 
-#: crates/opencrt/src/app.rs:6116
+#: crates/opencrt/src/app.rs:6119
 msgid "That file already exists; choose another name."
 msgstr "Ez a fájl már létezik; válasszon másik nevet."
 
-#: crates/opencrt/src/app.rs:6149
+#: crates/opencrt/src/app.rs:6152
 msgid "Checking for a new version…"
 msgstr "Új verzió keresése…"
 
-#: crates/opencrt/src/app.rs:6172
+#: crates/opencrt/src/app.rs:6175
 msgid "OpenCRT {} is available. {}"
 msgstr "Elérhető: OpenCRT {}. {}"
 
-#: crates/opencrt/src/app.rs:6177
+#: crates/opencrt/src/app.rs:6180
 msgid "OpenCRT {} is the latest version."
 msgstr "Az OpenCRT {} a legújabb verzió."
 
-#: crates/opencrt/src/app.rs:6180
+#: crates/opencrt/src/app.rs:6183
 msgid "Could not check for a new version: {}"
 msgstr "Nem sikerült új verziót keresni: {}"
 
-#: crates/opencrt/src/app.rs:6224
+#: crates/opencrt/src/app.rs:6227
 msgid "Could not update: {}. Download it from the release page instead."
 msgstr "Nem sikerült frissíteni: {}. Töltse le inkább a kiadási oldalról."
 
-#: crates/opencrt/src/app.rs:6240
+#: crates/opencrt/src/app.rs:6243
 msgid "Downloading Python for Python scripts (once) from its official site..."
 msgstr "Python letöltése a Python-szkriptekhez (egyszer) a hivatalos oldalról..."
 
-#: crates/opencrt/src/app.rs:6285
+#: crates/opencrt/src/app.rs:6288
 msgid "Downloading Git for Windows from its official releases..."
 msgstr "Git for Windows letöltése a hivatalos kiadásokból..."
 
-#: crates/opencrt/src/app.rs:6299
+#: crates/opencrt/src/app.rs:6302
 msgid "Git's installer is running: finish it, then press OK."
 msgstr "A Git telepítője fut: fejezze be, majd nyomja meg az OK gombot."
 
-#: crates/opencrt/src/app.rs:6300
+#: crates/opencrt/src/app.rs:6303
 msgid "Could not get Git for Windows: {}. It is also at git-scm.com."
 msgstr "Nem sikerült beszerezni a Git for Windowst: {}. A git-scm.com oldalon is elérhető."
 
-#: crates/opencrt/src/app.rs:6321
+#: crates/opencrt/src/app.rs:6324
 msgid "; public key copied to the clipboard"
 msgstr "; a nyilvános kulcs a vágólapra másolva"
 
-#: crates/opencrt/src/app.rs:6322
+#: crates/opencrt/src/app.rs:6325
 msgid "Created {} and .pub{}."
 msgstr "Létrehozva: {} és .pub{}."
 
-#: crates/opencrt/src/app.rs:6340
+#: crates/opencrt/src/app.rs:6343
 msgid "Convert Private Key"
 msgstr "Titkos kulcs konvertálása"
 
-#: crates/opencrt/src/app.rs:6347
+#: crates/opencrt/src/app.rs:6350
 msgid "Cannot decrypt {}: {}"
 msgstr "Nem fejthető vissza: {}: {}"
 
-#: crates/opencrt/src/app.rs:6361
+#: crates/opencrt/src/app.rs:6364
 msgid "Saved {} and .pub in OpenSSH format."
 msgstr "Mentve OpenSSH formátumban: {} és .pub."
 
-#: crates/opencrt/src/app.rs:6362 crates/opencrt/src/app.rs:6955 crates/opencrt/src/app.rs:7003
+#: crates/opencrt/src/app.rs:6365 crates/opencrt/src/app.rs:6958 crates/opencrt/src/app.rs:7006
 msgid "Cannot save {}: {}"
 msgstr "Nem menthető: {}: {}"
 
-#: crates/opencrt/src/app.rs:6379
+#: crates/opencrt/src/app.rs:6382
 msgid "Sent {} ({} bytes)."
 msgstr "Elküldve: {} ({} bájt)."
 
-#: crates/opencrt/src/app.rs:6382
+#: crates/opencrt/src/app.rs:6385
 msgid "Send Binary File: no connected session."
 msgstr "Bináris fájl küldése: nincs csatlakoztatott munkamenet."
 
-#: crates/opencrt/src/app.rs:6383 crates/opencrt/src/app.rs:6431
+#: crates/opencrt/src/app.rs:6386 crates/opencrt/src/app.rs:6434
 msgid "Cannot send {}: {}"
 msgstr "Nem küldhető: {}: {}"
 
-#: crates/opencrt/src/app.rs:6391
+#: crates/opencrt/src/app.rs:6394
 msgid "Stopped receiving into {}."
 msgstr "A fogadás leállítva ide: {}."
 
-#: crates/opencrt/src/app.rs:6399
+#: crates/opencrt/src/app.rs:6402
 msgid "Receiving into {}; choose Stop Receive ASCII to finish."
 msgstr "Fogadás ide: {}; a befejezéshez válassza az ASCII fogadásának leállítása parancsot."
 
-#: crates/opencrt/src/app.rs:6401 crates/opencrt/src/app.rs:6486
+#: crates/opencrt/src/app.rs:6404 crates/opencrt/src/app.rs:6489
 msgid "Cannot create {}: {}"
 msgstr "Nem hozható létre: {}: {}"
 
-#: crates/opencrt/src/app.rs:6430
+#: crates/opencrt/src/app.rs:6433
 msgid "Send ASCII File: no connected session."
 msgstr "ASCII-fájl küldése: nincs csatlakoztatott munkamenet."
 
-#: crates/opencrt/src/app.rs:6470
+#: crates/opencrt/src/app.rs:6473
 msgid "Stopped recording to {}."
 msgstr "A rögzítés leállítva: {}."
 
-#: crates/opencrt/src/app.rs:6484
+#: crates/opencrt/src/app.rs:6487
 msgid "Recording to {}; play it with asciinema play."
 msgstr "Rögzítés ide: {}; lejátszás: asciinema play."
 
-#: crates/opencrt/src/app.rs:6498
+#: crates/opencrt/src/app.rs:6501
 msgid "Stopped logging to {}."
 msgstr "A naplózás leállítva: {}."
 
-#: crates/opencrt/src/app.rs:6513
+#: crates/opencrt/src/app.rs:6516
 msgid "Logging to {}."
 msgstr "Naplózás ide: {}."
 
-#: crates/opencrt/src/app.rs:6525
+#: crates/opencrt/src/app.rs:6528
 msgid "Cannot read known_hosts: {}"
 msgstr "A known_hosts nem olvasható: {}"
 
-#: crates/opencrt/src/app.rs:6542
+#: crates/opencrt/src/app.rs:6545
 msgid "OpenCRT sessions"
 msgstr "OpenCRT-munkamenetek"
 
-#: crates/opencrt/src/app.rs:6549
+#: crates/opencrt/src/app.rs:6552
 msgid "Exported {} sessions to {}."
 msgstr "Exportált munkamenetek: {}, ide: {}."
 
-#: crates/opencrt/src/app.rs:6559
+#: crates/opencrt/src/app.rs:6562
 msgid "Sessions"
 msgstr "Munkamenetek"
 
-#: crates/opencrt/src/app.rs:6593
+#: crates/opencrt/src/app.rs:6596
 msgid "Cannot import {}: {}"
 msgstr "Nem importálható: {}: {}"
 
-#: crates/opencrt/src/app.rs:6598 crates/opencrt/src/app.rs:6641 crates/opencrt/src/app.rs:6664
+#: crates/opencrt/src/app.rs:6601 crates/opencrt/src/app.rs:6644 crates/opencrt/src/app.rs:6667
 msgid "; already there: {}"
 msgstr "; már megvolt: {}"
 
-#: crates/opencrt/src/app.rs:6599
+#: crates/opencrt/src/app.rs:6602
 msgid "Imported {} sessions from {}{}.{}"
 msgstr "Importált munkamenetek: {}, innen: {}{}.{}"
 
-#: crates/opencrt/src/app.rs:6642
+#: crates/opencrt/src/app.rs:6645
 msgid "Imported {} sessions from {}{}."
 msgstr "Importált munkamenetek: {}, innen: {}{}."
 
-#: crates/opencrt/src/app.rs:6650
+#: crates/opencrt/src/app.rs:6653
 msgid "Import SecureCRT Sessions (pick the Config folder)"
 msgstr "SecureCRT-munkamenetek importálása (válassza ki a Config mappát)"
 
-#: crates/opencrt/src/app.rs:6665
+#: crates/opencrt/src/app.rs:6668
 msgid "; not imported (unreadable or unsupported protocol): {}"
 msgstr "; nem importálva (olvashatatlan vagy nem támogatott protokoll): {}"
 
-#: crates/opencrt/src/app.rs:6678
+#: crates/opencrt/src/app.rs:6681
 msgid " Added button bars: {}, buttons: {}, keyword lists: {}."
 msgstr " Hozzáadott gombsorok: {}, gombok: {}, kulcsszólisták: {}."
 
-#: crates/opencrt/src/app.rs:6680
+#: crates/opencrt/src/app.rs:6683
 msgid " Buttons left out (SecureCRT menu functions): {}."
 msgstr " Kihagyott gombok (SecureCRT-menüfunkciók): {}."
 
-#: crates/opencrt/src/app.rs:6692
+#: crates/opencrt/src/app.rs:6695
 msgid "Imported {} sessions from {}{}{}.{}"
 msgstr "Importált munkamenetek: {}, innen: {}{}{}.{}"
 
-#: crates/opencrt/src/app.rs:6706
+#: crates/opencrt/src/app.rs:6709
 msgid "Run Script: open a session first."
 msgstr "Szkript futtatása: előbb nyisson meg egy munkamenetet."
 
-#: crates/opencrt/src/app.rs:6708
+#: crates/opencrt/src/app.rs:6711
 msgid "Run Script"
 msgstr "Szkript futtatása"
 
-#: crates/opencrt/src/app.rs:6708
+#: crates/opencrt/src/app.rs:6711
 msgid "Scripts"
 msgstr "Szkriptek"
 
-#: crates/opencrt/src/app.rs:6708
+#: crates/opencrt/src/app.rs:6711
 msgid "All files"
 msgstr "Minden fájl"
 
-#: crates/opencrt/src/app.rs:6719
+#: crates/opencrt/src/app.rs:6722
 msgid "Snapshots keep saved sessions; none are open."
 msgstr "A pillanatképek mentett munkameneteket tárolnak; egy sincs megnyitva."
 
-#: crates/opencrt/src/app.rs:6736
+#: crates/opencrt/src/app.rs:6739
 msgid "Saved the snapshot \"{}\" ({} sessions)."
 msgstr "Pillanatkép mentve: „{}” ({} munkamenet)."
 
-#: crates/opencrt/src/app.rs:6820 crates/opencrt/src/app.rs:6826 crates/opencrt/src/app.rs:6857
+#: crates/opencrt/src/app.rs:6823 crates/opencrt/src/app.rs:6829 crates/opencrt/src/app.rs:6860
 msgid "No connected session to send to."
 msgstr "Nincs csatlakoztatott munkamenet, amelybe küldeni lehetne."
 
-#: crates/opencrt/src/app.rs:6865
+#: crates/opencrt/src/app.rs:6868
 msgid "Run: no program given."
 msgstr "Futtatás: nincs megadva program."
 
-#: crates/opencrt/src/app.rs:6871
+#: crates/opencrt/src/app.rs:6874
 msgid "Cannot run {}: {}"
 msgstr "Nem futtatható: {}: {}"
 
-#: crates/opencrt/src/app.rs:6878
+#: crates/opencrt/src/app.rs:6881
 msgid "Telnet commands need a connected Telnet session."
 msgstr "A Telnet-parancsokhoz csatlakoztatott Telnet-munkamenet szükséges."
 
-#: crates/opencrt/src/app.rs:6879
+#: crates/opencrt/src/app.rs:6882
 msgid "Unknown Telnet command \"{}\"."
 msgstr "Ismeretlen Telnet-parancs: „{}”."
 
-#: crates/opencrt/src/app.rs:6889
+#: crates/opencrt/src/app.rs:6892
 msgid "Script {}: open a session first."
 msgstr "Szkript ({}): előbb nyisson meg egy munkamenetet."
 
-#: crates/opencrt/src/app.rs:6903 crates/opencrt/src/app.rs:6915 crates/opencrt/src/app.rs:6965
+#: crates/opencrt/src/app.rs:6906 crates/opencrt/src/app.rs:6918 crates/opencrt/src/app.rs:6968
 msgid "Running script {}..."
 msgstr "Szkript futtatása: {}..."
 
-#: crates/opencrt/src/app.rs:6909
+#: crates/opencrt/src/app.rs:6912
 msgid "Run Script: no connected session."
 msgstr "Szkript futtatása: nincs csatlakoztatott munkamenet."
 
-#: crates/opencrt/src/app.rs:6927 crates/opencrt/src/app.rs:6976
+#: crates/opencrt/src/app.rs:6930 crates/opencrt/src/app.rs:6979
 msgid "New script"
 msgstr "Új szkript"
 
-#: crates/opencrt/src/app.rs:6928 crates/opencrt/src/app.rs:6995
+#: crates/opencrt/src/app.rs:6931 crates/opencrt/src/app.rs:6998
 msgid "Rhai scripts"
 msgstr "Rhai-szkriptek"
 
-#: crates/opencrt/src/app.rs:6953
+#: crates/opencrt/src/app.rs:6956
 msgid "Saved {}."
 msgstr "Mentve: {}."
 
-#: crates/opencrt/src/app.rs:6960
+#: crates/opencrt/src/app.rs:6963
 msgid "No syntax errors."
 msgstr "Nincs szintaktikai hiba."
 
-#: crates/opencrt/src/app.rs:6990
+#: crates/opencrt/src/app.rs:6993
 msgid "Recording: lines you type are added to a script until Script > Stop Recording."
 msgstr "Rögzítés: a begépelt sorok egy szkriptbe kerülnek a Szkript > Rögzítés leállítása parancsig."
 
-#: crates/opencrt/src/app.rs:6999
+#: crates/opencrt/src/app.rs:7002
 msgid "Recording discarded."
 msgstr "A rögzítés elvetve."
 
-#: crates/opencrt/src/app.rs:7002
+#: crates/opencrt/src/app.rs:7005
 msgid "Script saved to {}."
 msgstr "A szkript mentve ide: {}."
 
-#: crates/opencrt/src/app.rs:7012
+#: crates/opencrt/src/app.rs:7015
 msgid "Drop files on a connected session to upload them."
 msgstr "A feltöltéshez ejtse a fájlokat egy csatlakoztatott munkamenetre."
 
-#: crates/opencrt/src/app.rs:7036
+#: crates/opencrt/src/app.rs:7039
 msgid "Send {} with:"
 msgstr "Küldés ({}) ezzel:"
 
-#: crates/opencrt/src/app.rs:7051
+#: crates/opencrt/src/app.rs:7054
 msgid "Only {} is sent: this protocol takes one file at a time."
 msgstr "Csak ez lesz elküldve: {}. Ez a protokoll egyszerre egy fájlt visz át."
 
-#: crates/opencrt/src/app.rs:7124
+#: crates/opencrt/src/app.rs:7127
 msgid "Cannot start the transfer: {}."
 msgstr "Az átvitel nem indítható: {}."
 
-#: crates/opencrt/src/app.rs:7131
+#: crates/opencrt/src/app.rs:7134
 msgid "Zmodem Upload: no connected session."
 msgstr "Zmodem-feltöltés: nincs csatlakoztatott munkamenet."
 
-#: crates/opencrt/src/app.rs:7236
+#: crates/opencrt/src/app.rs:7239
 msgid "Button Bar Button"
 msgstr "Gombsor gombja"
 
-#: crates/opencrt/src/app.rs:7236
+#: crates/opencrt/src/app.rs:7239
 msgid "Command"
 msgstr "Parancs"
 
-#: crates/opencrt/src/app.rs:7267
+#: crates/opencrt/src/app.rs:7270
 msgid "Enter a label and what the button does."
 msgstr "Adjon meg egy feliratot, és hogy mit csináljon a gomb."
 
-#: crates/opencrt/src/app.rs:7269
+#: crates/opencrt/src/app.rs:7272
 msgid "Telnet commands are brk, ip, ao, ayt, ec, el, ga and nop."
 msgstr "A Telnet-parancsok: brk, ip, ao, ayt, ec, el, ga és nop."
 
-#: crates/opencrt/src/app.rs:7294
+#: crates/opencrt/src/app.rs:7297
 msgid "Delete the button \"{}\"?"
 msgstr "Törli a(z) „{}” gombot?"
 
-#: crates/opencrt/src/app.rs:7295
+#: crates/opencrt/src/app.rs:7298
 msgid "Delete the command \"{}\"?"
 msgstr "Törli a(z) „{}” parancsot?"
 
-#: crates/opencrt/src/app.rs:7311
+#: crates/opencrt/src/app.rs:7342
 msgid "Custom"
 msgstr "Egyéni"
 
-#: crates/opencrt/src/app.rs:7406
+#: crates/opencrt/src/app.rs:7437
 msgid "New list"
 msgstr "Új lista"
 
-#: crates/opencrt/src/app.rs:7406
+#: crates/opencrt/src/app.rs:7437
 msgid "New list {}"
 msgstr "Új lista {}"
 
-#: crates/opencrt/src/app.rs:7540
+#: crates/opencrt/src/app.rs:7562
 msgid "Font size must be 6 to 48, scrollback 0 to 1000000 lines, and keepalive 0 to 86400 seconds."
 msgstr "A betűméret 6 és 48, a visszagörgetés 0 és 1000000 sor, a keepalive 0 és 86400 másodperc között lehet."
 
-#: crates/opencrt/src/app.rs:7549
+#: crates/opencrt/src/app.rs:7571
 msgid "General: recent sessions must be 0 to {}, the Connect All warning 0 to 1000, and the interface font size 9 to 20."
 msgstr "Általános: a legutóbbi munkamenetek száma 0 és {}, az Összes csatlakoztatása figyelmeztetés 0 és 1000, a felület betűmérete 9 és 20 között lehet."
 
-#: crates/opencrt/src/app.rs:7554
+#: crates/opencrt/src/app.rs:7576
 msgid "Connection: the default SSH2 key file does not exist."
 msgstr "Kapcsolat: az alapértelmezett SSH2-kulcsfájl nem létezik."
 
-#: crates/opencrt/src/app.rs:7562
+#: crates/opencrt/src/app.rs:7584
 msgid "Printing: the font size (up to 72) and margins (up to 100 mm) must be whole numbers."
 msgstr "Nyomtatás: a betűméretnek (legfeljebb 72) és a margóknak (legfeljebb 100 mm) egész számnak kell lennie."
 
-#: crates/opencrt/src/app.rs:7566
+#: crates/opencrt/src/app.rs:7588
 msgid "File Transfer: the download folder does not exist."
 msgstr "Fájlátvitel: a letöltési mappa nem létezik."
 
-#: crates/opencrt/src/app.rs:7570
+#: crates/opencrt/src/app.rs:7592
 msgid "General: the configuration folder must be a full path."
 msgstr "Általános: a konfigurációs mappának teljes elérési útnak kell lennie."
 
-#: crates/opencrt/src/app.rs:7579
+#: crates/opencrt/src/app.rs:7601
 msgid "Settings Sync needs git, which is not installed: {}."
 msgstr "A Beállítások szinkronizálásához git szükséges, de nincs telepítve: {}."
 
-#: crates/opencrt/src/app.rs:7583
+#: crates/opencrt/src/app.rs:7605
 msgid "File Transfer: TFTP addresses must be IP addresses or networks such as 192.168.1.0/24."
 msgstr "Fájlátvitel: a TFTP-címek csak IP-címek vagy hálózatok lehetnek, pl. 192.168.1.0/24."
 
-#: crates/opencrt/src/app.rs:7696
+#: crates/opencrt/src/app.rs:7710
 msgid "Settings Sync: the repository was not set up: {}"
 msgstr "Beállítások szinkronizálása: a tároló nem lett beállítva: {}"
 
-#: crates/opencrt/src/app.rs:7704
+#: crates/opencrt/src/app.rs:7718
 msgid " (your current settings were copied there)"
 msgstr " (a jelenlegi beállítások odamásolódtak)"
 
-#: crates/opencrt/src/app.rs:7706
+#: crates/opencrt/src/app.rs:7720
 msgid " Connected sessions will be disconnected."
 msgstr " A csatlakoztatott munkamenetek kapcsolata bontva lesz."
 
-#: crates/opencrt/src/app.rs:7707
+#: crates/opencrt/src/app.rs:7721
 msgid "Settings now live in {}{}. Restart OpenCRT to use them?{}"
 msgstr "A beállítások helye mostantól: {}{}. Újraindítja az OpenCRT-t a használatukhoz?{}"
 
-#: crates/opencrt/src/app.rs:7710
+#: crates/opencrt/src/app.rs:7724
 msgid "Configuration folder not changed: {}"
 msgstr "A konfigurációs mappa nem változott: {}"
 
-#: crates/opencrt/src/app.rs:7741
+#: crates/opencrt/src/app.rs:7755
 msgid "Cannot restart OpenCRT ({}); the new configuration folder is used from the next start."
 msgstr "Az OpenCRT nem indítható újra ({}); az új konfigurációs mappa a következő indítástól érvényes."
 
-#: crates/opencrt/src/app.rs:7810
+#: crates/opencrt/src/app.rs:7824
 msgid "Remote Desktop: enter both width and height (200 to 8192 pixels), or leave both blank to fit the window."
 msgstr "Távoli asztal: adja meg a szélességet és a magasságot is (200 és 8192 képpont között), vagy hagyja mindkettőt üresen az ablakhoz igazításhoz."
 
-#: crates/opencrt/src/app.rs:8056
+#: crates/opencrt/src/app.rs:8070
 msgid "Local"
 msgstr "Helyi"
 
-#: crates/opencrt/src/app.rs:8056
+#: crates/opencrt/src/app.rs:8070
 msgid "SSH server"
 msgstr "SSH-kiszolgáló"
 
-#: crates/opencrt/src/app.rs:8057
+#: crates/opencrt/src/app.rs:8071
 msgid "Remote"
 msgstr "Távoli"
 
-#: crates/opencrt/src/app.rs:8057
+#: crates/opencrt/src/app.rs:8071
 msgid "this machine"
 msgstr "ez a gép"
 
-#: crates/opencrt/src/app.rs:8058
+#: crates/opencrt/src/app.rs:8072
 msgid "any (SOCKS)"
 msgstr "bármely (SOCKS)"
 
-#: crates/opencrt/src/app.rs:8367
+#: crates/opencrt/src/app.rs:8381
 msgid "Not found"
 msgstr "Nem található"
 
-#: crates/opencrt/src/app.rs:8392
+#: crates/opencrt/src/app.rs:8406
 msgid "No connected session to send the command to."
 msgstr "Nincs csatlakoztatott munkamenet, amelybe a parancsot küldeni lehetne."
 

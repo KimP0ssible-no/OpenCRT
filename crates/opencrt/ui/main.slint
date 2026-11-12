@@ -3217,8 +3217,6 @@ component GlobalOptionsDialog inherits DialogFrame {
     in-out property <int> cursor-index;
     in-out property <int> bell-index;
     in-out property <int> theme-index;
-    in property <[string]> language-names;
-    in-out property <int> language-index;
     in-out property <string> ui-font-size;
     in-out property <int> scheme-index;
     in property <[string]> scheme-names;
@@ -3278,14 +3276,6 @@ component GlobalOptionsDialog inherits DialogFrame {
                     ComboBox {
                         model: [@tr("Follow the system"), @tr("Light"), @tr("Dark")];
                         current-index <=> root.theme-index;
-                    }
-                }
-                if root.category == 0: HorizontalLayout {
-                    spacing: 10px;
-                    FormLabel { text: @tr("Language:"); }
-                    ComboBox {
-                        model: root.language-names;
-                        current-index <=> root.language-index;
                     }
                 }
                 if root.category == 0: CheckBox {
@@ -5250,9 +5240,10 @@ export component MainWindow inherits Window {
     in-out property <int> go-cursor;
     in-out property <int> go-bell;
     in-out property <int> go-theme;
-    in property <[string]> go-language-names;
-    in-out property <int> go-language;
-    // For Rust: the Language list's first entry in the interface language.
+    // The Language menu: Follow the system, English, then the built-in languages.
+    in property <[string]> language-names;
+    in property <int> language-current;
+    // For Rust: the Language menu's first entry in the interface language.
     public pure function follow-system-label() -> string {
         @tr("Follow the system")
     }
@@ -5869,6 +5860,16 @@ export component MainWindow inherits Window {
                         root.select-tab(i);
                     }
                 }
+            }
+        }
+        // English beside the translation, so the way back stays readable.
+        Menu {
+            title: @tr("Language") == "Language" ? "Language" : "Language / " + @tr("Language");
+            for name[i] in root.language-names: MenuItem {
+                title: name;
+                checkable: true;
+                checked: i == root.language-current;
+                activated => { root.menu("language-" + i); }
             }
         }
         Menu {
@@ -6904,8 +6905,6 @@ export component MainWindow inherits Window {
         cursor-index <=> root.go-cursor;
         bell-index <=> root.go-bell;
         theme-index <=> root.go-theme;
-        language-names: root.go-language-names;
-        language-index <=> root.go-language;
         ui-font-size <=> root.go-ui-font-size;
         scheme-index <=> root.go-scheme;
         scheme-names: root.scheme-names;

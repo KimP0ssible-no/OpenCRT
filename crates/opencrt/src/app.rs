@@ -2490,6 +2490,9 @@ impl App {
             }
             return;
         }
+        if let Some(i) = name.strip_prefix("language-").and_then(|i| i.parse::<usize>().ok()) {
+            return self.pick_language(i, ui);
+        }
         if name == "button-bar-new" {
             self.naming_bar = true;
             ui.set_name_title("New Button Bar".into());
@@ -7323,6 +7326,34 @@ impl App {
         }
     }
 
+    // --- Language menu ---
+
+    /// Follow the system, English, then the built-in languages; the chosen one checked.
+    fn show_languages(&self, ui: &MainWindow) {
+        let mut names: Vec<SharedString> = vec![ui.invoke_follow_system_label(), "English".into()];
+        names.extend(crate::lang::LANGUAGES.iter().map(|l| SharedString::from(crate::lang::native_name(l))));
+        ui.set_language_names(ModelRc::new(VecModel::from(names)));
+        let current = match self.options.language.as_str() {
+            "" => 0,
+            "en" => 1,
+            code => crate::lang::LANGUAGES.iter().position(|l| *l == code).map_or(0, |i| i + 2),
+        };
+        ui.set_language_current(current as i32);
+    }
+
+    /// Language menu entry `index` (see `show_languages`).
+    fn pick_language(&mut self, index: usize, ui: &MainWindow) {
+        let code = match index {
+            0 => "",
+            1 => "en",
+            i => crate::lang::LANGUAGES.get(i - 2).copied().unwrap_or(""),
+        };
+        self.options.language = code.to_string();
+        crate::lang::apply(code);
+        self.save_options();
+        self.show_languages(ui);
+    }
+
     // --- Global Options > Keywords ---
 
     fn show_keyword_lists(&self, ui: &MainWindow) {
@@ -7538,15 +7569,6 @@ impl App {
         ui.set_go_cursor(config::Cursor::ALL.iter().position(|c| *c == self.options.cursor).unwrap_or(0) as i32);
         ui.set_go_bell(config::Bell::ALL.iter().position(|b| *b == self.options.bell).unwrap_or(0) as i32);
         ui.set_go_theme(self.options.theme.index());
-        let mut names: Vec<SharedString> = vec![ui.invoke_follow_system_label(), "English".into()];
-        names.extend(crate::lang::LANGUAGES.iter().map(|l| SharedString::from(crate::lang::native_name(l))));
-        ui.set_go_language_names(ModelRc::new(VecModel::from(names)));
-        let language = match self.options.language.as_str() {
-            "" => 0,
-            "en" => 1,
-            code => crate::lang::LANGUAGES.iter().position(|l| *l == code).map_or(0, |i| i + 2),
-        };
-        ui.set_go_language(language as i32);
         ui.set_go_ui_font_size(self.options.ui_font_size.to_string().into());
         self.kw_lists = render::keyword_lists(&self.options.keywords);
         self.kw_pick_list(0, ui);
@@ -7667,14 +7689,6 @@ impl App {
         self.options.cursor = config::Cursor::ALL.get(ui.get_go_cursor().max(0) as usize).copied().unwrap_or_default();
         self.options.bell = config::Bell::ALL.get(ui.get_go_bell().max(0) as usize).copied().unwrap_or_default();
         self.options.theme = config::UiTheme::ALL.get(ui.get_go_theme().max(0) as usize).copied().unwrap_or_default();
-        let language = match ui.get_go_language() {
-            1 => "en",
-            i => usize::try_from(i - 2).ok().and_then(|i| crate::lang::LANGUAGES.get(i)).copied().unwrap_or(""),
-        };
-        if language != self.options.language {
-            self.options.language = language.to_string();
-            crate::lang::apply(language);
-        }
         ui.set_theme_mode(self.options.theme.index());
         apply_desktop_colours(ui, self.options.theme);
         self.options.ui_font_size = ui_font_size;
@@ -8623,6 +8637,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_theme_mode(app.options.theme.index());
         // The chosen language, or the system's; also loads the Rust texts' translations.
         crate::lang::apply(&app.options.language);
+        app.show_languages(&ui);
         apply_desktop_colours(&ui, app.options.theme);
         ui.global::<crate::Theme>().set_ui_scale(app.options.ui_scale());
         crate::proxy::set_firewalls(&app.options.firewalls);

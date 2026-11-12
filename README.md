@@ -207,7 +207,7 @@ European languages: Bulgarian, Croatian, Czech, Danish, Dutch, Estonian,
 Finnish, French, German, Greek, Hungarian, Irish, Italian, Latvian,
 Lithuanian, Maltese, Norwegian Bokmål, Polish, Portuguese, Romanian, Slovak,
 Slovenian, Spanish, Swedish and Ukrainian. OpenCRT follows the system language;
-Global Options > General > Language chooses another.
+the Language menu chooses another.
 
 The translations are machine translations. If a text reads wrong in your
 language, open an issue or a pull request with the correction:

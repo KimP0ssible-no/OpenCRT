@@ -588,6 +588,8 @@ pub struct Options {
     pub bell: Bell,
     /// Light or dark window chrome, or whatever the system uses.
     pub theme: UiTheme,
+    /// Interface language (a folder under `lang/`): "" follows the system, "en" is English.
+    pub language: String,
     /// Menus, tabs, dialogs and other window text, in logical pixels.
     pub ui_font_size: f32,
     /// Show the menu bar (when hidden, the terminal's right-click menu brings it back).
@@ -1113,6 +1115,7 @@ impl Default for Options {
             cursor: Cursor::Block,
             bell: Bell::Visual,
             theme: UiTheme::System,
+            language: String::new(),
             // macOS menus use 13 points; Linux follows the desktop's font.
             #[cfg(target_os = "macos")]
             ui_font_size: 13.0,

@@ -16,6 +16,7 @@ pub mod fuzz;
 mod input;
 mod instance;
 mod kermit;
+mod lang;
 mod load;
 mod local;
 mod log;

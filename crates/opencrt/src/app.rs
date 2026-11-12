@@ -7540,6 +7540,15 @@ impl App {
         ui.set_go_cursor(config::Cursor::ALL.iter().position(|c| *c == self.options.cursor).unwrap_or(0) as i32);
         ui.set_go_bell(config::Bell::ALL.iter().position(|b| *b == self.options.bell).unwrap_or(0) as i32);
         ui.set_go_theme(self.options.theme.index());
+        let mut names: Vec<SharedString> = vec![ui.invoke_follow_system_label(), "English".into()];
+        names.extend(crate::lang::LANGUAGES.iter().map(|l| SharedString::from(crate::lang::native_name(l))));
+        ui.set_go_language_names(ModelRc::new(VecModel::from(names)));
+        let language = match self.options.language.as_str() {
+            "" => 0,
+            "en" => 1,
+            code => crate::lang::LANGUAGES.iter().position(|l| *l == code).map_or(0, |i| i + 2),
+        };
+        ui.set_go_language(language as i32);
         ui.set_go_ui_font_size(self.options.ui_font_size.to_string().into());
         self.kw_lists = render::keyword_lists(&self.options.keywords);
         self.kw_pick_list(0, ui);
@@ -7660,6 +7669,14 @@ impl App {
         self.options.cursor = config::Cursor::ALL.get(ui.get_go_cursor().max(0) as usize).copied().unwrap_or_default();
         self.options.bell = config::Bell::ALL.get(ui.get_go_bell().max(0) as usize).copied().unwrap_or_default();
         self.options.theme = config::UiTheme::ALL.get(ui.get_go_theme().max(0) as usize).copied().unwrap_or_default();
+        let language = match ui.get_go_language() {
+            1 => "en",
+            i => usize::try_from(i - 2).ok().and_then(|i| crate::lang::LANGUAGES.get(i)).copied().unwrap_or(""),
+        };
+        if language != self.options.language {
+            self.options.language = language.to_string();
+            crate::lang::apply(language);
+        }
         ui.set_theme_mode(self.options.theme.index());
         apply_desktop_colours(ui, self.options.theme);
         self.options.ui_font_size = ui_font_size;
@@ -8606,6 +8623,10 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_show_menubar(app.options.show_menubar);
         ui.set_show_connect_bar(app.options.show_connect_bar);
         ui.set_theme_mode(app.options.theme.index());
+        // Slint follows the system locale unless Global Options chose a language.
+        if !app.options.language.is_empty() {
+            crate::lang::apply(&app.options.language);
+        }
         apply_desktop_colours(&ui, app.options.theme);
         ui.global::<crate::Theme>().set_ui_scale(app.options.ui_scale());
         crate::proxy::set_firewalls(&app.options.firewalls);

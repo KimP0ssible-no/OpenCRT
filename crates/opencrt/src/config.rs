@@ -976,27 +976,23 @@ impl Options {
 /// desktops that let the compositor report the scale itself.
 #[cfg(all(unix, not(target_os = "macos")))]
 pub fn desktop_scale() -> Option<f32> {
-    for (schema, key) in [
-        ("org.ukui.SettingsDaemon.plugins.xsettings", "scaling-factor"),
-        ("org.gnome.desktop.interface", "scaling-factor"),
-        ("org.mate.interface", "window-scaling-factor"),
-    ] {
+    // Not GNOME's scaling-factor: on Wayland Mutter reports the scale itself,
+    // and an old X11 value would override fractional scaling.
+    for (schema, key) in [("org.ukui.SettingsDaemon.plugins.xsettings", "scaling-factor"), ("org.mate.interface", "window-scaling-factor")] {
         let Ok(out) = std::process::Command::new("gsettings").args(["get", schema, key]).output() else {
             continue;
         };
-        if !out.status.success() {
-            continue;
-        }
-        let value = String::from_utf8_lossy(&out.stdout);
-        // gsettings prints "2.0" for doubles and "uint32 2" for integers.
-        let Ok(scale) = value.trim().trim_start_matches("uint32 ").parse::<f32>() else {
-            continue;
-        };
-        if (1.0..=4.0).contains(&scale) {
+        if let Some(scale) = out.status.success().then(|| gsettings_scale(&String::from_utf8_lossy(&out.stdout))).flatten() {
             return Some(scale);
         }
     }
     None
+}
+
+/// A scale from `gsettings get` output: "2.0" for doubles, "uint32 2" for integers.
+#[cfg(all(unix, not(target_os = "macos")))]
+fn gsettings_scale(value: &str) -> Option<f32> {
+    value.trim().trim_start_matches("uint32 ").parse::<f32>().ok().filter(|s| (1.0..=4.0).contains(s))
 }
 
 /// The Linux desktop's interface font size in pixels (KDE or GNOME), if it has one.
@@ -1427,6 +1423,15 @@ mod tests {
         assert_eq!(options.button_bars, ["Empty"]);
         assert_eq!(options.buttons.iter().map(|b| b.label.as_str()).collect::<Vec<_>>(), ["b", "c"]);
         assert_eq!((store.sessions[0].button_bar.as_str(), store.default_session.button_bar.as_str()), ("", ""));
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    #[test]
+    fn desktop_scale_from_gsettings() {
+        assert_eq!(gsettings_scale("2.0\n"), Some(2.0));
+        assert_eq!(gsettings_scale("uint32 2\n"), Some(2.0));
+        // 0 means "automatic"; out-of-range and unknown values are left to the compositor.
+        assert_eq!((gsettings_scale("uint32 0"), gsettings_scale("9.0"), gsettings_scale("No such schema")), (None, None, None));
     }
 
     #[test]

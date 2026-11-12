@@ -9,6 +9,10 @@ translations of both.
 - `<locale>/LC_MESSAGES/opencrt.po` is one language, for example
   `zh_CN/LC_MESSAGES/opencrt.po` for Simplified Chinese.
 
+The translations here started as machine translations. Corrections from
+native speakers are welcome as issues or pull requests that change the
+`msgstr` lines.
+
 The build compiles every `.po` file in this folder into OpenCRT. A new
 language then shows in Global Options > General > Language. With "Follow the
 system", OpenCRT uses the language that matches the system locale, else

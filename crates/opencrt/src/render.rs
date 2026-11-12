@@ -92,23 +92,13 @@ pub struct Keyword {
 /// `/link (down|flap)/ = red line`, `error = red text bold word`.
 /// Invalid regexes are skipped.
 fn parse_keyword(line: &str) -> Option<Keyword> {
-    let colour = |w: &str| KEYWORD_COLORS.iter().find(|(n, ..)| n.eq_ignore_ascii_case(w));
-    let flag = |w: &str| ["line", "text", "bold", "word"].iter().any(|f| f.eq_ignore_ascii_case(w));
-    let (pattern, options) = match line.rsplit_once('=') {
-        Some((p, o)) if !o.trim().is_empty() && o.split_whitespace().all(|w| flag(w) || colour(w).is_some()) => (p, o),
-        _ => (line, ""),
+    let row = KeywordRow::parse(line)?;
+    let pattern = match row.regex {
+        true => Pattern::Regex(regex::RegexBuilder::new(&row.pattern).case_insensitive(true).build().ok()?),
+        false => Pattern::Word(row.pattern.chars().flat_map(char::to_lowercase).collect()),
     };
-    let has = |f: &str| options.split_whitespace().any(|w| w.eq_ignore_ascii_case(f));
-    let (fg, bg, text) = options.split_whitespace().find_map(colour).map_or((HIGHLIGHT_FG, HIGHLIGHT_BG, HIGHLIGHT_TEXT), |(_, fg, bg, text)| (*fg, *bg, *text));
-    // Text style: the colour goes on the letters and the cell keeps its background.
-    let paint = if has("text") { Paint { fg: text, bg: None, bold: has("bold") } } else { Paint { fg, bg: Some(bg), bold: has("bold") } };
-    let pattern = pattern.trim();
-    let pattern = match pattern.strip_prefix('/').and_then(|p| p.strip_suffix('/')) {
-        Some(re) if !re.is_empty() => Pattern::Regex(regex::RegexBuilder::new(re).case_insensitive(true).build().ok()?),
-        _ if pattern.is_empty() => return None,
-        _ => Pattern::Word(pattern.chars().flat_map(char::to_lowercase).collect()),
-    };
-    Some(Keyword { pattern, paint, line: has("line"), word: has("word") })
+    let (fg, bg) = row.colours();
+    Some(Keyword { pattern, paint: Paint { fg, bg, bold: row.bold }, line: row.line, word: row.word })
 }
 
 /// Keyword list lines (see `parse_keyword`) by set: a `[name]` line starts a
@@ -126,6 +116,120 @@ pub fn keyword_sets(lines: &[String]) -> HashMap<String, Vec<Keyword>> {
         }
     }
     sets
+}
+
+/// A keyword line's pattern and its options after `=` ("" when none are valid).
+fn split_keyword(line: &str) -> (&str, &str) {
+    let known = |w: &str| ["line", "text", "bold", "word"].iter().chain(KEYWORD_COLORS.iter().map(|(n, ..)| n)).any(|k| k.eq_ignore_ascii_case(w));
+    match line.rsplit_once('=') {
+        Some((p, o)) if !o.trim().is_empty() && o.split_whitespace().all(known) => (p, o),
+        _ => (line, ""),
+    }
+}
+
+/// The keyword colours for the editor, with their highlight background: the
+/// default amber, then KEYWORD_COLORS.
+pub fn keyword_colours() -> Vec<(String, Rgb)> {
+    let title = |n: &str| n[..1].to_uppercase() + &n[1..];
+    std::iter::once(("Amber".to_string(), HIGHLIGHT_BG)).chain(KEYWORD_COLORS.iter().map(|(n, _, bg, _)| (title(n), *bg))).collect()
+}
+
+/// One keyword line as the keyword editor shows it.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct KeywordRow {
+    /// The word, or the regex without its slashes.
+    pub pattern: String,
+    pub regex: bool,
+    /// An index into `keyword_colours` (0: amber).
+    pub colour: usize,
+    pub text: bool,
+    pub bold: bool,
+    pub word: bool,
+    pub line: bool,
+}
+
+impl KeywordRow {
+    fn parse(line: &str) -> Option<Self> {
+        let (pattern, options) = split_keyword(line);
+        let has = |f: &str| options.split_whitespace().any(|w| w.eq_ignore_ascii_case(f));
+        let colour = options.split_whitespace().find_map(|w| KEYWORD_COLORS.iter().position(|(n, ..)| n.eq_ignore_ascii_case(w))).map_or(0, |i| i + 1);
+        let pattern = pattern.trim();
+        let (pattern, regex) = match pattern.strip_prefix('/').and_then(|p| p.strip_suffix('/')) {
+            Some(re) if !re.is_empty() => (re, true),
+            _ => (pattern, false),
+        };
+        let row = KeywordRow { pattern: pattern.to_string(), regex, colour, text: has("text"), bold: has("bold"), word: has("word"), line: has("line") };
+        (!pattern.is_empty()).then_some(row)
+    }
+
+    /// The keyword line; a word that would read as a `[list]` or a `/regex/`
+    /// line is written as an escaped regex.
+    pub fn to_line(&self) -> String {
+        let p = self.pattern.trim();
+        let lookalike = |a: char, b: char| p.len() > 1 && p.starts_with(a) && p.ends_with(b);
+        let pattern = match self.regex {
+            true => format!("/{p}/"),
+            false if lookalike('[', ']') || lookalike('/', '/') => format!("/{}/", regex::escape(p)),
+            false => p.to_string(),
+        };
+        let colour = self.colour.checked_sub(1).and_then(|i| KEYWORD_COLORS.get(i)).map(|(n, ..)| *n);
+        let flags = [("text", self.text), ("bold", self.bold), ("word", self.word), ("line", self.line)];
+        let options: Vec<&str> = colour.into_iter().chain(flags.iter().filter(|(_, on)| *on).map(|(f, _)| *f)).collect();
+        if options.is_empty() { pattern } else { format!("{pattern} = {}", options.join(" ")) }
+    }
+
+    /// The letters' colour and the background (None keeps the cell's): text
+    /// style puts the colour on the letters.
+    pub fn colours(&self) -> (Rgb, Option<Rgb>) {
+        let named = self.colour.checked_sub(1).and_then(|i| KEYWORD_COLORS.get(i));
+        let (fg, bg, text) = named.map_or((HIGHLIGHT_FG, HIGHLIGHT_BG, HIGHLIGHT_TEXT), |(_, fg, bg, text)| (*fg, *bg, *text));
+        if self.text { (text, None) } else { (fg, Some(bg)) }
+    }
+
+    /// The editor's Style column.
+    pub fn style(&self) -> String {
+        let flags = [(self.regex, "regex"), (self.text, "text only"), (self.bold, "bold"), (self.word, "whole words"), (self.line, "whole line")];
+        flags.iter().filter(|(on, _)| *on).map(|(_, f)| *f).collect::<Vec<_>>().join(", ")
+    }
+}
+
+/// A keyword list in the editor: "" is the Default list.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct KeywordList {
+    pub name: String,
+    /// Its name when the editor opened; None for a list made since.
+    pub was: Option<String>,
+    pub rows: Vec<KeywordRow>,
+}
+
+/// Keyword lines as lists, the Default list first; a repeated `[name]` adds to that list.
+pub fn keyword_lists(lines: &[String]) -> Vec<KeywordList> {
+    let mut lists = vec![KeywordList { was: Some(String::new()), ..Default::default() }];
+    let mut current = 0;
+    for line in lines {
+        match line.trim().strip_prefix('[').and_then(|l| l.strip_suffix(']')).map(str::trim) {
+            Some(name) => {
+                current = lists.iter().position(|l| l.name == name).unwrap_or_else(|| {
+                    lists.push(KeywordList { name: name.to_string(), was: Some(name.to_string()), rows: Vec::new() });
+                    lists.len() - 1
+                });
+            }
+            None => lists[current].rows.extend(KeywordRow::parse(line)),
+        }
+    }
+    lists
+}
+
+/// The keyword lines for `lists` (see `keyword_sets`).
+pub fn keyword_lines(lists: &[KeywordList]) -> Vec<String> {
+    let mut lines = Vec::new();
+    for list in lists {
+        if !list.name.is_empty() {
+            lines.push(format!("[{}]", list.name));
+        }
+        lines.extend(list.rows.iter().filter(|r| !r.pattern.trim().is_empty()).map(KeywordRow::to_line));
+    }
+    lines
 }
 
 /// The named keyword sets in `lines`, in order (for the session's choice).
@@ -681,6 +785,23 @@ mod tests {
         // An unknown colour is part of the word; blank lines are skipped.
         assert!(matches!(parse_keyword("a=b").unwrap().pattern, Pattern::Word(w) if w.len() == 3));
         assert!(parse_keyword("   ").is_none() && parse_keyword(" = red").is_none());
+    }
+
+    #[test]
+    fn keyword_editor_lists_round_trip() {
+        let lines: Vec<String> = ["error = red text bold word", "/link (down|flap)/ = line", "[Cisco]", "up = GREEN", "warn", "[Cisco]", "a=b"]
+            .map(String::from)
+            .to_vec();
+        let lists = keyword_lists(&lines);
+        assert_eq!(lists.iter().map(|l| l.name.as_str()).collect::<Vec<_>>(), ["", "Cisco"]);
+        assert_eq!(lists[0].rows[1], KeywordRow { pattern: "link (down|flap)".into(), regex: true, line: true, ..Default::default() });
+        assert_eq!((lists[1].rows[0].colour, lists[1].rows.len()), (3, 3));
+        assert_eq!(lists[0].rows[0].style(), "text only, bold, whole words");
+        assert_eq!(keyword_lines(&lists), ["error = red text bold word", "/link (down|flap)/ = line", "[Cisco]", "up = green", "warn", "a=b"]);
+        // Words that look like a list or a regex stay words.
+        let row = KeywordRow { pattern: "[ERROR]".into(), ..Default::default() };
+        assert_eq!(KeywordRow::parse(&row.to_line()).unwrap().pattern, r"\[ERROR\]");
+        assert!(keyword_lists(&[row.to_line()]).len() == 1 && parse_keyword(&row.to_line()).is_some());
     }
 
     #[test]

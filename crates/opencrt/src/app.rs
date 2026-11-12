@@ -1789,6 +1789,10 @@ struct App {
     shown_bar: Option<String>,
     /// The Button Bar picked while no tab is open.
     idle_bar: String,
+    /// Global Options > Keywords: the lists being edited, the one on show, the picked row.
+    kw_lists: Vec<render::KeywordList>,
+    kw_list: usize,
+    kw_row: Option<usize>,
     /// known_hosts line of each row in the Host Keys dialog.
     host_key_lines: Vec<usize>,
     /// How tabs share the terminal area.
@@ -2029,6 +2033,9 @@ impl App {
             session_clip: None,
             shown_bar: None,
             idle_bar: String::new(),
+            kw_lists: Vec::new(),
+            kw_list: 0,
+            kw_row: None,
             host_key_lines: Vec::new(),
             layout: Layout::Tabs,
             stamp: 0,
@@ -7226,6 +7233,145 @@ impl App {
         }
     }
 
+    // --- Global Options > Keywords ---
+
+    fn show_keyword_lists(&self, ui: &MainWindow) {
+        let editor = ui.global::<crate::KeywordEditor>();
+        let names: Vec<SharedString> = self.kw_lists.iter().map(|l| if l.name.is_empty() { "Default".into() } else { l.name.as_str().into() }).collect();
+        editor.set_lists(ModelRc::new(VecModel::from(names)));
+        editor.set_list(self.kw_list as i32);
+        let colours = render::keyword_colours();
+        let rows: Vec<crate::KeywordRowView> = self.kw_lists[self.kw_list]
+            .rows
+            .iter()
+            .map(|r| {
+                let rgb = |[red, green, blue]: [u8; 3]| slint::Color::from_rgb_u8(red, green, blue);
+                let (fg, bg) = r.colours();
+                crate::KeywordRowView {
+                    pattern: r.pattern.as_str().into(),
+                    colour: colours[r.colour].0.as_str().into(),
+                    style: r.style().into(),
+                    fg: rgb(fg),
+                    bg: bg.map(rgb).unwrap_or_default(),
+                    has_bg: bg.is_some(),
+                    bold: r.bold,
+                }
+            })
+            .collect();
+        editor.set_rows(ModelRc::new(VecModel::from(rows)));
+        editor.set_row(self.kw_row.map_or(-1, |i| i as i32));
+    }
+
+    fn kw_pick_list(&mut self, index: usize, ui: &MainWindow) {
+        self.kw_list = index.min(self.kw_lists.len() - 1);
+        let editor = ui.global::<crate::KeywordEditor>();
+        editor.set_list_name(self.kw_lists[self.kw_list].name.as_str().into());
+        editor.set_list_error(SharedString::new());
+        self.kw_pick_row(None, ui);
+    }
+
+    /// Select a keyword and fill the fields under the table with it.
+    fn kw_pick_row(&mut self, index: Option<usize>, ui: &MainWindow) {
+        self.kw_row = index.filter(|i| *i < self.kw_lists[self.kw_list].rows.len());
+        let row = self.kw_row.map(|i| self.kw_lists[self.kw_list].rows[i].clone()).unwrap_or_default();
+        let editor = ui.global::<crate::KeywordEditor>();
+        editor.set_pattern(row.pattern.into());
+        editor.set_regex(row.regex);
+        editor.set_colour(row.colour as i32);
+        editor.set_text(row.text);
+        editor.set_bold(row.bold);
+        editor.set_word(row.word);
+        editor.set_line(row.line);
+        self.show_keyword_lists(ui);
+    }
+
+    fn kw_edit_row(&mut self, ui: &MainWindow) {
+        let editor = ui.global::<crate::KeywordEditor>();
+        let Some(row) = self.kw_row.and_then(|i| self.kw_lists[self.kw_list].rows.get_mut(i)) else {
+            return;
+        };
+        *row = render::KeywordRow {
+            pattern: editor.get_pattern().to_string(),
+            regex: editor.get_regex(),
+            colour: editor.get_colour().max(0) as usize,
+            text: editor.get_text(),
+            bold: editor.get_bold(),
+            word: editor.get_word(),
+            line: editor.get_line(),
+        };
+        self.show_keyword_lists(ui);
+    }
+
+    fn kw_add_row(&mut self, ui: &MainWindow) {
+        let rows = &mut self.kw_lists[self.kw_list].rows;
+        rows.push(render::KeywordRow::default());
+        let last = rows.len() - 1;
+        self.kw_pick_row(Some(last), ui);
+    }
+
+    fn kw_remove_row(&mut self, ui: &MainWindow) {
+        if let Some(i) = self.kw_row {
+            self.kw_lists[self.kw_list].rows.remove(i);
+            self.kw_pick_row(None, ui);
+        }
+    }
+
+    fn kw_new_list(&mut self, ui: &MainWindow) {
+        let taken = |name: &str| self.kw_lists.iter().any(|l| l.name.eq_ignore_ascii_case(name));
+        let name = (1..).map(|n| if n == 1 { "New list".to_string() } else { format!("New list {n}") }).find(|n| !taken(n)).unwrap_or_default();
+        self.kw_lists.push(render::KeywordList { name, was: None, rows: Vec::new() });
+        self.kw_pick_list(self.kw_lists.len() - 1, ui);
+    }
+
+    /// Rename the list on show as the name is typed; a name in use is kept back with a note.
+    fn kw_rename_list(&mut self, name: &str, ui: &MainWindow) {
+        let name = name.trim();
+        let error = if self.kw_list == 0 {
+            return;
+        } else if name.is_empty() {
+            "A list needs a name.".to_string()
+        } else if name.eq_ignore_ascii_case("default")
+            || self.kw_lists.iter().enumerate().any(|(i, l)| i != self.kw_list && l.name.eq_ignore_ascii_case(name))
+        {
+            format!("\"{name}\" is already a list.")
+        } else {
+            self.kw_lists[self.kw_list].name = name.to_string();
+            String::new()
+        };
+        ui.global::<crate::KeywordEditor>().set_list_error(error.into());
+        self.show_keyword_lists(ui);
+    }
+
+    fn kw_delete_list(&mut self, ui: &MainWindow) {
+        if self.kw_list > 0 {
+            self.kw_lists.remove(self.kw_list);
+            self.kw_pick_list(0, ui);
+        }
+    }
+
+    /// After OK: sessions and tabs follow renamed keyword lists, and ones whose
+    /// list was deleted use the Default list.
+    fn follow_keyword_lists(&mut self, before: &[String]) {
+        let mut moved = false;
+        for old in before {
+            let new = self.kw_lists.iter().find(|l| l.was.as_deref() == Some(old)).map_or("", |l| l.name.as_str());
+            if new == old {
+                continue;
+            }
+            let sessions = self.store.sessions.iter_mut().chain([&mut self.store.default_session]).map(|s| &mut s.keyword_set);
+            for set in sessions.chain(self.tabs.iter_mut().map(|t| &mut t.keyword_set)).filter(|s| *s == old) {
+                *set = new.to_string();
+                moved = true;
+            }
+        }
+        for list in &mut self.kw_lists {
+            list.was = Some(list.name.clone());
+        }
+        if moved {
+            self.save_store();
+        }
+    }
+
     // --- Global Options ---
 
     fn show_global_options(&mut self, ui: &MainWindow) {
@@ -7283,7 +7429,13 @@ impl App {
         ui.set_go_bell(config::Bell::ALL.iter().position(|b| *b == self.options.bell).unwrap_or(0) as i32);
         ui.set_go_theme(self.options.theme.index());
         ui.set_go_ui_font_size(self.options.ui_font_size.to_string().into());
-        ui.set_go_keywords(self.options.keywords.join("\n").into());
+        self.kw_lists = render::keyword_lists(&self.options.keywords);
+        let (names, dots): (Vec<SharedString>, Vec<slint::Color>) =
+            render::keyword_colours().into_iter().map(|(name, [r, g, b])| (SharedString::from(name), slint::Color::from_rgb_u8(r, g, b))).unzip();
+        let editor = ui.global::<crate::KeywordEditor>();
+        editor.set_colours(ModelRc::new(VecModel::from(names)));
+        editor.set_colour_dots(ModelRc::new(VecModel::from(dots)));
+        self.kw_pick_list(0, ui);
         ui.set_go_key_map(self.options.key_map.join("\n").into());
         ui.set_go_scheme(schemes().iter().position(|s| s.name == self.options.scheme).unwrap_or(0) as i32);
         ui.set_go_error(SharedString::new());
@@ -7426,8 +7578,9 @@ impl App {
         self.options.font_size = font_size;
         self.options.scrollback = scrollback;
         self.options.scheme = scheme.name.to_string();
-        self.options.keywords =
-            ui.get_go_keywords().lines().map(str::trim).filter(|w| !w.is_empty()).map(String::from).collect();
+        let before = render::keyword_set_names(&self.options.keywords);
+        self.options.keywords = render::keyword_lines(&self.kw_lists);
+        self.follow_keyword_lists(&before);
         self.apply_keywords();
         self.save_options();
         // After saving, so a copy into the new folder has today's settings.
@@ -8162,6 +8315,25 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
     on!(on_command_edit, |app, ui, index| app.bar_button_edit(Commands::Manager, index, &ui));
     on!(on_command_delete, |app, ui, index| app.bar_button_delete(Commands::Manager, index as usize, &ui));
     on!(on_command_folder, |app, ui, folder| app.toggle_command_folder(&folder, &ui));
+    macro_rules! kw {
+        ($setter:ident, |$app:ident, $ui:ident $(, $arg:ident)*| $body:expr) => {{
+            let app = app.clone();
+            let weak = ui.as_weak();
+            ui.global::<crate::KeywordEditor>().$setter(move |$($arg),*| {
+                let $ui = weak.unwrap();
+                let mut $app = app.borrow_mut();
+                $body
+            });
+        }};
+    }
+    kw!(on_pick_list, |app, ui, index| app.kw_pick_list(index.max(0) as usize, &ui));
+    kw!(on_new_list, |app, ui| app.kw_new_list(&ui));
+    kw!(on_rename_list, |app, ui, name| app.kw_rename_list(&name, &ui));
+    kw!(on_delete_list, |app, ui| app.kw_delete_list(&ui));
+    kw!(on_pick_row, |app, ui, index| app.kw_pick_row(usize::try_from(index).ok(), &ui));
+    kw!(on_add_row, |app, ui| app.kw_add_row(&ui));
+    kw!(on_remove_row, |app, ui| app.kw_remove_row(&ui));
+    kw!(on_edit_row, |app, ui| app.kw_edit_row(&ui));
     on!(on_session_activate, |app, ui, index| app.session_activate(index as usize, &ui));
     on!(on_session_toggle, |app, _ui, index| app.session_toggle(index as usize));
     on!(on_scratch_act, |app, ui, name| app.scratch_act(&name, &ui));

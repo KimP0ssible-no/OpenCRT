@@ -31,6 +31,10 @@ export global KeywordEditor {
     in-out property <int> row: -1;
     in property <[string]> colours;
     in property <[color]> colour-dots;
+    // The Custom colour as #rrggbb, while the last colour is picked.
+    in-out property <string> custom-colour;
+    in property <color> custom-rgb;
+    callback pick-colour(color);
     // The selected keyword's fields.
     in-out property <string> pattern;
     in-out property <bool> regex;
@@ -2749,6 +2753,147 @@ component FirewallDialog inherits DialogFrame {
 }
 
 // A colour field: a swatch and its #rrggbb text.
+// A colour swatch that opens a picker: basic colours, a saturation and
+// brightness square, and a hue bar. Each choice is sent with `picked`.
+component ColourPicker inherits Rectangle {
+    in property <color> value;
+    in property <bool> enabled: true;
+    callback picked(color);
+    property <float> hue;
+    property <float> sat;
+    property <float> val;
+    property <length> cell: 26px * Theme.ui-scale;
+    function set-sv(x: length, y: length, w: length, h: length) {
+        root.sat = clamp(x / w, 0, 1);
+        root.val = 1 - clamp(y / h, 0, 1);
+        root.picked(hsv(root.hue, root.sat, root.val));
+    }
+    function set-hue(x: length, w: length) {
+        root.hue = clamp(x / w, 0, 1) * 360;
+        root.picked(hsv(root.hue, root.sat, root.val));
+    }
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: Theme.border-strong;
+    background: root.value;
+    opacity: root.enabled ? 1 : 0.4;
+    TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        clicked => {
+            root.hue = root.value.to-hsv().hue;
+            root.sat = root.value.to-hsv().saturation;
+            root.val = root.value.to-hsv().value;
+            popup.show();
+        }
+    }
+    popup := PopupWindow {
+        close-policy: close-on-click-outside;
+        width: 8 * root.cell + 16px;
+        height: 6 * root.cell + 150px * Theme.ui-scale + 32px;
+        x: root.width - self.width;
+        y: - self.height - 4px;
+        Rectangle {
+            background: Theme.panel-bg;
+            border-width: 1px;
+            border-color: Theme.border;
+            border-radius: 4px;
+            // Basic colours: greys, then eight hues in five shades.
+            Rectangle {
+                x: 8px;
+                y: 8px;
+                width: 8 * root.cell;
+                height: 6 * root.cell;
+                for i in 48: Rectangle {
+                    property <int> across: mod(i, 8);
+                    property <int> down: floor(i / 8);
+                    property <color> c: down == 0 ? hsv(0, 0, across / 7)
+                        : down == 1 ? hsv(across * 45, 1, 1)
+                        : down == 2 ? hsv(across * 45, 1, 0.65)
+                        : down == 3 ? hsv(across * 45, 1, 0.35)
+                        : down == 4 ? hsv(across * 45, 0.5, 1)
+                        : hsv(across * 45, 0.25, 1);
+                    x: self.across * root.cell + 2px;
+                    y: self.down * root.cell + 2px;
+                    width: root.cell - 4px;
+                    height: root.cell - 4px;
+                    border-radius: 2px;
+                    border-width: swatch.has-hover ? 2px : 1px;
+                    border-color: swatch.has-hover ? Theme.text : Theme.border;
+                    background: self.c;
+                    swatch := TouchArea {
+                        clicked => {
+                            root.hue = parent.c.to-hsv().hue;
+                            root.sat = parent.c.to-hsv().saturation;
+                            root.val = parent.c.to-hsv().value;
+                            root.picked(parent.c);
+                        }
+                    }
+                }
+            }
+            // Saturation left to right, brightness bottom to top, for the hue.
+            Rectangle {
+                x: 8px;
+                y: 6 * root.cell + 16px;
+                width: 8 * root.cell;
+                height: 120px * Theme.ui-scale;
+                background: @linear-gradient(90deg, #ffffff 0%, hsv(root.hue, 1, 1) 100%);
+                Rectangle {
+                    background: @linear-gradient(0deg, #000000 0%, #00000000 100%);
+                }
+                Rectangle {
+                    x: root.sat * parent.width - 5px;
+                    y: (1 - root.val) * parent.height - 5px;
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 5px;
+                    border-width: 2px;
+                    border-color: root.val > 0.5 ? #000000 : #ffffff;
+                }
+                sv := TouchArea {
+                    pointer-event(e) => {
+                        if e.kind == PointerEventKind.down {
+                            root.set-sv(self.mouse-x, self.mouse-y, self.width, self.height);
+                        }
+                    }
+                    moved => {
+                        if self.pressed {
+                            root.set-sv(self.mouse-x, self.mouse-y, self.width, self.height);
+                        }
+                    }
+                }
+            }
+            Rectangle {
+                x: 8px;
+                y: 6 * root.cell + 24px + 120px * Theme.ui-scale;
+                width: 8 * root.cell;
+                height: 16px * Theme.ui-scale;
+                border-radius: 2px;
+                background: @linear-gradient(90deg, #ff0000 0%, #ffff00 16.7%, #00ff00 33.3%, #00ffff 50%, #0000ff 66.7%, #ff00ff 83.3%, #ff0000 100%);
+                Rectangle {
+                    x: root.hue / 360 * parent.width - 2px;
+                    width: 4px;
+                    border-width: 1px;
+                    border-color: #000000;
+                    background: #ffffff;
+                }
+                hue-touch := TouchArea {
+                    pointer-event(e) => {
+                        if e.kind == PointerEventKind.down {
+                            root.set-hue(self.mouse-x, self.width);
+                        }
+                    }
+                    moved => {
+                        if self.pressed {
+                            root.set-hue(self.mouse-x, self.width);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 // A dropdown of named colours, each with a dot of its colour.
 component ColourDropdown inherits Rectangle {
     in property <[string]> names;
@@ -3547,7 +3692,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                                     spacing: 6px;
                                     TableCell { text: "Keyword"; horizontal-stretch: 1; preferred-width: 10px * Theme.ui-scale; color: Theme.text-secondary; }
                                     TableCell { text: "Colour"; width: 70px * Theme.ui-scale; color: Theme.text-secondary; }
-                                    TableCell { text: "Style"; width: 180px * Theme.ui-scale; color: Theme.text-secondary; }
+                                    TableCell { text: "Style"; width: 140px * Theme.ui-scale; color: Theme.text-secondary; }
                                 }
                             }
                             ListView {
@@ -3581,7 +3726,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                                             }
                                         }
                                         TableCell { text: row.colour; width: 70px * Theme.ui-scale; }
-                                        TableCell { text: row.style; width: 180px * Theme.ui-scale; }
+                                        TableCell { text: row.style; width: 140px * Theme.ui-scale; }
                                     }
                                 }
                             }
@@ -3589,7 +3734,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                     }
                     HorizontalLayout {
                         spacing: 8px;
-                        FormLabel { text: "Keyword:"; }
+                        FormLabel { text: "Keyword:"; width: 64px * Theme.ui-scale; }
                         LineEdit {
                             horizontal-stretch: 1;
                             enabled: KeywordEditor.row >= 0;
@@ -3597,6 +3742,11 @@ component GlobalOptionsDialog inherits DialogFrame {
                             placeholder-text: KeywordEditor.regex ? "regular expression" : "word or phrase";
                             edited => { KeywordEditor.edit-row(); }
                         }
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        alignment: start;
+                        FormLabel { text: "Colour:"; width: 64px * Theme.ui-scale; }
                         ColourDropdown {
                             width: 110px * Theme.ui-scale;
                             enabled: KeywordEditor.row >= 0;
@@ -3604,6 +3754,17 @@ component GlobalOptionsDialog inherits DialogFrame {
                             dots: KeywordEditor.colour-dots;
                             current-index <=> KeywordEditor.colour;
                             selected => { KeywordEditor.edit-row(); }
+                        }
+                        if KeywordEditor.row >= 0 && KeywordEditor.colour == KeywordEditor.colours.length - 1: LineEdit {
+                            width: 80px * Theme.ui-scale;
+                            text <=> KeywordEditor.custom-colour;
+                            placeholder-text: "#rrggbb";
+                            edited => { KeywordEditor.edit-row(); }
+                        }
+                        if KeywordEditor.row >= 0 && KeywordEditor.colour == KeywordEditor.colours.length - 1: ColourPicker {
+                            width: 28px * Theme.ui-scale;
+                            value: KeywordEditor.custom-rgb;
+                            picked(c) => { KeywordEditor.pick-colour(c); }
                         }
                     }
                     HorizontalLayout {

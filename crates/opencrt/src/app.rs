@@ -1800,6 +1800,8 @@ struct App {
     kw_lists: Vec<render::KeywordList>,
     kw_list: usize,
     kw_row: Option<usize>,
+    /// The theme the window's title bar was last given.
+    window_theme: Option<config::UiTheme>,
     /// known_hosts line of each row in the Host Keys dialog.
     host_key_lines: Vec<usize>,
     /// How tabs share the terminal area.
@@ -2044,6 +2046,7 @@ impl App {
             kw_lists: Vec::new(),
             kw_list: 0,
             kw_row: None,
+            window_theme: None,
             host_key_lines: Vec::new(),
             layout: Layout::Tabs,
             stamp: 0,
@@ -3527,6 +3530,10 @@ impl App {
         if self.shown_bar.as_ref() != Some(&bar) {
             self.shown_bar = Some(bar);
             self.show_buttons(ui);
+        }
+        // The title bar follows the theme once the window exists.
+        if self.window_theme != Some(self.options.theme) && set_window_theme(ui, self.options.theme, self.window_theme.is_some()) {
+            self.window_theme = Some(self.options.theme);
         }
         self.keygen_done(ui);
         if update_due(self.options.check_updates, self.update_check.is_some(), Instant::now(), self.next_update_check) {
@@ -8261,6 +8268,27 @@ fn apply_desktop_colours(ui: &MainWindow, theme: config::UiTheme) {
     global.set_kde_text_inactive(inactive);
     let [r, g, b] = colours.map_or([0; 3], |c| c[1]).map(u32::from);
     global.set_kde_dark(r * 299 + g * 587 + b * 114 < 128_000);
+}
+
+/// Give the native title bar the chosen theme; false while the window does not exist yet.
+// shortcut: on X11 winit turns "follow the system" into dark, so System is only sent after a Light or Dark.
+fn set_window_theme(ui: &MainWindow, theme: config::UiTheme, changed: bool) -> bool {
+    use slint::winit_030::WinitWindowAccessor;
+    use slint::winit_030::winit::window::Theme;
+    let chosen = match theme {
+        config::UiTheme::System => None,
+        config::UiTheme::Light => Some(Theme::Light),
+        config::UiTheme::Dark => Some(Theme::Dark),
+    };
+    ui.window()
+        .with_winit_window(|w| {
+            if chosen.is_some() || changed {
+                w.set_theme(chosen);
+            }
+            #[cfg(target_os = "linux")]
+            crate::titlebar::follow(w, chosen);
+        })
+        .is_some()
 }
 
 pub fn run(args: &[String]) -> anyhow::Result<()> {

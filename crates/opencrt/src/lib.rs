@@ -36,6 +36,8 @@ mod ssh;
 mod telnet;
 mod terminal;
 mod tftp;
+#[cfg(target_os = "linux")]
+mod titlebar;
 mod update;
 mod vault;
 mod xymodem;

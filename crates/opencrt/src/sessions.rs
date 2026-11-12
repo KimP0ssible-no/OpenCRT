@@ -502,9 +502,11 @@ pub fn securecrt_extras(config_dir: &Path, home: &str) -> SecureCrtExtras {
     let mut files: Vec<PathBuf> = std::fs::read_dir(config_dir.join("Keywords")).into_iter().flatten().flatten().map(|e| e.path()).collect();
     files.retain(|p| p.extension().is_some_and(|e| e == "ini"));
     files.sort();
+    let default_session = std::fs::read_to_string(config_dir.join("Sessions").join("Default.ini")).unwrap_or_default();
+    let style = securecrt_highlight_style(&default_session);
     let keyword_sets = files
         .iter()
-        .filter_map(|p| Some(securecrt_keywords(&std::fs::read_to_string(p).ok()?, &p.file_stem()?.to_string_lossy())))
+        .filter_map(|p| Some(securecrt_keywords(&std::fs::read_to_string(p).ok()?, &p.file_stem()?.to_string_lossy(), style)))
         .collect();
     SecureCrtExtras { buttons, left_out, bars: names, keyword_sets }
 }
@@ -552,24 +554,42 @@ fn securecrt_buttons(text: &str, config_dir: &str, home: &str) -> (Vec<BarButton
     (buttons, left_out)
 }
 
+/// A session's keyword highlight style as keyword style bits (2 reverse
+/// video, 4 bold, 8 colour); colour when the session sets none.
+fn securecrt_highlight_style(session: &str) -> u32 {
+    let (values, _) = securecrt_entries(session);
+    let on = |key: &str| values.get(key).and_then(|v| u32::from_str_radix(v, 16).ok()).is_some_and(|v| v != 0);
+    let style = [("Highlight Reverse Video", 2), ("Highlight Bold", 4), ("Highlight Color", 8)].iter().filter(|(k, _)| on(k)).map(|(_, bit)| bit).sum();
+    if style == 0 { 8 } else { style }
+}
+
 /// A keyword list (`Keywords/<name>.ini`): its name and `word = colour ...`
-/// lines. Entries are `"word",colour,style,flags`: the colour a Windows
-/// COLORREF (0x00BBGGRR), matched to the nearest OpenCRT colour; the style
-/// bits 2 reverse video, 4 bold, 8 colour, or 0 for the session's style
-/// (SecureCRT's default: colour).
-fn securecrt_keywords(text: &str, file_stem: &str) -> KeywordSet {
+/// lines. SecureCRT 9 writes `Keyword List V3` entries `"word",colour,style,flags`:
+/// the colour a Windows COLORREF (0x00BBGGRR), kept as `#rrggbb`; the style bits 2 reverse video, 4 bold, 8 colour, or 0 for the
+/// session's style. Older versions write `Keyword List V2` entries
+/// `"pattern",colour,flags`, flag 1 a regular expression, in the session's
+/// style. `session_style` stands for the session's style (see
+/// `securecrt_highlight_style`).
+fn securecrt_keywords(text: &str, file_stem: &str, session_style: u32) -> KeywordSet {
     let (values, lists) = securecrt_entries(text);
-    let name = values.get("List Name").copied().unwrap_or(file_stem).to_string();
+    let name = values.get("List Name").copied().filter(|n| !n.is_empty()).unwrap_or(file_stem).to_string();
     let mut lines = Vec::new();
-    for entry in lists.get("Keyword List V3").into_iter().flatten() {
+    let v3 = lists.get("Keyword List V3").into_iter().flatten().map(|e| (e, true));
+    for (entry, v3) in v3.chain(lists.get("Keyword List V2").into_iter().flatten().map(|e| (e, false))) {
         let Some((word, rest)) = entry.strip_prefix('"').and_then(|e| e.rsplit_once("\",")) else { continue };
         let mut fields = rest.split(',').map(|f| u32::from_str_radix(f, 16).ok());
-        let (colour, style) = (fields.next().flatten(), fields.next().flatten().unwrap_or(0));
+        let colour = fields.next().flatten();
+        let (style, regex) = match v3 {
+            true => (fields.next().flatten().unwrap_or(0), false),
+            false => (0, fields.next().flatten().is_some_and(|f| f & 1 != 0)),
+        };
+        let style = if style == 0 { session_style } else { style };
+        let word = if regex { format!("/{word}/") } else { word.to_string() };
         let Some(c) = colour else {
-            lines.push(word.to_string());
+            lines.push(word);
             continue;
         };
-        let mut line = format!("{word} = {}", crate::render::nearest_keyword_colour([c as u8, (c >> 8) as u8, (c >> 16) as u8]));
+        let mut line = format!("{word} = {}", crate::render::hex_text([c as u8, (c >> 8) as u8, (c >> 16) as u8]));
         // Reverse video paints the background, as OpenCRT's plain keywords do;
         // otherwise the colour goes on the letters.
         // shortcut: bold alone (no colour) still colours the letters; OpenCRT has no plain bold.
@@ -822,8 +842,15 @@ mod tests {
         assert_eq!(buttons.iter().map(|b| b.color.as_str()).collect::<Vec<_>>(), ["blue", "purple", "", "yellow"], "cyan, magenta, white, yellow");
         // Reverse video only, bold only, bold and colour, and the session's style.
         let list = "\u{feff}S:\"List Name\"=Test\r\nD:\"Regex Line Mode\"=00000001\r\nD:\"Match Case\"=00000000\r\nZ:\"Keyword List V3\"=00000004\r\n \"error\",000000ff,00000002,00000003\r\n \"warning\",00ff4b2b,00000004,00000005\r\n \"whatheheck\",0000ff7b,0000000c,0000000f\r\n \"plain\",0000ff7b,00000000,00000001\r\n";
-        let lines = ["error = red", "warning = blue text bold", "whatheheck = green text bold", "plain = green text"].map(String::from);
-        assert_eq!(securecrt_keywords(list, "file"), ("Test".to_string(), lines.to_vec()));
+        let lines = ["error = #ff0000", "warning = #2b4bff text bold", "whatheheck = #7bff00 text bold", "plain = #7bff00 text"].map(String::from);
+        assert_eq!(securecrt_keywords(list, "file", 8), ("Test".to_string(), lines.to_vec()));
+        // Older SecureCRT: Keyword List V2, flag 1 a regex, in the session's style.
+        let v2 = "\u{feff}S:\"Keyword List\"=\r\nD:\"Match Case\"=00000000\r\nZ:\"Keyword List V2\"=00000003\r\n \"(?:yes|permit).?\",0036d700,00000001\r\n \"\\(hitcnt=0\\)\",00808080,00000001\r\n \"plain\",000000ff,00000000\r\n";
+        let reverse = securecrt_highlight_style("D:\"Highlight Bold\"=00000000\r\nD:\"Highlight Reverse Video\"=00000001\r\nD:\"Highlight Color\"=00000000\r\n");
+        assert_eq!((reverse, securecrt_highlight_style("")), (2, 8));
+        let lines = ["/(?:yes|permit).?/ = #00d736", "/\\(hitcnt=0\\)/ = #808080", "plain = #ff0000"].map(String::from);
+        assert_eq!(securecrt_keywords(v2, "Cisco Words", reverse), ("Cisco Words".to_string(), lines.to_vec()));
+        assert!(crate::render::keyword_sets(&lines).values().map(Vec::len).sum::<usize>() == 3, "the regexes compile");
         let session = "S:\"Protocol Name\"=SSH2\r\nS:\"Hostname\"=web1\r\nS:\"User Button Bar Name\"=Lab\r\nS:\"Keyword Set\"=Test\r\n";
         let s = from_securecrt(session, "SecureCRT", "web1", "/cfg", "").unwrap();
         assert_eq!((s.button_bar.as_str(), s.keyword_set.as_str()), ("Lab", "Test"));

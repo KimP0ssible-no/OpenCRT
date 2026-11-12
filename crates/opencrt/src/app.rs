@@ -63,6 +63,9 @@ const DIALOG_GLOBAL_OPTIONS: i32 = 6;
 const DIALOG_CONFIRM: i32 = 7;
 const DIALOG_NAME: i32 = 8;
 
+/// The keyword editor's Custom colour until one is typed: a mid grey.
+const CUSTOM_KEYWORD_COLOUR: [u8; 3] = [0x80; 3];
+
 /// A destructive action waiting for the user's Yes.
 enum Deletion {
     /// These sessions (by path).
@@ -7240,7 +7243,14 @@ impl App {
         let names: Vec<SharedString> = self.kw_lists.iter().map(|l| if l.name.is_empty() { "Default".into() } else { l.name.as_str().into() }).collect();
         editor.set_lists(ModelRc::new(VecModel::from(names)));
         editor.set_list(self.kw_list as i32);
-        let colours = render::keyword_colours();
+        // The named colours, then Custom with the picked keyword's own colour.
+        let picked = self.kw_row.and_then(|i| self.kw_lists[self.kw_list].rows.get(i)).and_then(|r| r.custom);
+        let mut colours = render::keyword_colours();
+        colours.push(("Custom".to_string(), picked.unwrap_or(CUSTOM_KEYWORD_COLOUR)));
+        let dot = |[r, g, b]: [u8; 3]| slint::Color::from_rgb_u8(r, g, b);
+        editor.set_colours(ModelRc::new(VecModel::from(colours.iter().map(|(n, _)| SharedString::from(n.as_str())).collect::<Vec<_>>())));
+        editor.set_colour_dots(ModelRc::new(VecModel::from(colours.iter().map(|(_, c)| dot(*c)).collect::<Vec<_>>())));
+        editor.set_custom_rgb(dot(picked.unwrap_or(CUSTOM_KEYWORD_COLOUR)));
         let rows: Vec<crate::KeywordRowView> = self.kw_lists[self.kw_list]
             .rows
             .iter()
@@ -7249,7 +7259,7 @@ impl App {
                 let (fg, bg) = r.colours();
                 crate::KeywordRowView {
                     pattern: r.pattern.as_str().into(),
-                    colour: colours[r.colour].0.as_str().into(),
+                    colour: r.custom.map_or_else(|| colours[r.colour].0.clone(), render::hex_text).into(),
                     style: r.style().into(),
                     fg: rgb(fg),
                     bg: bg.map(rgb).unwrap_or_default(),
@@ -7277,7 +7287,8 @@ impl App {
         let editor = ui.global::<crate::KeywordEditor>();
         editor.set_pattern(row.pattern.into());
         editor.set_regex(row.regex);
-        editor.set_colour(row.colour as i32);
+        editor.set_colour(if row.custom.is_some() { render::keyword_colours().len() } else { row.colour } as i32);
+        editor.set_custom_colour(row.custom.map(render::hex_text).unwrap_or_default().into());
         editor.set_text(row.text);
         editor.set_bold(row.bold);
         editor.set_word(row.word);
@@ -7290,10 +7301,22 @@ impl App {
         let Some(row) = self.kw_row.and_then(|i| self.kw_lists[self.kw_list].rows.get_mut(i)) else {
             return;
         };
+        let colour = editor.get_colour().max(0) as usize;
+        // Custom: the colour typed (with or without #), else the last good one.
+        let custom = (colour == render::keyword_colours().len()).then(|| {
+            let typed = editor.get_custom_colour();
+            let typed = typed.trim();
+            let hex = if typed.starts_with('#') { typed.to_string() } else { format!("#{typed}") };
+            render::hex_colour(&hex).or(row.custom).unwrap_or(CUSTOM_KEYWORD_COLOUR)
+        });
+        if custom.is_some() && editor.get_custom_colour().is_empty() {
+            editor.set_custom_colour(custom.map(render::hex_text).unwrap_or_default().into());
+        }
         *row = render::KeywordRow {
             pattern: editor.get_pattern().to_string(),
             regex: editor.get_regex(),
-            colour: editor.get_colour().max(0) as usize,
+            colour: if custom.is_some() { 0 } else { colour },
+            custom,
             text: editor.get_text(),
             bold: editor.get_bold(),
             word: editor.get_word(),
@@ -7430,11 +7453,6 @@ impl App {
         ui.set_go_theme(self.options.theme.index());
         ui.set_go_ui_font_size(self.options.ui_font_size.to_string().into());
         self.kw_lists = render::keyword_lists(&self.options.keywords);
-        let (names, dots): (Vec<SharedString>, Vec<slint::Color>) =
-            render::keyword_colours().into_iter().map(|(name, [r, g, b])| (SharedString::from(name), slint::Color::from_rgb_u8(r, g, b))).unzip();
-        let editor = ui.global::<crate::KeywordEditor>();
-        editor.set_colours(ModelRc::new(VecModel::from(names)));
-        editor.set_colour_dots(ModelRc::new(VecModel::from(dots)));
         self.kw_pick_list(0, ui);
         ui.set_go_key_map(self.options.key_map.join("\n").into());
         ui.set_go_scheme(schemes().iter().position(|s| s.name == self.options.scheme).unwrap_or(0) as i32);
@@ -8334,6 +8352,11 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
     kw!(on_add_row, |app, ui| app.kw_add_row(&ui));
     kw!(on_remove_row, |app, ui| app.kw_remove_row(&ui));
     kw!(on_edit_row, |app, ui| app.kw_edit_row(&ui));
+    kw!(on_pick_colour, |app, ui, colour| {
+        let hex = render::hex_text([colour.red(), colour.green(), colour.blue()]);
+        ui.global::<crate::KeywordEditor>().set_custom_colour(hex.into());
+        app.kw_edit_row(&ui);
+    });
     on!(on_session_activate, |app, ui, index| app.session_activate(index as usize, &ui));
     on!(on_session_toggle, |app, _ui, index| app.session_toggle(index as usize));
     on!(on_scratch_act, |app, ui, name| app.scratch_act(&name, &ui));

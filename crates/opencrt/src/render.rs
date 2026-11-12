@@ -54,10 +54,16 @@ const KEYWORD_COLORS: [(&str, Rgb, Rgb, Rgb); 5] = [
 /// The default amber, for `text` style.
 const HIGHLIGHT_TEXT: Rgb = [0xd2, 0x99, 0x22];
 
-/// The keyword colour name nearest to `rgb`, for keyword lists from elsewhere.
-pub fn nearest_keyword_colour(rgb: Rgb) -> &'static str {
-    let distance = |c: &Rgb| (0..3).map(|i| (i32::from(c[i]) - i32::from(rgb[i])).pow(2)).sum::<i32>();
-    KEYWORD_COLORS.iter().min_by_key(|(_, _, bg, _)| distance(bg)).map_or("red", |(name, ..)| name)
+/// `#rrggbb` as a colour.
+pub fn hex_colour(word: &str) -> Option<Rgb> {
+    let hex = word.strip_prefix('#').filter(|h| h.len() == 6 && h.is_ascii())?;
+    let byte = |i: usize| u8::from_str_radix(&hex[i..i + 2], 16).ok();
+    Some([byte(0)?, byte(2)?, byte(4)?])
+}
+
+/// `rgb` as `#rrggbb`.
+pub fn hex_text([r, g, b]: Rgb) -> String {
+    format!("#{r:02x}{g:02x}{b:02x}")
 }
 
 #[derive(Clone, Debug)]
@@ -120,15 +126,15 @@ pub fn keyword_sets(lines: &[String]) -> HashMap<String, Vec<Keyword>> {
 
 /// A keyword line's pattern and its options after `=` ("" when none are valid).
 fn split_keyword(line: &str) -> (&str, &str) {
-    let known = |w: &str| ["line", "text", "bold", "word"].iter().chain(KEYWORD_COLORS.iter().map(|(n, ..)| n)).any(|k| k.eq_ignore_ascii_case(w));
+    let known = |w: &str| ["line", "text", "bold", "word"].iter().chain(KEYWORD_COLORS.iter().map(|(n, ..)| n)).any(|k| k.eq_ignore_ascii_case(w)) || hex_colour(w).is_some();
     match line.rsplit_once('=') {
         Some((p, o)) if !o.trim().is_empty() && o.split_whitespace().all(known) => (p, o),
         _ => (line, ""),
     }
 }
 
-/// The keyword colours for the editor, with their highlight background: the
-/// default amber, then KEYWORD_COLORS.
+/// The named keyword colours for the editor, with their highlight background:
+/// the default amber, then KEYWORD_COLORS. The editor adds Custom after them.
 pub fn keyword_colours() -> Vec<(String, Rgb)> {
     let title = |n: &str| n[..1].to_uppercase() + &n[1..];
     std::iter::once(("Amber".to_string(), HIGHLIGHT_BG)).chain(KEYWORD_COLORS.iter().map(|(n, _, bg, _)| (title(n), *bg))).collect()
@@ -140,8 +146,10 @@ pub struct KeywordRow {
     /// The word, or the regex without its slashes.
     pub pattern: String,
     pub regex: bool,
-    /// An index into `keyword_colours` (0: amber).
+    /// An index into `keyword_colours` (0: amber); ignored while `custom` is set.
     pub colour: usize,
+    /// An exact colour (`#rrggbb`), e.g. from a SecureCRT keyword list.
+    pub custom: Option<Rgb>,
     pub text: bool,
     pub bold: bool,
     pub word: bool,
@@ -153,12 +161,13 @@ impl KeywordRow {
         let (pattern, options) = split_keyword(line);
         let has = |f: &str| options.split_whitespace().any(|w| w.eq_ignore_ascii_case(f));
         let colour = options.split_whitespace().find_map(|w| KEYWORD_COLORS.iter().position(|(n, ..)| n.eq_ignore_ascii_case(w))).map_or(0, |i| i + 1);
+        let custom = options.split_whitespace().find_map(hex_colour);
         let pattern = pattern.trim();
         let (pattern, regex) = match pattern.strip_prefix('/').and_then(|p| p.strip_suffix('/')) {
             Some(re) if !re.is_empty() => (re, true),
             _ => (pattern, false),
         };
-        let row = KeywordRow { pattern: pattern.to_string(), regex, colour, text: has("text"), bold: has("bold"), word: has("word"), line: has("line") };
+        let row = KeywordRow { pattern: pattern.to_string(), regex, colour, custom, text: has("text"), bold: has("bold"), word: has("word"), line: has("line") };
         (!pattern.is_empty()).then_some(row)
     }
 
@@ -172,9 +181,12 @@ impl KeywordRow {
             false if lookalike('[', ']') || lookalike('/', '/') => format!("/{}/", regex::escape(p)),
             false => p.to_string(),
         };
-        let colour = self.colour.checked_sub(1).and_then(|i| KEYWORD_COLORS.get(i)).map(|(n, ..)| *n);
+        let colour = match self.custom {
+            Some(rgb) => Some(hex_text(rgb)),
+            None => self.colour.checked_sub(1).and_then(|i| KEYWORD_COLORS.get(i)).map(|(n, ..)| n.to_string()),
+        };
         let flags = [("text", self.text), ("bold", self.bold), ("word", self.word), ("line", self.line)];
-        let options: Vec<&str> = colour.into_iter().chain(flags.iter().filter(|(_, on)| *on).map(|(f, _)| *f)).collect();
+        let options: Vec<String> = colour.into_iter().chain(flags.iter().filter(|(_, on)| *on).map(|(f, _)| f.to_string())).collect();
         if options.is_empty() { pattern } else { format!("{pattern} = {}", options.join(" ")) }
     }
 
@@ -182,7 +194,11 @@ impl KeywordRow {
     /// style puts the colour on the letters.
     pub fn colours(&self) -> (Rgb, Option<Rgb>) {
         let named = self.colour.checked_sub(1).and_then(|i| KEYWORD_COLORS.get(i));
-        let (fg, bg, text) = named.map_or((HIGHLIGHT_FG, HIGHLIGHT_BG, HIGHLIGHT_TEXT), |(_, fg, bg, text)| (*fg, *bg, *text));
+        let (fg, bg, text) = match self.custom {
+            // Dark or white letters, whichever reads on the colour.
+            Some(c @ [r, g, b]) => (if u32::from(r) * 299 + u32::from(g) * 587 + u32::from(b) * 114 > 140_000 { HIGHLIGHT_FG } else { [0xff; 3] }, c, c),
+            None => named.map_or((HIGHLIGHT_FG, HIGHLIGHT_BG, HIGHLIGHT_TEXT), |(_, fg, bg, text)| (*fg, *bg, *text)),
+        };
         if self.text { (text, None) } else { (fg, Some(bg)) }
     }
 
@@ -785,6 +801,20 @@ mod tests {
         // An unknown colour is part of the word; blank lines are skipped.
         assert!(matches!(parse_keyword("a=b").unwrap().pattern, Pattern::Word(w) if w.len() == 3));
         assert!(parse_keyword("   ").is_none() && parse_keyword(" = red").is_none());
+    }
+
+    #[test]
+    fn keywords_take_exact_colours() {
+        let row = KeywordRow::parse("Gi0/1 = #808080 text word").unwrap();
+        assert_eq!((row.custom, row.text, row.word), (Some([0x80; 3]), true, true));
+        assert_eq!(row.to_line(), "Gi0/1 = #808080 text word");
+        assert_eq!(row.colours(), ([0x80; 3], None));
+        // On a background the letters are dark or white, whichever reads.
+        assert_eq!(KeywordRow::parse("a = #ffffff").unwrap().colours(), (HIGHLIGHT_FG, Some([0xff; 3])));
+        assert_eq!(KeywordRow::parse("a = #000080").unwrap().colours(), ([0xff; 3], Some([0, 0, 0x80])));
+        // Not a colour: part of the word.
+        assert_eq!(KeywordRow::parse("a = #80808").unwrap().pattern, "a = #80808");
+        assert!(parse_keyword("x = #00d736 bold").is_some_and(|k| k.paint.bg == Some([0, 0xd7, 0x36]) && k.paint.bold));
     }
 
     #[test]

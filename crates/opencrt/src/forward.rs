@@ -1,6 +1,7 @@
 //! SSH port forwarding: local, remote and dynamic SOCKS. Local and SOCKS
 //! listeners bind to 127.0.0.1 unless the forward names another address.
 
+use crate::tr;
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::{Arc, Mutex, Weak};
@@ -103,15 +104,15 @@ impl Forward {
     }
 
     /// What is wrong with this forward, for the properties dialog.
-    pub fn problem(&self) -> Option<&'static str> {
+    pub fn problem(&self) -> Option<String> {
         if self.port == 0 {
-            Some("Enter the port to listen on (1-65535).")
+            Some(tr!("Enter the port to listen on (1-65535)."))
         } else if self.kind != ForwardKind::Dynamic && self.host_port == 0 {
-            Some("Enter the destination port (1-65535).")
+            Some(tr!("Enter the destination port (1-65535)."))
         } else if [&self.bind, &self.host].iter().any(|s| s.contains(char::is_whitespace)) {
-            Some("Addresses and host names cannot contain spaces.")
+            Some(tr!("Addresses and host names cannot contain spaces."))
         } else if parse_allow(&self.allow).is_none() {
-            Some("Allowed addresses must be IP addresses or networks such as 192.168.1.0/24, separated by commas.")
+            Some(tr!("Allowed addresses must be IP addresses or networks such as 192.168.1.0/24, separated by commas."))
         } else {
             None
         }
@@ -240,10 +241,10 @@ where
             }
         };
         match result {
-            Err(e) => report(events, format!("Port forward \"{forward}\" failed: {e:#}")),
+            Err(e) => report(events, tr!("Port forward \"{}\" failed: {}", forward, format!("{:#}", e))),
             Ok(()) if forward.kind != ForwardKind::Remote && !forward.application.is_empty() => {
                 if let Err(e) = launch(&forward.application, &forward.arguments) {
-                    report(events, format!("Port forward \"{forward}\": cannot start {}: {e}", forward.application));
+                    report(events, tr!("Port forward \"{}\": cannot start {}: {}", forward, forward.application, e));
                 }
             }
             Ok(()) => {}
@@ -281,7 +282,7 @@ where
                 break; // the connection is gone: stop listening
             }
             if !allowed(&allow, peer.ip()) {
-                report(&events, format!("Port {port}: refused a connection from {} (not in the allowed addresses)", peer.ip()));
+                report(&events, tr!("Port {}: refused a connection from {} (not in the allowed addresses)", port, peer.ip()));
                 continue;
             }
             let (session, dest, events) = (session.clone(), dest.clone(), events.clone());
@@ -311,7 +312,7 @@ where
                 }
                 .await;
                 if let Err(e) = result {
-                    report(&events, format!("Forwarded connection on port {port}: {e:#}"));
+                    report(&events, tr!("Forwarded connection on port {}: {}", port, format!("{:#}", e)));
                 }
             });
         }

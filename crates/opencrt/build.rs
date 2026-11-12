@@ -13,7 +13,11 @@ fn main() {
         .collect();
     languages.sort();
     let out = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("languages.rs");
-    std::fs::write(out, format!("pub const LANGUAGES: &[&str] = &{languages:?};\n")).unwrap();
+    // The same .po files, for the texts the Rust code shows (see src/lang.rs).
+    let lang_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("lang");
+    let catalogues: String =
+        languages.iter().map(|l| format!("({l:?}, include_str!({:?})),", lang_dir.join(l).join("LC_MESSAGES/opencrt.po"))).collect();
+    std::fs::write(out, format!("pub const LANGUAGES: &[&str] = &{languages:?};\nconst CATALOGUES: &[(&str, &str)] = &[{catalogues}];\n")).unwrap();
     let mut config = slint_build::CompilerConfiguration::new()
         .with_style("fluent".into())
         .with_default_translation_context(slint_build::DefaultTranslationContext::None);

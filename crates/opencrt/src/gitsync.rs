@@ -12,6 +12,7 @@
 //! changed the same thing, this computer wins (the other version stays in the
 //! repository's history).
 
+use crate::tr;
 use std::collections::{HashMap, HashSet};
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -499,9 +500,9 @@ fn start_using(base: &Path, current: &Path, current_synced: bool, remote: &Remot
     }
     config::save(&base.join(REMOTE_FILE), remote)?;
     Ok(if empty {
-        "Your settings are now in the repository; OpenCRT uses it from the next start.".into()
+        tr!("Your settings are now in the repository; OpenCRT uses it from the next start.")
     } else {
-        format!("The repository's settings are used from the next start (yours stay in {}).", current.display())
+        tr!("The repository's settings are used from the next start (yours stay in {}).", current.display())
     })
 }
 
@@ -524,7 +525,7 @@ fn stop_using(base: &Path, current: &Path, folder: &Path, current_synced: bool) 
         Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e)?,
         _ => {}
     }
-    Ok(format!("Settings are kept in {} again from the next start.", folder.display()))
+    Ok(tr!("Settings are kept in {} again from the next start.", folder.display()))
 }
 
 enum Job {
@@ -559,7 +560,7 @@ pub fn start_up(args: &[String]) {
     };
     let token = match remote.https() {
         true => config::git_token().unwrap_or_else(|e| {
-            note(format!("Settings repository: cannot read the token from the keychain ({e})."));
+            note(tr!("Settings repository: cannot read the token from the keychain ({}).", e));
             None
         }),
         false => None,
@@ -574,7 +575,7 @@ pub fn start_up(args: &[String]) {
     };
     if let Err(e) = result {
         let using = if git.dir.join(".git").is_dir() { "the copy on this computer" } else { "this computer's own settings for now" };
-        note(format!("Settings repository not reached ({e:#}); using {using}."));
+        note(tr!("Settings repository not reached ({}); using {}.", format!("{:#}", e), using));
     }
     if git.dir.join(".git").is_dir() {
         let (jobs, work) = mpsc::channel();
@@ -620,11 +621,11 @@ fn send_changes(git: &Git, jobs: &mpsc::Receiver<Job>) {
             Ok(true) => last_error = None,
             Ok(false) if !told_behind => {
                 told_behind = true;
-                note("Settings were changed on another computer: restart OpenCRT to merge them with yours.".into());
+                note(tr!("Settings were changed on another computer: restart OpenCRT to merge them with yours."));
             }
             Ok(false) => {}
             Err(e) => {
-                let text = format!("Settings not sent to the repository: {e:#}");
+                let text = tr!("Settings not sent to the repository: {}", format!("{:#}", e));
                 if last_error.as_ref() != Some(&text) {
                     note(text.clone());
                     last_error = Some(text);

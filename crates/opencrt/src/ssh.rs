@@ -1,6 +1,7 @@
 //! SSH transport built on `russh`, run on a background tokio runtime and bridged
 //! to the UI with channels.
 
+use crate::tr;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -130,7 +131,7 @@ pub(crate) fn saved_password(name: &str, io: &Io) -> Option<String> {
         }
     }
     crate::config::credential_password(name).unwrap_or_else(|e| {
-        let note = format!("\x1b[33mCredential \"{name}\": {e}; asking for the password instead.\x1b[0m\r\n");
+        let note = format!("\x1b[33m{}\x1b[0m\r\n", tr!("Credential \"{}\": {}; asking for the password instead.", name, e));
         let _ = io.output.send(SshEvent::Data(note.into_bytes()));
         None
     })

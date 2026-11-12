@@ -1,7 +1,9 @@
 # Translations
 
-OpenCRT's interface text comes from `crates/opencrt/ui/main.slint`, where each
-visible string is marked with `@tr("...")`. This folder holds the translations.
+OpenCRT's interface text comes from two places: `crates/opencrt/ui/main.slint`,
+where each visible string is marked with `@tr("...")`, and the Rust code, where
+each text the user sees is marked with `tr!("...")`. This folder holds the
+translations of both.
 
 - `opencrt.pot` is the template: every text to translate.
 - `<locale>/LC_MESSAGES/opencrt.po` is one language, for example
@@ -22,16 +24,17 @@ English. A text without a translation shows in English.
 
 ## Update the template
 
-If you add or change `@tr` text in `main.slint`, extract the template again
-from the repository root. `slint-tr-extractor` comes from
-`cargo install slint-tr-extractor`:
+If you add or change `@tr` or `tr!` text, write the template again from the
+repository root. The script needs `slint-tr-extractor`
+(`cargo install slint-tr-extractor`) and `python3`:
 
 ```
-slint-tr-extractor --no-default-translation-context --package-name OpenCRT -o crates/opencrt/lang/opencrt.pot crates/opencrt/ui/*.slint
+crates/opencrt/lang/update-template.sh
 ```
+
+A unit test fails when a `tr!` text is missing from the template.
 
 To bring a language up to date with the new template, run GNU gettext's
 `msgmerge --update <locale>/LC_MESSAGES/opencrt.po opencrt.pot`.
 
-Texts that the Rust code shows (status bar messages, errors) are not
-translated yet.
+Error texts from protocol code and libraries stay in English.

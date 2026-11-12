@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OpenCRT VERSION\n"
-"POT-Creation-Date: 2026-11-12 13:54+0000\n"
+"POT-Creation-Date: 2026-11-12 14:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2900,4 +2900,1236 @@ msgstr ""
 
 #: crates/opencrt/ui/main.slint:7395
 msgid "\\r is Enter, \\n a line feed, \\t Tab, \\e Escape and \\\\ a backslash."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:379
+msgid "Enter a username."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:381
+msgid "Enter jump hosts as [user@]host[:port] or saved session names, separated by commas."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:383
+msgid "Enter a username (user, DOMAIN\\user or user@domain)."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:385
+msgid "Enter a hostname."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:388
+msgid "Enter a port between 1 and 65535."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:390
+msgid "Enter a serial port name, e.g. COM3."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:391
+msgid "Enter a baud rate."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:551
+msgid "No saved session named \"{}\"."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:942
+msgid "Reconnecting in {} s (attempt {} of {})..."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:975
+msgid "Script finished."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:976
+msgid "Script stopped: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:990
+msgid "Zmodem: received {} bytes"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1007
+msgid "Kermit: received {} bytes"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1013
+msgid "Kermit: sent {} of {} bytes"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1027
+msgid "Zmodem: receiving into {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1071
+msgid "Zmodem: sending {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1101 crates/opencrt/src/app.rs:7059 crates/opencrt/src/app.rs:7137
+msgid "Run rz on the host to receive {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1123
+msgid "Kermit: sending {} (run kermit -r on the host)..."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1127
+msgid "Kermit: receiving into {}..."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1172
+msgid "Zmodem: sent {} of {} bytes"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1188
+msgid "Logging stopped: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1282
+msgid "Connects when shown"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1300
+msgid "Running the pre-connect command..."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1338
+msgid "Connecting to {}..."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1347 crates/opencrt/src/app.rs:1353
+msgid "Logon script {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1355 crates/opencrt/src/app.rs:5179
+msgid "Logon script: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1408 crates/opencrt/src/app.rs:1411
+msgid "Pre-connect command: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1409 crates/opencrt/src/app.rs:1543
+msgid "Press Enter to reconnect."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1512 crates/opencrt/src/app.rs:3821
+msgid "Recording to {} stopped: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1518
+msgid "Receive ASCII stopped: cannot write {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1562
+msgid "Connection closed. Press Enter to reconnect."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:1569 crates/opencrt/src/app.rs:1571
+msgid "Disconnected"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2092
+msgid "Sessions not saved: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2105
+msgid "Options not saved: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2201
+msgid "Session {} no longer exists."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2231
+msgid "That tab is locked: unlock it first (its tab menu)."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2259
+msgid "Port forwarding needs an SSH2 session."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2262
+msgid "This session has no port forwards: add them in Session Options > Port Forwarding."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2276
+msgid "Close {} other tabs, {} of them connected?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2291
+msgid "Close {} tabs, {} of them connected?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2314
+msgid "Password to unlock with:"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2315
+msgid "The same password again:"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2318
+msgid "Unlock Session"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2318
+msgid "Lock Session"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2329
+msgid "The passwords did not match; the tab is not locked."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2344
+msgid "Wrong password; the tab stays locked."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2353
+msgid "Locked tabs were left open."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2404
+msgid "Sent to the printer."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2405
+msgid "Cannot print: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2489
+msgid "Deleted the snapshot \"{}\"."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2496 crates/opencrt/src/app.rs:2504
+msgid "Bar name:"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2512
+msgid "Delete the button bar \"{}\"? Sessions that use it go back to the Default bar."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2513
+msgid "Delete the button bar \"{}\" and its buttons ({})? Sessions that use it go back to the Default bar."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2521
+msgid "Snapshot name:"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2593
+msgid "Send Break works in connected serial and Telnet sessions."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2599
+msgid "Script cancelled."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2605
+msgid "Convert Private Key to OpenSSH"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2642 crates/opencrt/src/app.rs:5578
+msgid "Add Key to Agent"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2695
+msgid "Import known_hosts"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2700
+msgid "Import SecureCRT Host Keys (pick its KnownHosts folder)"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2716
+msgid "Imported {} host keys ({} found)."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2717
+msgid "Cannot update known_hosts: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2727
+msgid "Exported the host keys to {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2728 crates/opencrt/src/app.rs:6550
+msgid "Cannot export to {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2738
+msgid "Cannot update {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2756
+msgid "Updating restarts OpenCRT and disconnects the connected session. Update now?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2757
+msgid "Updating restarts OpenCRT and disconnects {} connected sessions. Update now?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2764 crates/opencrt/src/app.rs:2820 crates/opencrt/src/app.rs:2942 crates/opencrt/src/app.rs:3314 crates/opencrt/src/app.rs:3614 crates/opencrt/src/app.rs:6458 crates/opencrt/src/app.rs:6515 crates/opencrt/src/app.rs:6938
+msgid "Cannot open {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2771 crates/opencrt/src/app.rs:2867
+msgid "Disconnected."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2811
+msgid "Auto Print: output is collected and printed when you turn it off."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:2938
+msgid "No local port forward to open: SOCKS and remote forwards have no page."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:3061
+msgid "Stopped sending the pasted text."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:3376
+msgid "Font size {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:3499
+msgid "Do the same for the rest of the queue"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:3506
+msgid "These {} lines will be pasted into every connected tab. Change them first if needed."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:3507
+msgid "These {} lines will be pasted. Change them first if needed."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:3562
+msgid "Public key added to authorized_keys on {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:3564
+msgid "Could not add the public key on {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4068
+msgid "Log in to {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4077
+msgid "Type the password"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4143
+msgid "Cannot save the passphrase of {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4189
+msgid "The SecureCRT sessions were imported without their passwords."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4195
+msgid "The password was not saved."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4201
+msgid "Type the new master password."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4202
+msgid "The new password and its confirmation differ."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4205
+msgid "Saved passwords and key passphrases are now kept under the master password."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4209
+msgid "Settings Sync shares these passwords: removing the master password moves them into this computer's keychain only, and the other computers that sync these settings will need their saved passwords entered again. Click Remove again to go ahead."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4214
+msgid "Changed the master password."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4217
+msgid "Removed the master password: saved passwords are back in this computer's keychain."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4243
+msgid "Type SecureCRT's Config Passphrase."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4251
+msgid "That passphrase opens none of the saved passwords. Check it in SecureCRT (it asks for it when it starts)."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4258
+msgid "Cannot save the password of {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4269
+msgid " Not read: {} (saved before the passphrase was set, or in an older form)."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4270
+msgid "Imported {} saved SecureCRT passwords as credentials of their sessions.{}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4398
+msgid "Connect to {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4618
+msgid "Connect {} sessions in \"{}\"?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4643 crates/opencrt/src/app.rs:4695 crates/opencrt/src/app.rs:4834
+msgid "Folder name:"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4702
+msgid "Delete the session \"{}\"?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4703
+msgid "Delete {} sessions?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4709
+msgid "Delete the folder \"{}\"?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4710
+msgid "Delete the folder \"{}\" and the session in it?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4711
+msgid "Delete the folder \"{}\" and the {} sessions in it?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4768
+msgid "Deleted the button bar \"{}\"."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4782
+msgid "The new configuration folder is used from the next start."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4822
+msgid "Pick the files or folders whose paths to copy."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4826
+msgid "The clipboard is not available."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4829
+msgid "Pick one file or folder to rename."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4830
+msgid "Pick the files or folders to delete."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4833
+msgid "Rename"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4834
+msgid "New name:"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4841
+msgid "Delete \"{}\" from this computer?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4842
+msgid "Delete \"{}\" from the server?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4843
+msgid "Delete the folder \"{}\" and everything in it from this computer?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4844
+msgid "Delete the folder \"{}\" and everything in it from the server?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4845
+msgid "Delete {} items (folders with everything in them) from this computer?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4846
+msgid "Delete {} items (folders with everything in them) from the server?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:4865
+msgid "Tab name:"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5181
+msgid "Anti-idle: the interval must be a whole number of seconds."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5186
+msgid "Remote Desktop: {} is not a folder on this computer."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5199
+msgid "Cannot change \"{}\": {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5237
+msgid "Enter a session name (without \"/\")."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5241
+msgid "A session with that name already exists in this folder."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5331
+msgid "Disconnected by the script."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5416
+msgid "Running script..."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5425
+msgid "Script {} finished."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5428
+msgid "Script {} stopped: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5534
+msgid "Public Key Assistant: open an SSH2 session first."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5538
+msgid "Public Key Assistant: the active tab must be a connected SSH2 session."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5542
+msgid "Public Key to Add"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5542
+msgid "Public keys"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5554
+msgid "Adding the public key on {}..."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5578 crates/opencrt/src/app.rs:6340
+msgid "Passphrase for {}:"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5581 crates/opencrt/src/app.rs:5593 crates/opencrt/src/lang.rs:14
+msgid "Cannot load {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5628 crates/opencrt/src/app.rs:5822 crates/opencrt/src/app.rs:5913
+msgid "Cannot save the password: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5640
+msgid "under the master password"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5640
+msgid "in the system keychain"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5641
+msgid "Password for {} saved {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5694
+msgid "Fix the colours first (#rrggbb)."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5709
+msgid "Enter a name for the scheme."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5711
+msgid "A scheme with that name already exists."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5713
+msgid "Every colour must be #rrggbb (cursor and selection may be blank)."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5724
+msgid "Colour scheme saved."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5807
+msgid "A firewall with that name already exists."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5893
+msgid "Enter a name for the credential."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5895
+msgid "A credential with that name already exists."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5897
+msgid "The passwords do not match."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:5943
+msgid "The password of \"{}\" could not be removed from the keychain: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6037
+msgid "Import Key Map"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6037
+msgid "Key maps"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6040 crates/opencrt/src/app.rs:6342 crates/opencrt/src/app.rs:6619 crates/opencrt/src/app.rs:6836 crates/opencrt/src/sessions.rs:673
+msgid "Cannot read {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6049 crates/opencrt/src/app.rs:6844
+msgid "Cannot write {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6055 crates/opencrt/src/app.rs:6502
+msgid "Log files"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6057
+msgid "OpenSSH Certificate"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6057
+msgid "Certificates"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6062
+msgid "Folder to Share with the Remote Computer"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6112
+msgid "The passphrases do not match."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6114
+msgid "Enter where to save the private key."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6116
+msgid "That file already exists; choose another name."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6149
+msgid "Checking for a new version…"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6172
+msgid "OpenCRT {} is available. {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6177
+msgid "OpenCRT {} is the latest version."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6180
+msgid "Could not check for a new version: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6224
+msgid "Could not update: {}. Download it from the release page instead."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6240
+msgid "Downloading Python for Python scripts (once) from its official site..."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6285
+msgid "Downloading Git for Windows from its official releases..."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6299
+msgid "Git's installer is running: finish it, then press OK."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6300
+msgid "Could not get Git for Windows: {}. It is also at git-scm.com."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6321
+msgid "; public key copied to the clipboard"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6322
+msgid "Created {} and .pub{}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6340
+msgid "Convert Private Key"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6347
+msgid "Cannot decrypt {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6361
+msgid "Saved {} and .pub in OpenSSH format."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6362 crates/opencrt/src/app.rs:6955 crates/opencrt/src/app.rs:7003
+msgid "Cannot save {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6379
+msgid "Sent {} ({} bytes)."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6382
+msgid "Send Binary File: no connected session."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6383 crates/opencrt/src/app.rs:6431
+msgid "Cannot send {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6391
+msgid "Stopped receiving into {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6399
+msgid "Receiving into {}; choose Stop Receive ASCII to finish."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6401 crates/opencrt/src/app.rs:6486
+msgid "Cannot create {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6430
+msgid "Send ASCII File: no connected session."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6470
+msgid "Stopped recording to {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6484
+msgid "Recording to {}; play it with asciinema play."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6498
+msgid "Stopped logging to {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6513
+msgid "Logging to {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6525
+msgid "Cannot read known_hosts: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6542
+msgid "OpenCRT sessions"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6549
+msgid "Exported {} sessions to {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6559
+msgid "Sessions"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6593
+msgid "Cannot import {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6598 crates/opencrt/src/app.rs:6641 crates/opencrt/src/app.rs:6664
+msgid "; already there: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6599
+msgid "Imported {} sessions from {}{}.{}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6642
+msgid "Imported {} sessions from {}{}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6650
+msgid "Import SecureCRT Sessions (pick the Config folder)"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6665
+msgid "; not imported (unreadable or unsupported protocol): {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6678
+msgid " Added button bars: {}, buttons: {}, keyword lists: {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6680
+msgid " Buttons left out (SecureCRT menu functions): {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6692
+msgid "Imported {} sessions from {}{}{}.{}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6706
+msgid "Run Script: open a session first."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6708
+msgid "Run Script"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6708
+msgid "Scripts"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6708
+msgid "All files"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6719
+msgid "Snapshots keep saved sessions; none are open."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6736
+msgid "Saved the snapshot \"{}\" ({} sessions)."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6820 crates/opencrt/src/app.rs:6826 crates/opencrt/src/app.rs:6857
+msgid "No connected session to send to."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6865
+msgid "Run: no program given."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6871
+msgid "Cannot run {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6878
+msgid "Telnet commands need a connected Telnet session."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6879
+msgid "Unknown Telnet command \"{}\"."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6889
+msgid "Script {}: open a session first."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6903 crates/opencrt/src/app.rs:6915 crates/opencrt/src/app.rs:6965
+msgid "Running script {}..."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6909
+msgid "Run Script: no connected session."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6927 crates/opencrt/src/app.rs:6976
+msgid "New script"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6928 crates/opencrt/src/app.rs:6995
+msgid "Rhai scripts"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6953
+msgid "Saved {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6960
+msgid "No syntax errors."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6990
+msgid "Recording: lines you type are added to a script until Script > Stop Recording."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6999
+msgid "Recording discarded."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7002
+msgid "Script saved to {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7012
+msgid "Drop files on a connected session to upload them."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7036
+msgid "Send {} with:"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7051
+msgid "Only {} is sent: this protocol takes one file at a time."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7124
+msgid "Cannot start the transfer: {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7131
+msgid "Zmodem Upload: no connected session."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7236
+msgid "Button Bar Button"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7236
+msgid "Command"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7267
+msgid "Enter a label and what the button does."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7269
+msgid "Telnet commands are brk, ip, ao, ayt, ec, el, ga and nop."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7294
+msgid "Delete the button \"{}\"?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7295
+msgid "Delete the command \"{}\"?"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7311
+msgid "Custom"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7406
+msgid "New list"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7406
+msgid "New list {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7540
+msgid "Font size must be 6 to 48, scrollback 0 to 1000000 lines, and keepalive 0 to 86400 seconds."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7549
+msgid "General: recent sessions must be 0 to {}, the Connect All warning 0 to 1000, and the interface font size 9 to 20."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7554
+msgid "Connection: the default SSH2 key file does not exist."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7562
+msgid "Printing: the font size (up to 72) and margins (up to 100 mm) must be whole numbers."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7566
+msgid "File Transfer: the download folder does not exist."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7570
+msgid "General: the configuration folder must be a full path."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7579
+msgid "Settings Sync needs git, which is not installed: {}."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7583
+msgid "File Transfer: TFTP addresses must be IP addresses or networks such as 192.168.1.0/24."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7696
+msgid "Settings Sync: the repository was not set up: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7704
+msgid " (your current settings were copied there)"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7706
+msgid " Connected sessions will be disconnected."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7707
+msgid "Settings now live in {}{}. Restart OpenCRT to use them?{}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7710
+msgid "Configuration folder not changed: {}"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7741
+msgid "Cannot restart OpenCRT ({}); the new configuration folder is used from the next start."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:7810
+msgid "Remote Desktop: enter both width and height (200 to 8192 pixels), or leave both blank to fit the window."
+msgstr ""
+
+#: crates/opencrt/src/app.rs:8056
+msgid "Local"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:8056
+msgid "SSH server"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:8057
+msgid "Remote"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:8057
+msgid "this machine"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:8058
+msgid "any (SOCKS)"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:8367
+msgid "Not found"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:8392
+msgid "No connected session to send the command to."
+msgstr ""
+
+#: crates/opencrt/src/config.rs:808
+msgid "The portable version keeps saved passwords only under its master password; change it instead."
+msgstr ""
+
+#: crates/opencrt/src/filebrowser.rs:203
+msgid "Empty folder."
+msgstr ""
+
+#: crates/opencrt/src/filebrowser.rs:473
+msgid "Open a folder on both sides first."
+msgstr ""
+
+#: crates/opencrt/src/filebrowser.rs:493
+msgid "Not copied (unsafe local name): {}"
+msgstr ""
+
+#: crates/opencrt/src/filebrowser.rs:501
+msgid "The remote folder is not open yet."
+msgstr ""
+
+#: crates/opencrt/src/filebrowser.rs:523 crates/opencrt/src/filebrowser.rs:525
+msgid "Pick one remote file to edit."
+msgstr ""
+
+#: crates/opencrt/src/filebrowser.rs:536 crates/opencrt/src/filebrowser.rs:543
+msgid "Cannot make {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/filebrowser.rs:666
+msgid "Not overwritten: the file exists"
+msgstr ""
+
+#: crates/opencrt/src/filebrowser.rs:739
+msgid "Nothing to show: the filter or Show hidden files hides it all."
+msgstr ""
+
+#: crates/opencrt/src/filebrowser.rs:803
+msgid "The file exists: overwrite?"
+msgstr ""
+
+#: crates/opencrt/src/forward.rs:109
+msgid "Enter the port to listen on (1-65535)."
+msgstr ""
+
+#: crates/opencrt/src/forward.rs:111
+msgid "Enter the destination port (1-65535)."
+msgstr ""
+
+#: crates/opencrt/src/forward.rs:113
+msgid "Addresses and host names cannot contain spaces."
+msgstr ""
+
+#: crates/opencrt/src/forward.rs:115
+msgid "Allowed addresses must be IP addresses or networks such as 192.168.1.0/24, separated by commas."
+msgstr ""
+
+#: crates/opencrt/src/forward.rs:244
+msgid "Port forward \"{}\" failed: {}"
+msgstr ""
+
+#: crates/opencrt/src/forward.rs:247
+msgid "Port forward \"{}\": cannot start {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/forward.rs:285
+msgid "Port {}: refused a connection from {} (not in the allowed addresses)"
+msgstr ""
+
+#: crates/opencrt/src/forward.rs:315
+msgid "Forwarded connection on port {}: {}"
+msgstr ""
+
+#: crates/opencrt/src/gitsync.rs:503
+msgid "Your settings are now in the repository; OpenCRT uses it from the next start."
+msgstr ""
+
+#: crates/opencrt/src/gitsync.rs:505
+msgid "The repository's settings are used from the next start (yours stay in {})."
+msgstr ""
+
+#: crates/opencrt/src/gitsync.rs:528
+msgid "Settings are kept in {} again from the next start."
+msgstr ""
+
+#: crates/opencrt/src/gitsync.rs:563
+msgid "Settings repository: cannot read the token from the keychain ({})."
+msgstr ""
+
+#: crates/opencrt/src/gitsync.rs:578
+msgid "Settings repository not reached ({}); using {}."
+msgstr ""
+
+#: crates/opencrt/src/gitsync.rs:624
+msgid "Settings were changed on another computer: restart OpenCRT to merge them with yours."
+msgstr ""
+
+#: crates/opencrt/src/gitsync.rs:628
+msgid "Settings not sent to the repository: {}"
+msgstr ""
+
+#: crates/opencrt/src/proxy.rs:66
+msgid "Enter a name for the firewall."
+msgstr ""
+
+#: crates/opencrt/src/proxy.rs:68
+msgid "A firewall name cannot look like a proxy address."
+msgstr ""
+
+#: crates/opencrt/src/proxy.rs:70
+msgid "Enter the command to run, e.g. nc %h %p."
+msgstr ""
+
+#: crates/opencrt/src/proxy.rs:72
+msgid "Enter the firewall's host name and port."
+msgstr ""
+
+#: crates/opencrt/src/proxy.rs:111
+msgid "For a proxy that needs a login, add a firewall in Options > Firewalls."
+msgstr ""
+
+#: crates/opencrt/src/python.rs:247
+msgid "{} wants to {}.\n\nUntil you trust a script, it may use files only in its own folder, the download folder and the log folder, and may not run programs or use the network.\n\nAllow once lets this run go on; Always trust lets the script do anything from now on, until it is changed."
+msgstr ""
+
+#: crates/opencrt/src/python.rs:248
+msgid "Allow once"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:248
+msgid "Always trust this script"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:248
+msgid "Stop"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:250
+msgid "Script Wants More Access"
+msgstr ""
+
+#: crates/opencrt/src/python.rs:256
+msgid "Stopped: {} wanted to {}."
+msgstr ""
+
+#: crates/opencrt/src/python.rs:339
+msgid "Python stopped ({})"
+msgstr ""
+
+#: crates/opencrt/src/rdp.rs:216
+msgid "Password for {}@{}:"
+msgstr ""
+
+#: crates/opencrt/src/rdp.rs:291 crates/opencrt/src/vnc.rs:73
+msgid "The saved password was not accepted ({}); enter it again."
+msgstr ""
+
+#: crates/opencrt/src/sessions.rs:269
+msgid "The file is empty."
+msgstr ""
+
+#: crates/opencrt/src/sessions.rs:290
+msgid "The first line must name the columns, including a host (or hostname) column."
+msgstr ""
+
+#: crates/opencrt/src/sessions.rs:306
+msgid "Line {}: bad port \"{}\"."
+msgstr ""
+
+#: crates/opencrt/src/sessions.rs:317
+msgid "Line {}: unknown protocol \"{}\"."
+msgstr ""
+
+#: crates/opencrt/src/sessions.rs:364
+msgid "Enter a folder name (without \"/\")."
+msgstr ""
+
+#: crates/opencrt/src/sessions.rs:700
+msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
+msgstr ""
+
+#: crates/opencrt/src/ssh.rs:134
+msgid "Credential \"{}\": {}; asking for the password instead."
+msgstr ""
+
+#: crates/opencrt/src/update.rs:321
+msgid "Update Now installs it and restarts OpenCRT."
+msgstr ""
+
+#: crates/opencrt/src/update.rs:322
+msgid "Update it with your system's package manager."
+msgstr ""
+
+#: crates/opencrt/src/update.rs:324
+msgid "To get it, and later versions, with your system's updates, set up the OpenCRT package repository once: kimp0ssible-no.github.io/OpenCRT"
+msgstr ""
+
+#: crates/opencrt/src/update.rs:326
+msgid "Download the portable zip from the release page and replace the program files in this folder; the settings folder stays as it is."
+msgstr ""
+
+#: crates/opencrt/src/update.rs:327
+msgid "Download it from the release page."
+msgstr ""
+
+#: crates/opencrt/src/vault.rs:103
+msgid "That is not the master password."
+msgstr ""
+
+#: crates/opencrt/src/vnc.rs:186
+msgid "Username for {}:"
+msgstr ""
+
+#: crates/opencrt/src/vnc.rs:277 crates/opencrt/src/vnc.rs:383
+msgid "Password for {} on {}:"
 msgstr ""

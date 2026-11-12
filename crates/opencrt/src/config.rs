@@ -1,5 +1,6 @@
 //! Per-user configuration: locations, saved sessions and global options.
 
+use crate::tr;
 use std::path::{Path, PathBuf};
 
 use anyhow::Context;
@@ -804,7 +805,7 @@ pub fn adopt_keychain_secrets(accounts: &[String]) -> Result<(), String> {
 /// Remove the master password: the secrets go back to the keychain.
 pub fn remove_master_password() -> Result<(), String> {
     if portable_dir().is_some() {
-        return Err("The portable version keeps saved passwords only under its master password; change it instead.".into());
+        return Err(tr!("The portable version keeps saved passwords only under its master password; change it instead."));
     }
     let dir = vault_dir().ok_or("no master password is set")?;
     for (account, secret) in crate::vault::all(&dir)? {

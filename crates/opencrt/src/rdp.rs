@@ -6,6 +6,7 @@
 //! checks the server certificate like an SSH host key before the helper may
 //! log in, and turns helper messages into tab events.
 
+use crate::tr;
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, Command, Stdio};
 
@@ -212,7 +213,7 @@ pub(crate) async fn trust(store_name: &str, host: &str, port: u16, fingerprint: 
 /// Without a saved credential, ask for the password on every connect.
 async fn ask_password(user: &str, host: &str, io: &Io) -> anyhow::Result<String> {
     let (reply, answer) = oneshot::channel();
-    let prompt = AuthPrompt { instructions: String::new(), prompts: vec![(format!("Password for {user}@{host}:"), false)], kind: ssh::PromptKind::Password, reply };
+    let prompt = AuthPrompt { instructions: String::new(), prompts: vec![(tr!("Password for {}@{}:", user, host), false)], kind: ssh::PromptKind::Password, reply };
     io.output.send(SshEvent::AuthPrompt(prompt)).map_err(|_| anyhow!("the tab was closed"))?;
     match answer.await.ok().flatten().and_then(|mut answers| answers.pop()) {
         Some(password) => Ok(password),
@@ -287,7 +288,7 @@ async fn run(settings: Settings, saved: Option<String>, mut input: UnboundedRece
     let mut progress = Progress::default();
     match attempt(&settings, password, &mut input, io, &mut progress).await {
         Err(e) if used_saved && !progress.connected && !progress.rejected => {
-            let note = format!("\x1b[33mThe saved password was not accepted ({e:#}); enter it again.\x1b[0m\r\n");
+            let note = format!("\x1b[33m{}\x1b[0m\r\n", tr!("The saved password was not accepted ({}); enter it again.", format!("{e:#}")));
             let _ = io.output.send(SshEvent::Data(note.into_bytes()));
             let password = ask_password(&settings.user, &settings.host, io).await?;
             attempt(&settings, password, &mut input, io, &mut Progress::default()).await

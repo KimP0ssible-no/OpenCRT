@@ -7,8 +7,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5601
-#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5601
+#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5604
+#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5604
 msgid "Session Manager"
 msgstr "Менеджер сеансів"
 
@@ -17,7 +17,7 @@ msgstr "Менеджер сеансів"
 msgid "Connect"
 msgstr "Підключити"
 
-#: crates/opencrt/ui/main.slint:364 crates/opencrt/ui/main.slint:6747
+#: crates/opencrt/ui/main.slint:364 crates/opencrt/ui/main.slint:6781
 msgid "New Session"
 msgstr "Новий сеанс"
 
@@ -31,7 +31,7 @@ msgstr "Властивості"
 
 #: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508
 #: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142
-#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142 crates/opencrt/ui/main.slint:5501
+#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142 crates/opencrt/ui/main.slint:5504
 msgid "Delete"
 msgstr "Видалити"
 
@@ -79,15 +79,15 @@ msgstr "Дублювати..."
 msgid "Cut"
 msgstr "Вирізати"
 
-#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5522
-#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5522 crates/opencrt/ui/main.slint:6277
+#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5525
+#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5525 crates/opencrt/ui/main.slint:6311
 msgid "Copy"
 msgstr "Копіювати"
 
 #: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011
 #: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5532
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5532 crates/opencrt/ui/main.slint:6292
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5535
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5535 crates/opencrt/ui/main.slint:6326
 msgid "Paste"
 msgstr "Вставити"
 
@@ -113,12 +113,12 @@ msgid "Filter (Ctrl+click picks several)"
 msgstr "Фільтр (Ctrl+клік вибирає кілька)"
 
 #: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897
-#: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897 crates/opencrt/ui/main.slint:5958
+#: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897 crates/opencrt/ui/main.slint:5992
 msgid "Reconnect"
 msgstr "Перепідключити"
 
 #: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902
-#: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902 crates/opencrt/ui/main.slint:5965
+#: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902 crates/opencrt/ui/main.slint:5999
 msgid "Disconnect"
 msgstr "Відключити"
 
@@ -128,12 +128,12 @@ msgstr "Заблокувати"
 
 #: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975
 #: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7084
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7084 crates/opencrt/ui/main.slint:7261
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7118
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7118 crates/opencrt/ui/main.slint:7295
 msgid "Close"
 msgstr "Закрити"
 
-#: crates/opencrt/ui/main.slint:717 crates/opencrt/ui/main.slint:5606
+#: crates/opencrt/ui/main.slint:717 crates/opencrt/ui/main.slint:5609
 msgid "Command Manager"
 msgstr "Менеджер команд"
 
@@ -168,7 +168,7 @@ msgid "Send"
 msgstr "Надіслати"
 
 #: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414
-#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414 crates/opencrt/ui/main.slint:7145
+#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414 crates/opencrt/ui/main.slint:7179
 msgid "Edit..."
 msgstr "Редагувати..."
 
@@ -180,7 +180,7 @@ msgstr "Копіювати на панель кнопок"
 msgid "New Command..."
 msgstr "Нова команда..."
 
-#: crates/opencrt/ui/main.slint:907 crates/opencrt/ui/main.slint:5435
+#: crates/opencrt/ui/main.slint:907 crates/opencrt/ui/main.slint:5438
 msgid "Clone Session"
 msgstr "Клонувати сеанс"
 
@@ -196,7 +196,7 @@ msgstr "Надіслати Ctrl+Alt+Del"
 msgid "Send Windows Key"
 msgstr "Надіслати клавішу Windows"
 
-#: crates/opencrt/ui/main.slint:935 crates/opencrt/ui/main.slint:5656
+#: crates/opencrt/ui/main.slint:935 crates/opencrt/ui/main.slint:5659
 msgid "Session Options..."
 msgstr "Параметри сеансу..."
 
@@ -240,19 +240,19 @@ msgstr "Закрити інші вкладки"
 msgid "Scratchpad"
 msgstr "Чернетка"
 
-#: crates/opencrt/ui/main.slint:1115 crates/opencrt/ui/main.slint:6510
+#: crates/opencrt/ui/main.slint:1115 crates/opencrt/ui/main.slint:6544
 msgid "Send to"
 msgstr "Надіслати в"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6517
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6551
 msgid "the active tab"
 msgstr "активну вкладку"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6517
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6551
 msgid "all tabs"
 msgstr "усі вкладки"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6517
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6551
 msgid "tabs on screen"
 msgstr "вкладки на екрані"
 
@@ -316,8 +316,8 @@ msgstr "Прийняти один раз"
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7342
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7342
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7376
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7376
 msgid "Cancel"
 msgstr "Скасувати"
 
@@ -343,7 +343,7 @@ msgstr "Зберегти пароль (коли вхід вдасться)"
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285 crates/opencrt/ui/main.slint:7410
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285 crates/opencrt/ui/main.slint:7444
 msgid "OK"
 msgstr "OK"
 
@@ -440,7 +440,7 @@ msgid "Parity:"
 msgstr "Парність:"
 
 #: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644
-#: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644 crates/opencrt/ui/main.slint:7413
 msgid "None"
 msgstr "Немає"
 
@@ -472,7 +472,7 @@ msgstr "RTS/CTS"
 msgid "Opens your default shell (PowerShell on Windows, $SHELL elsewhere)."
 msgstr "Відкриває вашу типову оболонку (PowerShell у Windows, $SHELL в інших системах)."
 
-#: crates/opencrt/ui/main.slint:1674 crates/opencrt/ui/main.slint:5916
+#: crates/opencrt/ui/main.slint:1674 crates/opencrt/ui/main.slint:5950
 msgid "Quick Connect"
 msgstr "Швидке підключення"
 
@@ -488,7 +488,7 @@ msgstr "Паролі та парольні фрази запитуються, к
 msgid "Session Options ({} sessions)"
 msgstr "Параметри сеансу (сеансів: {})"
 
-#: crates/opencrt/ui/main.slint:1816 crates/opencrt/ui/main.slint:6016
+#: crates/opencrt/ui/main.slint:1816 crates/opencrt/ui/main.slint:6050
 msgid "Session Options"
 msgstr "Параметри сеансу"
 
@@ -532,7 +532,7 @@ msgstr "Віддалений робочий стіл"
 msgid "Session name:"
 msgstr "Назва сеансу:"
 
-#: crates/opencrt/ui/main.slint:1874 crates/opencrt/ui/main.slint:7392
+#: crates/opencrt/ui/main.slint:1874 crates/opencrt/ui/main.slint:7426
 msgid "Folder:"
 msgstr "Папка:"
 
@@ -786,27 +786,27 @@ msgstr "Список ключових слів:"
 msgid "Tab colour:"
 msgstr "Колір вкладки:"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Red"
 msgstr "Червоний"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Orange"
 msgstr "Помаранчевий"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Yellow"
 msgstr "Жовтий"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Green"
 msgstr "Зелений"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Blue"
 msgstr "Синій"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Purple"
 msgstr "Фіолетовий"
 
@@ -984,7 +984,7 @@ msgid ""
 "run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
 msgstr "Клавіша = що вона робить. Клавіші: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, Enter, Escape, Space або символ, з Ctrl+ Alt+ Shift+ (символам потрібен Ctrl або Alt). Текст надсилається (\\r — це Enter); або script: file, menu: command, run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
 
-#: crates/opencrt/ui/main.slint:2320 crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:2320 crates/opencrt/ui/main.slint:7403
 msgid "Script file:"
 msgstr "Файл сценарію:"
 
@@ -1018,8 +1018,8 @@ msgstr "Використовує $DISPLAY, інакше дисплей 0 на ц
 msgid "Port forwards (SSH2 only):"
 msgstr "Переадресації портів (лише SSH2):"
 
-#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7043
-#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7043
+#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7077
+#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7077
 msgid "Name"
 msgstr "Назва"
 
@@ -1039,15 +1039,15 @@ msgstr "Призначення"
 msgid "Application"
 msgstr "Застосунок"
 
-#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7070
-#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7070 crates/opencrt/ui/main.slint:7252
+#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7104
+#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7104 crates/opencrt/ui/main.slint:7286
 msgid "Add..."
 msgstr "Додати..."
 
 #: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822
 #: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7079
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7079 crates/opencrt/ui/main.slint:7256
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7113
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7113 crates/opencrt/ui/main.slint:7290
 msgid "Remove"
 msgstr "Вилучити"
 
@@ -1211,11 +1211,11 @@ msgstr "ID користувача:"
 msgid "kept in the system keychain"
 msgstr "зберігається в системному сховищі ключів"
 
-#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7403
 msgid "Send:"
 msgstr "Надіслати:"
 
-#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7403
 msgid "Command:"
 msgstr "Команда:"
 
@@ -1315,7 +1315,7 @@ msgstr "Синхронізація налаштувань"
 msgid "Theme:"
 msgstr "Тема:"
 
-#: crates/opencrt/ui/main.slint:3269 crates/opencrt/ui/main.slint:5238
+#: crates/opencrt/ui/main.slint:3269 crates/opencrt/ui/main.slint:5241
 msgid "Follow the system"
 msgstr "Як у системі"
 
@@ -1732,7 +1732,7 @@ msgstr "регулярний вираз"
 msgid "word or phrase"
 msgstr "слово або фраза"
 
-#: crates/opencrt/ui/main.slint:3755 crates/opencrt/ui/main.slint:7377
+#: crates/opencrt/ui/main.slint:3755 crates/opencrt/ui/main.slint:7411
 msgid "Colour:"
 msgstr "Колір:"
 
@@ -1768,11 +1768,11 @@ msgstr "Додати"
 msgid "Mapped keys (one per line):"
 msgstr "Призначені клавіші (по одній у рядку):"
 
-#: crates/opencrt/ui/main.slint:3836 crates/opencrt/ui/main.slint:6995
+#: crates/opencrt/ui/main.slint:3836 crates/opencrt/ui/main.slint:7029
 msgid "Import..."
 msgstr "Імпорт..."
 
-#: crates/opencrt/ui/main.slint:3840 crates/opencrt/ui/main.slint:7003
+#: crates/opencrt/ui/main.slint:3840 crates/opencrt/ui/main.slint:7037
 msgid "Export..."
 msgstr "Експорт..."
 
@@ -2050,7 +2050,7 @@ msgstr "Cmd+L"
 msgid "Connect a local shell"
 msgstr "Підключити локальну оболонку"
 
-#: crates/opencrt/ui/main.slint:4173 crates/opencrt/ui/main.slint:5868
+#: crates/opencrt/ui/main.slint:4173 crates/opencrt/ui/main.slint:5902
 msgid "Keyboard Shortcuts"
 msgstr "Клавіатурні скорочення"
 
@@ -2060,7 +2060,7 @@ msgid ""
 "> Keyboard. For example, F1 = menu: shortcuts opens this list."
 msgstr "Додайте власні в Глобальні параметри > Клавіатура або для окремого сеансу в Параметри сеансу > Клавіатура. Наприклад, F1 = menu: shortcuts відкриває цей список."
 
-#: crates/opencrt/ui/main.slint:4217 crates/opencrt/ui/main.slint:5876
+#: crates/opencrt/ui/main.slint:4217 crates/opencrt/ui/main.slint:5910
 msgid "About OpenCRT"
 msgstr "Про OpenCRT"
 
@@ -2104,7 +2104,7 @@ msgstr "Шрифти"
 msgid "IBM Plex Sans and Mono, SIL Open Font License 1.1"
 msgstr "IBM Plex Sans і Mono, SIL Open Font License 1.1"
 
-#: crates/opencrt/ui/main.slint:4272 crates/opencrt/ui/main.slint:5872
+#: crates/opencrt/ui/main.slint:4272 crates/opencrt/ui/main.slint:5906
 msgid "Check for Updates"
 msgstr "Перевірити оновлення"
 
@@ -2252,649 +2252,661 @@ msgstr "Enter підключає  ·  Shift+Enter відкриває вклад�
 msgid "Ready"
 msgstr "Готово"
 
-#: crates/opencrt/ui/main.slint:5271 crates/opencrt/ui/main.slint:5742
+#: crates/opencrt/ui/main.slint:5274 crates/opencrt/ui/main.slint:5745
 msgid "Script"
 msgstr "Сценарій"
 
-#: crates/opencrt/ui/main.slint:5417
+#: crates/opencrt/ui/main.slint:5420
 msgid "File"
 msgstr "Файл"
 
-#: crates/opencrt/ui/main.slint:5419
+#: crates/opencrt/ui/main.slint:5422
 msgid "Quick Connect..."
 msgstr "Швидке підключення..."
 
-#: crates/opencrt/ui/main.slint:5423
+#: crates/opencrt/ui/main.slint:5426
 msgid "Quick Open... (Cmd+O)"
 msgstr "Швидке відкриття... (Cmd+O)"
 
-#: crates/opencrt/ui/main.slint:5423
+#: crates/opencrt/ui/main.slint:5426
 msgid "Quick Open... (Ctrl+Shift+T)"
 msgstr "Швидке відкриття... (Ctrl+Shift+T)"
 
-#: crates/opencrt/ui/main.slint:5427
+#: crates/opencrt/ui/main.slint:5430
 msgid "Connect in Tab..."
 msgstr "Підключення у вкладці..."
 
-#: crates/opencrt/ui/main.slint:5431 crates/opencrt/ui/main.slint:5928
+#: crates/opencrt/ui/main.slint:5434 crates/opencrt/ui/main.slint:5962
 msgid "Connect Local Shell"
 msgstr "Підключити локальну оболонку"
 
-#: crates/opencrt/ui/main.slint:5451
+#: crates/opencrt/ui/main.slint:5454
 msgid "Disconnect All"
 msgstr "Відключити всі"
 
-#: crates/opencrt/ui/main.slint:5456
+#: crates/opencrt/ui/main.slint:5459
 msgid "Close Tab"
 msgstr "Закрити вкладку"
 
-#: crates/opencrt/ui/main.slint:5462
+#: crates/opencrt/ui/main.slint:5465
 msgid "Stop Logging"
 msgstr "Зупинити журналювання"
 
-#: crates/opencrt/ui/main.slint:5462
+#: crates/opencrt/ui/main.slint:5465
 msgid "Log Session..."
 msgstr "Журналювати сеанс..."
 
-#: crates/opencrt/ui/main.slint:5467
+#: crates/opencrt/ui/main.slint:5470
 msgid "Stop Recording"
 msgstr "Зупинити запис"
 
-#: crates/opencrt/ui/main.slint:5467
+#: crates/opencrt/ui/main.slint:5470
 msgid "Record Session (asciicast)..."
 msgstr "Записати сеанс (asciicast)..."
 
-#: crates/opencrt/ui/main.slint:5473 crates/opencrt/ui/main.slint:6009
+#: crates/opencrt/ui/main.slint:5476 crates/opencrt/ui/main.slint:6043
 msgid "Print Screen"
 msgstr "Друк екрана"
 
-#: crates/opencrt/ui/main.slint:5478
+#: crates/opencrt/ui/main.slint:5481
 msgid "Print Selection"
 msgstr "Друк виділеного"
 
-#: crates/opencrt/ui/main.slint:5483
+#: crates/opencrt/ui/main.slint:5486
 msgid "Stop Auto Print"
 msgstr "Зупинити автодрук"
 
-#: crates/opencrt/ui/main.slint:5483
+#: crates/opencrt/ui/main.slint:5486
 msgid "Auto Print"
 msgstr "Автодрук"
 
-#: crates/opencrt/ui/main.slint:5489
+#: crates/opencrt/ui/main.slint:5492
 msgid "Snapshots"
 msgstr "Знімки"
 
-#: crates/opencrt/ui/main.slint:5491
+#: crates/opencrt/ui/main.slint:5494
 msgid "Save Snapshot..."
 msgstr "Зберегти знімок..."
 
-#: crates/opencrt/ui/main.slint:5515
+#: crates/opencrt/ui/main.slint:5518
 msgid "Exit"
 msgstr "Вихід"
 
-#: crates/opencrt/ui/main.slint:5520
+#: crates/opencrt/ui/main.slint:5523
 msgid "Edit"
 msgstr "Редагування"
 
-#: crates/opencrt/ui/main.slint:5527 crates/opencrt/ui/main.slint:6282
+#: crates/opencrt/ui/main.slint:5530 crates/opencrt/ui/main.slint:6316
 msgid "Copy with Colours"
 msgstr "Копіювати з кольорами"
 
-#: crates/opencrt/ui/main.slint:5537
+#: crates/opencrt/ui/main.slint:5540
 msgid "Copy and Paste"
 msgstr "Копіювати й вставити"
 
-#: crates/opencrt/ui/main.slint:5542 crates/opencrt/ui/main.slint:6298
+#: crates/opencrt/ui/main.slint:5545 crates/opencrt/ui/main.slint:6332
 msgid "Select All"
 msgstr "Виділити все"
 
-#: crates/opencrt/ui/main.slint:5547
+#: crates/opencrt/ui/main.slint:5550
 msgid "Find..."
 msgstr "Знайти..."
 
-#: crates/opencrt/ui/main.slint:5557
+#: crates/opencrt/ui/main.slint:5560
 msgid "Clear Screen"
 msgstr "Очистити екран"
 
-#: crates/opencrt/ui/main.slint:5562 crates/opencrt/ui/main.slint:6302
+#: crates/opencrt/ui/main.slint:5565 crates/opencrt/ui/main.slint:6336
 msgid "Clear Scrollback"
 msgstr "Очистити буфер прокручування"
 
-#: crates/opencrt/ui/main.slint:5567
+#: crates/opencrt/ui/main.slint:5570
 msgid "Clear Screen and Scrollback"
 msgstr "Очистити екран і буфер прокручування"
 
-#: crates/opencrt/ui/main.slint:5572
+#: crates/opencrt/ui/main.slint:5575
 msgid "Reset Terminal"
 msgstr "Скинути термінал"
 
-#: crates/opencrt/ui/main.slint:5577 crates/opencrt/ui/main.slint:6306
+#: crates/opencrt/ui/main.slint:5580 crates/opencrt/ui/main.slint:6340
 msgid "Send Break"
 msgstr "Надіслати Break"
 
-#: crates/opencrt/ui/main.slint:5583
+#: crates/opencrt/ui/main.slint:5586
 msgid "Send Input to All Tabs"
 msgstr "Надсилати введення в усі вкладки"
 
-#: crates/opencrt/ui/main.slint:5589
+#: crates/opencrt/ui/main.slint:5592
 msgid "View"
 msgstr "Вигляд"
 
-#: crates/opencrt/ui/main.slint:5591
+#: crates/opencrt/ui/main.slint:5594
 msgid "Toolbar"
 msgstr "Панель інструментів"
 
-#: crates/opencrt/ui/main.slint:5596
+#: crates/opencrt/ui/main.slint:5599
 msgid "Status Bar"
 msgstr "Рядок стану"
 
-#: crates/opencrt/ui/main.slint:5611
+#: crates/opencrt/ui/main.slint:5614
 msgid "Command Window"
 msgstr "Командне вікно"
 
-#: crates/opencrt/ui/main.slint:5616
+#: crates/opencrt/ui/main.slint:5619
 msgid "Hex View"
 msgstr "Шістнадцятковий вигляд"
 
-#: crates/opencrt/ui/main.slint:5621
+#: crates/opencrt/ui/main.slint:5624
 msgid "Show Control Characters"
 msgstr "Показувати керівні символи"
 
-#: crates/opencrt/ui/main.slint:5627
+#: crates/opencrt/ui/main.slint:5630
 msgid "Button Bar"
 msgstr "Панель кнопок"
 
-#: crates/opencrt/ui/main.slint:5633
+#: crates/opencrt/ui/main.slint:5636
 msgid "Full Screen"
 msgstr "Повний екран"
 
-#: crates/opencrt/ui/main.slint:5638
+#: crates/opencrt/ui/main.slint:5641
 msgid "Always on Top"
 msgstr "Поверх усіх вікон"
 
-#: crates/opencrt/ui/main.slint:5645
+#: crates/opencrt/ui/main.slint:5648
 msgid "Larger Font"
 msgstr "Більший шрифт"
 
-#: crates/opencrt/ui/main.slint:5649
+#: crates/opencrt/ui/main.slint:5652
 msgid "Smaller Font"
 msgstr "Менший шрифт"
 
-#: crates/opencrt/ui/main.slint:5654
+#: crates/opencrt/ui/main.slint:5657
 msgid "Options"
 msgstr "Параметри"
 
-#: crates/opencrt/ui/main.slint:5661
+#: crates/opencrt/ui/main.slint:5664
 msgid "Default Session..."
 msgstr "Типовий сеанс..."
 
-#: crates/opencrt/ui/main.slint:5665
+#: crates/opencrt/ui/main.slint:5668
 msgid "Firewalls..."
 msgstr "Брандмауери..."
 
-#: crates/opencrt/ui/main.slint:5669
+#: crates/opencrt/ui/main.slint:5672
 msgid "Colour Schemes..."
 msgstr "Колірні схеми..."
 
-#: crates/opencrt/ui/main.slint:5673
+#: crates/opencrt/ui/main.slint:5676
 msgid "Global Options..."
 msgstr "Глобальні параметри..."
 
-#: crates/opencrt/ui/main.slint:5678
+#: crates/opencrt/ui/main.slint:5681
 msgid "Transfer"
 msgstr "Передавання"
 
-#: crates/opencrt/ui/main.slint:5690
+#: crates/opencrt/ui/main.slint:5693
 msgid "Send ASCII File..."
 msgstr "Надіслати файл ASCII..."
 
-#: crates/opencrt/ui/main.slint:5695
+#: crates/opencrt/ui/main.slint:5698
 msgid "Send Binary File..."
 msgstr "Надіслати двійковий файл..."
 
-#: crates/opencrt/ui/main.slint:5700
+#: crates/opencrt/ui/main.slint:5703
 msgid "Stop Receive ASCII"
 msgstr "Зупинити прийом ASCII"
 
-#: crates/opencrt/ui/main.slint:5700
+#: crates/opencrt/ui/main.slint:5703
 msgid "Receive ASCII..."
 msgstr "Прийняти ASCII..."
 
-#: crates/opencrt/ui/main.slint:5705
+#: crates/opencrt/ui/main.slint:5708
 msgid "Zmodem Upload..."
 msgstr "Вивантаження Zmodem..."
 
-#: crates/opencrt/ui/main.slint:5711
+#: crates/opencrt/ui/main.slint:5714
 msgid "Send Xmodem..."
 msgstr "Надіслати Xmodem..."
 
-#: crates/opencrt/ui/main.slint:5716
+#: crates/opencrt/ui/main.slint:5719
 msgid "Receive Xmodem..."
 msgstr "Прийняти Xmodem..."
 
-#: crates/opencrt/ui/main.slint:5721
+#: crates/opencrt/ui/main.slint:5724
 msgid "Send Ymodem..."
 msgstr "Надіслати Ymodem..."
 
-#: crates/opencrt/ui/main.slint:5726
+#: crates/opencrt/ui/main.slint:5729
 msgid "Receive Ymodem"
 msgstr "Прийняти Ymodem"
 
-#: crates/opencrt/ui/main.slint:5731
+#: crates/opencrt/ui/main.slint:5734
 msgid "Send Kermit..."
 msgstr "Надіслати Kermit..."
 
-#: crates/opencrt/ui/main.slint:5736
+#: crates/opencrt/ui/main.slint:5739
 msgid "Receive Kermit"
 msgstr "Прийняти Kermit"
 
-#: crates/opencrt/ui/main.slint:5744
+#: crates/opencrt/ui/main.slint:5747
 msgid "Run..."
 msgstr "Запустити..."
 
-#: crates/opencrt/ui/main.slint:5754
+#: crates/opencrt/ui/main.slint:5757
 msgid "Script Editor..."
 msgstr "Редактор сценаріїв..."
 
-#: crates/opencrt/ui/main.slint:5759
+#: crates/opencrt/ui/main.slint:5762
 msgid "Stop Recording..."
 msgstr "Зупинити запис..."
 
-#: crates/opencrt/ui/main.slint:5759
+#: crates/opencrt/ui/main.slint:5762
 msgid "Start Recording"
 msgstr "Почати запис"
 
-#: crates/opencrt/ui/main.slint:5765
+#: crates/opencrt/ui/main.slint:5768
 msgid "Tools"
 msgstr "Інструменти"
 
-#: crates/opencrt/ui/main.slint:5767
+#: crates/opencrt/ui/main.slint:5770
 msgid "Create Public Key..."
 msgstr "Створити відкритий ключ..."
 
-#: crates/opencrt/ui/main.slint:5771
+#: crates/opencrt/ui/main.slint:5774
 msgid "Host Keys..."
 msgstr "Ключі хостів..."
 
-#: crates/opencrt/ui/main.slint:5775
+#: crates/opencrt/ui/main.slint:5778
 msgid "Credentials Manager..."
 msgstr "Менеджер облікових даних..."
 
-#: crates/opencrt/ui/main.slint:5779
+#: crates/opencrt/ui/main.slint:5782
 msgid "Master Password..."
 msgstr "Головний пароль..."
 
-#: crates/opencrt/ui/main.slint:5783
+#: crates/opencrt/ui/main.slint:5786
 msgid "Agent Keys..."
 msgstr "Ключі агента..."
 
-#: crates/opencrt/ui/main.slint:5787
+#: crates/opencrt/ui/main.slint:5790
 msgid "Public Key Assistant..."
 msgstr "Помічник відкритих ключів..."
 
-#: crates/opencrt/ui/main.slint:5791
+#: crates/opencrt/ui/main.slint:5794
 msgid "Convert Private Key to OpenSSH..."
 msgstr "Конвертувати закритий ключ в OpenSSH..."
 
-#: crates/opencrt/ui/main.slint:5796
+#: crates/opencrt/ui/main.slint:5799
 msgid "Import OpenSSH Config"
 msgstr "Імпортувати конфігурацію OpenSSH"
 
-#: crates/opencrt/ui/main.slint:5800
+#: crates/opencrt/ui/main.slint:5803
 msgid "Import SecureCRT Sessions..."
 msgstr "Імпортувати сеанси SecureCRT..."
 
-#: crates/opencrt/ui/main.slint:5804
+#: crates/opencrt/ui/main.slint:5807
 msgid "Import Sessions..."
 msgstr "Імпортувати сеанси..."
 
-#: crates/opencrt/ui/main.slint:5808
+#: crates/opencrt/ui/main.slint:5811
 msgid "Export Sessions..."
 msgstr "Експортувати сеанси..."
 
-#: crates/opencrt/ui/main.slint:5813
+#: crates/opencrt/ui/main.slint:5816
 msgid "Window"
 msgstr "Вікно"
 
-#: crates/opencrt/ui/main.slint:5815
+#: crates/opencrt/ui/main.slint:5818
 msgid "Next Tab"
 msgstr "Наступна вкладка"
 
-#: crates/opencrt/ui/main.slint:5820
+#: crates/opencrt/ui/main.slint:5823
 msgid "Previous Tab"
 msgstr "Попередня вкладка"
 
-#: crates/opencrt/ui/main.slint:5826
+#: crates/opencrt/ui/main.slint:5829
 msgid "Tile Vertically"
 msgstr "Розташувати вертикально"
 
-#: crates/opencrt/ui/main.slint:5831
+#: crates/opencrt/ui/main.slint:5834
 msgid "Tile Horizontally"
 msgstr "Розташувати горизонтально"
 
-#: crates/opencrt/ui/main.slint:5836
+#: crates/opencrt/ui/main.slint:5839
 msgid "Untile"
 msgstr "Скасувати розташування"
 
-#: crates/opencrt/ui/main.slint:5840
+#: crates/opencrt/ui/main.slint:5843
 msgid "Merge Tab Groups"
 msgstr "Об’єднати групи вкладок"
 
-#: crates/opencrt/ui/main.slint:5857
+#: crates/opencrt/ui/main.slint:5860
 msgid "Language"
 msgstr "Мова"
 
-#: crates/opencrt/ui/main.slint:5866
+#: crates/opencrt/ui/main.slint:5869
+msgid "Western and Southern Europe"
+msgstr "Західна і Південна Європа"
+
+#: crates/opencrt/ui/main.slint:5879
+msgid "Northern Europe"
+msgstr "Північна Європа"
+
+#: crates/opencrt/ui/main.slint:5889
+msgid "Central and Eastern Europe"
+msgstr "Центральна і Східна Європа"
+
+#: crates/opencrt/ui/main.slint:5900
 msgid "Help"
 msgstr "Довідка"
 
-#: crates/opencrt/ui/main.slint:5922
+#: crates/opencrt/ui/main.slint:5956
 msgid "Connect in Tab"
 msgstr "Підключення у вкладці"
 
-#: crates/opencrt/ui/main.slint:5942
+#: crates/opencrt/ui/main.slint:5976
 msgid "PowerShell"
 msgstr "PowerShell"
 
-#: crates/opencrt/ui/main.slint:5946
+#: crates/opencrt/ui/main.slint:5980
 msgid "Command Prompt (classic)"
 msgstr "Командний рядок (класичний)"
 
-#: crates/opencrt/ui/main.slint:5951
+#: crates/opencrt/ui/main.slint:5985
 msgid "WSL: {}"
 msgstr "WSL: {}"
 
-#: crates/opencrt/ui/main.slint:5976
+#: crates/opencrt/ui/main.slint:6010
 msgid "Quick connect: user@host"
 msgstr "Швидке підключення: user@host"
 
-#: crates/opencrt/ui/main.slint:5996
+#: crates/opencrt/ui/main.slint:6030
 msgid "Find"
 msgstr "Знайти"
 
-#: crates/opencrt/ui/main.slint:6004
+#: crates/opencrt/ui/main.slint:6038
 msgid "Highlight words"
 msgstr "Підсвічувати слова"
 
-#: crates/opencrt/ui/main.slint:6256 crates/opencrt/ui/main.slint:6909
+#: crates/opencrt/ui/main.slint:6290 crates/opencrt/ui/main.slint:6943
 msgid "OpenCRT"
 msgstr "OpenCRT"
 
-#: crates/opencrt/ui/main.slint:6262
+#: crates/opencrt/ui/main.slint:6296
 msgid "File > Quick Connect, or type user@host in the toolbar's connect bar."
 msgstr "Файл > Швидке підключення або введіть user@host у панелі підключення на панелі інструментів."
 
-#: crates/opencrt/ui/main.slint:6272
+#: crates/opencrt/ui/main.slint:6306
 msgid "Show Menu Bar"
 msgstr "Показати рядок меню"
 
-#: crates/opencrt/ui/main.slint:6287
+#: crates/opencrt/ui/main.slint:6321
 msgid "Search the Web"
 msgstr "Шукати в інтернеті"
 
-#: crates/opencrt/ui/main.slint:6399
+#: crates/opencrt/ui/main.slint:6433
 msgid "Default"
 msgstr "Типовий"
 
-#: crates/opencrt/ui/main.slint:6414
+#: crates/opencrt/ui/main.slint:6448
 msgid "New Bar..."
 msgstr "Нова панель..."
 
-#: crates/opencrt/ui/main.slint:6418
+#: crates/opencrt/ui/main.slint:6452
 msgid "Rename Bar..."
 msgstr "Перейменувати панель..."
 
-#: crates/opencrt/ui/main.slint:6423
+#: crates/opencrt/ui/main.slint:6457
 msgid "Delete Bar..."
 msgstr "Видалити панель..."
 
-#: crates/opencrt/ui/main.slint:6454
+#: crates/opencrt/ui/main.slint:6488
 msgid "Add a button that sends a command, e.g. show version\\r"
 msgstr "Додайте кнопку, яка надсилає команду, напр. show version\\r"
 
-#: crates/opencrt/ui/main.slint:6477
+#: crates/opencrt/ui/main.slint:6511
 msgid "Nothing received yet in this tab."
 msgstr "У цій вкладці ще нічого не отримано."
 
-#: crates/opencrt/ui/main.slint:6525
+#: crates/opencrt/ui/main.slint:6559
 msgid "characters are sent as you type; Enter sends Enter"
 msgstr "символи надсилаються під час введення; Enter надсилає Enter"
 
-#: crates/opencrt/ui/main.slint:6525
+#: crates/opencrt/ui/main.slint:6559
 msgid "type a command and press Enter"
 msgstr "введіть команду й натисніть Enter"
 
-#: crates/opencrt/ui/main.slint:6541
+#: crates/opencrt/ui/main.slint:6575
 msgid "History"
 msgstr "Історія"
 
-#: crates/opencrt/ui/main.slint:6552
+#: crates/opencrt/ui/main.slint:6586
 msgid "Send characters immediately"
 msgstr "Надсилати символи відразу"
 
-#: crates/opencrt/ui/main.slint:6573
+#: crates/opencrt/ui/main.slint:6607
 msgid "Find:"
 msgstr "Знайти:"
 
-#: crates/opencrt/ui/main.slint:6580
+#: crates/opencrt/ui/main.slint:6614
 msgid "text to find (Enter = next)"
 msgstr "текст для пошуку (Enter = наступний)"
 
-#: crates/opencrt/ui/main.slint:6586
+#: crates/opencrt/ui/main.slint:6620
 msgid "Next"
 msgstr "Наступний"
 
-#: crates/opencrt/ui/main.slint:6590
+#: crates/opencrt/ui/main.slint:6624
 msgid "Previous"
 msgstr "Попередній"
 
-#: crates/opencrt/ui/main.slint:6594
+#: crates/opencrt/ui/main.slint:6628
 msgid "Match case"
 msgstr "Враховувати регістр"
 
-#: crates/opencrt/ui/main.slint:6643
+#: crates/opencrt/ui/main.slint:6677
 msgid "OpenCRT {} available"
 msgstr "Доступна версія OpenCRT {}"
 
-#: crates/opencrt/ui/main.slint:6658
+#: crates/opencrt/ui/main.slint:6692
 msgid "{n} tunnel tab"
 msgid_plural "{n} tunnel tabs"
 msgstr[0] "{n} вкладка тунелю"
 msgstr[1] "{n} вкладки тунелів"
 msgstr[2] "{n} вкладок тунелів"
 
-#: crates/opencrt/ui/main.slint:6682
+#: crates/opencrt/ui/main.slint:6716
 msgid "ALL TABS"
 msgstr "УСІ ВКЛАДКИ"
 
-#: crates/opencrt/ui/main.slint:6687
+#: crates/opencrt/ui/main.slint:6721
 msgid "LOG"
 msgstr "LOG"
 
-#: crates/opencrt/ui/main.slint:6691
+#: crates/opencrt/ui/main.slint:6725
 msgid "CAP"
 msgstr "CAP"
 
-#: crates/opencrt/ui/main.slint:6696
+#: crates/opencrt/ui/main.slint:6730
 msgid "NUM"
 msgstr "NUM"
 
-#: crates/opencrt/ui/main.slint:6747
+#: crates/opencrt/ui/main.slint:6781
 msgid "Session Options - {}"
 msgstr "Параметри сеансу - {}"
 
-#: crates/opencrt/ui/main.slint:6956
+#: crates/opencrt/ui/main.slint:6990
 msgid "Host Keys"
 msgstr "Ключі хостів"
 
-#: crates/opencrt/ui/main.slint:6959
+#: crates/opencrt/ui/main.slint:6993
 msgid ""
 "Keys of the SSH servers you have accepted. Remove one when a server's key "
 "has changed for a known reason (for example after a reinstall); you are "
 "asked to accept the new key at the next connection."
 msgstr "Ключі SSH-серверів, які ви прийняли. Вилучіть ключ, якщо ключ сервера змінився з відомої причини (наприклад, після перевстановлення); під час наступного підключення вам запропонують прийняти новий ключ."
 
-#: crates/opencrt/ui/main.slint:6969
+#: crates/opencrt/ui/main.slint:7003
 msgid "No saved host keys."
 msgstr "Немає збережених ключів хостів."
 
-#: crates/opencrt/ui/main.slint:6999
+#: crates/opencrt/ui/main.slint:7033
 msgid "Import SecureCRT..."
 msgstr "Імпортувати з SecureCRT..."
 
-#: crates/opencrt/ui/main.slint:7023
+#: crates/opencrt/ui/main.slint:7057
 msgid "Credentials Manager"
 msgstr "Менеджер облікових даних"
 
-#: crates/opencrt/ui/main.slint:7026
+#: crates/opencrt/ui/main.slint:7060
 msgid ""
 "Saved logins for SSH2, Telnet, RDP and VNC sessions. Pick one in Session "
 "Options > Authentication; its password is kept in the system keychain."
 msgstr "Збережені дані входу для сеансів SSH2, Telnet, RDP і VNC. Виберіть їх у Параметри сеансу > Автентифікація; пароль зберігається в системному сховищі ключів."
 
-#: crates/opencrt/ui/main.slint:7044
+#: crates/opencrt/ui/main.slint:7078
 msgid "Username"
 msgstr "Ім’я користувача"
 
-#: crates/opencrt/ui/main.slint:7094
+#: crates/opencrt/ui/main.slint:7128
 msgid "Firewalls"
 msgstr "Брандмауери"
 
-#: crates/opencrt/ui/main.slint:7097
+#: crates/opencrt/ui/main.slint:7131
 msgid ""
 "Proxies and gateways defined once and used by name: type a firewall's name "
 "into a session's Proxy field (Session Options > Connection)."
 msgstr "Проксі та шлюзи, які визначаються один раз і використовуються за назвою: введіть назву брандмауера в поле «Проксі» сеансу (Параметри сеансу > Підключення)."
 
-#: crates/opencrt/ui/main.slint:7115
+#: crates/opencrt/ui/main.slint:7149
 msgid "Proxy"
 msgstr "Проксі"
 
-#: crates/opencrt/ui/main.slint:7209
+#: crates/opencrt/ui/main.slint:7243
 msgid "Agent Keys"
 msgstr "Ключі агента"
 
-#: crates/opencrt/ui/main.slint:7212
+#: crates/opencrt/ui/main.slint:7246
 msgid ""
 "Keys held by OpenCRT's own SSH agent. While it holds keys, sessions without "
 "a key file log in with them and forwarded agents use them; otherwise the "
 "system's agent is used. Keys stay in memory until OpenCRT closes."
 msgstr "Ключі, які зберігає власний SSH-агент OpenCRT. Поки в ньому є ключі, сеанси без файлу ключа входять з ними, і переадресовані агенти їх використовують; інакше використовується системний агент. Ключі залишаються в пам’яті до закриття OpenCRT."
 
-#: crates/opencrt/ui/main.slint:7222
+#: crates/opencrt/ui/main.slint:7256
 msgid "No keys loaded."
 msgstr "Ключі не завантажено."
 
-#: crates/opencrt/ui/main.slint:7247
+#: crates/opencrt/ui/main.slint:7281
 msgid ""
 "Load these keys when OpenCRT starts (their file names are saved; passphrases "
 "are asked for)"
 msgstr "Завантажувати ці ключі під час запуску OpenCRT (зберігаються імена файлів; парольні фрази запитуються)"
 
-#: crates/opencrt/ui/main.slint:7278
+#: crates/opencrt/ui/main.slint:7312
 msgid "Create Public Key"
 msgstr "Створити відкритий ключ"
 
-#: crates/opencrt/ui/main.slint:7281
+#: crates/opencrt/ui/main.slint:7315
 msgid ""
 "Creates a key pair in OpenSSH format. Add the public key (copied to the "
 "clipboard when done) to ~/.ssh/authorized_keys on the server, or use Tools > "
 "Public Key Assistant."
 msgstr "Створює пару ключів у форматі OpenSSH. Додайте відкритий ключ (після створення його буде скопійовано в буфер обміну) до ~/.ssh/authorized_keys на сервері або скористайтеся Інструменти > Помічник відкритих ключів."
 
-#: crates/opencrt/ui/main.slint:7294
+#: crates/opencrt/ui/main.slint:7328
 msgid "Passphrase:"
 msgstr "Парольна фраза:"
 
-#: crates/opencrt/ui/main.slint:7298
+#: crates/opencrt/ui/main.slint:7332
 msgid "recommended"
 msgstr "рекомендовано"
 
-#: crates/opencrt/ui/main.slint:7312
+#: crates/opencrt/ui/main.slint:7346
 msgid "Comment:"
 msgstr "Коментар:"
 
-#: crates/opencrt/ui/main.slint:7319
+#: crates/opencrt/ui/main.slint:7353
 msgid "Save as:"
 msgstr "Зберегти як:"
 
-#: crates/opencrt/ui/main.slint:7336
+#: crates/opencrt/ui/main.slint:7370
 msgid "Creating..."
 msgstr "Створення..."
 
-#: crates/opencrt/ui/main.slint:7336
+#: crates/opencrt/ui/main.slint:7370
 msgid "Create"
 msgstr "Створити"
 
-#: crates/opencrt/ui/main.slint:7354
+#: crates/opencrt/ui/main.slint:7388
 msgid "Label:"
 msgstr "Мітка:"
 
-#: crates/opencrt/ui/main.slint:7362
+#: crates/opencrt/ui/main.slint:7396
 msgid "Action:"
 msgstr "Дія:"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Send text"
 msgstr "Надіслати текст"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Run a script"
 msgstr "Запустити сценарій"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Menu command"
 msgstr "Команда меню"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Run a program"
 msgstr "Запустити програму"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Telnet command"
 msgstr "Команда Telnet"
 
-#: crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:7403
 msgid "Menu command:"
 msgstr "Команда меню:"
 
-#: crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:7403
 msgid "Program:"
 msgstr "Програма:"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "e.g. show version\\r"
 msgstr "напр. show version\\r"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "e.g. /home/me/scripts/login.rhai"
 msgstr "напр. /home/me/scripts/login.rhai"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "e.g. clear-screen, reconnect, sftp-tab"
 msgstr "напр. clear-screen, reconnect, sftp-tab"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "e.g. wireshark -k"
 msgstr "напр. wireshark -k"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "brk, ip, ao, ayt, ec, el, ga or nop"
 msgstr "brk, ip, ao, ayt, ec, el, ga або nop"
 
-#: crates/opencrt/ui/main.slint:7384
+#: crates/opencrt/ui/main.slint:7418
 msgid "Bar:"
 msgstr "Панель:"
 
-#: crates/opencrt/ui/main.slint:7387
+#: crates/opencrt/ui/main.slint:7421
 msgid "blank: the default bar (sessions choose theirs)"
 msgstr "порожньо: типова панель (сеанси вибирають свою)"
 
-#: crates/opencrt/ui/main.slint:7395
+#: crates/opencrt/ui/main.slint:7429
 msgid "optional, e.g. Cisco"
 msgstr "необов’язково, напр. Cisco"
 
-#: crates/opencrt/ui/main.slint:7400
+#: crates/opencrt/ui/main.slint:7434
 msgid "\\r is Enter, \\n a line feed, \\t Tab, \\e Escape and \\\\ a backslash."
 msgstr "\\r — це Enter, \\n — переведення рядка, \\t — Tab, \\e — Escape, а \\\\ — зворотна скісна риска."
 
@@ -3814,103 +3826,103 @@ msgstr "Видалити кнопку «{}»?"
 msgid "Delete the command \"{}\"?"
 msgstr "Видалити команду «{}»?"
 
-#: crates/opencrt/src/app.rs:7342
+#: crates/opencrt/src/app.rs:7346
 msgid "Custom"
 msgstr "Власна"
 
-#: crates/opencrt/src/app.rs:7437
+#: crates/opencrt/src/app.rs:7441
 msgid "New list"
 msgstr "Новий список"
 
-#: crates/opencrt/src/app.rs:7437
+#: crates/opencrt/src/app.rs:7441
 msgid "New list {}"
 msgstr "Новий список {}"
 
-#: crates/opencrt/src/app.rs:7562
+#: crates/opencrt/src/app.rs:7566
 msgid "Font size must be 6 to 48, scrollback 0 to 1000000 lines, and keepalive 0 to 86400 seconds."
 msgstr "Розмір шрифту має бути від 6 до 48, буфер прокручування — від 0 до 1000000 рядків, а keepalive — від 0 до 86400 секунд."
 
-#: crates/opencrt/src/app.rs:7571
+#: crates/opencrt/src/app.rs:7575
 msgid "General: recent sessions must be 0 to {}, the Connect All warning 0 to 1000, and the interface font size 9 to 20."
 msgstr "Загальні: кількість останніх сеансів має бути від 0 до {}, поріг попередження «Підключити всі» — від 0 до 1000, а розмір шрифту інтерфейсу — від 9 до 20."
 
-#: crates/opencrt/src/app.rs:7576
+#: crates/opencrt/src/app.rs:7580
 msgid "Connection: the default SSH2 key file does not exist."
 msgstr "Підключення: типовий файл ключа SSH2 не існує."
 
-#: crates/opencrt/src/app.rs:7584
+#: crates/opencrt/src/app.rs:7588
 msgid "Printing: the font size (up to 72) and margins (up to 100 mm) must be whole numbers."
 msgstr "Друк: розмір шрифту (до 72) і поля (до 100 мм) мають бути цілими числами."
 
-#: crates/opencrt/src/app.rs:7588
+#: crates/opencrt/src/app.rs:7592
 msgid "File Transfer: the download folder does not exist."
 msgstr "Передавання файлів: папка завантажень не існує."
 
-#: crates/opencrt/src/app.rs:7592
+#: crates/opencrt/src/app.rs:7596
 msgid "General: the configuration folder must be a full path."
 msgstr "Загальні: папка конфігурації має бути повним шляхом."
 
-#: crates/opencrt/src/app.rs:7601
+#: crates/opencrt/src/app.rs:7605
 msgid "Settings Sync needs git, which is not installed: {}."
 msgstr "Синхронізації налаштувань потрібен git, який не встановлено: {}."
 
-#: crates/opencrt/src/app.rs:7605
+#: crates/opencrt/src/app.rs:7609
 msgid "File Transfer: TFTP addresses must be IP addresses or networks such as 192.168.1.0/24."
 msgstr "Передавання файлів: адреси TFTP мають бути IP-адресами або мережами, як-от 192.168.1.0/24."
 
-#: crates/opencrt/src/app.rs:7710
+#: crates/opencrt/src/app.rs:7714
 msgid "Settings Sync: the repository was not set up: {}"
 msgstr "Синхронізація налаштувань: репозиторій не налаштовано: {}"
 
-#: crates/opencrt/src/app.rs:7718
+#: crates/opencrt/src/app.rs:7722
 msgid " (your current settings were copied there)"
 msgstr " (ваші поточні налаштування скопійовано туди)"
 
-#: crates/opencrt/src/app.rs:7720
+#: crates/opencrt/src/app.rs:7724
 msgid " Connected sessions will be disconnected."
 msgstr " Підключені сеанси буде відключено."
 
-#: crates/opencrt/src/app.rs:7721
+#: crates/opencrt/src/app.rs:7725
 msgid "Settings now live in {}{}. Restart OpenCRT to use them?{}"
 msgstr "Налаштування тепер зберігаються в {}{}. Перезапустити OpenCRT, щоб використати їх?{}"
 
-#: crates/opencrt/src/app.rs:7724
+#: crates/opencrt/src/app.rs:7728
 msgid "Configuration folder not changed: {}"
 msgstr "Папку конфігурації не змінено: {}"
 
-#: crates/opencrt/src/app.rs:7755
+#: crates/opencrt/src/app.rs:7759
 msgid "Cannot restart OpenCRT ({}); the new configuration folder is used from the next start."
 msgstr "Не вдається перезапустити OpenCRT ({}); нова папка конфігурації використовується з наступного запуску."
 
-#: crates/opencrt/src/app.rs:7824
+#: crates/opencrt/src/app.rs:7828
 msgid "Remote Desktop: enter both width and height (200 to 8192 pixels), or leave both blank to fit the window."
 msgstr "Віддалений робочий стіл: введіть і ширину, і висоту (від 200 до 8192 пікселів) або залиште обидва поля порожніми, щоб підлаштувати під вікно."
 
-#: crates/opencrt/src/app.rs:8070
+#: crates/opencrt/src/app.rs:8074
 msgid "Local"
 msgstr "Локальна"
 
-#: crates/opencrt/src/app.rs:8070
+#: crates/opencrt/src/app.rs:8074
 msgid "SSH server"
 msgstr "SSH-сервер"
 
-#: crates/opencrt/src/app.rs:8071
+#: crates/opencrt/src/app.rs:8075
 msgid "Remote"
 msgstr "Віддалена"
 
-#: crates/opencrt/src/app.rs:8071
+#: crates/opencrt/src/app.rs:8075
 msgid "this machine"
 msgstr "цей комп’ютер"
 
-#: crates/opencrt/src/app.rs:8072
+#: crates/opencrt/src/app.rs:8076
 msgid "any (SOCKS)"
 msgstr "будь-який (SOCKS)"
 
-#: crates/opencrt/src/app.rs:8381
+#: crates/opencrt/src/app.rs:8390
 msgid "Not found"
 msgstr "Не знайдено"
 
-#: crates/opencrt/src/app.rs:8406
+#: crates/opencrt/src/app.rs:8415
 msgid "No connected session to send the command to."
 msgstr "Немає підключеного сеансу, куди можна надіслати команду."
 

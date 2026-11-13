@@ -7,8 +7,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5601
-#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5601
+#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5604
+#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5604
 msgid "Session Manager"
 msgstr "Seansihaldur"
 
@@ -17,7 +17,7 @@ msgstr "Seansihaldur"
 msgid "Connect"
 msgstr "Ühenda"
 
-#: crates/opencrt/ui/main.slint:364 crates/opencrt/ui/main.slint:6747
+#: crates/opencrt/ui/main.slint:364 crates/opencrt/ui/main.slint:6781
 msgid "New Session"
 msgstr "Uus seanss"
 
@@ -31,7 +31,7 @@ msgstr "Atribuudid"
 
 #: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508
 #: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142
-#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142 crates/opencrt/ui/main.slint:5501
+#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142 crates/opencrt/ui/main.slint:5504
 msgid "Delete"
 msgstr "Kustuta"
 
@@ -79,15 +79,15 @@ msgstr "Dubleeri..."
 msgid "Cut"
 msgstr "Lõika"
 
-#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5522
-#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5522 crates/opencrt/ui/main.slint:6277
+#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5525
+#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5525 crates/opencrt/ui/main.slint:6311
 msgid "Copy"
 msgstr "Kopeeri"
 
 #: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011
 #: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5532
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5532 crates/opencrt/ui/main.slint:6292
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5535
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5535 crates/opencrt/ui/main.slint:6326
 msgid "Paste"
 msgstr "Kleebi"
 
@@ -113,12 +113,12 @@ msgid "Filter (Ctrl+click picks several)"
 msgstr "Filter (Ctrl+klõps valib mitu)"
 
 #: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897
-#: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897 crates/opencrt/ui/main.slint:5958
+#: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897 crates/opencrt/ui/main.slint:5992
 msgid "Reconnect"
 msgstr "Ühenda uuesti"
 
 #: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902
-#: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902 crates/opencrt/ui/main.slint:5965
+#: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902 crates/opencrt/ui/main.slint:5999
 msgid "Disconnect"
 msgstr "Katkesta ühendus"
 
@@ -128,12 +128,12 @@ msgstr "Lukusta"
 
 #: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975
 #: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7084
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7084 crates/opencrt/ui/main.slint:7261
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7118
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7118 crates/opencrt/ui/main.slint:7295
 msgid "Close"
 msgstr "Sulge"
 
-#: crates/opencrt/ui/main.slint:717 crates/opencrt/ui/main.slint:5606
+#: crates/opencrt/ui/main.slint:717 crates/opencrt/ui/main.slint:5609
 msgid "Command Manager"
 msgstr "Käsuhaldur"
 
@@ -168,7 +168,7 @@ msgid "Send"
 msgstr "Saada"
 
 #: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414
-#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414 crates/opencrt/ui/main.slint:7145
+#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414 crates/opencrt/ui/main.slint:7179
 msgid "Edit..."
 msgstr "Muuda..."
 
@@ -180,7 +180,7 @@ msgstr "Kopeeri nupuribale"
 msgid "New Command..."
 msgstr "Uus käsk..."
 
-#: crates/opencrt/ui/main.slint:907 crates/opencrt/ui/main.slint:5435
+#: crates/opencrt/ui/main.slint:907 crates/opencrt/ui/main.slint:5438
 msgid "Clone Session"
 msgstr "Klooni seanss"
 
@@ -196,7 +196,7 @@ msgstr "Saada Ctrl+Alt+Del"
 msgid "Send Windows Key"
 msgstr "Saada Windowsi klahv"
 
-#: crates/opencrt/ui/main.slint:935 crates/opencrt/ui/main.slint:5656
+#: crates/opencrt/ui/main.slint:935 crates/opencrt/ui/main.slint:5659
 msgid "Session Options..."
 msgstr "Seansisuvandid..."
 
@@ -240,19 +240,19 @@ msgstr "Sulge teised vahekaardid"
 msgid "Scratchpad"
 msgstr "Märkmik"
 
-#: crates/opencrt/ui/main.slint:1115 crates/opencrt/ui/main.slint:6510
+#: crates/opencrt/ui/main.slint:1115 crates/opencrt/ui/main.slint:6544
 msgid "Send to"
 msgstr "Saada"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6517
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6551
 msgid "the active tab"
 msgstr "aktiivsele vahekaardile"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6517
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6551
 msgid "all tabs"
 msgstr "kõigile vahekaartidele"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6517
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6551
 msgid "tabs on screen"
 msgstr "ekraanil olevatele vahekaartidele"
 
@@ -316,8 +316,8 @@ msgstr "Nõustu üks kord"
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7342
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7342
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7376
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7376
 msgid "Cancel"
 msgstr "Loobu"
 
@@ -343,7 +343,7 @@ msgstr "Salvesta parool (kui sisselogimine õnnestub)"
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285 crates/opencrt/ui/main.slint:7410
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285 crates/opencrt/ui/main.slint:7444
 msgid "OK"
 msgstr "OK"
 
@@ -440,7 +440,7 @@ msgid "Parity:"
 msgstr "Paarsus:"
 
 #: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644
-#: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644 crates/opencrt/ui/main.slint:7413
 msgid "None"
 msgstr "Puudub"
 
@@ -472,7 +472,7 @@ msgstr "RTS/CTS"
 msgid "Opens your default shell (PowerShell on Windows, $SHELL elsewhere)."
 msgstr "Avab teie vaikekesta (Windowsis PowerShell, mujal $SHELL)."
 
-#: crates/opencrt/ui/main.slint:1674 crates/opencrt/ui/main.slint:5916
+#: crates/opencrt/ui/main.slint:1674 crates/opencrt/ui/main.slint:5950
 msgid "Quick Connect"
 msgstr "Kiirühendus"
 
@@ -488,7 +488,7 @@ msgstr "Paroole ja paroolifraase küsitakse siis, kui server neid vajab."
 msgid "Session Options ({} sessions)"
 msgstr "Seansisuvandid ({} seanssi)"
 
-#: crates/opencrt/ui/main.slint:1816 crates/opencrt/ui/main.slint:6016
+#: crates/opencrt/ui/main.slint:1816 crates/opencrt/ui/main.slint:6050
 msgid "Session Options"
 msgstr "Seansisuvandid"
 
@@ -532,7 +532,7 @@ msgstr "Kaugtöölaud"
 msgid "Session name:"
 msgstr "Seansi nimi:"
 
-#: crates/opencrt/ui/main.slint:1874 crates/opencrt/ui/main.slint:7392
+#: crates/opencrt/ui/main.slint:1874 crates/opencrt/ui/main.slint:7426
 msgid "Folder:"
 msgstr "Kaust:"
 
@@ -786,27 +786,27 @@ msgstr "Märksõnaloend:"
 msgid "Tab colour:"
 msgstr "Vahekaardi värv:"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Red"
 msgstr "Punane"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Orange"
 msgstr "Oranž"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Yellow"
 msgstr "Kollane"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Green"
 msgstr "Roheline"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Blue"
 msgstr "Sinine"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Purple"
 msgstr "Lilla"
 
@@ -984,7 +984,7 @@ msgid ""
 "run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
 msgstr "Klahv = mida see teeb. Klahvid: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, Enter, Escape, Space või märk, koos Ctrl+ Alt+ Shift+ (märgid vajavad Ctrl-i või Alt-i). Saadetakse tekst (\\r on Enter); või script: fail, menu: käsk, run: programm, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
 
-#: crates/opencrt/ui/main.slint:2320 crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:2320 crates/opencrt/ui/main.slint:7403
 msgid "Script file:"
 msgstr "Skriptifail:"
 
@@ -1018,8 +1018,8 @@ msgstr "Kasutab muutujat $DISPLAY, selle puudumisel selle masina ekraani 0. X-se
 msgid "Port forwards (SSH2 only):"
 msgstr "Pordisuunamised (ainult SSH2):"
 
-#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7043
-#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7043
+#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7077
+#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7077
 msgid "Name"
 msgstr "Nimi"
 
@@ -1039,15 +1039,15 @@ msgstr "Sihtkoht"
 msgid "Application"
 msgstr "Rakendus"
 
-#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7070
-#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7070 crates/opencrt/ui/main.slint:7252
+#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7104
+#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7104 crates/opencrt/ui/main.slint:7286
 msgid "Add..."
 msgstr "Lisa..."
 
 #: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822
 #: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7079
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7079 crates/opencrt/ui/main.slint:7256
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7113
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7113 crates/opencrt/ui/main.slint:7290
 msgid "Remove"
 msgstr "Eemalda"
 
@@ -1211,11 +1211,11 @@ msgstr "Kasutaja ID:"
 msgid "kept in the system keychain"
 msgstr "hoitakse süsteemi võtmehoidlas"
 
-#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7403
 msgid "Send:"
 msgstr "Saada:"
 
-#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7403
 msgid "Command:"
 msgstr "Käsk:"
 
@@ -1315,7 +1315,7 @@ msgstr "Sätete sünkroonimine"
 msgid "Theme:"
 msgstr "Teema:"
 
-#: crates/opencrt/ui/main.slint:3269 crates/opencrt/ui/main.slint:5238
+#: crates/opencrt/ui/main.slint:3269 crates/opencrt/ui/main.slint:5241
 msgid "Follow the system"
 msgstr "Järgi süsteemi"
 
@@ -1732,7 +1732,7 @@ msgstr "regulaaravaldis"
 msgid "word or phrase"
 msgstr "sõna või fraas"
 
-#: crates/opencrt/ui/main.slint:3755 crates/opencrt/ui/main.slint:7377
+#: crates/opencrt/ui/main.slint:3755 crates/opencrt/ui/main.slint:7411
 msgid "Colour:"
 msgstr "Värv:"
 
@@ -1768,11 +1768,11 @@ msgstr "Lisa"
 msgid "Mapped keys (one per line):"
 msgstr "Vastendatud klahvid (üks rea kohta):"
 
-#: crates/opencrt/ui/main.slint:3836 crates/opencrt/ui/main.slint:6995
+#: crates/opencrt/ui/main.slint:3836 crates/opencrt/ui/main.slint:7029
 msgid "Import..."
 msgstr "Impordi..."
 
-#: crates/opencrt/ui/main.slint:3840 crates/opencrt/ui/main.slint:7003
+#: crates/opencrt/ui/main.slint:3840 crates/opencrt/ui/main.slint:7037
 msgid "Export..."
 msgstr "Ekspordi..."
 
@@ -2050,7 +2050,7 @@ msgstr "Cmd+L"
 msgid "Connect a local shell"
 msgstr "Ühenda kohalik kest"
 
-#: crates/opencrt/ui/main.slint:4173 crates/opencrt/ui/main.slint:5868
+#: crates/opencrt/ui/main.slint:4173 crates/opencrt/ui/main.slint:5902
 msgid "Keyboard Shortcuts"
 msgstr "Kiirklahvid"
 
@@ -2060,7 +2060,7 @@ msgid ""
 "> Keyboard. For example, F1 = menu: shortcuts opens this list."
 msgstr "Lisage oma jaotises Üldsuvandid > Klaviatuur või seansipõhiselt jaotises Seansisuvandid > Klaviatuur. Näiteks F1 = menu: shortcuts avab selle loendi."
 
-#: crates/opencrt/ui/main.slint:4217 crates/opencrt/ui/main.slint:5876
+#: crates/opencrt/ui/main.slint:4217 crates/opencrt/ui/main.slint:5910
 msgid "About OpenCRT"
 msgstr "Teave OpenCRT kohta"
 
@@ -2104,7 +2104,7 @@ msgstr "Fondid"
 msgid "IBM Plex Sans and Mono, SIL Open Font License 1.1"
 msgstr "IBM Plex Sans ja Mono, SIL Open Font License 1.1"
 
-#: crates/opencrt/ui/main.slint:4272 crates/opencrt/ui/main.slint:5872
+#: crates/opencrt/ui/main.slint:4272 crates/opencrt/ui/main.slint:5906
 msgid "Check for Updates"
 msgstr "Otsi uuendusi"
 
@@ -2252,648 +2252,660 @@ msgstr "Enter ühendab  ·  Shift+Enter avab SFTP GUI vahekaardi  ·  Esc sulgeb
 msgid "Ready"
 msgstr "Valmis"
 
-#: crates/opencrt/ui/main.slint:5271 crates/opencrt/ui/main.slint:5742
+#: crates/opencrt/ui/main.slint:5274 crates/opencrt/ui/main.slint:5745
 msgid "Script"
 msgstr "Skript"
 
-#: crates/opencrt/ui/main.slint:5417
+#: crates/opencrt/ui/main.slint:5420
 msgid "File"
 msgstr "Fail"
 
-#: crates/opencrt/ui/main.slint:5419
+#: crates/opencrt/ui/main.slint:5422
 msgid "Quick Connect..."
 msgstr "Kiirühendus..."
 
-#: crates/opencrt/ui/main.slint:5423
+#: crates/opencrt/ui/main.slint:5426
 msgid "Quick Open... (Cmd+O)"
 msgstr "Kiiravamine... (Cmd+O)"
 
-#: crates/opencrt/ui/main.slint:5423
+#: crates/opencrt/ui/main.slint:5426
 msgid "Quick Open... (Ctrl+Shift+T)"
 msgstr "Kiiravamine... (Ctrl+Shift+T)"
 
-#: crates/opencrt/ui/main.slint:5427
+#: crates/opencrt/ui/main.slint:5430
 msgid "Connect in Tab..."
 msgstr "Ühenda vahekaardil..."
 
-#: crates/opencrt/ui/main.slint:5431 crates/opencrt/ui/main.slint:5928
+#: crates/opencrt/ui/main.slint:5434 crates/opencrt/ui/main.slint:5962
 msgid "Connect Local Shell"
 msgstr "Ühenda kohalik kest"
 
-#: crates/opencrt/ui/main.slint:5451
+#: crates/opencrt/ui/main.slint:5454
 msgid "Disconnect All"
 msgstr "Katkesta kõik ühendused"
 
-#: crates/opencrt/ui/main.slint:5456
+#: crates/opencrt/ui/main.slint:5459
 msgid "Close Tab"
 msgstr "Sulge vahekaart"
 
-#: crates/opencrt/ui/main.slint:5462
+#: crates/opencrt/ui/main.slint:5465
 msgid "Stop Logging"
 msgstr "Peata logimine"
 
-#: crates/opencrt/ui/main.slint:5462
+#: crates/opencrt/ui/main.slint:5465
 msgid "Log Session..."
 msgstr "Logi seanss..."
 
-#: crates/opencrt/ui/main.slint:5467
+#: crates/opencrt/ui/main.slint:5470
 msgid "Stop Recording"
 msgstr "Peata lindistamine"
 
-#: crates/opencrt/ui/main.slint:5467
+#: crates/opencrt/ui/main.slint:5470
 msgid "Record Session (asciicast)..."
 msgstr "Lindista seanss (asciicast)..."
 
-#: crates/opencrt/ui/main.slint:5473 crates/opencrt/ui/main.slint:6009
+#: crates/opencrt/ui/main.slint:5476 crates/opencrt/ui/main.slint:6043
 msgid "Print Screen"
 msgstr "Prindi ekraan"
 
-#: crates/opencrt/ui/main.slint:5478
+#: crates/opencrt/ui/main.slint:5481
 msgid "Print Selection"
 msgstr "Prindi valik"
 
-#: crates/opencrt/ui/main.slint:5483
+#: crates/opencrt/ui/main.slint:5486
 msgid "Stop Auto Print"
 msgstr "Peata automaatne printimine"
 
-#: crates/opencrt/ui/main.slint:5483
+#: crates/opencrt/ui/main.slint:5486
 msgid "Auto Print"
 msgstr "Automaatne printimine"
 
-#: crates/opencrt/ui/main.slint:5489
+#: crates/opencrt/ui/main.slint:5492
 msgid "Snapshots"
 msgstr "Hetktõmmised"
 
-#: crates/opencrt/ui/main.slint:5491
+#: crates/opencrt/ui/main.slint:5494
 msgid "Save Snapshot..."
 msgstr "Salvesta hetktõmmis..."
 
-#: crates/opencrt/ui/main.slint:5515
+#: crates/opencrt/ui/main.slint:5518
 msgid "Exit"
 msgstr "Välju"
 
-#: crates/opencrt/ui/main.slint:5520
+#: crates/opencrt/ui/main.slint:5523
 msgid "Edit"
 msgstr "Redigeeri"
 
-#: crates/opencrt/ui/main.slint:5527 crates/opencrt/ui/main.slint:6282
+#: crates/opencrt/ui/main.slint:5530 crates/opencrt/ui/main.slint:6316
 msgid "Copy with Colours"
 msgstr "Kopeeri koos värvidega"
 
-#: crates/opencrt/ui/main.slint:5537
+#: crates/opencrt/ui/main.slint:5540
 msgid "Copy and Paste"
 msgstr "Kopeeri ja kleebi"
 
-#: crates/opencrt/ui/main.slint:5542 crates/opencrt/ui/main.slint:6298
+#: crates/opencrt/ui/main.slint:5545 crates/opencrt/ui/main.slint:6332
 msgid "Select All"
 msgstr "Vali kõik"
 
-#: crates/opencrt/ui/main.slint:5547
+#: crates/opencrt/ui/main.slint:5550
 msgid "Find..."
 msgstr "Otsi..."
 
-#: crates/opencrt/ui/main.slint:5557
+#: crates/opencrt/ui/main.slint:5560
 msgid "Clear Screen"
 msgstr "Tühjenda ekraan"
 
-#: crates/opencrt/ui/main.slint:5562 crates/opencrt/ui/main.slint:6302
+#: crates/opencrt/ui/main.slint:5565 crates/opencrt/ui/main.slint:6336
 msgid "Clear Scrollback"
 msgstr "Tühjenda kerimispuhver"
 
-#: crates/opencrt/ui/main.slint:5567
+#: crates/opencrt/ui/main.slint:5570
 msgid "Clear Screen and Scrollback"
 msgstr "Tühjenda ekraan ja kerimispuhver"
 
-#: crates/opencrt/ui/main.slint:5572
+#: crates/opencrt/ui/main.slint:5575
 msgid "Reset Terminal"
 msgstr "Lähtesta terminal"
 
-#: crates/opencrt/ui/main.slint:5577 crates/opencrt/ui/main.slint:6306
+#: crates/opencrt/ui/main.slint:5580 crates/opencrt/ui/main.slint:6340
 msgid "Send Break"
 msgstr "Saada Break"
 
-#: crates/opencrt/ui/main.slint:5583
+#: crates/opencrt/ui/main.slint:5586
 msgid "Send Input to All Tabs"
 msgstr "Saada sisend kõigile vahekaartidele"
 
-#: crates/opencrt/ui/main.slint:5589
+#: crates/opencrt/ui/main.slint:5592
 msgid "View"
 msgstr "Vaade"
 
-#: crates/opencrt/ui/main.slint:5591
+#: crates/opencrt/ui/main.slint:5594
 msgid "Toolbar"
 msgstr "Tööriistariba"
 
-#: crates/opencrt/ui/main.slint:5596
+#: crates/opencrt/ui/main.slint:5599
 msgid "Status Bar"
 msgstr "Olekuriba"
 
-#: crates/opencrt/ui/main.slint:5611
+#: crates/opencrt/ui/main.slint:5614
 msgid "Command Window"
 msgstr "Käsuaken"
 
-#: crates/opencrt/ui/main.slint:5616
+#: crates/opencrt/ui/main.slint:5619
 msgid "Hex View"
 msgstr "Hex-vaade"
 
-#: crates/opencrt/ui/main.slint:5621
+#: crates/opencrt/ui/main.slint:5624
 msgid "Show Control Characters"
 msgstr "Kuva juhtmärgid"
 
-#: crates/opencrt/ui/main.slint:5627
+#: crates/opencrt/ui/main.slint:5630
 msgid "Button Bar"
 msgstr "Nupuriba"
 
-#: crates/opencrt/ui/main.slint:5633
+#: crates/opencrt/ui/main.slint:5636
 msgid "Full Screen"
 msgstr "Täisekraan"
 
-#: crates/opencrt/ui/main.slint:5638
+#: crates/opencrt/ui/main.slint:5641
 msgid "Always on Top"
 msgstr "Alati pealmine"
 
-#: crates/opencrt/ui/main.slint:5645
+#: crates/opencrt/ui/main.slint:5648
 msgid "Larger Font"
 msgstr "Suurem font"
 
-#: crates/opencrt/ui/main.slint:5649
+#: crates/opencrt/ui/main.slint:5652
 msgid "Smaller Font"
 msgstr "Väiksem font"
 
-#: crates/opencrt/ui/main.slint:5654
+#: crates/opencrt/ui/main.slint:5657
 msgid "Options"
 msgstr "Suvandid"
 
-#: crates/opencrt/ui/main.slint:5661
+#: crates/opencrt/ui/main.slint:5664
 msgid "Default Session..."
 msgstr "Vaikeseanss..."
 
-#: crates/opencrt/ui/main.slint:5665
+#: crates/opencrt/ui/main.slint:5668
 msgid "Firewalls..."
 msgstr "Tulemüürid..."
 
-#: crates/opencrt/ui/main.slint:5669
+#: crates/opencrt/ui/main.slint:5672
 msgid "Colour Schemes..."
 msgstr "Värviskeemid..."
 
-#: crates/opencrt/ui/main.slint:5673
+#: crates/opencrt/ui/main.slint:5676
 msgid "Global Options..."
 msgstr "Üldsuvandid..."
 
-#: crates/opencrt/ui/main.slint:5678
+#: crates/opencrt/ui/main.slint:5681
 msgid "Transfer"
 msgstr "Edastus"
 
-#: crates/opencrt/ui/main.slint:5690
+#: crates/opencrt/ui/main.slint:5693
 msgid "Send ASCII File..."
 msgstr "Saada ASCII-fail..."
 
-#: crates/opencrt/ui/main.slint:5695
+#: crates/opencrt/ui/main.slint:5698
 msgid "Send Binary File..."
 msgstr "Saada binaarfail..."
 
-#: crates/opencrt/ui/main.slint:5700
+#: crates/opencrt/ui/main.slint:5703
 msgid "Stop Receive ASCII"
 msgstr "Peata ASCII vastuvõtt"
 
-#: crates/opencrt/ui/main.slint:5700
+#: crates/opencrt/ui/main.slint:5703
 msgid "Receive ASCII..."
 msgstr "Võta vastu ASCII..."
 
-#: crates/opencrt/ui/main.slint:5705
+#: crates/opencrt/ui/main.slint:5708
 msgid "Zmodem Upload..."
 msgstr "Zmodem üleslaadimine..."
 
-#: crates/opencrt/ui/main.slint:5711
+#: crates/opencrt/ui/main.slint:5714
 msgid "Send Xmodem..."
 msgstr "Saada Xmodem..."
 
-#: crates/opencrt/ui/main.slint:5716
+#: crates/opencrt/ui/main.slint:5719
 msgid "Receive Xmodem..."
 msgstr "Võta vastu Xmodem..."
 
-#: crates/opencrt/ui/main.slint:5721
+#: crates/opencrt/ui/main.slint:5724
 msgid "Send Ymodem..."
 msgstr "Saada Ymodem..."
 
-#: crates/opencrt/ui/main.slint:5726
+#: crates/opencrt/ui/main.slint:5729
 msgid "Receive Ymodem"
 msgstr "Võta vastu Ymodem"
 
-#: crates/opencrt/ui/main.slint:5731
+#: crates/opencrt/ui/main.slint:5734
 msgid "Send Kermit..."
 msgstr "Saada Kermit..."
 
-#: crates/opencrt/ui/main.slint:5736
+#: crates/opencrt/ui/main.slint:5739
 msgid "Receive Kermit"
 msgstr "Võta vastu Kermit"
 
-#: crates/opencrt/ui/main.slint:5744
+#: crates/opencrt/ui/main.slint:5747
 msgid "Run..."
 msgstr "Käivita..."
 
-#: crates/opencrt/ui/main.slint:5754
+#: crates/opencrt/ui/main.slint:5757
 msgid "Script Editor..."
 msgstr "Skriptiredaktor..."
 
-#: crates/opencrt/ui/main.slint:5759
+#: crates/opencrt/ui/main.slint:5762
 msgid "Stop Recording..."
 msgstr "Peata lindistamine..."
 
-#: crates/opencrt/ui/main.slint:5759
+#: crates/opencrt/ui/main.slint:5762
 msgid "Start Recording"
 msgstr "Alusta lindistamist"
 
-#: crates/opencrt/ui/main.slint:5765
+#: crates/opencrt/ui/main.slint:5768
 msgid "Tools"
 msgstr "Tööriistad"
 
-#: crates/opencrt/ui/main.slint:5767
+#: crates/opencrt/ui/main.slint:5770
 msgid "Create Public Key..."
 msgstr "Loo avalik võti..."
 
-#: crates/opencrt/ui/main.slint:5771
+#: crates/opencrt/ui/main.slint:5774
 msgid "Host Keys..."
 msgstr "Hostivõtmed..."
 
-#: crates/opencrt/ui/main.slint:5775
+#: crates/opencrt/ui/main.slint:5778
 msgid "Credentials Manager..."
 msgstr "Mandaadihaldur..."
 
-#: crates/opencrt/ui/main.slint:5779
+#: crates/opencrt/ui/main.slint:5782
 msgid "Master Password..."
 msgstr "Ülemparool..."
 
-#: crates/opencrt/ui/main.slint:5783
+#: crates/opencrt/ui/main.slint:5786
 msgid "Agent Keys..."
 msgstr "Agendi võtmed..."
 
-#: crates/opencrt/ui/main.slint:5787
+#: crates/opencrt/ui/main.slint:5790
 msgid "Public Key Assistant..."
 msgstr "Avaliku võtme abiline..."
 
-#: crates/opencrt/ui/main.slint:5791
+#: crates/opencrt/ui/main.slint:5794
 msgid "Convert Private Key to OpenSSH..."
 msgstr "Teisenda privaatvõti OpenSSH-vormingusse..."
 
-#: crates/opencrt/ui/main.slint:5796
+#: crates/opencrt/ui/main.slint:5799
 msgid "Import OpenSSH Config"
 msgstr "Impordi OpenSSH konfiguratsioon"
 
-#: crates/opencrt/ui/main.slint:5800
+#: crates/opencrt/ui/main.slint:5803
 msgid "Import SecureCRT Sessions..."
 msgstr "Impordi SecureCRT seansid..."
 
-#: crates/opencrt/ui/main.slint:5804
+#: crates/opencrt/ui/main.slint:5807
 msgid "Import Sessions..."
 msgstr "Impordi seansid..."
 
-#: crates/opencrt/ui/main.slint:5808
+#: crates/opencrt/ui/main.slint:5811
 msgid "Export Sessions..."
 msgstr "Ekspordi seansid..."
 
-#: crates/opencrt/ui/main.slint:5813
+#: crates/opencrt/ui/main.slint:5816
 msgid "Window"
 msgstr "Aken"
 
-#: crates/opencrt/ui/main.slint:5815
+#: crates/opencrt/ui/main.slint:5818
 msgid "Next Tab"
 msgstr "Järgmine vahekaart"
 
-#: crates/opencrt/ui/main.slint:5820
+#: crates/opencrt/ui/main.slint:5823
 msgid "Previous Tab"
 msgstr "Eelmine vahekaart"
 
-#: crates/opencrt/ui/main.slint:5826
+#: crates/opencrt/ui/main.slint:5829
 msgid "Tile Vertically"
 msgstr "Paani vertikaalselt"
 
-#: crates/opencrt/ui/main.slint:5831
+#: crates/opencrt/ui/main.slint:5834
 msgid "Tile Horizontally"
 msgstr "Paani horisontaalselt"
 
-#: crates/opencrt/ui/main.slint:5836
+#: crates/opencrt/ui/main.slint:5839
 msgid "Untile"
 msgstr "Tühista paanimine"
 
-#: crates/opencrt/ui/main.slint:5840
+#: crates/opencrt/ui/main.slint:5843
 msgid "Merge Tab Groups"
 msgstr "Liida vahekaardirühmad"
 
-#: crates/opencrt/ui/main.slint:5857
+#: crates/opencrt/ui/main.slint:5860
 msgid "Language"
 msgstr "Keel"
 
-#: crates/opencrt/ui/main.slint:5866
+#: crates/opencrt/ui/main.slint:5869
+msgid "Western and Southern Europe"
+msgstr "Lääne- ja Lõuna-Euroopa"
+
+#: crates/opencrt/ui/main.slint:5879
+msgid "Northern Europe"
+msgstr "Põhja-Euroopa"
+
+#: crates/opencrt/ui/main.slint:5889
+msgid "Central and Eastern Europe"
+msgstr "Kesk- ja Ida-Euroopa"
+
+#: crates/opencrt/ui/main.slint:5900
 msgid "Help"
 msgstr "Abi"
 
-#: crates/opencrt/ui/main.slint:5922
+#: crates/opencrt/ui/main.slint:5956
 msgid "Connect in Tab"
 msgstr "Ühenda vahekaardil"
 
-#: crates/opencrt/ui/main.slint:5942
+#: crates/opencrt/ui/main.slint:5976
 msgid "PowerShell"
 msgstr "PowerShell"
 
-#: crates/opencrt/ui/main.slint:5946
+#: crates/opencrt/ui/main.slint:5980
 msgid "Command Prompt (classic)"
 msgstr "Käsuviip (klassikaline)"
 
-#: crates/opencrt/ui/main.slint:5951
+#: crates/opencrt/ui/main.slint:5985
 msgid "WSL: {}"
 msgstr "WSL: {}"
 
-#: crates/opencrt/ui/main.slint:5976
+#: crates/opencrt/ui/main.slint:6010
 msgid "Quick connect: user@host"
 msgstr "Kiirühendus: user@host"
 
-#: crates/opencrt/ui/main.slint:5996
+#: crates/opencrt/ui/main.slint:6030
 msgid "Find"
 msgstr "Otsi"
 
-#: crates/opencrt/ui/main.slint:6004
+#: crates/opencrt/ui/main.slint:6038
 msgid "Highlight words"
 msgstr "Tõsta sõnad esile"
 
-#: crates/opencrt/ui/main.slint:6256 crates/opencrt/ui/main.slint:6909
+#: crates/opencrt/ui/main.slint:6290 crates/opencrt/ui/main.slint:6943
 msgid "OpenCRT"
 msgstr "OpenCRT"
 
-#: crates/opencrt/ui/main.slint:6262
+#: crates/opencrt/ui/main.slint:6296
 msgid "File > Quick Connect, or type user@host in the toolbar's connect bar."
 msgstr "Fail > Kiirühendus või tippige user@host tööriistariba ühendusribale."
 
-#: crates/opencrt/ui/main.slint:6272
+#: crates/opencrt/ui/main.slint:6306
 msgid "Show Menu Bar"
 msgstr "Kuva menüüriba"
 
-#: crates/opencrt/ui/main.slint:6287
+#: crates/opencrt/ui/main.slint:6321
 msgid "Search the Web"
 msgstr "Otsi veebist"
 
-#: crates/opencrt/ui/main.slint:6399
+#: crates/opencrt/ui/main.slint:6433
 msgid "Default"
 msgstr "Vaikimisi"
 
-#: crates/opencrt/ui/main.slint:6414
+#: crates/opencrt/ui/main.slint:6448
 msgid "New Bar..."
 msgstr "Uus riba..."
 
-#: crates/opencrt/ui/main.slint:6418
+#: crates/opencrt/ui/main.slint:6452
 msgid "Rename Bar..."
 msgstr "Nimeta riba ümber..."
 
-#: crates/opencrt/ui/main.slint:6423
+#: crates/opencrt/ui/main.slint:6457
 msgid "Delete Bar..."
 msgstr "Kustuta riba..."
 
-#: crates/opencrt/ui/main.slint:6454
+#: crates/opencrt/ui/main.slint:6488
 msgid "Add a button that sends a command, e.g. show version\\r"
 msgstr "Lisa nupp, mis saadab käsu, nt show version\\r"
 
-#: crates/opencrt/ui/main.slint:6477
+#: crates/opencrt/ui/main.slint:6511
 msgid "Nothing received yet in this tab."
 msgstr "Sellel vahekaardil pole veel midagi vastu võetud."
 
-#: crates/opencrt/ui/main.slint:6525
+#: crates/opencrt/ui/main.slint:6559
 msgid "characters are sent as you type; Enter sends Enter"
 msgstr "märgid saadetakse tippimise ajal; Enter saadab Enteri"
 
-#: crates/opencrt/ui/main.slint:6525
+#: crates/opencrt/ui/main.slint:6559
 msgid "type a command and press Enter"
 msgstr "tippige käsk ja vajutage Enter"
 
-#: crates/opencrt/ui/main.slint:6541
+#: crates/opencrt/ui/main.slint:6575
 msgid "History"
 msgstr "Ajalugu"
 
-#: crates/opencrt/ui/main.slint:6552
+#: crates/opencrt/ui/main.slint:6586
 msgid "Send characters immediately"
 msgstr "Saada märgid kohe"
 
-#: crates/opencrt/ui/main.slint:6573
+#: crates/opencrt/ui/main.slint:6607
 msgid "Find:"
 msgstr "Otsi:"
 
-#: crates/opencrt/ui/main.slint:6580
+#: crates/opencrt/ui/main.slint:6614
 msgid "text to find (Enter = next)"
 msgstr "otsitav tekst (Enter = järgmine)"
 
-#: crates/opencrt/ui/main.slint:6586
+#: crates/opencrt/ui/main.slint:6620
 msgid "Next"
 msgstr "Järgmine"
 
-#: crates/opencrt/ui/main.slint:6590
+#: crates/opencrt/ui/main.slint:6624
 msgid "Previous"
 msgstr "Eelmine"
 
-#: crates/opencrt/ui/main.slint:6594
+#: crates/opencrt/ui/main.slint:6628
 msgid "Match case"
 msgstr "Tõstutundlik"
 
-#: crates/opencrt/ui/main.slint:6643
+#: crates/opencrt/ui/main.slint:6677
 msgid "OpenCRT {} available"
 msgstr "OpenCRT {} on saadaval"
 
-#: crates/opencrt/ui/main.slint:6658
+#: crates/opencrt/ui/main.slint:6692
 msgid "{n} tunnel tab"
 msgid_plural "{n} tunnel tabs"
 msgstr[0] "{n} tunneli vahekaart"
 msgstr[1] "{n} tunneli vahekaarti"
 
-#: crates/opencrt/ui/main.slint:6682
+#: crates/opencrt/ui/main.slint:6716
 msgid "ALL TABS"
 msgstr "KÕIK VAHEKAARDID"
 
-#: crates/opencrt/ui/main.slint:6687
+#: crates/opencrt/ui/main.slint:6721
 msgid "LOG"
 msgstr "LOGI"
 
-#: crates/opencrt/ui/main.slint:6691
+#: crates/opencrt/ui/main.slint:6725
 msgid "CAP"
 msgstr "CAP"
 
-#: crates/opencrt/ui/main.slint:6696
+#: crates/opencrt/ui/main.slint:6730
 msgid "NUM"
 msgstr "NUM"
 
-#: crates/opencrt/ui/main.slint:6747
+#: crates/opencrt/ui/main.slint:6781
 msgid "Session Options - {}"
 msgstr "Seansisuvandid - {}"
 
-#: crates/opencrt/ui/main.slint:6956
+#: crates/opencrt/ui/main.slint:6990
 msgid "Host Keys"
 msgstr "Hostivõtmed"
 
-#: crates/opencrt/ui/main.slint:6959
+#: crates/opencrt/ui/main.slint:6993
 msgid ""
 "Keys of the SSH servers you have accepted. Remove one when a server's key "
 "has changed for a known reason (for example after a reinstall); you are "
 "asked to accept the new key at the next connection."
 msgstr "Teie aktsepteeritud SSH-serverite võtmed. Eemaldage võti, kui serveri võti on teadaoleval põhjusel muutunud (näiteks pärast uuesti installimist); järgmisel ühendamisel palutakse teil uus võti aktsepteerida."
 
-#: crates/opencrt/ui/main.slint:6969
+#: crates/opencrt/ui/main.slint:7003
 msgid "No saved host keys."
 msgstr "Salvestatud hostivõtmeid pole."
 
-#: crates/opencrt/ui/main.slint:6999
+#: crates/opencrt/ui/main.slint:7033
 msgid "Import SecureCRT..."
 msgstr "Impordi SecureCRT..."
 
-#: crates/opencrt/ui/main.slint:7023
+#: crates/opencrt/ui/main.slint:7057
 msgid "Credentials Manager"
 msgstr "Mandaadihaldur"
 
-#: crates/opencrt/ui/main.slint:7026
+#: crates/opencrt/ui/main.slint:7060
 msgid ""
 "Saved logins for SSH2, Telnet, RDP and VNC sessions. Pick one in Session "
 "Options > Authentication; its password is kept in the system keychain."
 msgstr "Salvestatud sisselogimisandmed SSH2-, Telnet-, RDP- ja VNC-seansside jaoks. Valige üks jaotises Seansisuvandid > Autentimine; selle parooli hoitakse süsteemi võtmehoidlas."
 
-#: crates/opencrt/ui/main.slint:7044
+#: crates/opencrt/ui/main.slint:7078
 msgid "Username"
 msgstr "Kasutajanimi"
 
-#: crates/opencrt/ui/main.slint:7094
+#: crates/opencrt/ui/main.slint:7128
 msgid "Firewalls"
 msgstr "Tulemüürid"
 
-#: crates/opencrt/ui/main.slint:7097
+#: crates/opencrt/ui/main.slint:7131
 msgid ""
 "Proxies and gateways defined once and used by name: type a firewall's name "
 "into a session's Proxy field (Session Options > Connection)."
 msgstr "Ühe korra määratud ja nime järgi kasutatavad puhverserverid ja lüüsid: tippige tulemüüri nimi seansi välja Puhverserver (Seansisuvandid > Ühendus)."
 
-#: crates/opencrt/ui/main.slint:7115
+#: crates/opencrt/ui/main.slint:7149
 msgid "Proxy"
 msgstr "Puhverserver"
 
-#: crates/opencrt/ui/main.slint:7209
+#: crates/opencrt/ui/main.slint:7243
 msgid "Agent Keys"
 msgstr "Agendi võtmed"
 
-#: crates/opencrt/ui/main.slint:7212
+#: crates/opencrt/ui/main.slint:7246
 msgid ""
 "Keys held by OpenCRT's own SSH agent. While it holds keys, sessions without "
 "a key file log in with them and forwarded agents use them; otherwise the "
 "system's agent is used. Keys stay in memory until OpenCRT closes."
 msgstr "OpenCRT enda SSH-agendi hoitavad võtmed. Kui sellel on võtmeid, logivad võtmefailita seansid nendega sisse ja edasisuunatud agendid kasutavad neid; muidu kasutatakse süsteemi agenti. Võtmed jäävad mällu kuni OpenCRT sulgemiseni."
 
-#: crates/opencrt/ui/main.slint:7222
+#: crates/opencrt/ui/main.slint:7256
 msgid "No keys loaded."
 msgstr "Võtmeid pole laaditud."
 
-#: crates/opencrt/ui/main.slint:7247
+#: crates/opencrt/ui/main.slint:7281
 msgid ""
 "Load these keys when OpenCRT starts (their file names are saved; passphrases "
 "are asked for)"
 msgstr "Laadi need võtmed OpenCRT käivitamisel (failinimed salvestatakse; paroolifraase küsitakse)"
 
-#: crates/opencrt/ui/main.slint:7278
+#: crates/opencrt/ui/main.slint:7312
 msgid "Create Public Key"
 msgstr "Loo avalik võti"
 
-#: crates/opencrt/ui/main.slint:7281
+#: crates/opencrt/ui/main.slint:7315
 msgid ""
 "Creates a key pair in OpenSSH format. Add the public key (copied to the "
 "clipboard when done) to ~/.ssh/authorized_keys on the server, or use Tools > "
 "Public Key Assistant."
 msgstr "Loob OpenSSH-vormingus võtmepaari. Lisage avalik võti (kopeeritakse lõpus lõikelauale) serveris faili ~/.ssh/authorized_keys või kasutage menüüd Tööriistad > Avaliku võtme abiline."
 
-#: crates/opencrt/ui/main.slint:7294
+#: crates/opencrt/ui/main.slint:7328
 msgid "Passphrase:"
 msgstr "Paroolifraas:"
 
-#: crates/opencrt/ui/main.slint:7298
+#: crates/opencrt/ui/main.slint:7332
 msgid "recommended"
 msgstr "soovitatav"
 
-#: crates/opencrt/ui/main.slint:7312
+#: crates/opencrt/ui/main.slint:7346
 msgid "Comment:"
 msgstr "Kommentaar:"
 
-#: crates/opencrt/ui/main.slint:7319
+#: crates/opencrt/ui/main.slint:7353
 msgid "Save as:"
 msgstr "Salvesta kui:"
 
-#: crates/opencrt/ui/main.slint:7336
+#: crates/opencrt/ui/main.slint:7370
 msgid "Creating..."
 msgstr "Loomine..."
 
-#: crates/opencrt/ui/main.slint:7336
+#: crates/opencrt/ui/main.slint:7370
 msgid "Create"
 msgstr "Loo"
 
-#: crates/opencrt/ui/main.slint:7354
+#: crates/opencrt/ui/main.slint:7388
 msgid "Label:"
 msgstr "Silt:"
 
-#: crates/opencrt/ui/main.slint:7362
+#: crates/opencrt/ui/main.slint:7396
 msgid "Action:"
 msgstr "Toiming:"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Send text"
 msgstr "Saada tekst"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Run a script"
 msgstr "Käivita skript"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Menu command"
 msgstr "Menüükäsk"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Run a program"
 msgstr "Käivita programm"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Telnet command"
 msgstr "Telneti käsk"
 
-#: crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:7403
 msgid "Menu command:"
 msgstr "Menüükäsk:"
 
-#: crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:7403
 msgid "Program:"
 msgstr "Programm:"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "e.g. show version\\r"
 msgstr "nt show version\\r"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "e.g. /home/me/scripts/login.rhai"
 msgstr "nt /home/me/scripts/login.rhai"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "e.g. clear-screen, reconnect, sftp-tab"
 msgstr "nt clear-screen, reconnect, sftp-tab"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "e.g. wireshark -k"
 msgstr "nt wireshark -k"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "brk, ip, ao, ayt, ec, el, ga or nop"
 msgstr "brk, ip, ao, ayt, ec, el, ga või nop"
 
-#: crates/opencrt/ui/main.slint:7384
+#: crates/opencrt/ui/main.slint:7418
 msgid "Bar:"
 msgstr "Riba:"
 
-#: crates/opencrt/ui/main.slint:7387
+#: crates/opencrt/ui/main.slint:7421
 msgid "blank: the default bar (sessions choose theirs)"
 msgstr "tühi: vaikeriba (seansid valivad oma)"
 
-#: crates/opencrt/ui/main.slint:7395
+#: crates/opencrt/ui/main.slint:7429
 msgid "optional, e.g. Cisco"
 msgstr "valikuline, nt Cisco"
 
-#: crates/opencrt/ui/main.slint:7400
+#: crates/opencrt/ui/main.slint:7434
 msgid "\\r is Enter, \\n a line feed, \\t Tab, \\e Escape and \\\\ a backslash."
 msgstr "\\r on Enter, \\n reavahetus, \\t Tab, \\e Escape ja \\\\ kaldkriips."
 
@@ -3813,103 +3825,103 @@ msgstr "Kas kustutada nupp „{}”?"
 msgid "Delete the command \"{}\"?"
 msgstr "Kas kustutada käsk „{}”?"
 
-#: crates/opencrt/src/app.rs:7342
+#: crates/opencrt/src/app.rs:7346
 msgid "Custom"
 msgstr "Kohandatud"
 
-#: crates/opencrt/src/app.rs:7437
+#: crates/opencrt/src/app.rs:7441
 msgid "New list"
 msgstr "Uus loend"
 
-#: crates/opencrt/src/app.rs:7437
+#: crates/opencrt/src/app.rs:7441
 msgid "New list {}"
 msgstr "Uus loend {}"
 
-#: crates/opencrt/src/app.rs:7562
+#: crates/opencrt/src/app.rs:7566
 msgid "Font size must be 6 to 48, scrollback 0 to 1000000 lines, and keepalive 0 to 86400 seconds."
 msgstr "Fondi suurus peab olema 6 kuni 48, kerimispuhver 0 kuni 1000000 rida ja keepalive 0 kuni 86400 sekundit."
 
-#: crates/opencrt/src/app.rs:7571
+#: crates/opencrt/src/app.rs:7575
 msgid "General: recent sessions must be 0 to {}, the Connect All warning 0 to 1000, and the interface font size 9 to 20."
 msgstr "Üldine: hiljutisi seansse peab olema 0 kuni {}, Ühenda kõik hoiatus 0 kuni 1000 ja liidese fondi suurus 9 kuni 20."
 
-#: crates/opencrt/src/app.rs:7576
+#: crates/opencrt/src/app.rs:7580
 msgid "Connection: the default SSH2 key file does not exist."
 msgstr "Ühendus: SSH2 vaikevõtmefaili pole olemas."
 
-#: crates/opencrt/src/app.rs:7584
+#: crates/opencrt/src/app.rs:7588
 msgid "Printing: the font size (up to 72) and margins (up to 100 mm) must be whole numbers."
 msgstr "Printimine: fondi suurus (kuni 72) ja veerised (kuni 100 mm) peavad olema täisarvud."
 
-#: crates/opencrt/src/app.rs:7588
+#: crates/opencrt/src/app.rs:7592
 msgid "File Transfer: the download folder does not exist."
 msgstr "Failiedastus: allalaadimiskausta pole olemas."
 
-#: crates/opencrt/src/app.rs:7592
+#: crates/opencrt/src/app.rs:7596
 msgid "General: the configuration folder must be a full path."
 msgstr "Üldine: konfiguratsioonikaust peab olema täielik tee."
 
-#: crates/opencrt/src/app.rs:7601
+#: crates/opencrt/src/app.rs:7605
 msgid "Settings Sync needs git, which is not installed: {}."
 msgstr "Sätete sünkroonimine vajab git-i, mis pole installitud: {}."
 
-#: crates/opencrt/src/app.rs:7605
+#: crates/opencrt/src/app.rs:7609
 msgid "File Transfer: TFTP addresses must be IP addresses or networks such as 192.168.1.0/24."
 msgstr "Failiedastus: TFTP-aadressid peavad olema IP-aadressid või võrgud, nt 192.168.1.0/24."
 
-#: crates/opencrt/src/app.rs:7710
+#: crates/opencrt/src/app.rs:7714
 msgid "Settings Sync: the repository was not set up: {}"
 msgstr "Sätete sünkroonimine: hoidlat ei seadistatud: {}"
 
-#: crates/opencrt/src/app.rs:7718
+#: crates/opencrt/src/app.rs:7722
 msgid " (your current settings were copied there)"
 msgstr " (teie praegused sätted kopeeriti sinna)"
 
-#: crates/opencrt/src/app.rs:7720
+#: crates/opencrt/src/app.rs:7724
 msgid " Connected sessions will be disconnected."
 msgstr " Ühendatud seansside ühendus katkestatakse."
 
-#: crates/opencrt/src/app.rs:7721
+#: crates/opencrt/src/app.rs:7725
 msgid "Settings now live in {}{}. Restart OpenCRT to use them?{}"
 msgstr "Sätted asuvad nüüd asukohas {}{}. Kas taaskäivitada OpenCRT nende kasutamiseks?{}"
 
-#: crates/opencrt/src/app.rs:7724
+#: crates/opencrt/src/app.rs:7728
 msgid "Configuration folder not changed: {}"
 msgstr "Konfiguratsioonikausta ei muudetud: {}"
 
-#: crates/opencrt/src/app.rs:7755
+#: crates/opencrt/src/app.rs:7759
 msgid "Cannot restart OpenCRT ({}); the new configuration folder is used from the next start."
 msgstr "OpenCRT taaskäivitamine nurjus ({}); uut konfiguratsioonikausta kasutatakse järgmisest käivitusest."
 
-#: crates/opencrt/src/app.rs:7824
+#: crates/opencrt/src/app.rs:7828
 msgid "Remote Desktop: enter both width and height (200 to 8192 pixels), or leave both blank to fit the window."
 msgstr "Kaugtöölaud: sisestage nii laius kui ka kõrgus (200 kuni 8192 pikslit) või jätke mõlemad tühjaks, et sobitada aknaga."
 
-#: crates/opencrt/src/app.rs:8070
+#: crates/opencrt/src/app.rs:8074
 msgid "Local"
 msgstr "Kohalik"
 
-#: crates/opencrt/src/app.rs:8070
+#: crates/opencrt/src/app.rs:8074
 msgid "SSH server"
 msgstr "SSH-server"
 
-#: crates/opencrt/src/app.rs:8071
+#: crates/opencrt/src/app.rs:8075
 msgid "Remote"
 msgstr "Kaug"
 
-#: crates/opencrt/src/app.rs:8071
+#: crates/opencrt/src/app.rs:8075
 msgid "this machine"
 msgstr "see masin"
 
-#: crates/opencrt/src/app.rs:8072
+#: crates/opencrt/src/app.rs:8076
 msgid "any (SOCKS)"
 msgstr "mis tahes (SOCKS)"
 
-#: crates/opencrt/src/app.rs:8381
+#: crates/opencrt/src/app.rs:8390
 msgid "Not found"
 msgstr "Ei leitud"
 
-#: crates/opencrt/src/app.rs:8406
+#: crates/opencrt/src/app.rs:8415
 msgid "No connected session to send the command to."
 msgstr "Pole ühendatud seanssi, millele käsk saata."
 

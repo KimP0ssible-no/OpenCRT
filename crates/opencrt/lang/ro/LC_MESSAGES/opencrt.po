@@ -7,8 +7,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2);\n"
 
-#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5601
-#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5601
+#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5604
+#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5604
 msgid "Session Manager"
 msgstr "Manager de sesiuni"
 
@@ -17,7 +17,7 @@ msgstr "Manager de sesiuni"
 msgid "Connect"
 msgstr "Conectare"
 
-#: crates/opencrt/ui/main.slint:364 crates/opencrt/ui/main.slint:6747
+#: crates/opencrt/ui/main.slint:364 crates/opencrt/ui/main.slint:6781
 msgid "New Session"
 msgstr "Sesiune nouă"
 
@@ -31,7 +31,7 @@ msgstr "Proprietăți"
 
 #: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508
 #: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142
-#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142 crates/opencrt/ui/main.slint:5501
+#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142 crates/opencrt/ui/main.slint:5504
 msgid "Delete"
 msgstr "Ștergere"
 
@@ -79,15 +79,15 @@ msgstr "Duplicare..."
 msgid "Cut"
 msgstr "Decupare"
 
-#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5522
-#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5522 crates/opencrt/ui/main.slint:6277
+#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5525
+#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5525 crates/opencrt/ui/main.slint:6311
 msgid "Copy"
 msgstr "Copiere"
 
 #: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011
 #: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5532
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5532 crates/opencrt/ui/main.slint:6292
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5535
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5535 crates/opencrt/ui/main.slint:6326
 msgid "Paste"
 msgstr "Lipire"
 
@@ -113,12 +113,12 @@ msgid "Filter (Ctrl+click picks several)"
 msgstr "Filtru (Ctrl+clic selectează mai multe)"
 
 #: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897
-#: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897 crates/opencrt/ui/main.slint:5958
+#: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897 crates/opencrt/ui/main.slint:5992
 msgid "Reconnect"
 msgstr "Reconectare"
 
 #: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902
-#: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902 crates/opencrt/ui/main.slint:5965
+#: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902 crates/opencrt/ui/main.slint:5999
 msgid "Disconnect"
 msgstr "Deconectare"
 
@@ -128,12 +128,12 @@ msgstr "Blocare"
 
 #: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975
 #: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7084
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7084 crates/opencrt/ui/main.slint:7261
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7118
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7118 crates/opencrt/ui/main.slint:7295
 msgid "Close"
 msgstr "Închidere"
 
-#: crates/opencrt/ui/main.slint:717 crates/opencrt/ui/main.slint:5606
+#: crates/opencrt/ui/main.slint:717 crates/opencrt/ui/main.slint:5609
 msgid "Command Manager"
 msgstr "Manager de comenzi"
 
@@ -168,7 +168,7 @@ msgid "Send"
 msgstr "Trimitere"
 
 #: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414
-#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414 crates/opencrt/ui/main.slint:7145
+#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414 crates/opencrt/ui/main.slint:7179
 msgid "Edit..."
 msgstr "Editare..."
 
@@ -180,7 +180,7 @@ msgstr "Copiere în Bara de butoane"
 msgid "New Command..."
 msgstr "Comandă nouă..."
 
-#: crates/opencrt/ui/main.slint:907 crates/opencrt/ui/main.slint:5435
+#: crates/opencrt/ui/main.slint:907 crates/opencrt/ui/main.slint:5438
 msgid "Clone Session"
 msgstr "Clonare sesiune"
 
@@ -196,7 +196,7 @@ msgstr "Trimitere Ctrl+Alt+Del"
 msgid "Send Windows Key"
 msgstr "Trimitere tastă Windows"
 
-#: crates/opencrt/ui/main.slint:935 crates/opencrt/ui/main.slint:5656
+#: crates/opencrt/ui/main.slint:935 crates/opencrt/ui/main.slint:5659
 msgid "Session Options..."
 msgstr "Opțiuni sesiune..."
 
@@ -240,19 +240,19 @@ msgstr "Închidere celelalte file"
 msgid "Scratchpad"
 msgstr "Ciornă"
 
-#: crates/opencrt/ui/main.slint:1115 crates/opencrt/ui/main.slint:6510
+#: crates/opencrt/ui/main.slint:1115 crates/opencrt/ui/main.slint:6544
 msgid "Send to"
 msgstr "Trimitere la"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6517
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6551
 msgid "the active tab"
 msgstr "fila activă"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6517
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6551
 msgid "all tabs"
 msgstr "toate filele"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6517
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6551
 msgid "tabs on screen"
 msgstr "filele de pe ecran"
 
@@ -316,8 +316,8 @@ msgstr "Acceptare o dată"
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7342
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7342
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7376
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7376
 msgid "Cancel"
 msgstr "Anulare"
 
@@ -343,7 +343,7 @@ msgstr "Salvează parola (după ce autentificarea reușește)"
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285 crates/opencrt/ui/main.slint:7410
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285 crates/opencrt/ui/main.slint:7444
 msgid "OK"
 msgstr "OK"
 
@@ -440,7 +440,7 @@ msgid "Parity:"
 msgstr "Paritate:"
 
 #: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644
-#: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644 crates/opencrt/ui/main.slint:7413
 msgid "None"
 msgstr "Niciuna"
 
@@ -472,7 +472,7 @@ msgstr "RTS/CTS"
 msgid "Opens your default shell (PowerShell on Windows, $SHELL elsewhere)."
 msgstr "Deschide shell-ul implicit (PowerShell pe Windows, $SHELL în rest)."
 
-#: crates/opencrt/ui/main.slint:1674 crates/opencrt/ui/main.slint:5916
+#: crates/opencrt/ui/main.slint:1674 crates/opencrt/ui/main.slint:5950
 msgid "Quick Connect"
 msgstr "Conectare rapidă"
 
@@ -488,7 +488,7 @@ msgstr "Parolele și frazele de acces sunt cerute atunci când serverul are nevo
 msgid "Session Options ({} sessions)"
 msgstr "Opțiuni sesiune ({} sesiuni)"
 
-#: crates/opencrt/ui/main.slint:1816 crates/opencrt/ui/main.slint:6016
+#: crates/opencrt/ui/main.slint:1816 crates/opencrt/ui/main.slint:6050
 msgid "Session Options"
 msgstr "Opțiuni sesiune"
 
@@ -532,7 +532,7 @@ msgstr "Desktop la distanță"
 msgid "Session name:"
 msgstr "Nume sesiune:"
 
-#: crates/opencrt/ui/main.slint:1874 crates/opencrt/ui/main.slint:7392
+#: crates/opencrt/ui/main.slint:1874 crates/opencrt/ui/main.slint:7426
 msgid "Folder:"
 msgstr "Folder:"
 
@@ -786,27 +786,27 @@ msgstr "Listă de cuvinte cheie:"
 msgid "Tab colour:"
 msgstr "Culoare filă:"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Red"
 msgstr "Roșu"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Orange"
 msgstr "Portocaliu"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Yellow"
 msgstr "Galben"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Green"
 msgstr "Verde"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Blue"
 msgstr "Albastru"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7379
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
 msgid "Purple"
 msgstr "Violet"
 
@@ -984,7 +984,7 @@ msgid ""
 "run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
 msgstr "Tastă = ce face. Taste: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, Enter, Escape, Space sau un caracter, cu Ctrl+ Alt+ Shift+ (caracterele necesită Ctrl sau Alt). Textul este trimis (\\r este Enter); sau script: fișier, menu: comandă, run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
 
-#: crates/opencrt/ui/main.slint:2320 crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:2320 crates/opencrt/ui/main.slint:7403
 msgid "Script file:"
 msgstr "Fișier script:"
 
@@ -1018,8 +1018,8 @@ msgstr "Folosește $DISPLAY, altfel afișajul 0 de pe acest computer. Serverul X
 msgid "Port forwards (SSH2 only):"
 msgstr "Redirecționări de porturi (doar SSH2):"
 
-#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7043
-#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7043
+#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7077
+#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7077
 msgid "Name"
 msgstr "Nume"
 
@@ -1039,15 +1039,15 @@ msgstr "Destinație"
 msgid "Application"
 msgstr "Aplicație"
 
-#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7070
-#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7070 crates/opencrt/ui/main.slint:7252
+#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7104
+#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7104 crates/opencrt/ui/main.slint:7286
 msgid "Add..."
 msgstr "Adăugare..."
 
 #: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822
 #: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7079
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7079 crates/opencrt/ui/main.slint:7256
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7113
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7113 crates/opencrt/ui/main.slint:7290
 msgid "Remove"
 msgstr "Eliminare"
 
@@ -1211,11 +1211,11 @@ msgstr "ID utilizator:"
 msgid "kept in the system keychain"
 msgstr "păstrată în keychain-ul sistemului"
 
-#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7403
 msgid "Send:"
 msgstr "Trimitere:"
 
-#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7403
 msgid "Command:"
 msgstr "Comandă:"
 
@@ -1315,7 +1315,7 @@ msgstr "Sincronizare setări"
 msgid "Theme:"
 msgstr "Temă:"
 
-#: crates/opencrt/ui/main.slint:3269 crates/opencrt/ui/main.slint:5238
+#: crates/opencrt/ui/main.slint:3269 crates/opencrt/ui/main.slint:5241
 msgid "Follow the system"
 msgstr "Ca sistemul"
 
@@ -1732,7 +1732,7 @@ msgstr "expresie regulată"
 msgid "word or phrase"
 msgstr "cuvânt sau expresie"
 
-#: crates/opencrt/ui/main.slint:3755 crates/opencrt/ui/main.slint:7377
+#: crates/opencrt/ui/main.slint:3755 crates/opencrt/ui/main.slint:7411
 msgid "Colour:"
 msgstr "Culoare:"
 
@@ -1768,11 +1768,11 @@ msgstr "Adăugare"
 msgid "Mapped keys (one per line):"
 msgstr "Taste mapate (câte una pe linie):"
 
-#: crates/opencrt/ui/main.slint:3836 crates/opencrt/ui/main.slint:6995
+#: crates/opencrt/ui/main.slint:3836 crates/opencrt/ui/main.slint:7029
 msgid "Import..."
 msgstr "Import..."
 
-#: crates/opencrt/ui/main.slint:3840 crates/opencrt/ui/main.slint:7003
+#: crates/opencrt/ui/main.slint:3840 crates/opencrt/ui/main.slint:7037
 msgid "Export..."
 msgstr "Export..."
 
@@ -2050,7 +2050,7 @@ msgstr "Cmd+L"
 msgid "Connect a local shell"
 msgstr "Conectare shell local"
 
-#: crates/opencrt/ui/main.slint:4173 crates/opencrt/ui/main.slint:5868
+#: crates/opencrt/ui/main.slint:4173 crates/opencrt/ui/main.slint:5902
 msgid "Keyboard Shortcuts"
 msgstr "Comenzi rapide de la tastatură"
 
@@ -2060,7 +2060,7 @@ msgid ""
 "> Keyboard. For example, F1 = menu: shortcuts opens this list."
 msgstr "Adăugați propriile comenzi în Opțiuni globale > Tastatură sau per sesiune în Opțiuni sesiune > Tastatură. De exemplu, F1 = menu: shortcuts deschide această listă."
 
-#: crates/opencrt/ui/main.slint:4217 crates/opencrt/ui/main.slint:5876
+#: crates/opencrt/ui/main.slint:4217 crates/opencrt/ui/main.slint:5910
 msgid "About OpenCRT"
 msgstr "Despre OpenCRT"
 
@@ -2104,7 +2104,7 @@ msgstr "Fonturi"
 msgid "IBM Plex Sans and Mono, SIL Open Font License 1.1"
 msgstr "IBM Plex Sans și Mono, SIL Open Font License 1.1"
 
-#: crates/opencrt/ui/main.slint:4272 crates/opencrt/ui/main.slint:5872
+#: crates/opencrt/ui/main.slint:4272 crates/opencrt/ui/main.slint:5906
 msgid "Check for Updates"
 msgstr "Căutare actualizări"
 
@@ -2252,649 +2252,661 @@ msgstr "Enter conectează  ·  Shift+Enter deschide o filă SFTP grafică  ·  E
 msgid "Ready"
 msgstr "Gata"
 
-#: crates/opencrt/ui/main.slint:5271 crates/opencrt/ui/main.slint:5742
+#: crates/opencrt/ui/main.slint:5274 crates/opencrt/ui/main.slint:5745
 msgid "Script"
 msgstr "Script"
 
-#: crates/opencrt/ui/main.slint:5417
+#: crates/opencrt/ui/main.slint:5420
 msgid "File"
 msgstr "Fișier"
 
-#: crates/opencrt/ui/main.slint:5419
+#: crates/opencrt/ui/main.slint:5422
 msgid "Quick Connect..."
 msgstr "Conectare rapidă..."
 
-#: crates/opencrt/ui/main.slint:5423
+#: crates/opencrt/ui/main.slint:5426
 msgid "Quick Open... (Cmd+O)"
 msgstr "Deschidere rapidă... (Cmd+O)"
 
-#: crates/opencrt/ui/main.slint:5423
+#: crates/opencrt/ui/main.slint:5426
 msgid "Quick Open... (Ctrl+Shift+T)"
 msgstr "Deschidere rapidă... (Ctrl+Shift+T)"
 
-#: crates/opencrt/ui/main.slint:5427
+#: crates/opencrt/ui/main.slint:5430
 msgid "Connect in Tab..."
 msgstr "Conectare în filă..."
 
-#: crates/opencrt/ui/main.slint:5431 crates/opencrt/ui/main.slint:5928
+#: crates/opencrt/ui/main.slint:5434 crates/opencrt/ui/main.slint:5962
 msgid "Connect Local Shell"
 msgstr "Conectare shell local"
 
-#: crates/opencrt/ui/main.slint:5451
+#: crates/opencrt/ui/main.slint:5454
 msgid "Disconnect All"
 msgstr "Deconectare toate"
 
-#: crates/opencrt/ui/main.slint:5456
+#: crates/opencrt/ui/main.slint:5459
 msgid "Close Tab"
 msgstr "Închidere filă"
 
-#: crates/opencrt/ui/main.slint:5462
+#: crates/opencrt/ui/main.slint:5465
 msgid "Stop Logging"
 msgstr "Oprire jurnalizare"
 
-#: crates/opencrt/ui/main.slint:5462
+#: crates/opencrt/ui/main.slint:5465
 msgid "Log Session..."
 msgstr "Jurnalizare sesiune..."
 
-#: crates/opencrt/ui/main.slint:5467
+#: crates/opencrt/ui/main.slint:5470
 msgid "Stop Recording"
 msgstr "Oprire înregistrare"
 
-#: crates/opencrt/ui/main.slint:5467
+#: crates/opencrt/ui/main.slint:5470
 msgid "Record Session (asciicast)..."
 msgstr "Înregistrare sesiune (asciicast)..."
 
-#: crates/opencrt/ui/main.slint:5473 crates/opencrt/ui/main.slint:6009
+#: crates/opencrt/ui/main.slint:5476 crates/opencrt/ui/main.slint:6043
 msgid "Print Screen"
 msgstr "Imprimare ecran"
 
-#: crates/opencrt/ui/main.slint:5478
+#: crates/opencrt/ui/main.slint:5481
 msgid "Print Selection"
 msgstr "Imprimare selecție"
 
-#: crates/opencrt/ui/main.slint:5483
+#: crates/opencrt/ui/main.slint:5486
 msgid "Stop Auto Print"
 msgstr "Oprire imprimare automată"
 
-#: crates/opencrt/ui/main.slint:5483
+#: crates/opencrt/ui/main.slint:5486
 msgid "Auto Print"
 msgstr "Imprimare automată"
 
-#: crates/opencrt/ui/main.slint:5489
+#: crates/opencrt/ui/main.slint:5492
 msgid "Snapshots"
 msgstr "Instantanee"
 
-#: crates/opencrt/ui/main.slint:5491
+#: crates/opencrt/ui/main.slint:5494
 msgid "Save Snapshot..."
 msgstr "Salvare instantaneu..."
 
-#: crates/opencrt/ui/main.slint:5515
+#: crates/opencrt/ui/main.slint:5518
 msgid "Exit"
 msgstr "Ieșire"
 
-#: crates/opencrt/ui/main.slint:5520
+#: crates/opencrt/ui/main.slint:5523
 msgid "Edit"
 msgstr "Editare"
 
-#: crates/opencrt/ui/main.slint:5527 crates/opencrt/ui/main.slint:6282
+#: crates/opencrt/ui/main.slint:5530 crates/opencrt/ui/main.slint:6316
 msgid "Copy with Colours"
 msgstr "Copiere cu culori"
 
-#: crates/opencrt/ui/main.slint:5537
+#: crates/opencrt/ui/main.slint:5540
 msgid "Copy and Paste"
 msgstr "Copiere și lipire"
 
-#: crates/opencrt/ui/main.slint:5542 crates/opencrt/ui/main.slint:6298
+#: crates/opencrt/ui/main.slint:5545 crates/opencrt/ui/main.slint:6332
 msgid "Select All"
 msgstr "Selectare tot"
 
-#: crates/opencrt/ui/main.slint:5547
+#: crates/opencrt/ui/main.slint:5550
 msgid "Find..."
 msgstr "Căutare..."
 
-#: crates/opencrt/ui/main.slint:5557
+#: crates/opencrt/ui/main.slint:5560
 msgid "Clear Screen"
 msgstr "Golire ecran"
 
-#: crates/opencrt/ui/main.slint:5562 crates/opencrt/ui/main.slint:6302
+#: crates/opencrt/ui/main.slint:5565 crates/opencrt/ui/main.slint:6336
 msgid "Clear Scrollback"
 msgstr "Golire istoric derulare"
 
-#: crates/opencrt/ui/main.slint:5567
+#: crates/opencrt/ui/main.slint:5570
 msgid "Clear Screen and Scrollback"
 msgstr "Golire ecran și istoric derulare"
 
-#: crates/opencrt/ui/main.slint:5572
+#: crates/opencrt/ui/main.slint:5575
 msgid "Reset Terminal"
 msgstr "Resetare terminal"
 
-#: crates/opencrt/ui/main.slint:5577 crates/opencrt/ui/main.slint:6306
+#: crates/opencrt/ui/main.slint:5580 crates/opencrt/ui/main.slint:6340
 msgid "Send Break"
 msgstr "Trimitere Break"
 
-#: crates/opencrt/ui/main.slint:5583
+#: crates/opencrt/ui/main.slint:5586
 msgid "Send Input to All Tabs"
 msgstr "Trimitere intrare la toate filele"
 
-#: crates/opencrt/ui/main.slint:5589
+#: crates/opencrt/ui/main.slint:5592
 msgid "View"
 msgstr "Vizualizare"
 
-#: crates/opencrt/ui/main.slint:5591
+#: crates/opencrt/ui/main.slint:5594
 msgid "Toolbar"
 msgstr "Bară de instrumente"
 
-#: crates/opencrt/ui/main.slint:5596
+#: crates/opencrt/ui/main.slint:5599
 msgid "Status Bar"
 msgstr "Bară de stare"
 
-#: crates/opencrt/ui/main.slint:5611
+#: crates/opencrt/ui/main.slint:5614
 msgid "Command Window"
 msgstr "Fereastră de comenzi"
 
-#: crates/opencrt/ui/main.slint:5616
+#: crates/opencrt/ui/main.slint:5619
 msgid "Hex View"
 msgstr "Vizualizare hex"
 
-#: crates/opencrt/ui/main.slint:5621
+#: crates/opencrt/ui/main.slint:5624
 msgid "Show Control Characters"
 msgstr "Afișare caractere de control"
 
-#: crates/opencrt/ui/main.slint:5627
+#: crates/opencrt/ui/main.slint:5630
 msgid "Button Bar"
 msgstr "Bară de butoane"
 
-#: crates/opencrt/ui/main.slint:5633
+#: crates/opencrt/ui/main.slint:5636
 msgid "Full Screen"
 msgstr "Ecran complet"
 
-#: crates/opencrt/ui/main.slint:5638
+#: crates/opencrt/ui/main.slint:5641
 msgid "Always on Top"
 msgstr "Mereu deasupra"
 
-#: crates/opencrt/ui/main.slint:5645
+#: crates/opencrt/ui/main.slint:5648
 msgid "Larger Font"
 msgstr "Font mai mare"
 
-#: crates/opencrt/ui/main.slint:5649
+#: crates/opencrt/ui/main.slint:5652
 msgid "Smaller Font"
 msgstr "Font mai mic"
 
-#: crates/opencrt/ui/main.slint:5654
+#: crates/opencrt/ui/main.slint:5657
 msgid "Options"
 msgstr "Opțiuni"
 
-#: crates/opencrt/ui/main.slint:5661
+#: crates/opencrt/ui/main.slint:5664
 msgid "Default Session..."
 msgstr "Sesiune implicită..."
 
-#: crates/opencrt/ui/main.slint:5665
+#: crates/opencrt/ui/main.slint:5668
 msgid "Firewalls..."
 msgstr "Firewall-uri..."
 
-#: crates/opencrt/ui/main.slint:5669
+#: crates/opencrt/ui/main.slint:5672
 msgid "Colour Schemes..."
 msgstr "Scheme de culori..."
 
-#: crates/opencrt/ui/main.slint:5673
+#: crates/opencrt/ui/main.slint:5676
 msgid "Global Options..."
 msgstr "Opțiuni globale..."
 
-#: crates/opencrt/ui/main.slint:5678
+#: crates/opencrt/ui/main.slint:5681
 msgid "Transfer"
 msgstr "Transfer"
 
-#: crates/opencrt/ui/main.slint:5690
+#: crates/opencrt/ui/main.slint:5693
 msgid "Send ASCII File..."
 msgstr "Trimitere fișier ASCII..."
 
-#: crates/opencrt/ui/main.slint:5695
+#: crates/opencrt/ui/main.slint:5698
 msgid "Send Binary File..."
 msgstr "Trimitere fișier binar..."
 
-#: crates/opencrt/ui/main.slint:5700
+#: crates/opencrt/ui/main.slint:5703
 msgid "Stop Receive ASCII"
 msgstr "Oprire recepție ASCII"
 
-#: crates/opencrt/ui/main.slint:5700
+#: crates/opencrt/ui/main.slint:5703
 msgid "Receive ASCII..."
 msgstr "Recepție ASCII..."
 
-#: crates/opencrt/ui/main.slint:5705
+#: crates/opencrt/ui/main.slint:5708
 msgid "Zmodem Upload..."
 msgstr "Încărcare Zmodem..."
 
-#: crates/opencrt/ui/main.slint:5711
+#: crates/opencrt/ui/main.slint:5714
 msgid "Send Xmodem..."
 msgstr "Trimitere Xmodem..."
 
-#: crates/opencrt/ui/main.slint:5716
+#: crates/opencrt/ui/main.slint:5719
 msgid "Receive Xmodem..."
 msgstr "Recepție Xmodem..."
 
-#: crates/opencrt/ui/main.slint:5721
+#: crates/opencrt/ui/main.slint:5724
 msgid "Send Ymodem..."
 msgstr "Trimitere Ymodem..."
 
-#: crates/opencrt/ui/main.slint:5726
+#: crates/opencrt/ui/main.slint:5729
 msgid "Receive Ymodem"
 msgstr "Recepție Ymodem"
 
-#: crates/opencrt/ui/main.slint:5731
+#: crates/opencrt/ui/main.slint:5734
 msgid "Send Kermit..."
 msgstr "Trimitere Kermit..."
 
-#: crates/opencrt/ui/main.slint:5736
+#: crates/opencrt/ui/main.slint:5739
 msgid "Receive Kermit"
 msgstr "Recepție Kermit"
 
-#: crates/opencrt/ui/main.slint:5744
+#: crates/opencrt/ui/main.slint:5747
 msgid "Run..."
 msgstr "Rulare..."
 
-#: crates/opencrt/ui/main.slint:5754
+#: crates/opencrt/ui/main.slint:5757
 msgid "Script Editor..."
 msgstr "Editor de scripturi..."
 
-#: crates/opencrt/ui/main.slint:5759
+#: crates/opencrt/ui/main.slint:5762
 msgid "Stop Recording..."
 msgstr "Oprire înregistrare..."
 
-#: crates/opencrt/ui/main.slint:5759
+#: crates/opencrt/ui/main.slint:5762
 msgid "Start Recording"
 msgstr "Pornire înregistrare"
 
-#: crates/opencrt/ui/main.slint:5765
+#: crates/opencrt/ui/main.slint:5768
 msgid "Tools"
 msgstr "Instrumente"
 
-#: crates/opencrt/ui/main.slint:5767
+#: crates/opencrt/ui/main.slint:5770
 msgid "Create Public Key..."
 msgstr "Creare cheie publică..."
 
-#: crates/opencrt/ui/main.slint:5771
+#: crates/opencrt/ui/main.slint:5774
 msgid "Host Keys..."
 msgstr "Chei de gazdă..."
 
-#: crates/opencrt/ui/main.slint:5775
+#: crates/opencrt/ui/main.slint:5778
 msgid "Credentials Manager..."
 msgstr "Manager de credențiale..."
 
-#: crates/opencrt/ui/main.slint:5779
+#: crates/opencrt/ui/main.slint:5782
 msgid "Master Password..."
 msgstr "Parolă principală..."
 
-#: crates/opencrt/ui/main.slint:5783
+#: crates/opencrt/ui/main.slint:5786
 msgid "Agent Keys..."
 msgstr "Chei agent..."
 
-#: crates/opencrt/ui/main.slint:5787
+#: crates/opencrt/ui/main.slint:5790
 msgid "Public Key Assistant..."
 msgstr "Asistent cheie publică..."
 
-#: crates/opencrt/ui/main.slint:5791
+#: crates/opencrt/ui/main.slint:5794
 msgid "Convert Private Key to OpenSSH..."
 msgstr "Conversie cheie privată în OpenSSH..."
 
-#: crates/opencrt/ui/main.slint:5796
+#: crates/opencrt/ui/main.slint:5799
 msgid "Import OpenSSH Config"
 msgstr "Import configurare OpenSSH"
 
-#: crates/opencrt/ui/main.slint:5800
+#: crates/opencrt/ui/main.slint:5803
 msgid "Import SecureCRT Sessions..."
 msgstr "Import sesiuni SecureCRT..."
 
-#: crates/opencrt/ui/main.slint:5804
+#: crates/opencrt/ui/main.slint:5807
 msgid "Import Sessions..."
 msgstr "Import sesiuni..."
 
-#: crates/opencrt/ui/main.slint:5808
+#: crates/opencrt/ui/main.slint:5811
 msgid "Export Sessions..."
 msgstr "Export sesiuni..."
 
-#: crates/opencrt/ui/main.slint:5813
+#: crates/opencrt/ui/main.slint:5816
 msgid "Window"
 msgstr "Fereastră"
 
-#: crates/opencrt/ui/main.slint:5815
+#: crates/opencrt/ui/main.slint:5818
 msgid "Next Tab"
 msgstr "Fila următoare"
 
-#: crates/opencrt/ui/main.slint:5820
+#: crates/opencrt/ui/main.slint:5823
 msgid "Previous Tab"
 msgstr "Fila anterioară"
 
-#: crates/opencrt/ui/main.slint:5826
+#: crates/opencrt/ui/main.slint:5829
 msgid "Tile Vertically"
 msgstr "Alăturare verticală"
 
-#: crates/opencrt/ui/main.slint:5831
+#: crates/opencrt/ui/main.slint:5834
 msgid "Tile Horizontally"
 msgstr "Alăturare orizontală"
 
-#: crates/opencrt/ui/main.slint:5836
+#: crates/opencrt/ui/main.slint:5839
 msgid "Untile"
 msgstr "Anulare alăturare"
 
-#: crates/opencrt/ui/main.slint:5840
+#: crates/opencrt/ui/main.slint:5843
 msgid "Merge Tab Groups"
 msgstr "Unire grupuri de file"
 
-#: crates/opencrt/ui/main.slint:5857
+#: crates/opencrt/ui/main.slint:5860
 msgid "Language"
 msgstr "Limbă"
 
-#: crates/opencrt/ui/main.slint:5866
+#: crates/opencrt/ui/main.slint:5869
+msgid "Western and Southern Europe"
+msgstr "Europa de Vest și de Sud"
+
+#: crates/opencrt/ui/main.slint:5879
+msgid "Northern Europe"
+msgstr "Europa de Nord"
+
+#: crates/opencrt/ui/main.slint:5889
+msgid "Central and Eastern Europe"
+msgstr "Europa Centrală și de Est"
+
+#: crates/opencrt/ui/main.slint:5900
 msgid "Help"
 msgstr "Ajutor"
 
-#: crates/opencrt/ui/main.slint:5922
+#: crates/opencrt/ui/main.slint:5956
 msgid "Connect in Tab"
 msgstr "Conectare în filă"
 
-#: crates/opencrt/ui/main.slint:5942
+#: crates/opencrt/ui/main.slint:5976
 msgid "PowerShell"
 msgstr "PowerShell"
 
-#: crates/opencrt/ui/main.slint:5946
+#: crates/opencrt/ui/main.slint:5980
 msgid "Command Prompt (classic)"
 msgstr "Command Prompt (clasic)"
 
-#: crates/opencrt/ui/main.slint:5951
+#: crates/opencrt/ui/main.slint:5985
 msgid "WSL: {}"
 msgstr "WSL: {}"
 
-#: crates/opencrt/ui/main.slint:5976
+#: crates/opencrt/ui/main.slint:6010
 msgid "Quick connect: user@host"
 msgstr "Conectare rapidă: user@host"
 
-#: crates/opencrt/ui/main.slint:5996
+#: crates/opencrt/ui/main.slint:6030
 msgid "Find"
 msgstr "Căutare"
 
-#: crates/opencrt/ui/main.slint:6004
+#: crates/opencrt/ui/main.slint:6038
 msgid "Highlight words"
 msgstr "Evidențiere cuvinte"
 
-#: crates/opencrt/ui/main.slint:6256 crates/opencrt/ui/main.slint:6909
+#: crates/opencrt/ui/main.slint:6290 crates/opencrt/ui/main.slint:6943
 msgid "OpenCRT"
 msgstr "OpenCRT"
 
-#: crates/opencrt/ui/main.slint:6262
+#: crates/opencrt/ui/main.slint:6296
 msgid "File > Quick Connect, or type user@host in the toolbar's connect bar."
 msgstr "Fișier > Conectare rapidă sau tastați user@host în bara de conectare din bara de instrumente."
 
-#: crates/opencrt/ui/main.slint:6272
+#: crates/opencrt/ui/main.slint:6306
 msgid "Show Menu Bar"
 msgstr "Afișare bară de meniu"
 
-#: crates/opencrt/ui/main.slint:6287
+#: crates/opencrt/ui/main.slint:6321
 msgid "Search the Web"
 msgstr "Căutare pe web"
 
-#: crates/opencrt/ui/main.slint:6399
+#: crates/opencrt/ui/main.slint:6433
 msgid "Default"
 msgstr "Implicit"
 
-#: crates/opencrt/ui/main.slint:6414
+#: crates/opencrt/ui/main.slint:6448
 msgid "New Bar..."
 msgstr "Bară nouă..."
 
-#: crates/opencrt/ui/main.slint:6418
+#: crates/opencrt/ui/main.slint:6452
 msgid "Rename Bar..."
 msgstr "Redenumire bară..."
 
-#: crates/opencrt/ui/main.slint:6423
+#: crates/opencrt/ui/main.slint:6457
 msgid "Delete Bar..."
 msgstr "Ștergere bară..."
 
-#: crates/opencrt/ui/main.slint:6454
+#: crates/opencrt/ui/main.slint:6488
 msgid "Add a button that sends a command, e.g. show version\\r"
 msgstr "Adăugați un buton care trimite o comandă, ex. show version\\r"
 
-#: crates/opencrt/ui/main.slint:6477
+#: crates/opencrt/ui/main.slint:6511
 msgid "Nothing received yet in this tab."
 msgstr "Nimic primit încă în această filă."
 
-#: crates/opencrt/ui/main.slint:6525
+#: crates/opencrt/ui/main.slint:6559
 msgid "characters are sent as you type; Enter sends Enter"
 msgstr "caracterele sunt trimise pe măsură ce tastați; Enter trimite Enter"
 
-#: crates/opencrt/ui/main.slint:6525
+#: crates/opencrt/ui/main.slint:6559
 msgid "type a command and press Enter"
 msgstr "tastați o comandă și apăsați Enter"
 
-#: crates/opencrt/ui/main.slint:6541
+#: crates/opencrt/ui/main.slint:6575
 msgid "History"
 msgstr "Istoric"
 
-#: crates/opencrt/ui/main.slint:6552
+#: crates/opencrt/ui/main.slint:6586
 msgid "Send characters immediately"
 msgstr "Trimitere imediată a caracterelor"
 
-#: crates/opencrt/ui/main.slint:6573
+#: crates/opencrt/ui/main.slint:6607
 msgid "Find:"
 msgstr "Căutare:"
 
-#: crates/opencrt/ui/main.slint:6580
+#: crates/opencrt/ui/main.slint:6614
 msgid "text to find (Enter = next)"
 msgstr "text de căutat (Enter = următorul)"
 
-#: crates/opencrt/ui/main.slint:6586
+#: crates/opencrt/ui/main.slint:6620
 msgid "Next"
 msgstr "Următorul"
 
-#: crates/opencrt/ui/main.slint:6590
+#: crates/opencrt/ui/main.slint:6624
 msgid "Previous"
 msgstr "Anteriorul"
 
-#: crates/opencrt/ui/main.slint:6594
+#: crates/opencrt/ui/main.slint:6628
 msgid "Match case"
 msgstr "Potrivire majuscule"
 
-#: crates/opencrt/ui/main.slint:6643
+#: crates/opencrt/ui/main.slint:6677
 msgid "OpenCRT {} available"
 msgstr "OpenCRT {} disponibil"
 
-#: crates/opencrt/ui/main.slint:6658
+#: crates/opencrt/ui/main.slint:6692
 msgid "{n} tunnel tab"
 msgid_plural "{n} tunnel tabs"
 msgstr[0] "{n} filă de tunel"
 msgstr[1] "{n} file de tunel"
 msgstr[2] "{n} de file de tunel"
 
-#: crates/opencrt/ui/main.slint:6682
+#: crates/opencrt/ui/main.slint:6716
 msgid "ALL TABS"
 msgstr "TOATE FILELE"
 
-#: crates/opencrt/ui/main.slint:6687
+#: crates/opencrt/ui/main.slint:6721
 msgid "LOG"
 msgstr "LOG"
 
-#: crates/opencrt/ui/main.slint:6691
+#: crates/opencrt/ui/main.slint:6725
 msgid "CAP"
 msgstr "CAP"
 
-#: crates/opencrt/ui/main.slint:6696
+#: crates/opencrt/ui/main.slint:6730
 msgid "NUM"
 msgstr "NUM"
 
-#: crates/opencrt/ui/main.slint:6747
+#: crates/opencrt/ui/main.slint:6781
 msgid "Session Options - {}"
 msgstr "Opțiuni sesiune - {}"
 
-#: crates/opencrt/ui/main.slint:6956
+#: crates/opencrt/ui/main.slint:6990
 msgid "Host Keys"
 msgstr "Chei de gazdă"
 
-#: crates/opencrt/ui/main.slint:6959
+#: crates/opencrt/ui/main.slint:6993
 msgid ""
 "Keys of the SSH servers you have accepted. Remove one when a server's key "
 "has changed for a known reason (for example after a reinstall); you are "
 "asked to accept the new key at the next connection."
 msgstr "Cheile serverelor SSH pe care le-ați acceptat. Eliminați una când cheia unui server s-a schimbat dintr-un motiv cunoscut (de exemplu după o reinstalare); vi se va cere să acceptați cheia nouă la următoarea conexiune."
 
-#: crates/opencrt/ui/main.slint:6969
+#: crates/opencrt/ui/main.slint:7003
 msgid "No saved host keys."
 msgstr "Nicio cheie de gazdă salvată."
 
-#: crates/opencrt/ui/main.slint:6999
+#: crates/opencrt/ui/main.slint:7033
 msgid "Import SecureCRT..."
 msgstr "Import SecureCRT..."
 
-#: crates/opencrt/ui/main.slint:7023
+#: crates/opencrt/ui/main.slint:7057
 msgid "Credentials Manager"
 msgstr "Manager de credențiale"
 
-#: crates/opencrt/ui/main.slint:7026
+#: crates/opencrt/ui/main.slint:7060
 msgid ""
 "Saved logins for SSH2, Telnet, RDP and VNC sessions. Pick one in Session "
 "Options > Authentication; its password is kept in the system keychain."
 msgstr "Autentificări salvate pentru sesiunile SSH2, Telnet, RDP și VNC. Alegeți una în Opțiuni sesiune > Autentificare; parola sa este păstrată în keychain-ul sistemului."
 
-#: crates/opencrt/ui/main.slint:7044
+#: crates/opencrt/ui/main.slint:7078
 msgid "Username"
 msgstr "Nume utilizator"
 
-#: crates/opencrt/ui/main.slint:7094
+#: crates/opencrt/ui/main.slint:7128
 msgid "Firewalls"
 msgstr "Firewall-uri"
 
-#: crates/opencrt/ui/main.slint:7097
+#: crates/opencrt/ui/main.slint:7131
 msgid ""
 "Proxies and gateways defined once and used by name: type a firewall's name "
 "into a session's Proxy field (Session Options > Connection)."
 msgstr "Proxy-uri și gateway-uri definite o singură dată și folosite după nume: tastați numele unui firewall în câmpul Proxy al unei sesiuni (Opțiuni sesiune > Conexiune)."
 
-#: crates/opencrt/ui/main.slint:7115
+#: crates/opencrt/ui/main.slint:7149
 msgid "Proxy"
 msgstr "Proxy"
 
-#: crates/opencrt/ui/main.slint:7209
+#: crates/opencrt/ui/main.slint:7243
 msgid "Agent Keys"
 msgstr "Chei agent"
 
-#: crates/opencrt/ui/main.slint:7212
+#: crates/opencrt/ui/main.slint:7246
 msgid ""
 "Keys held by OpenCRT's own SSH agent. While it holds keys, sessions without "
 "a key file log in with them and forwarded agents use them; otherwise the "
 "system's agent is used. Keys stay in memory until OpenCRT closes."
 msgstr "Cheile deținute de agentul SSH propriu al OpenCRT. Cât timp deține chei, sesiunile fără fișier de cheie se autentifică cu ele, iar agenții redirecționați le folosesc; altfel se folosește agentul sistemului. Cheile rămân în memorie până la închiderea OpenCRT."
 
-#: crates/opencrt/ui/main.slint:7222
+#: crates/opencrt/ui/main.slint:7256
 msgid "No keys loaded."
 msgstr "Nicio cheie încărcată."
 
-#: crates/opencrt/ui/main.slint:7247
+#: crates/opencrt/ui/main.slint:7281
 msgid ""
 "Load these keys when OpenCRT starts (their file names are saved; passphrases "
 "are asked for)"
 msgstr "Încarcă aceste chei la pornirea OpenCRT (numele fișierelor sunt salvate; frazele de acces sunt cerute)"
 
-#: crates/opencrt/ui/main.slint:7278
+#: crates/opencrt/ui/main.slint:7312
 msgid "Create Public Key"
 msgstr "Creare cheie publică"
 
-#: crates/opencrt/ui/main.slint:7281
+#: crates/opencrt/ui/main.slint:7315
 msgid ""
 "Creates a key pair in OpenSSH format. Add the public key (copied to the "
 "clipboard when done) to ~/.ssh/authorized_keys on the server, or use Tools > "
 "Public Key Assistant."
 msgstr "Creează o pereche de chei în format OpenSSH. Adăugați cheia publică (copiată în clipboard la final) în ~/.ssh/authorized_keys pe server sau folosiți Instrumente > Asistent cheie publică."
 
-#: crates/opencrt/ui/main.slint:7294
+#: crates/opencrt/ui/main.slint:7328
 msgid "Passphrase:"
 msgstr "Frază de acces:"
 
-#: crates/opencrt/ui/main.slint:7298
+#: crates/opencrt/ui/main.slint:7332
 msgid "recommended"
 msgstr "recomandat"
 
-#: crates/opencrt/ui/main.slint:7312
+#: crates/opencrt/ui/main.slint:7346
 msgid "Comment:"
 msgstr "Comentariu:"
 
-#: crates/opencrt/ui/main.slint:7319
+#: crates/opencrt/ui/main.slint:7353
 msgid "Save as:"
 msgstr "Salvare ca:"
 
-#: crates/opencrt/ui/main.slint:7336
+#: crates/opencrt/ui/main.slint:7370
 msgid "Creating..."
 msgstr "Se creează..."
 
-#: crates/opencrt/ui/main.slint:7336
+#: crates/opencrt/ui/main.slint:7370
 msgid "Create"
 msgstr "Creare"
 
-#: crates/opencrt/ui/main.slint:7354
+#: crates/opencrt/ui/main.slint:7388
 msgid "Label:"
 msgstr "Etichetă:"
 
-#: crates/opencrt/ui/main.slint:7362
+#: crates/opencrt/ui/main.slint:7396
 msgid "Action:"
 msgstr "Acțiune:"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Send text"
 msgstr "Trimitere text"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Run a script"
 msgstr "Rulare script"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Menu command"
 msgstr "Comandă de meniu"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Run a program"
 msgstr "Rulare program"
 
-#: crates/opencrt/ui/main.slint:7364
+#: crates/opencrt/ui/main.slint:7398
 msgid "Telnet command"
 msgstr "Comandă Telnet"
 
-#: crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:7403
 msgid "Menu command:"
 msgstr "Comandă de meniu:"
 
-#: crates/opencrt/ui/main.slint:7369
+#: crates/opencrt/ui/main.slint:7403
 msgid "Program:"
 msgstr "Program:"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "e.g. show version\\r"
 msgstr "ex. show version\\r"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "e.g. /home/me/scripts/login.rhai"
 msgstr "ex. /home/me/scripts/login.rhai"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "e.g. clear-screen, reconnect, sftp-tab"
 msgstr "ex. clear-screen, reconnect, sftp-tab"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "e.g. wireshark -k"
 msgstr "ex. wireshark -k"
 
-#: crates/opencrt/ui/main.slint:7372
+#: crates/opencrt/ui/main.slint:7406
 msgid "brk, ip, ao, ayt, ec, el, ga or nop"
 msgstr "brk, ip, ao, ayt, ec, el, ga sau nop"
 
-#: crates/opencrt/ui/main.slint:7384
+#: crates/opencrt/ui/main.slint:7418
 msgid "Bar:"
 msgstr "Bară:"
 
-#: crates/opencrt/ui/main.slint:7387
+#: crates/opencrt/ui/main.slint:7421
 msgid "blank: the default bar (sessions choose theirs)"
 msgstr "gol: bara implicită (sesiunile o aleg pe a lor)"
 
-#: crates/opencrt/ui/main.slint:7395
+#: crates/opencrt/ui/main.slint:7429
 msgid "optional, e.g. Cisco"
 msgstr "opțional, ex. Cisco"
 
-#: crates/opencrt/ui/main.slint:7400
+#: crates/opencrt/ui/main.slint:7434
 msgid "\\r is Enter, \\n a line feed, \\t Tab, \\e Escape and \\\\ a backslash."
 msgstr "\\r este Enter, \\n un salt de linie, \\t Tab, \\e Escape și \\\\ o bară inversă."
 
@@ -3814,103 +3826,103 @@ msgstr "Ștergeți butonul „{}”?"
 msgid "Delete the command \"{}\"?"
 msgstr "Ștergeți comanda „{}”?"
 
-#: crates/opencrt/src/app.rs:7342
+#: crates/opencrt/src/app.rs:7346
 msgid "Custom"
 msgstr "Personalizat"
 
-#: crates/opencrt/src/app.rs:7437
+#: crates/opencrt/src/app.rs:7441
 msgid "New list"
 msgstr "Listă nouă"
 
-#: crates/opencrt/src/app.rs:7437
+#: crates/opencrt/src/app.rs:7441
 msgid "New list {}"
 msgstr "Listă nouă {}"
 
-#: crates/opencrt/src/app.rs:7562
+#: crates/opencrt/src/app.rs:7566
 msgid "Font size must be 6 to 48, scrollback 0 to 1000000 lines, and keepalive 0 to 86400 seconds."
 msgstr "Dimensiunea fontului trebuie să fie între 6 și 48, istoricul de derulare între 0 și 1000000 de linii, iar keepalive între 0 și 86400 de secunde."
 
-#: crates/opencrt/src/app.rs:7571
+#: crates/opencrt/src/app.rs:7575
 msgid "General: recent sessions must be 0 to {}, the Connect All warning 0 to 1000, and the interface font size 9 to 20."
 msgstr "General: sesiunile recente trebuie să fie între 0 și {}, avertizarea Conectare la toate între 0 și 1000, iar dimensiunea fontului interfeței între 9 și 20."
 
-#: crates/opencrt/src/app.rs:7576
+#: crates/opencrt/src/app.rs:7580
 msgid "Connection: the default SSH2 key file does not exist."
 msgstr "Conexiune: fișierul cheie SSH2 implicit nu există."
 
-#: crates/opencrt/src/app.rs:7584
+#: crates/opencrt/src/app.rs:7588
 msgid "Printing: the font size (up to 72) and margins (up to 100 mm) must be whole numbers."
 msgstr "Imprimare: dimensiunea fontului (până la 72) și marginile (până la 100 mm) trebuie să fie numere întregi."
 
-#: crates/opencrt/src/app.rs:7588
+#: crates/opencrt/src/app.rs:7592
 msgid "File Transfer: the download folder does not exist."
 msgstr "Transfer fișiere: folderul de descărcare nu există."
 
-#: crates/opencrt/src/app.rs:7592
+#: crates/opencrt/src/app.rs:7596
 msgid "General: the configuration folder must be a full path."
 msgstr "General: folderul de configurare trebuie să fie o cale completă."
 
-#: crates/opencrt/src/app.rs:7601
+#: crates/opencrt/src/app.rs:7605
 msgid "Settings Sync needs git, which is not installed: {}."
 msgstr "Sincronizare setări necesită git, care nu este instalat: {}."
 
-#: crates/opencrt/src/app.rs:7605
+#: crates/opencrt/src/app.rs:7609
 msgid "File Transfer: TFTP addresses must be IP addresses or networks such as 192.168.1.0/24."
 msgstr "Transfer fișiere: adresele TFTP trebuie să fie adrese IP sau rețele, cum ar fi 192.168.1.0/24."
 
-#: crates/opencrt/src/app.rs:7710
+#: crates/opencrt/src/app.rs:7714
 msgid "Settings Sync: the repository was not set up: {}"
 msgstr "Sincronizare setări: depozitul nu a fost configurat: {}"
 
-#: crates/opencrt/src/app.rs:7718
+#: crates/opencrt/src/app.rs:7722
 msgid " (your current settings were copied there)"
 msgstr " (setările dvs. curente au fost copiate acolo)"
 
-#: crates/opencrt/src/app.rs:7720
+#: crates/opencrt/src/app.rs:7724
 msgid " Connected sessions will be disconnected."
 msgstr " Sesiunile conectate vor fi deconectate."
 
-#: crates/opencrt/src/app.rs:7721
+#: crates/opencrt/src/app.rs:7725
 msgid "Settings now live in {}{}. Restart OpenCRT to use them?{}"
 msgstr "Setările se află acum în {}{}. Reporniți OpenCRT pentru a le folosi?{}"
 
-#: crates/opencrt/src/app.rs:7724
+#: crates/opencrt/src/app.rs:7728
 msgid "Configuration folder not changed: {}"
 msgstr "Folderul de configurare nu a fost schimbat: {}"
 
-#: crates/opencrt/src/app.rs:7755
+#: crates/opencrt/src/app.rs:7759
 msgid "Cannot restart OpenCRT ({}); the new configuration folder is used from the next start."
 msgstr "Nu se poate reporni OpenCRT ({}); noul folder de configurare este folosit de la următoarea pornire."
 
-#: crates/opencrt/src/app.rs:7824
+#: crates/opencrt/src/app.rs:7828
 msgid "Remote Desktop: enter both width and height (200 to 8192 pixels), or leave both blank to fit the window."
 msgstr "Desktop la distanță: introduceți atât lățimea, cât și înălțimea (200 până la 8192 pixeli) sau lăsați-le pe amândouă goale pentru a se potrivi ferestrei."
 
-#: crates/opencrt/src/app.rs:8070
+#: crates/opencrt/src/app.rs:8074
 msgid "Local"
 msgstr "Local"
 
-#: crates/opencrt/src/app.rs:8070
+#: crates/opencrt/src/app.rs:8074
 msgid "SSH server"
 msgstr "Server SSH"
 
-#: crates/opencrt/src/app.rs:8071
+#: crates/opencrt/src/app.rs:8075
 msgid "Remote"
 msgstr "La distanță"
 
-#: crates/opencrt/src/app.rs:8071
+#: crates/opencrt/src/app.rs:8075
 msgid "this machine"
 msgstr "acest computer"
 
-#: crates/opencrt/src/app.rs:8072
+#: crates/opencrt/src/app.rs:8076
 msgid "any (SOCKS)"
 msgstr "oricare (SOCKS)"
 
-#: crates/opencrt/src/app.rs:8381
+#: crates/opencrt/src/app.rs:8390
 msgid "Not found"
 msgstr "Negăsit"
 
-#: crates/opencrt/src/app.rs:8406
+#: crates/opencrt/src/app.rs:8415
 msgid "No connected session to send the command to."
 msgstr "Nicio sesiune conectată căreia să i se trimită comanda."
 

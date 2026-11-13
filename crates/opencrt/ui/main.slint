@@ -5242,6 +5242,9 @@ export component MainWindow inherits Window {
     in-out property <int> go-theme;
     // The Language menu: Follow the system, English, then the built-in languages.
     in property <[string]> language-names;
+    in property <[string]> language-west;
+    in property <[string]> language-north;
+    in property <[string]> language-east;
     in property <int> language-current;
     // For Rust: the Language menu's first entry in the interface language.
     public pure function follow-system-label() -> string {
@@ -5870,6 +5873,37 @@ export component MainWindow inherits Window {
                 checkable: true;
                 checked: i == root.language-current;
                 activated => { root.menu("language-" + i); }
+            }
+            // Entries are numbered across the lists, in Rust's language_codes order.
+            if root.language-west.length > 0: Menu {
+                title: @tr("Western and Southern Europe");
+                for name[i] in root.language-west: MenuItem {
+                    property <int> n: root.language-names.length + i;
+                    title: name;
+                    checkable: true;
+                    checked: self.n == root.language-current;
+                    activated => { root.menu("language-" + self.n); }
+                }
+            }
+            if root.language-north.length > 0: Menu {
+                title: @tr("Northern Europe");
+                for name[i] in root.language-north: MenuItem {
+                    property <int> n: root.language-names.length + root.language-west.length + i;
+                    title: name;
+                    checkable: true;
+                    checked: self.n == root.language-current;
+                    activated => { root.menu("language-" + self.n); }
+                }
+            }
+            if root.language-east.length > 0: Menu {
+                title: @tr("Central and Eastern Europe");
+                for name[i] in root.language-east: MenuItem {
+                    property <int> n: root.language-names.length + root.language-west.length + root.language-north.length + i;
+                    title: name;
+                    checkable: true;
+                    checked: self.n == root.language-current;
+                    activated => { root.menu("language-" + self.n); }
+                }
             }
         }
         Menu {

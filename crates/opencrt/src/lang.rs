@@ -57,6 +57,26 @@ pub fn native_name(code: &str) -> &str {
     }
 }
 
+/// The Language menu's groups of built-in languages, each by its own names:
+/// outside Europe (top level), then Western and Southern, Northern, and
+/// Central and Eastern Europe (submenus, so no menu is taller than a window).
+pub fn menu_groups() -> [Vec<&'static str>; 4] {
+    let group = |code: &str| match code.split(['_', '-']).next().unwrap_or(code) {
+        "de" | "el" | "es" | "fr" | "ga" | "it" | "mt" | "nl" | "pt" => 1,
+        "da" | "et" | "fi" | "lt" | "lv" | "nb" | "no" | "sv" => 2,
+        "bg" | "cs" | "hr" | "hu" | "pl" | "ro" | "sk" | "sl" | "uk" => 3,
+        _ => 0,
+    };
+    let mut groups: [Vec<&'static str>; 4] = Default::default();
+    for code in LANGUAGES {
+        groups[group(code)].push(code);
+    }
+    for g in &mut groups {
+        g.sort_by_key(|c| native_name(c).to_lowercase());
+    }
+    groups
+}
+
 /// Show the interface in `code`: "" follows the system, "en" is English.
 pub fn apply(code: &str) {
     if LANGUAGES.is_empty() {

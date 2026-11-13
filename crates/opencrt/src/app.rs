@@ -7328,26 +7328,25 @@ impl App {
 
     // --- Language menu ---
 
-    /// Follow the system, English, then the built-in languages; the chosen one checked.
+    /// The Language menu: Follow the system, English and the languages outside
+    /// Europe, then the European ones in three submenus; the chosen one checked.
+    /// Entries are numbered across all four lists, in `language_codes` order.
     fn show_languages(&self, ui: &MainWindow) {
-        let mut names: Vec<SharedString> = vec![ui.invoke_follow_system_label(), "English".into()];
-        names.extend(crate::lang::LANGUAGES.iter().map(|l| SharedString::from(crate::lang::native_name(l))));
-        ui.set_language_names(ModelRc::new(VecModel::from(names)));
-        let current = match self.options.language.as_str() {
-            "" => 0,
-            "en" => 1,
-            code => crate::lang::LANGUAGES.iter().position(|l| *l == code).map_or(0, |i| i + 2),
-        };
+        let names = |codes: &[&str]| ModelRc::new(VecModel::from(codes.iter().map(|l| SharedString::from(crate::lang::native_name(l))).collect::<Vec<_>>()));
+        let [top, west, north, east] = crate::lang::menu_groups();
+        let mut first: Vec<SharedString> = vec![ui.invoke_follow_system_label(), "English".into()];
+        first.extend(top.iter().map(|l| SharedString::from(crate::lang::native_name(l))));
+        ui.set_language_names(ModelRc::new(VecModel::from(first)));
+        ui.set_language_west(names(&west));
+        ui.set_language_north(names(&north));
+        ui.set_language_east(names(&east));
+        let current = language_codes().iter().position(|c| *c == self.options.language).unwrap_or(0);
         ui.set_language_current(current as i32);
     }
 
     /// Language menu entry `index` (see `show_languages`).
     fn pick_language(&mut self, index: usize, ui: &MainWindow) {
-        let code = match index {
-            0 => "",
-            1 => "en",
-            i => crate::lang::LANGUAGES.get(i - 2).copied().unwrap_or(""),
-        };
+        let code = language_codes().get(index).copied().unwrap_or("");
         self.options.language = code.to_string();
         crate::lang::apply(code);
         self.save_options();
@@ -8304,6 +8303,11 @@ fn update_status_empty(ui: &MainWindow) {
     ui.set_mouse_reporting(false);
     ui.set_remote_desktop(false);
     ui.set_ssh_active(false);
+}
+
+/// The Language menu's entries as language codes ("" follows the system).
+fn language_codes() -> Vec<&'static str> {
+    ["", "en"].into_iter().chain(crate::lang::menu_groups().into_iter().flatten()).collect()
 }
 
 /// Build the window, wire its callbacks and run until it closes.

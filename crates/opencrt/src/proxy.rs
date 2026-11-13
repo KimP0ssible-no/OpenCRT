@@ -4,6 +4,7 @@
 //! (its password is in the system keychain), send text to a Telnet-style
 //! gateway, or run a local proxy command.
 
+use crate::tr;
 use std::sync::RwLock;
 
 use anyhow::{anyhow, bail};
@@ -60,15 +61,15 @@ pub struct Firewall {
 
 impl Firewall {
     /// What is wrong with this firewall, for its dialog.
-    pub fn problem(&self) -> Option<&'static str> {
+    pub fn problem(&self) -> Option<String> {
         if self.name.trim().is_empty() {
-            Some("Enter a name for the firewall.")
+            Some(tr!("Enter a name for the firewall."))
         } else if self.name.contains("://") {
-            Some("A firewall name cannot look like a proxy address.")
+            Some(tr!("A firewall name cannot look like a proxy address."))
         } else if self.kind == Kind::Command && self.template.trim().is_empty() {
-            Some("Enter the command to run, e.g. nc %h %p.")
+            Some(tr!("Enter the command to run, e.g. nc %h %p."))
         } else if self.kind != Kind::Command && (self.host.trim().is_empty() || self.port == 0) {
-            Some("Enter the firewall's host name and port.")
+            Some(tr!("Enter the firewall's host name and port."))
         } else {
             None
         }
@@ -107,7 +108,7 @@ pub fn parse(spec: &str) -> Result<(Kind, String, u16), String> {
         _ => return Err(usage.into()),
     };
     match crate::app::parse_target(rest.trim_end_matches('/')) {
-        Some((Some(_), ..)) => Err("For a proxy that needs a login, add a firewall in Options > Firewalls.".into()),
+        Some((Some(_), ..)) => Err(tr!("For a proxy that needs a login, add a firewall in Options > Firewalls.")),
         Some((None, host, port)) => Ok((kind, host, port.unwrap_or(kind.default_port()))),
         None => Err(usage.into()),
     }

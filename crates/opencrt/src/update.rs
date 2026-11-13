@@ -1,6 +1,7 @@
 //! New versions: the latest release on GitHub, and how this copy was installed
 //! (which decides what the user is told to do about it).
 
+use crate::tr;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -315,15 +316,15 @@ impl InstallKind {
     }
 
     /// What to do about a new version, after "OpenCRT X is available.".
-    pub fn advice(self) -> &'static str {
+    pub fn advice(self) -> String {
         match self {
-            Self::InnoSetup | Self::MacBundle => "Update Now installs it and restarts OpenCRT.",
-            Self::Package { repo: true } => "Update it with your system's package manager.",
+            Self::InnoSetup | Self::MacBundle => tr!("Update Now installs it and restarts OpenCRT."),
+            Self::Package { repo: true } => tr!("Update it with your system's package manager."),
             Self::Package { repo: false } => {
-                "To get it, and later versions, with your system's updates, set up the OpenCRT package repository once: kimp0ssible-no.github.io/OpenCRT"
+                tr!("To get it, and later versions, with your system's updates, set up the OpenCRT package repository once: kimp0ssible-no.github.io/OpenCRT")
             }
-            Self::Portable => "Download the portable zip from the release page and replace the program files in this folder; the settings folder stays as it is.",
-            Self::Manual => "Download it from the release page.",
+            Self::Portable => tr!("Download the portable zip from the release page and replace the program files in this folder; the settings folder stays as it is."),
+            Self::Manual => tr!("Download it from the release page."),
         }
     }
 

@@ -201,6 +201,18 @@ automatic check off in Options > Global Options > General.
   legacy algorithms for old devices, per session or for every host (Global
   Options > Connection).
 
+## Languages
+OpenCRT's interface is available in English, Simplified Chinese and 25
+European languages: Bulgarian, Croatian, Czech, Danish, Dutch, Estonian,
+Finnish, French, German, Greek, Hungarian, Irish, Italian, Latvian,
+Lithuanian, Maltese, Norwegian Bokmål, Polish, Portuguese, Romanian, Slovak,
+Slovenian, Spanish, Swedish and Ukrainian. OpenCRT follows the system language;
+the Language menu chooses another.
+
+The translations are machine translations. If a text reads wrong in your
+language, open an issue or a pull request with the correction:
+`crates/opencrt/lang/README.md` explains the files.
+
 ## Keyboard
 | Keys | Action |
 | --- | --- |

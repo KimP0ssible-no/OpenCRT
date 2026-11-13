@@ -4072,6 +4072,7 @@ dependencies = [
  "sha2",
  "slint",
  "slint-build",
+ "sys-locale",
  "tokio",
  "tokio-rustls",
  "toml",

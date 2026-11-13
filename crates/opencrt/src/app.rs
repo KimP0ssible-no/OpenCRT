@@ -13,6 +13,7 @@ use slint::winit_030::winit::event::{ElementState, KeyEvent};
 use slint::winit_030::winit::keyboard::{KeyCode, PhysicalKey};
 use slint::{ComponentHandle, Image, Model, ModelRc, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer, SharedString, Timer, TimerMode, VecModel};
 
+use crate::tr;
 use crate::config::{self, Credential, FlowControl, Options, Parity, Protocol, SerialLine, Session, SessionStore};
 use crate::forward::{Forward, ForwardKind};
 use crate::rdp::ToHelper;
@@ -373,21 +374,21 @@ impl Target {
     }
 
     /// What is missing before this target can connect, if anything.
-    fn problem(&self) -> Option<&'static str> {
+    fn problem(&self) -> Option<String> {
         match self.protocol {
-            Protocol::Ssh2 | Protocol::Rlogin if self.user.is_empty() => Some("Enter a username."),
+            Protocol::Ssh2 | Protocol::Rlogin if self.user.is_empty() => Some(tr!("Enter a username.")),
             Protocol::Ssh2 | Protocol::Rdp | Protocol::Vnc if self.jump.as_deref().is_some_and(|j| j.split(',').any(|hop| hop.trim().is_empty())) => {
-                Some("Enter jump hosts as [user@]host[:port] or saved session names, separated by commas.")
+                Some(tr!("Enter jump hosts as [user@]host[:port] or saved session names, separated by commas."))
             }
-            Protocol::Rdp if self.user.is_empty() => Some("Enter a username (user, DOMAIN\\user or user@domain)."),
+            Protocol::Rdp if self.user.is_empty() => Some(tr!("Enter a username (user, DOMAIN\\user or user@domain).")),
             Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin | Protocol::Vnc if self.host.is_empty() => {
-                Some("Enter a hostname.")
+                Some(tr!("Enter a hostname."))
             }
             Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin | Protocol::Vnc if self.port == 0 => {
-                Some("Enter a port between 1 and 65535.")
+                Some(tr!("Enter a port between 1 and 65535."))
             }
-            Protocol::Serial if self.serial_port.is_empty() => Some("Enter a serial port name, e.g. COM3."),
-            Protocol::Serial if self.baud == 0 => Some("Enter a baud rate."),
+            Protocol::Serial if self.serial_port.is_empty() => Some(tr!("Enter a serial port name, e.g. COM3.")),
+            Protocol::Serial if self.baud == 0 => Some(tr!("Enter a baud rate.")),
             _ => None,
         }
     }
@@ -547,7 +548,7 @@ fn session_arg<'a>(args: &[String], store: &'a SessionStore) -> Option<Result<&'
     let at = args.iter().position(|a| a.eq_ignore_ascii_case("/S"))?;
     let name = args.get(at + 1).map(String::as_str).unwrap_or_default();
     let by = |f: fn(&Session) -> String| store.sessions.iter().find(|s| f(s).eq_ignore_ascii_case(name));
-    Some(by(Session::path).or_else(|| by(|s| s.name.clone())).ok_or_else(|| format!("No saved session named \"{name}\".")))
+    Some(by(Session::path).or_else(|| by(|s| s.name.clone())).ok_or_else(|| tr!("No saved session named \"{}\".", name)))
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -938,7 +939,7 @@ impl Tab {
             let attempt = self.retry.map_or(1, |(_, n)| n + 1);
             self.retry = (enabled && attempt <= RECONNECT_ATTEMPTS).then(|| (now + RECONNECT_STEP * attempt, attempt));
             if let Some((at, _)) = self.retry {
-                self.status = format!("Reconnecting in {} s (attempt {attempt} of {RECONNECT_ATTEMPTS})...", (at - now).as_secs());
+                self.status = tr!("Reconnecting in {} s (attempt {} of {})...", (at - now).as_secs(), attempt, RECONNECT_ATTEMPTS);
             }
         }
         if self.state == State::Closed && self.retry.is_some_and(|(at, _)| now >= at) {
@@ -971,8 +972,8 @@ impl Tab {
         }
         let message = match outcome {
             Ok(false) => return,
-            Ok(true) => "Script finished.".to_string(),
-            Err(e) => format!("Script stopped: {e}"),
+            Ok(true) => tr!("Script finished."),
+            Err(e) => tr!("Script stopped: {}", e),
         };
         self.script = None;
         self.status = message;
@@ -986,7 +987,7 @@ impl Tab {
         let progress = match self.transfer.as_mut() {
             Some(Transfer::Receive(receiver)) => {
                 let progress = receiver.feed(bytes, &mut reply);
-                self.status = format!("Zmodem: received {} bytes", receiver.position());
+                self.status = tr!("Zmodem: received {} bytes", receiver.position());
                 progress
             }
             Some(Transfer::Send(sender)) => sender.feed(bytes, &mut reply),
@@ -1003,13 +1004,13 @@ impl Tab {
             }
             Some(Transfer::KReceive(receiver)) => {
                 let progress = receiver.feed(bytes, Instant::now(), &mut reply);
-                self.status = format!("Kermit: received {} bytes", receiver.position());
+                self.status = tr!("Kermit: received {} bytes", receiver.position());
                 progress
             }
             Some(Transfer::KSend(sender)) => {
                 let progress = sender.feed(bytes, Instant::now(), &mut reply);
                 let (done, size) = sender.progress();
-                self.status = format!("Kermit: sent {done} of {size} bytes");
+                self.status = tr!("Kermit: sent {} of {} bytes", done, size);
                 progress
             }
             None => {
@@ -1023,7 +1024,7 @@ impl Tab {
                         let (mut receiver, _) = zmodem::Receiver::new(dir.clone());
                         let progress = receiver.feed(&bytes[at..], &mut reply);
                         self.transfer = Some(Transfer::Receive(receiver));
-                        self.status = format!("Zmodem: receiving into {}", dir.display());
+                        self.status = tr!("Zmodem: receiving into {}", dir.display());
                         self.send(reply);
                         self.finish_transfer(progress);
                     }
@@ -1067,7 +1068,7 @@ impl Tab {
         match zmodem::Sender::new(path) {
             Ok(mut sender) => {
                 self.send(sender.start());
-                self.status = format!("Zmodem: sending {}", path.display());
+                self.status = tr!("Zmodem: sending {}", path.display());
                 self.transfer = Some(Transfer::Send(sender));
             }
             Err(e) => {
@@ -1097,7 +1098,7 @@ impl Tab {
             }
             ("zmodem", true) => {
                 let path = file()?;
-                self.status = format!("Run rz on the host to receive {}.", path.display());
+                self.status = tr!("Run rz on the host to receive {}.", path.display());
                 if std::mem::take(&mut self.wants_upload) {
                     self.start_upload(&path);
                 } else {
@@ -1119,11 +1120,11 @@ impl Tab {
             ("kermit", true) => {
                 let path = file()?;
                 let (sender, start) = kermit::Sender::new(&path, now).map_err(|e| unreadable(&path, e))?;
-                (Transfer::KSend(sender), start, format!("Kermit: sending {} (run kermit -r on the host)...", path.display()))
+                (Transfer::KSend(sender), start, tr!("Kermit: sending {} (run kermit -r on the host)...", path.display()))
             }
             ("kermit", false) => {
                 let (receiver, start) = kermit::Receiver::new(self.download_dir.clone(), now);
-                (Transfer::KReceive(receiver), start, format!("Kermit: receiving into {}...", self.download_dir.display()))
+                (Transfer::KReceive(receiver), start, tr!("Kermit: receiving into {}...", self.download_dir.display()))
             }
             _ => return Err(format!("unknown protocol \"{how}\"")),
         };
@@ -1168,7 +1169,7 @@ impl Tab {
             Ok(bytes) if bytes.is_empty() => {}
             Ok(bytes) => {
                 let (done, size) = sender.progress();
-                self.status = format!("Zmodem: sent {done} of {size} bytes");
+                self.status = tr!("Zmodem: sent {} of {} bytes", done, size);
                 self.send(bytes);
             }
             Err(e) => {
@@ -1184,7 +1185,7 @@ impl Tab {
             && let Err(e) = if raw { log.write_raw(bytes) } else { log.write(bytes) }
         {
             self.log = None;
-            self.status = format!("Logging stopped: {e}");
+            self.status = tr!("Logging stopped: {}", e);
         }
     }
 
@@ -1278,7 +1279,7 @@ impl Tab {
     fn defer(&mut self) {
         self.deferred = true;
         self.state = State::Closed;
-        self.status = "Connects when shown".into();
+        self.status = tr!("Connects when shown");
         self.dirty = true;
     }
 
@@ -1296,7 +1297,7 @@ impl Tab {
         if !self.target.pre_connect.is_empty() && self.via.is_none() && !std::mem::take(&mut self.pre_connect_done) {
             self.pre_connect = Some(run_local_command(self.target.pre_connect.clone(), PRE_CONNECT_LIMIT));
             self.state = State::Connecting;
-            self.status = "Running the pre-connect command...".into();
+            self.status = tr!("Running the pre-connect command...");
             self.dirty = true;
             return;
         }
@@ -1334,7 +1335,7 @@ impl Tab {
             None => self.target.connect(cols as u32, rows as u32),
         });
         self.state = State::Connecting;
-        self.status = format!("Connecting to {}...", self.target.label());
+        self.status = tr!("Connecting to {}...", self.target.label());
         self.dirty = true;
         self.open_log(chrono::Local::now().naive_local());
         self.log_note(0);
@@ -1343,15 +1344,15 @@ impl Tab {
             if is_python(&path) && python::program(&self.python).is_none() {
                 self.wants_python = Some(path);
             } else if let Err(e) = self.start_script(&path) {
-                self.terminal.feed(format!("\x1b[33mLogon script {}: {e}\x1b[0m\r\n", path.display()).as_bytes());
+                self.terminal.feed(format!("\x1b[33m{}\x1b[0m\r\n", tr!("Logon script {}: {}", path.display(), e)).as_bytes());
             }
             return;
         }
         // The logon script file, else the script written in Session Options.
         let logon = match &self.logon_script {
-            Some(path) => Some(load_script(path).map_err(|e| format!("Logon script {}: {e}", path.display()))),
+            Some(path) => Some(load_script(path).map_err(|e| tr!("Logon script {}: {}", path.display(), e))),
             None if !self.logon_actions.trim().is_empty() => {
-                Some(script::Runner::parse(&self.logon_actions).map_err(|e| format!("Logon script: {e}")))
+                Some(script::Runner::parse(&self.logon_actions).map_err(|e| tr!("Logon script: {}", e)))
             }
             None => None,
         };
@@ -1404,10 +1405,10 @@ impl Tab {
                         self.connect();
                     }
                     Err(e) => {
-                        self.terminal.feed(format!("\r\n\x1b[1;31mPre-connect command: {e}\x1b[0m\r\n").as_bytes());
-                        self.terminal.feed(b"\x1b[33mPress Enter to reconnect.\x1b[0m\r\n");
+                        self.terminal.feed(format!("\r\n\x1b[1;31m{}\x1b[0m\r\n", tr!("Pre-connect command: {}", e)).as_bytes());
+                        self.terminal.feed(format!("\x1b[33m{}\x1b[0m\r\n", tr!("Press Enter to reconnect.")).as_bytes());
                         self.state = State::Closed;
-                        self.status = format!("Pre-connect command: {e}");
+                        self.status = tr!("Pre-connect command: {}", e);
                         self.dirty = true;
                     }
                 }
@@ -1425,7 +1426,7 @@ impl Tab {
                     self.passphrase_to_save = self.pending_passphrase.take();
                     self.secrets_ready = std::mem::take(&mut self.pending_secrets);
                     self.state = State::Connected;
-                    self.status = "Ready".into();
+                    self.status = tr!("Ready");
                     let queued = std::mem::take(&mut self.on_connect);
                     if !queued.is_empty() {
                         self.send(queued);
@@ -1508,13 +1509,13 @@ impl Tab {
                     if let Some((cast, path)) = self.cast.as_mut()
                         && let Err(e) = cast.output(bytes)
                     {
-                        self.status = format!("Recording to {} stopped: {e}", path.display());
+                        self.status = tr!("Recording to {} stopped: {}", path.display(), e);
                         self.cast = None;
                     }
                     if let Some((file, path)) = self.capture.as_mut()
                         && let Err(e) = std::io::Write::write_all(file, bytes)
                     {
-                        self.status = format!("Receive ASCII stopped: cannot write {}: {e}", path.display());
+                        self.status = tr!("Receive ASCII stopped: cannot write {}: {}", path.display(), e);
                         self.capture = None;
                     }
                     let shown;
@@ -1539,7 +1540,7 @@ impl Tab {
                     }
                     let text = format!("\r\n\x1b[1;31m{}\x1b[0m\r\n", msg.replace('\n', "\r\n"));
                     self.terminal.feed(text.as_bytes());
-                    self.terminal.feed(b"\x1b[33mPress Enter to reconnect.\x1b[0m\r\n");
+                    self.terminal.feed(format!("\x1b[33m{}\x1b[0m\r\n", tr!("Press Enter to reconnect.")).as_bytes());
                     self.lost = self.state == State::Connected || self.retry.is_some();
                     self.ssh = None;
                     self.end_rdp();
@@ -1558,16 +1559,16 @@ impl Tab {
                     if let Some(reply) = self.connect_reply.take() {
                         let _ = reply.send(Some((self.id, false)));
                     }
-                    self.terminal.feed(b"\r\n\x1b[33mConnection closed. Press Enter to reconnect.\x1b[0m\r\n");
+                    self.terminal.feed(format!("\r\n\x1b[33m{}\x1b[0m\r\n", tr!("Connection closed. Press Enter to reconnect.")).as_bytes());
                     self.lost = self.state == State::Connected || self.retry.is_some();
                     self.ssh = None;
                     self.end_rdp();
                     self.close_log();
                     self.transfer = None;
                     self.state = State::Closed;
-                    self.status = "Disconnected".into();
+                    self.status = tr!("Disconnected");
                     if let Some(files) = self.files.as_mut() {
-                        files.detach("Disconnected");
+                        files.detach(&tr!("Disconnected"));
                     }
                 }
             }
@@ -1576,7 +1577,7 @@ impl Tab {
         self.pump_upload();
         if let Some(files) = self.files.as_mut().filter(|_| self.state == State::Connected) {
             files.pump();
-            let status = files.status().unwrap_or_else(|| "Ready".into());
+            let status = files.status().unwrap_or_else(|| tr!("Ready"));
             if status != self.status {
                 self.status = status;
                 self.dirty = true;
@@ -2088,7 +2089,7 @@ impl App {
         };
         match result {
             Ok(()) => crate::gitsync::changed(),
-            Err(e) => self.notify(format!("Sessions not saved: {e:#}")),
+            Err(e) => self.notify(tr!("Sessions not saved: {}", format!("{:#}", e))),
         }
         self.rows_dirty = true;
     }
@@ -2101,7 +2102,7 @@ impl App {
         };
         match result {
             Ok(()) => crate::gitsync::changed(),
-            Err(e) => self.notify(format!("Options not saved: {e:#}")),
+            Err(e) => self.notify(tr!("Options not saved: {}", format!("{:#}", e))),
         }
     }
 
@@ -2197,7 +2198,7 @@ impl App {
             None => {
                 self.options.recent_sessions.remove(index);
                 self.save_options();
-                self.notify(format!("Session {path} no longer exists."));
+                self.notify(tr!("Session {} no longer exists.", path));
             }
         }
     }
@@ -2227,7 +2228,7 @@ impl App {
             return;
         };
         if tab.lock.is_some() {
-            return self.notify("That tab is locked: unlock it first (its tab menu).");
+            return self.notify(tr!("That tab is locked: unlock it first (its tab menu)."));
         }
         if tab.state == State::Closed || !self.options.confirm_disconnect {
             return self.remove_tab(index, ui);
@@ -2255,10 +2256,10 @@ impl App {
     /// A tab running only `target`'s port forwards (an SSH2 session with some).
     fn start_tunnels(&mut self, target: Target, color: String) {
         if target.protocol != Protocol::Ssh2 {
-            return self.notify("Port forwarding needs an SSH2 session.");
+            return self.notify(tr!("Port forwarding needs an SSH2 session."));
         }
         if !target.forwards.iter().any(|f| f.enabled) {
-            return self.notify("This session has no port forwards: add them in Session Options > Port Forwarding.");
+            return self.notify(tr!("This session has no port forwards: add them in Session Options > Port Forwarding."));
         }
         self.open_tab(Target { sftp: false, files: false, tunnels: true, ..target }, None);
         if let Some(tab) = self.tabs.last_mut() {
@@ -2272,7 +2273,7 @@ impl App {
         let ids: Vec<u64> = others.iter().filter(|t| t.lock.is_none()).map(|t| t.id).collect();
         let connected = others.iter().filter(|t| t.lock.is_none() && t.state != State::Closed).count();
         if connected > 0 && self.options.confirm_disconnect {
-            let message = format!("Close {} other tabs, {connected} of them connected?", ids.len());
+            let message = tr!("Close {} other tabs, {} of them connected?", ids.len(), connected);
             return self.ask_confirm(ui, &message, Deletion::Tabs(ids));
         }
         self.remove_tabs(&ids, ui);
@@ -2287,7 +2288,7 @@ impl App {
                 let ids: Vec<u64> = picked.iter().filter_map(|i| self.tabs.get(*i).map(|t| t.id)).collect();
                 let connected = picked.iter().filter(|i| self.tabs.get(**i).is_some_and(|t| t.state != State::Closed)).count();
                 if connected > 0 && self.options.confirm_disconnect {
-                    let message = format!("Close {} tabs, {connected} of them connected?", ids.len());
+                    let message = tr!("Close {} tabs, {} of them connected?", ids.len(), connected);
                     return self.ask_confirm(ui, &message, Deletion::Tabs(ids));
                 }
                 self.remove_tabs(&ids, ui);
@@ -2310,13 +2311,13 @@ impl App {
             return;
         }
         let text = match step {
-            LockStep::Lock { .. } => "Password to unlock with:",
-            LockStep::Confirm { .. } => "The same password again:",
-            LockStep::Unlock => "Password:",
+            LockStep::Lock { .. } => tr!("Password to unlock with:"),
+            LockStep::Confirm { .. } => tr!("The same password again:"),
+            LockStep::Unlock => tr!("Password:"),
         };
-        let title = if step == LockStep::Unlock { "Unlock Session" } else { "Lock Session" };
+        let title = if step == LockStep::Unlock { tr!("Unlock Session") } else { tr!("Lock Session") };
         self.script_dialog = Some(ScriptAnswer::Lock(ids, step));
-        show_script_dialog(ui, title, text, Some(""), true);
+        show_script_dialog(ui, &title, &text, Some(""), true);
     }
 
     fn lock_answer(&mut self, ids: Vec<u64>, step: LockStep, password: String, ui: &MainWindow) {
@@ -2325,7 +2326,7 @@ impl App {
             LockStep::Lock { .. } => self.notify("A lock needs a password."),
             LockStep::Confirm { hide, first } => {
                 if first.0 != password {
-                    return self.notify("The passwords did not match; the tab is not locked.");
+                    return self.notify(tr!("The passwords did not match; the tab is not locked."));
                 }
                 for tab in self.tabs.iter_mut().filter(|t| ids.contains(&t.id)) {
                     tab.lock = Some((first.clone(), hide));
@@ -2340,7 +2341,7 @@ impl App {
                     tab.lock = None;
                     tab.dirty = true;
                 } else {
-                    self.notify("Wrong password; the tab stays locked.");
+                    self.notify(tr!("Wrong password; the tab stays locked."));
                 }
             }
         }
@@ -2349,7 +2350,7 @@ impl App {
     fn remove_tabs(&mut self, ids: &[u64], ui: &MainWindow) {
         let unlocked: Vec<u64> = ids.iter().copied().filter(|id| self.tabs.iter().any(|t| t.id == *id && t.lock.is_none())).collect();
         if unlocked.len() < ids.len() {
-            self.notify("Locked tabs were left open.");
+            self.notify(tr!("Locked tabs were left open."));
         }
         let ids = unlocked;
         while let Some(i) = self.tabs.iter().position(|t| ids.contains(&t.id)) {
@@ -2400,8 +2401,8 @@ impl App {
         let o = &self.options;
         let setup = crate::print::PageSetup { printer: o.print_printer.clone(), font_size: o.print_font_size, margin_mm: o.print_margin_mm };
         match crate::print::print(text, &setup) {
-            Ok(()) => self.notify("Sent to the printer."),
-            Err(e) => self.notify(format!("Cannot print: {e}")),
+            Ok(()) => self.notify(tr!("Sent to the printer.")),
+            Err(e) => self.notify(tr!("Cannot print: {}", e)),
         }
     }
 
@@ -2485,14 +2486,17 @@ impl App {
                 let gone = self.options.snapshots.remove(i).name;
                 self.save_options();
                 self.show_snapshots(ui);
-                self.notify(format!("Deleted the snapshot \"{gone}\"."));
+                self.notify(tr!("Deleted the snapshot \"{}\".", gone));
             }
             return;
+        }
+        if let Some(i) = name.strip_prefix("language-").and_then(|i| i.parse::<usize>().ok()) {
+            return self.pick_language(i, ui);
         }
         if name == "button-bar-new" {
             self.naming_bar = true;
             ui.set_name_title("New Button Bar".into());
-            ui.set_name_label("Bar name:".into());
+            ui.set_name_label(tr!("Bar name:").into());
             ui.set_name_value(SharedString::new());
             ui.set_dialog(DIALOG_NAME);
             return;
@@ -2500,26 +2504,24 @@ impl App {
         let bar = self.shown_bar.clone().unwrap_or_default();
         if name == "button-bar-rename" && !bar.is_empty() {
             ui.set_name_title("Rename Button Bar".into());
-            ui.set_name_label("Bar name:".into());
+            ui.set_name_label(tr!("Bar name:").into());
             ui.set_name_value(bar.as_str().into());
             self.renaming_bar = Some(bar);
             ui.set_dialog(DIALOG_NAME);
             return;
         }
         if name == "button-bar-delete" && !bar.is_empty() {
-            let buttons = match self.options.buttons.iter().filter(|b| b.bar.eq_ignore_ascii_case(&bar)).count() {
-                0 => String::new(),
-                1 => " and its button".to_string(),
-                n => format!(" and its {n} buttons"),
+            let message = match self.options.buttons.iter().filter(|b| b.bar.eq_ignore_ascii_case(&bar)).count() {
+                0 => tr!("Delete the button bar \"{}\"? Sessions that use it go back to the Default bar.", bar),
+                n => tr!("Delete the button bar \"{}\" and its buttons ({})? Sessions that use it go back to the Default bar.", bar, n),
             };
-            let message = format!("Delete the button bar \"{bar}\"{buttons}? Sessions that use it go back to the Default bar.");
             self.ask_confirm(ui, &message, Deletion::Bar(bar));
             return;
         }
         if name == "snapshot-save" {
             self.naming_snapshot = true;
             ui.set_name_title("Save Snapshot".into());
-            ui.set_name_label("Snapshot name:".into());
+            ui.set_name_label(tr!("Snapshot name:").into());
             ui.set_name_value(SharedString::new());
             ui.set_dialog(DIALOG_NAME);
             return;
@@ -2591,19 +2593,19 @@ impl App {
                         ssh.send_break();
                     }
                 }
-                _ => self.notify("Send Break works in connected serial and Telnet sessions."),
+                _ => self.notify(tr!("Send Break works in connected serial and Telnet sessions.")),
             },
             "cancel-script" => {
                 if let Some(tab) = self.active_tab()
                     && (tab.script.take().is_some() | tab.rhai.take().is_some())
                 {
-                    tab.status = "Script cancelled.".into();
+                    tab.status = tr!("Script cancelled.");
                 }
             }
             "create-key" => return show_keygen(ui),
             "convert-key" => {
                 let ssh_dir = std::env::home_dir().map(|h| h.join(".ssh")).filter(|d| d.is_dir());
-                let mut dialog = rfd::FileDialog::new().set_title("Convert Private Key to OpenSSH");
+                let mut dialog = rfd::FileDialog::new().set_title(tr!("Convert Private Key to OpenSSH"));
                 if let Some(dir) = ssh_dir {
                     dialog = dialog.set_directory(dir);
                 }
@@ -2641,7 +2643,7 @@ impl App {
             }
             "agent-add" => {
                 let ssh_dir = std::env::home_dir().map(|h| h.join(".ssh")).filter(|d| d.is_dir());
-                let dialog = rfd::FileDialog::new().set_title("Add Key to Agent");
+                let dialog = rfd::FileDialog::new().set_title(tr!("Add Key to Agent"));
                 let dialog = match ssh_dir {
                     Some(dir) => dialog.set_directory(dir),
                     None => dialog,
@@ -2694,12 +2696,12 @@ impl App {
                     return;
                 };
                 let lines = if name == "host-key-import" {
-                    let Some(path) = rfd::FileDialog::new().set_title("Import known_hosts").pick_file() else {
+                    let Some(path) = rfd::FileDialog::new().set_title(tr!("Import known_hosts")).pick_file() else {
                         return;
                     };
                     ssh::known_hosts_lines(&std::fs::read_to_string(&path).unwrap_or_default())
                 } else {
-                    let mut dialog = rfd::FileDialog::new().set_title("Import SecureCRT Host Keys (pick its KnownHosts folder)");
+                    let mut dialog = rfd::FileDialog::new().set_title(tr!("Import SecureCRT Host Keys (pick its KnownHosts folder)"));
                     if let Some(dir) = sessions::vandyke_dir().map(|d| d.join("Config").join("KnownHosts")).filter(|d| d.is_dir()) {
                         dialog = dialog.set_directory(dir);
                     }
@@ -2715,8 +2717,8 @@ impl App {
                         .collect()
                 };
                 match ssh::known_hosts_merge(&store, &lines) {
-                    Ok(added) => self.notify(format!("Imported {added} host keys ({} found).", lines.len())),
-                    Err(e) => self.notify(format!("Cannot update known_hosts: {e}")),
+                    Ok(added) => self.notify(tr!("Imported {} host keys ({} found).", added, lines.len())),
+                    Err(e) => self.notify(tr!("Cannot update known_hosts: {}", e)),
                 }
                 return self.show_host_keys(ui);
             }
@@ -2726,8 +2728,8 @@ impl App {
                 };
                 if let Some(out) = rfd::FileDialog::new().set_title("Export Host Keys").set_file_name("known_hosts").save_file() {
                     match std::fs::copy(&store, &out) {
-                        Ok(_) => self.notify(format!("Exported the host keys to {}.", out.display())),
-                        Err(e) => self.notify(format!("Cannot export to {}: {e}", out.display())),
+                        Ok(_) => self.notify(tr!("Exported the host keys to {}.", out.display())),
+                        Err(e) => self.notify(tr!("Cannot export to {}: {}", out.display(), e)),
                     }
                 }
                 return;
@@ -2737,7 +2739,7 @@ impl App {
                 if let (Some(line), Some(path)) = (line, config::known_hosts())
                     && let Err(e) = ssh::known_hosts_remove(&path, line)
                 {
-                    self.notify(format!("Cannot update {}: {e}", path.display()));
+                    self.notify(tr!("Cannot update {}: {}", path.display(), e));
                 }
                 return self.show_host_keys(ui);
             }
@@ -2755,22 +2757,22 @@ impl App {
                 let live = self.tabs.iter().filter(|t| t.state != State::Closed).count();
                 match live {
                     0 => self.install_update(ui),
-                    1 => self.ask_confirm(ui, "Updating restarts OpenCRT and disconnects the connected session. Update now?", Deletion::Update),
-                    n => self.ask_confirm(ui, &format!("Updating restarts OpenCRT and disconnects {n} connected sessions. Update now?"), Deletion::Update),
+                    1 => self.ask_confirm(ui, &tr!("Updating restarts OpenCRT and disconnects the connected session. Update now?"), Deletion::Update),
+                    n => self.ask_confirm(ui, &tr!("Updating restarts OpenCRT and disconnects {} connected sessions. Update now?", n), Deletion::Update),
                 }
                 return;
             }
             "release-notes" => {
                 let url = format!("{}/tag/v{}", update::RELEASES, ui.get_update_version());
                 if let Err(e) = webbrowser::open(&url) {
-                    self.notify(format!("Cannot open {url}: {e}"));
+                    self.notify(tr!("Cannot open {}: {}", url, e));
                 }
             }
             "reconnect" => self.tab_action(active, "reconnect"),
             "disconnect" => self.tab_action(active, "disconnect"),
             "disconnect-all" => {
                 for tab in self.tabs.iter_mut().filter(|t| t.state != State::Closed) {
-                    tab.disconnect("Disconnected.");
+                    tab.disconnect(&tr!("Disconnected."));
                 }
             }
             "clone" => self.tab_action(active, "clone"),
@@ -2810,7 +2812,7 @@ impl App {
                         }
                         None => {
                             tab.auto_print = Some(Vec::new());
-                            self.notify("Auto Print: output is collected and printed when you turn it off.");
+                            self.notify(tr!("Auto Print: output is collected and printed when you turn it off."));
                         }
                     }
                 }
@@ -2819,7 +2821,7 @@ impl App {
                 if let Some(text) = self.tabs.get(self.active).and_then(|t| t.terminal.selection_text()) {
                     let url = search_url(&self.options.web_search, &text);
                     if let Err(e) = webbrowser::open(&url) {
-                        self.notify(format!("Cannot open {url}: {e}"));
+                        self.notify(tr!("Cannot open {}: {}", url, e));
                     }
                 }
             }
@@ -2866,7 +2868,7 @@ impl App {
         };
         match name {
             "reconnect" if tab.state == State::Closed => tab.reconnect(),
-            "disconnect" if tab.state != State::Closed => tab.disconnect("Disconnected."),
+            "disconnect" if tab.state != State::Closed => tab.disconnect(&tr!("Disconnected.")),
             "clone" => {
                 let target = tab.target.clone();
                 let session = tab.session.as_ref().and_then(|p| self.store.sessions.iter().find(|s| s.path() == *p)).cloned();
@@ -2937,11 +2939,11 @@ impl App {
             "open-browser" => {
                 let addresses: Vec<String> = tab.target.forwards.iter().filter(|f| f.enabled).filter_map(|f| f.browser_address()).collect();
                 if addresses.is_empty() {
-                    self.notify("No local port forward to open: SOCKS and remote forwards have no page.");
+                    self.notify(tr!("No local port forward to open: SOCKS and remote forwards have no page."));
                 }
                 for address in addresses {
                     if let Err(e) = webbrowser::open(&address) {
-                        self.notify(format!("Cannot open {address}: {e}"));
+                        self.notify(tr!("Cannot open {}: {}", address, e));
                     }
                 }
             }
@@ -3060,7 +3062,7 @@ impl App {
             KeyAction::Send(bytes) => {
                 // Typing stops a paced paste (e.g. one stuck waiting for a prompt).
                 if tab.pacer.take().is_some() {
-                    self.notify("Stopped sending the pasted text.");
+                    self.notify(tr!("Stopped sending the pasted text."));
                     return true;
                 }
                 let bytes = if bytes == [0x7f] && tab.backspace_ctrl_h { vec![0x08] } else { bytes };
@@ -3214,10 +3216,10 @@ impl App {
     /// The dock's vertical tab labels, for the window's scale and the interface font size.
     fn draw_dock_labels(&self, ui: &MainWindow) {
         let px = 11.0 * self.scale * self.options.ui_scale();
-        ui.set_dock_label_sessions(dock_label("Session Manager", px));
-        ui.set_dock_label_active(dock_label("Active Sessions", px));
-        ui.set_dock_label_commands(dock_label("Command Manager", px));
-        ui.set_dock_label_scratch(dock_label("Scratchpad", px));
+        ui.set_dock_label_sessions(dock_label(&tr!("Session Manager"), px));
+        ui.set_dock_label_active(dock_label(&tr!("Active Sessions"), px));
+        ui.set_dock_label_commands(dock_label(&tr!("Command Manager"), px));
+        ui.set_dock_label_scratch(dock_label(&tr!("Scratchpad"), px));
     }
 
     /// The panes to show in a `w` x `h` terminal area.
@@ -3313,7 +3315,7 @@ impl App {
             && let Some(url) = tab.terminal.url_at(row, col)
         {
             if let Err(e) = webbrowser::open(&url) {
-                self.notify(format!("Cannot open {url}: {e}"));
+                self.notify(tr!("Cannot open {}: {}", url, e));
             }
             return;
         }
@@ -3375,7 +3377,7 @@ impl App {
             for tab in &mut self.tabs {
                 tab.dirty = true;
             }
-            self.notify(format!("Font size {size}"));
+            self.notify(tr!("Font size {}", size));
         }
     }
 
@@ -3498,14 +3500,16 @@ impl App {
             })
         {
             self.ask_confirm(ui, &format!("{target} already exists. Overwrite it?"), Deletion::Overwrite(tab, job));
-            ui.set_confirm_option("Do the same for the rest of the queue".into());
+            ui.set_confirm_option(tr!("Do the same for the rest of the queue").into());
             ui.set_confirm_checked(false);
         }
         if ui.get_dialog() == DIALOG_NONE
             && let Some(text) = self.pending_paste.take()
         {
-            let target = if self.send_to_all { " into every connected tab" } else { "" };
-            let message = format!("These {} lines will be pasted{target}. Change them first if needed.", paste_lines(&text));
+            let message = match self.send_to_all {
+                true => tr!("These {} lines will be pasted into every connected tab. Change them first if needed.", paste_lines(&text)),
+                false => tr!("These {} lines will be pasted. Change them first if needed.", paste_lines(&text)),
+            };
             ui.set_paste_message(message.into());
             ui.set_paste_value(text.into());
             ui.set_dialog(DIALOG_PASTE);
@@ -3559,9 +3563,9 @@ impl App {
         };
         for (host, result) in finished {
             self.notify(match result {
-                Ok(true) => format!("Public key added to authorized_keys on {host}."),
+                Ok(true) => tr!("Public key added to authorized_keys on {}.", host),
                 Ok(false) => format!("{host} already has that public key."),
-                Err(e) => format!("Could not add the public key on {host}: {e}"),
+                Err(e) => tr!("Could not add the public key on {}: {}", host, e),
             });
         }
         // Passwords and key passphrases to save once logged in; they wait for
@@ -3611,7 +3615,7 @@ impl App {
             }
             for path in tab.files.as_mut().map(|f| f.take_to_open()).unwrap_or_default() {
                 if let Err(e) = crate::filebrowser::open_in_app(&path) {
-                    open_failed = Some(format!("Cannot open {}: {e}", path.display()));
+                    open_failed = Some(tr!("Cannot open {}: {}", path.display(), e));
                 }
             }
             // Output in a tab out of sight marks it until it is looked at.
@@ -3818,7 +3822,7 @@ impl App {
                 if let Some((cast, path)) = tab.cast.as_mut()
                     && let Err(e) = cast.resize(cols, lines)
                 {
-                    tab.status = format!("Recording to {} stopped: {e}", path.display());
+                    tab.status = tr!("Recording to {} stopped: {}", path.display(), e);
                     tab.cast = None;
                 }
                 if let Some(ssh) = tab.ssh.as_ref() {
@@ -3907,7 +3911,7 @@ impl App {
             Some(_) => {
                 self.notice = None;
                 if self.tabs.is_empty() {
-                    ui.set_status_text("Ready".into());
+                    ui.set_status_text(tr!("Ready").into());
                 }
             }
             None => {}
@@ -4065,7 +4069,7 @@ impl App {
                 .map(|(label, echo)| PromptField { label: label.clone().into(), echo: *echo })
                 .collect();
             let answers = vec![SharedString::new(); fields.len()];
-            ui.set_auth_title(format!("Log in to {}", tab.target.label()).into());
+            ui.set_auth_title(tr!("Log in to {}", tab.target.label()).into());
             ui.set_auth_instructions(prompt.instructions.clone().into());
             ui.set_auth_fields(ModelRc::new(VecModel::from(fields)));
             ui.set_auth_answers(ModelRc::new(VecModel::from(answers)));
@@ -4074,7 +4078,7 @@ impl App {
             ui.set_auth_passphrase(passphrase);
             ui.set_auth_save(false);
             let choices: Vec<SharedString> = if prompt.kind == ssh::PromptKind::Password {
-                std::iter::once("Type the password".into()).chain(self.options.credentials.iter().map(|c| c.name.clone().into())).collect()
+                std::iter::once(tr!("Type the password").into()).chain(self.options.credentials.iter().map(|c| c.name.clone().into())).collect()
             } else {
                 Vec::new()
             };
@@ -4140,7 +4144,7 @@ impl App {
                     None => continue,
                 },
                 WaitingSecret::Key { tab, path, passphrase } => {
-                    (tab, config::set_key_passphrase(&path, &passphrase).err().map(|e| format!("Cannot save the passphrase of {path}: {e}")))
+                    (tab, config::set_key_passphrase(&path, &passphrase).err().map(|e| tr!("Cannot save the passphrase of {}: {}", path, e)))
                 }
             };
             if let Some(e) = error {
@@ -4186,35 +4190,35 @@ impl App {
         let result = match (choice, mode) {
             (0, 3) => {
                 self.securecrt_passwords.clear();
-                Ok(Some("The SecureCRT sessions were imported without their passwords.".to_string()))
+                Ok(Some(tr!("The SecureCRT sessions were imported without their passwords.")))
             }
             (_, 3) => self.import_securecrt_passwords(&current).map(Some),
             (0, _) if !self.secrets_waiting.is_empty() => {
                 let tabs: Vec<u64> = std::mem::take(&mut self.secrets_waiting).into_iter().map(|w| w.tab()).collect();
                 for tab in tabs {
-                    self.tab_note(tab, "The password was not saved.");
+                    self.tab_note(tab, &tr!("The password was not saved."));
                 }
                 Ok(None)
             }
             (0, _) => Ok(None),
             (1, 0) => config::unlock_secrets(&current).and_then(|()| config::adopt_keychain_secrets(&self.secret_accounts())).map(|()| None),
-            (1, _) if new.is_empty() => Err("Type the new master password.".to_string()),
-            (1, _) if new != confirm => Err("The new password and its confirmation differ.".to_string()),
+            (1, _) if new.is_empty() => Err(tr!("Type the new master password.")),
+            (1, _) if new != confirm => Err(tr!("The new password and its confirmation differ.")),
             (1, 1) => {
                 config::set_master_password(&new, &self.secret_accounts())
-                    .map(|()| Some("Saved passwords and key passphrases are now kept under the master password.".to_string()))
+                    .map(|()| Some(tr!("Saved passwords and key passphrases are now kept under the master password.")))
             }
             // Removing deletes the synced file, so other computers lose these passwords: say so first.
             (2, _) if !std::mem::replace(&mut self.remove_warned, true) && crate::gitsync::local_copy().is_some_and(|d| Some(d) == config::dir()) => Err(
-                "Settings Sync shares these passwords: removing the master password moves them into this computer's keychain only, and the other computers that sync these settings will need their saved passwords entered again. Click Remove again to go ahead."
+                tr!("Settings Sync shares these passwords: removing the master password moves them into this computer's keychain only, and the other computers that sync these settings will need their saved passwords entered again. Click Remove again to go ahead.")
                     .to_string(),
             ),
             (1, _) => config::unlock_secrets(&current)
                 .and_then(|()| config::change_master_password(&new))
-                .map(|()| Some("Changed the master password.".to_string())),
+                .map(|()| Some(tr!("Changed the master password."))),
             _ => config::unlock_secrets(&current)
                 .and_then(|()| config::remove_master_password())
-                .map(|()| Some("Removed the master password: saved passwords are back in this computer's keychain.".to_string())),
+                .map(|()| Some(tr!("Removed the master password: saved passwords are back in this computer's keychain."))),
         };
         match result {
             Err(e) => ui.set_mp_error(e.into()),
@@ -4240,7 +4244,7 @@ impl App {
     /// keep each as a credential of its session. Err keeps the dialog open.
     fn import_securecrt_passwords(&mut self, passphrase: &str) -> Result<String, String> {
         if passphrase.is_empty() {
-            return Err("Type SecureCRT's Config Passphrase.".into());
+            return Err(tr!("Type SecureCRT's Config Passphrase."));
         }
         let opened: Vec<(String, String)> = self
             .securecrt_passwords
@@ -4248,14 +4252,14 @@ impl App {
             .filter_map(|(path, saved)| Some((path.clone(), sessions::securecrt_password(saved, passphrase)?)))
             .collect();
         if opened.is_empty() {
-            return Err("That passphrase opens none of the saved passwords. Check it in SecureCRT (it asks for it when it starts).".into());
+            return Err(tr!("That passphrase opens none of the saved passwords. Check it in SecureCRT (it asks for it when it starts)."));
         }
         let unread = self.securecrt_passwords.len() - opened.len();
         let mut saved = 0;
         for (path, password) in opened {
             let name = unused_credential_name(&self.options.credentials, &path);
             if let Err(e) = config::set_credential_password(&name, &password) {
-                return Err(format!("Cannot save the password of {path}: {e}"));
+                return Err(tr!("Cannot save the password of {}: {}", path, e));
             }
             self.options.credentials.push(Credential { name: name.clone(), user: String::new() });
             if let Some(session) = self.store.sessions.iter_mut().find(|s| s.path() == path) {
@@ -4266,8 +4270,8 @@ impl App {
         self.securecrt_passwords.clear();
         self.save_options();
         self.save_store();
-        let unread = if unread > 0 { format!(" {unread} could not be read (saved before the passphrase was set, or in an older form).") } else { String::new() };
-        Ok(format!("Imported {saved} saved SecureCRT passwords as credentials of their sessions.{unread}"))
+        let unread = if unread > 0 { tr!(" Not read: {} (saved before the passphrase was set, or in an older form).", unread) } else { String::new() };
+        Ok(tr!("Imported {} saved SecureCRT passwords as credentials of their sessions.{}", saved, unread))
     }
 
     fn answer_auth(&mut self, ok: bool, ui: &MainWindow) {
@@ -4395,7 +4399,7 @@ impl App {
                     crate::QuickRow { label: s.name.clone().into(), detail: detail.into(), protocol: s.protocol.index() as i32, typed: false }
                 }
                 None => crate::QuickRow {
-                    label: format!("Connect to {}", query.trim()).into(),
+                    label: tr!("Connect to {}", query.trim()).into(),
                     detail: "SSH2 (Shift+Enter: SFTP GUI tab)".into(),
                     protocol: 0,
                     typed: true,
@@ -4615,7 +4619,7 @@ impl App {
                     .collect();
                 let warn = self.options.warn_connect_count;
                 if warn > 0 && inside.len() > warn {
-                    let message = format!("Connect {} sessions in \"{path}\"?", inside.len());
+                    let message = tr!("Connect {} sessions in \"{}\"?", inside.len(), path);
                     return self.ask_confirm(ui, &message, Deletion::Connect(inside));
                 }
                 for i in inside {
@@ -4640,7 +4644,7 @@ impl App {
                 let leaf = path.rsplit('/').next().unwrap_or(&path).to_string();
                 self.renaming_folder = Some(path);
                 ui.set_name_title("Rename Folder".into());
-                ui.set_name_label("Folder name:".into());
+                ui.set_name_label(tr!("Folder name:").into());
                 ui.set_name_value(leaf.into());
                 ui.set_dialog(DIALOG_NAME);
             }
@@ -4692,23 +4696,23 @@ impl App {
             ("new-folder", _) => {
                 self.new_folder_parent = Some(self.selected_folder(ui));
                 ui.set_name_title("New Folder".into());
-                ui.set_name_label("Folder name:".into());
+                ui.set_name_label(tr!("Folder name:").into());
                 ui.set_name_value(SharedString::new());
                 ui.set_dialog(DIALOG_NAME);
             }
             ("delete", Some(Node::Session(_))) => {
                 let paths: Vec<String> = self.chosen_sessions(ui).into_iter().map(|i| self.store.sessions[i].path()).collect();
                 let message = match paths.as_slice() {
-                    [one] => format!("Delete the session \"{one}\"?"),
-                    many => format!("Delete {} sessions?", many.len()),
+                    [one] => tr!("Delete the session \"{}\"?", one),
+                    many => tr!("Delete {} sessions?", many.len()),
                 };
                 self.ask_confirm(ui, &message, Deletion::Sessions(paths));
             }
             ("delete", Some(Node::Folder(path))) => {
                 let message = match self.store.sessions.iter().filter(|s| sessions::in_folder(s, &path)).count() {
-                    0 => format!("Delete the folder \"{path}\"?"),
-                    1 => format!("Delete the folder \"{path}\" and the session in it?"),
-                    n => format!("Delete the folder \"{path}\" and the {n} sessions in it?"),
+                    0 => tr!("Delete the folder \"{}\"?", path),
+                    1 => tr!("Delete the folder \"{}\" and the session in it?", path),
+                    n => tr!("Delete the folder \"{}\" and the {} sessions in it?", path, n),
                 };
                 self.ask_confirm(ui, &message, Deletion::Folder(path));
             }
@@ -4765,7 +4769,7 @@ impl App {
             }
             Some(Deletion::Bar(bar)) if yes => {
                 self.move_bar(&bar, "");
-                self.notify(format!("Deleted the button bar \"{bar}\"."));
+                self.notify(tr!("Deleted the button bar \"{}\".", bar));
             }
             Some(Deletion::Exit) if yes => {
                 let _ = slint::quit_event_loop();
@@ -4779,7 +4783,7 @@ impl App {
             }
             Some(Deletion::Update) if yes => return self.install_update(ui),
             Some(Deletion::Restart) if yes => self.restart(),
-            Some(Deletion::Restart) => self.notify("The new configuration folder is used from the next start."),
+            Some(Deletion::Restart) => self.notify(tr!("The new configuration folder is used from the next start.")),
             Some(Deletion::Overwrite(id, job)) => {
                 if let Some(files) = self.tabs.iter_mut().find(|t| t.id == id).and_then(|t| t.files.as_mut()) {
                     files.answer(job, yes, ui.get_confirm_checked());
@@ -4819,31 +4823,33 @@ impl App {
             (_, "copy-path") => {
                 let paths = files.paths(which);
                 match self.clipboard.as_mut() {
-                    _ if paths.is_empty() => problem = Some("Pick the files or folders whose paths to copy.".to_string()),
+                    _ if paths.is_empty() => problem = Some(tr!("Pick the files or folders whose paths to copy.")),
                     Some(clipboard) => {
                         let _ = clipboard.set_text(paths.join("\n"));
                     }
-                    None => problem = Some("The clipboard is not available.".to_string()),
+                    None => problem = Some(tr!("The clipboard is not available.")),
                 }
             }
-            (_, "rename") if picked.len() != 1 => problem = Some("Pick one file or folder to rename.".to_string()),
-            (_, "delete") if picked.is_empty() => problem = Some("Pick the files or folders to delete.".to_string()),
+            (_, "rename") if picked.len() != 1 => problem = Some(tr!("Pick one file or folder to rename.")),
+            (_, "delete") if picked.is_empty() => problem = Some(tr!("Pick the files or folders to delete.")),
             (_, "mkdir" | "rename") => {
                 let old = (name == "rename").then(|| picked[0].0.clone());
-                ui.set_name_title(if old.is_some() { "Rename" } else { "New Folder" }.into());
-                ui.set_name_label(if old.is_some() { "New name:" } else { "Folder name:" }.into());
+                ui.set_name_title(if old.is_some() { tr!("Rename") } else { tr!("New Folder") }.into());
+                ui.set_name_label(if old.is_some() { tr!("New name:") } else { tr!("Folder name:") }.into());
                 ui.set_name_value(old.clone().unwrap_or_default().into());
                 self.files_naming = Some((id, which, old));
                 ui.set_dialog(DIALOG_NAME);
             }
             (_, "delete") => {
-                let place = if side == 0 { "this computer" } else { "the server" };
-                let what = match &picked[..] {
-                    [(n, false)] => format!("\"{n}\""),
-                    [(n, true)] => format!("the folder \"{n}\" and everything in it"),
-                    many => format!("{} items (folders with everything in them)", many.len()),
+                let message = match (&picked[..], side == 0) {
+                    ([(n, false)], true) => tr!("Delete \"{}\" from this computer?", n),
+                    ([(n, false)], false) => tr!("Delete \"{}\" from the server?", n),
+                    ([(n, true)], true) => tr!("Delete the folder \"{}\" and everything in it from this computer?", n),
+                    ([(n, true)], false) => tr!("Delete the folder \"{}\" and everything in it from the server?", n),
+                    (many, true) => tr!("Delete {} items (folders with everything in them) from this computer?", many.len()),
+                    (many, false) => tr!("Delete {} items (folders with everything in them) from the server?", many.len()),
                 };
-                self.ask_confirm(ui, &format!("Delete {what} from {place}?"), Deletion::Files(id, which, picked));
+                self.ask_confirm(ui, &message, Deletion::Files(id, which, picked));
             }
             (_, _) => {
                 if let Some(column) = name.strip_prefix("sort-").and_then(|n| n.parse().ok()) {
@@ -4860,7 +4866,7 @@ impl App {
         if let Some(tab) = self.tabs.get(index) {
             self.renaming_tab = Some(index);
             ui.set_name_title("Rename Tab".into());
-            ui.set_name_label("Tab name:".into());
+            ui.set_name_label(tr!("Tab name:").into());
             ui.set_name_value(tab.title().into());
             ui.set_dialog(DIALOG_NAME);
         }
@@ -5060,7 +5066,7 @@ impl App {
         ui.set_so_anti_idle_protocol(session.anti_idle_protocol);
         ui.set_so_anti_idle_secs(if session.anti_idle_secs == 0 { SharedString::new() } else { session.anti_idle_secs.to_string().into() });
         let choices: Vec<SharedString> =
-            std::iter::once("None".into()).chain(self.options.credentials.iter().map(|c| c.name.clone().into())).collect();
+            std::iter::once(tr!("None").into()).chain(self.options.credentials.iter().map(|c| c.name.clone().into())).collect();
         ui.set_credential_choices(ModelRc::new(VecModel::from(choices)));
         let chosen = self.options.credentials.iter().position(|c| !session.credential.is_empty() && c.name == session.credential);
         ui.set_so_credential(chosen.map_or(0, |i| i as i32 + 1));
@@ -5174,14 +5180,14 @@ impl App {
         let session = self.session_from_ui(ui);
         let invalid = script::Runner::parse(&session.logon_actions)
             .err()
-            .map(|e| format!("Logon script: {e}"))
+            .map(|e| tr!("Logon script: {}", e))
             .or_else(|| input::parse_key_map(&session.key_map).err().map(|e| format!("Keyboard: {e}")))
-            .or_else(|| anti_idle_secs.is_none().then(|| "Anti-idle: the interval must be a whole number of seconds.".into()))
-            .or_else(|| rdp_size_problem(ui.get_so_rdp_width().trim(), ui.get_so_rdp_height().trim()).map(String::from))
+            .or_else(|| anti_idle_secs.is_none().then(|| tr!("Anti-idle: the interval must be a whole number of seconds.")))
+            .or_else(|| rdp_size_problem(ui.get_so_rdp_width().trim(), ui.get_so_rdp_height().trim()))
             .or_else(|| {
                 let share = ui.get_so_rdp_share().trim().to_string();
                 (!share.is_empty() && !Path::new(&config::expand_env(&share)).is_dir())
-                    .then(|| format!("Remote Desktop: {share} is not a folder on this computer."))
+                    .then(|| tr!("Remote Desktop: {} is not a folder on this computer.", share))
             })
             .or_else(|| {
                 (!session.proxy.is_empty()).then(|| crate::proxy::check(&session.proxy).err()).flatten().map(|e| format!("Proxy: {e}"))
@@ -5194,7 +5200,7 @@ impl App {
             for path in &paths {
                 let Some(i) = self.store.sessions.iter().position(|s| s.path() == *path) else { continue };
                 if let Err(e) = sessions::apply_changes(&before, &session, &mut self.store.sessions[i]) {
-                    self.notify(format!("Cannot change \"{path}\": {e}"));
+                    self.notify(tr!("Cannot change \"{}\": {}", path, e));
                     continue;
                 }
                 let updated = self.store.sessions[i].clone();
@@ -5232,13 +5238,13 @@ impl App {
             .enumerate()
             .any(|(i, s)| Some(i) != index && s.path() == session.path());
         let error = if session.name.is_empty() || session.name.contains('/') {
-            "Enter a session name (without \"/\")."
+            tr!("Enter a session name (without \"/\").")
         } else if let Some(problem) = Target::from_session(&session, &self.options.credentials).problem() {
             problem
         } else if clash {
-            "A session with that name already exists in this folder."
+            tr!("A session with that name already exists in this folder.")
         } else {
-            invalid.as_deref().unwrap_or("")
+            invalid.clone().unwrap_or_default()
         };
         if !error.is_empty() {
             ui.set_so_error(error.into());
@@ -5326,7 +5332,7 @@ impl App {
                 tab.status = text;
                 tab.dirty = true;
             }
-            Request::Disconnect => tab.disconnect("Disconnected by the script."),
+            Request::Disconnect => tab.disconnect(&tr!("Disconnected by the script.")),
             Request::Transfer { protocol, send, file, reply } => {
                 let file = file.map(|f| PathBuf::from(config::expand_env(&f)));
                 tab.transfer_outcome = None;
@@ -5411,7 +5417,7 @@ impl App {
                     new.watchers.extend(watcher);
                     if script.is_some() {
                         new.rhai = script;
-                        new.status = "Running script...".into();
+                        new.status = tr!("Running script...");
                     }
                 }
                 return !follow;
@@ -5420,10 +5426,10 @@ impl App {
                 let tab = &mut self.tabs[i];
                 let name = tab.rhai.take().map(|s| s.name.clone()).unwrap_or_default();
                 tab.status = match result {
-                    Ok(()) => format!("Script {name} finished."),
+                    Ok(()) => tr!("Script {} finished.", name),
                     Err(e) => {
                         tab.terminal.feed(format!("\r\n\x1b[33mScript {name}: {e}\x1b[0m\r\n").as_bytes());
-                        format!("Script {name} stopped: {}", e.lines().next().unwrap_or_default())
+                        tr!("Script {} stopped: {}", name, e.lines().next().unwrap_or_default())
                     }
                 };
                 tab.dirty = true;
@@ -5529,15 +5535,15 @@ impl App {
     /// session's account, over its connection.
     fn upload_public_key(&mut self) {
         let Some(tab) = self.tabs.get(self.active) else {
-            return self.notify("Public Key Assistant: open an SSH2 session first.");
+            return self.notify(tr!("Public Key Assistant: open an SSH2 session first."));
         };
         let shared = tab.link.as_ref().and_then(|l| l.upgrade()).filter(|s| !s.is_closed());
         let (Some(shared), Protocol::Ssh2) = (shared, tab.target.protocol) else {
-            return self.notify("Public Key Assistant: the active tab must be a connected SSH2 session.");
+            return self.notify(tr!("Public Key Assistant: the active tab must be a connected SSH2 session."));
         };
         let (host, key) = (tab.target.host.clone(), tab.target.key_path.clone());
         let ssh_dir = std::env::home_dir().map(|h| h.join(".ssh")).filter(|d| d.is_dir());
-        let mut dialog = rfd::FileDialog::new().set_title("Public Key to Add").add_filter("Public keys", &["pub"]);
+        let mut dialog = rfd::FileDialog::new().set_title(tr!("Public Key to Add")).add_filter(tr!("Public keys"), &["pub"]);
         if let Some(dir) = key.as_ref().and_then(|k| Path::new(k).parent().map(Path::to_path_buf)).or(ssh_dir) {
             dialog = dialog.set_directory(dir);
         }
@@ -5549,7 +5555,7 @@ impl App {
             return self.notify(format!("{} is not an OpenSSH public key.", path.display()));
         }
         self.uploads.push((host.clone(), ssh::upload_public_key(shared, line)));
-        self.notify(format!("Adding the public key on {host}..."));
+        self.notify(tr!("Adding the public key on {}...", host));
     }
 
     /// The Agent Keys list.
@@ -5573,10 +5579,10 @@ impl App {
                 Err(e) if e.to_lowercase().contains("encrypted") => {
                     self.agent_keys_open = ui.get_dialog() == DIALOG_AGENT;
                     self.script_dialog = Some(ScriptAnswer::AgentPassphrase(path.clone()));
-                    show_script_dialog(ui, "Add Key to Agent", &format!("Passphrase for {path}:"), Some(""), true);
+                    show_script_dialog(ui, &tr!("Add Key to Agent"), &tr!("Passphrase for {}:", path), Some(""), true);
                     return;
                 }
-                Err(e) => self.notify(format!("Cannot load {path}: {e}")),
+                Err(e) => self.notify(tr!("Cannot load {}: {}", path, e)),
             }
         }
         self.show_agent_keys(ui);
@@ -5588,7 +5594,7 @@ impl App {
             .and_then(|text| russh::keys::decode_secret_key(&text, passphrase).map_err(|e| e.to_string()));
         match key {
             Ok(key) => self.agent_add_key(path, key),
-            Err(e) => self.notify(format!("Cannot load {path}: {e}")),
+            Err(e) => self.notify(tr!("Cannot load {}: {}", path, e)),
         }
     }
 
@@ -5623,7 +5629,7 @@ impl App {
         } else {
             unused_credential_name(&self.options.credentials, &path)
         };
-        config::set_credential_password(&name, &password).map_err(|e| format!("Cannot save the password: {e}"))?;
+        config::set_credential_password(&name, &password).map_err(|e| tr!("Cannot save the password: {}", e))?;
         if !self.options.credentials.iter().any(|c| c.name == name) {
             self.options.credentials.push(Credential { name: name.clone(), user: String::new() });
             self.save_options();
@@ -5635,8 +5641,8 @@ impl App {
         for t in self.tabs.iter_mut().filter(|t| t.session.as_deref() == Some(path.as_str())) {
             t.target.credential = Some(name.clone());
         }
-        let place = if config::master_password_set() { "under the master password" } else { "in the system keychain" };
-        self.notify(format!("Password for {path} saved {place}."));
+        let place = if config::master_password_set() { tr!("under the master password") } else { tr!("in the system keychain") };
+        self.notify(tr!("Password for {} saved {}.", path, place));
         Ok(())
     }
 
@@ -5689,7 +5695,7 @@ impl App {
         let taken = |n: &str| schemes().iter().any(|s| s.name.eq_ignore_ascii_case(n));
         def.name = (1..).map(|n| if n == 1 { format!("{} copy", def.name) } else { format!("{} copy {n}", def.name) }).find(|n| !taken(n)).unwrap_or_default();
         if def.to_scheme().is_none() {
-            return ui.set_sc_error("Fix the colours first (#rrggbb).".into());
+            return ui.set_sc_error(tr!("Fix the colours first (#rrggbb).").into());
         }
         self.options.user_schemes.push(def);
         self.apply_schemes(ui, None);
@@ -5704,13 +5710,13 @@ impl App {
         let old = self.options.user_schemes.get(user).map(|d| d.name.clone()).unwrap_or_default();
         let clash = schemes().iter().any(|s| s.name.eq_ignore_ascii_case(&def.name) && !s.name.eq_ignore_ascii_case(&old));
         let error = if def.name.is_empty() {
-            "Enter a name for the scheme."
+            tr!("Enter a name for the scheme.")
         } else if clash {
-            "A scheme with that name already exists."
+            tr!("A scheme with that name already exists.")
         } else if def.to_scheme().is_none() {
-            "Every colour must be #rrggbb (cursor and selection may be blank)."
+            tr!("Every colour must be #rrggbb (cursor and selection may be blank).")
         } else {
-            ""
+            String::new()
         };
         if !error.is_empty() {
             return ui.set_sc_error(error.into());
@@ -5719,7 +5725,7 @@ impl App {
         self.options.user_schemes[user] = def;
         self.apply_schemes(ui, renamed);
         self.scheme_pick(SCHEMES.len() + user, ui);
-        self.notify("Colour scheme saved.");
+        self.notify(tr!("Colour scheme saved."));
     }
 
     /// Colour Schemes > Use as Default: the selected scheme becomes the one
@@ -5732,7 +5738,7 @@ impl App {
         self.save_options();
         self.follow_default_scheme(scheme);
         ui.set_sc_default(scheme.name.into());
-        self.notify(format!("Sessions without their own scheme now use \"{}\".", scheme.name));
+        self.notify(tr!("Sessions without their own scheme now use \"{}\".", scheme.name));
     }
 
     /// Tabs without a session-specific scheme follow the default.
@@ -5826,7 +5832,7 @@ impl App {
             template: ui.get_fw_template().trim().to_string(),
         };
         let taken = self.options.firewalls.iter().enumerate().any(|(i, f)| Some(i) != self.editing_firewall && f.name.eq_ignore_ascii_case(&firewall.name));
-        let problem = firewall.problem().or(taken.then_some("A firewall with that name already exists."));
+        let problem = firewall.problem().or_else(|| taken.then(|| tr!("A firewall with that name already exists.")));
         if let Some(problem) = problem {
             return ui.set_fw_error(problem.into());
         }
@@ -5841,7 +5847,7 @@ impl App {
             Ok(())
         };
         if let Err(e) = saved {
-            return ui.set_fw_error(format!("Cannot save the password: {e}").into());
+            return ui.set_fw_error(tr!("Cannot save the password: {}", e).into());
         }
         if let Some(old) = old.filter(|o| *o != firewall.name) {
             let _ = config::delete_firewall_password(&old);
@@ -5912,13 +5918,13 @@ impl App {
         let renamed = old.clone().filter(|o| *o != name);
         let taken = self.options.credentials.iter().enumerate().any(|(i, c)| Some(i) != self.editing_credential && c.name == name);
         let error = if name.is_empty() {
-            "Enter a name for the credential."
+            tr!("Enter a name for the credential.")
         } else if taken {
-            "A credential with that name already exists."
+            tr!("A credential with that name already exists.")
         } else if password != confirm {
-            "The passwords do not match."
+            tr!("The passwords do not match.")
         } else {
-            ""
+            String::new()
         };
         if !error.is_empty() {
             return ui.set_cred_error(error.into());
@@ -5932,7 +5938,7 @@ impl App {
             Ok(())
         };
         if let Err(e) = saved {
-            return ui.set_cred_error(format!("Cannot save the password: {e}").into());
+            return ui.set_cred_error(tr!("Cannot save the password: {}", e).into());
         }
         if let Some(old) = &renamed {
             let _ = config::delete_credential_password(old);
@@ -5962,7 +5968,7 @@ impl App {
         };
         let name = self.options.credentials.remove(i).name;
         if let Err(e) = config::delete_credential_password(&name) {
-            self.notify(format!("The password of \"{name}\" could not be removed from the keychain: {e}"));
+            self.notify(tr!("The password of \"{}\" could not be removed from the keychain: {}", name, e));
         }
         rename_credential(&mut self.store, &name, "");
         self.save_store();
@@ -6056,10 +6062,10 @@ impl App {
     fn browse(&mut self, field: &str, ui: &MainWindow) {
         // Key map files: the Keyboard page's text, one mapping per line.
         if field == "go-keymap-import" {
-            if let Some(path) = rfd::FileDialog::new().set_title("Import Key Map").add_filter("Key maps", &["txt", "keymap"]).pick_file() {
+            if let Some(path) = rfd::FileDialog::new().set_title(tr!("Import Key Map")).add_filter(tr!("Key maps"), &["txt", "keymap"]).pick_file() {
                 match std::fs::read_to_string(&path) {
                     Ok(text) => ui.set_go_key_map(text.into()),
-                    Err(e) => ui.set_go_error(format!("Cannot read {}: {e}", path.display()).into()),
+                    Err(e) => ui.set_go_error(tr!("Cannot read {}: {}", path.display(), e).into()),
                 }
             }
             return;
@@ -6068,20 +6074,20 @@ impl App {
             if let Some(path) = rfd::FileDialog::new().set_title("Export Key Map").set_file_name("opencrt.keymap").save_file()
                 && let Err(e) = std::fs::write(&path, format!("{}\n", ui.get_go_key_map().trim_end()))
             {
-                ui.set_go_error(format!("Cannot write {}: {e}", path.display()).into());
+                ui.set_go_error(tr!("Cannot write {}: {}", path.display(), e).into());
             }
             return;
         }
         let dialog = rfd::FileDialog::new();
         let path = match field {
-            "so-log" => dialog.set_title("Log File").add_filter("Log files", &["log", "txt"]).save_file(),
+            "so-log" => dialog.set_title(tr!("Log File")).add_filter(tr!("Log files"), &["log", "txt"]).save_file(),
             "so-script" => scripts_dialog().set_title("Logon Script").pick_file(),
-            "so-cert" => dialog.set_title("OpenSSH Certificate").add_filter("Certificates", &["pub"]).pick_file(),
-            "fwd-app" => dialog.set_title("Application").pick_file(),
+            "so-cert" => dialog.set_title(tr!("OpenSSH Certificate")).add_filter(tr!("Certificates"), &["pub"]).pick_file(),
+            "fwd-app" => dialog.set_title(tr!("Application")).pick_file(),
             "go-download" => dialog.set_title("Download Folder").pick_folder(),
             "go-config-dir" => dialog.set_title("Configuration Folder").pick_folder(),
             "go-python" => dialog.set_title("Python Program").pick_file(),
-            "so-rdp-share" => dialog.set_title("Folder to Share with the Remote Computer").pick_folder(),
+            "so-rdp-share" => dialog.set_title(tr!("Folder to Share with the Remote Computer")).pick_folder(),
             "kg-file" => {
                 let current = PathBuf::from(ui.get_kg_file().as_str());
                 match current.parent().filter(|d| d.is_dir()) {
@@ -6131,13 +6137,13 @@ impl App {
         let (passphrase, file) = (ui.get_kg_passphrase().to_string(), ui.get_kg_file());
         let path = PathBuf::from(file.trim());
         let error = if ui.get_kg_confirm() != passphrase {
-            "The passphrases do not match."
+            tr!("The passphrases do not match.")
         } else if path.file_name().is_none() {
-            "Enter where to save the private key."
+            tr!("Enter where to save the private key.")
         } else if path.exists() || PathBuf::from(format!("{}.pub", path.display())).exists() {
-            "That file already exists; choose another name."
+            tr!("That file already exists; choose another name.")
         } else {
-            ""
+            String::new()
         };
         if !error.is_empty() {
             return ui.set_kg_error(error.into());
@@ -6168,7 +6174,7 @@ impl App {
         });
         self.update_check = Some((asked, rx));
         if asked {
-            ui.set_update_status("Checking for a new version…".into());
+            ui.set_update_status(tr!("Checking for a new version…").into());
         }
     }
 
@@ -6191,15 +6197,15 @@ impl App {
                 if update::is_newer(&tag, current) {
                     let version = tag.trim_start_matches('v').to_string();
                     let kind = install_kind();
-                    let status = format!("OpenCRT {version} is available. {}", kind.advice());
+                    let status = tr!("OpenCRT {} is available. {}", version, kind.advice());
                     ui.set_update_installable(kind.asset(&version).is_some());
                     ui.set_update_version(version.into());
                     status
                 } else {
-                    format!("OpenCRT {current} is the latest version.")
+                    tr!("OpenCRT {} is the latest version.", current)
                 }
             }
-            Err(e) => format!("Could not check for a new version: {e}"),
+            Err(e) => tr!("Could not check for a new version: {}", e),
         };
         if asked || !ui.get_update_version().is_empty() {
             ui.set_update_status(status.into());
@@ -6243,7 +6249,7 @@ impl App {
             }
             Err(e) => {
                 ui.set_update_installable(true);
-                ui.set_update_status(format!("Could not update: {e}. Download it from the release page instead.").into());
+                ui.set_update_status(tr!("Could not update: {}. Download it from the release page instead.", e).into());
             }
         }
     }
@@ -6259,7 +6265,7 @@ impl App {
             let _ = tx.send(python::fetch().map_err(|e| format!("{e:#}")));
         });
         self.python_download = Some(rx);
-        self.notify("Downloading Python for Python scripts (once) from its official site...");
+        self.notify(tr!("Downloading Python for Python scripts (once) from its official site..."));
     }
 
     fn python_download_done(&mut self) {
@@ -6304,7 +6310,7 @@ impl App {
             let _ = tx.send(update::download_git_for_windows().map_err(|e| format!("{e:#}")));
         });
         self.git_download = Some(rx);
-        ui.set_go_git_status("Downloading Git for Windows from its official releases...".into());
+        ui.set_go_git_status(tr!("Downloading Git for Windows from its official releases...").into());
     }
 
     fn git_download_done(&mut self, ui: &MainWindow) {
@@ -6318,8 +6324,8 @@ impl App {
         };
         self.git_download = None;
         let status = match result.and_then(|path| update::shell_open(&path, "").map_err(|e| format!("{e:#}"))) {
-            Ok(()) => "Git's installer is running: finish it, then press OK.".to_string(),
-            Err(e) => format!("Could not get Git for Windows: {e}. It is also at git-scm.com."),
+            Ok(()) => tr!("Git's installer is running: finish it, then press OK."),
+            Err(e) => tr!("Could not get Git for Windows: {}. It is also at git-scm.com.", e),
         };
         ui.set_go_git_status(status.into());
     }
@@ -6340,8 +6346,8 @@ impl App {
         match result {
             Ok(public) => {
                 let copied = self.clipboard.as_mut().is_some_and(|c| c.set_text(public).is_ok());
-                let note = if copied { "; public key copied to the clipboard" } else { "" };
-                self.notify(format!("Created {} and .pub{note}.", path.display()));
+                let note = if copied { tr!("; public key copied to the clipboard") } else { String::new() };
+                self.notify(tr!("Created {} and .pub{}.", path.display(), note));
                 if ui.get_dialog() == DIALOG_KEYGEN {
                     ui.set_dialog(DIALOG_NONE);
                     ui.invoke_focus_terminal();
@@ -6359,14 +6365,14 @@ impl App {
             Ok(key) => key,
             Err(e) if passphrase.is_none() && e.to_string().to_lowercase().contains("encrypted") => {
                 self.script_dialog = Some(ScriptAnswer::ConvertPassphrase(path.clone()));
-                return show_script_dialog(ui, "Convert Private Key", &format!("Passphrase for {}:", path.display()), Some(""), true);
+                return show_script_dialog(ui, &tr!("Convert Private Key"), &tr!("Passphrase for {}:", path.display()), Some(""), true);
             }
-            Err(e) => return self.notify(format!("Cannot read {}: {e}", path.display())),
+            Err(e) => return self.notify(tr!("Cannot read {}: {}", path.display(), e)),
         };
         let key = if key.is_encrypted() {
             match key.decrypt(passphrase.as_deref().unwrap_or_default()) {
                 Ok(key) => key,
-                Err(e) => return self.notify(format!("Cannot decrypt {}: {e}", path.display())),
+                Err(e) => return self.notify(tr!("Cannot decrypt {}: {}", path.display(), e)),
             }
         } else {
             key
@@ -6380,8 +6386,8 @@ impl App {
             return;
         };
         match ssh::save_key_pair(key, &out, passphrase.as_deref().unwrap_or_default()) {
-            Ok(_) => self.notify(format!("Saved {} and .pub in OpenSSH format.", out.display())),
-            Err(e) => self.notify(format!("Cannot save {}: {e}", out.display())),
+            Ok(_) => self.notify(tr!("Saved {} and .pub in OpenSSH format.", out.display())),
+            Err(e) => self.notify(tr!("Cannot save {}: {}", out.display(), e)),
         }
     }
 
@@ -6398,11 +6404,11 @@ impl App {
             (Ok(bytes), Some(tab)) if tab.state == State::Connected => {
                 let size = bytes.len();
                 tab.send(bytes);
-                tab.status = format!("Sent {} ({size} bytes).", path.display());
+                tab.status = tr!("Sent {} ({} bytes).", path.display(), size);
                 tab.dirty = true;
             }
-            (Ok(_), _) => self.notify("Send Binary File: no connected session."),
-            (Err(e), _) => self.notify(format!("Cannot send {}: {e}", path.display())),
+            (Ok(_), _) => self.notify(tr!("Send Binary File: no connected session.")),
+            (Err(e), _) => self.notify(tr!("Cannot send {}: {}", path.display(), e)),
         }
     }
 
@@ -6410,7 +6416,7 @@ impl App {
     fn receive_ascii(&mut self) {
         let Some(tab) = self.tabs.get_mut(self.active) else { return };
         if let Some((_, path)) = tab.capture.take() {
-            return self.notify(format!("Stopped receiving into {}.", path.display()));
+            return self.notify(tr!("Stopped receiving into {}.", path.display()));
         }
         let Some(path) = rfd::FileDialog::new().set_title("Receive ASCII").set_file_name("received.txt").save_file() else {
             return;
@@ -6418,9 +6424,9 @@ impl App {
         match std::fs::File::create(&path) {
             Ok(file) => {
                 tab.capture = Some((file, path.clone()));
-                self.notify(format!("Receiving into {}; choose Stop Receive ASCII to finish.", path.display()));
+                self.notify(tr!("Receiving into {}; choose Stop Receive ASCII to finish.", path.display()));
             }
-            Err(e) => self.notify(format!("Cannot create {}: {e}", path.display())),
+            Err(e) => self.notify(tr!("Cannot create {}: {}", path.display(), e)),
         }
     }
 
@@ -6449,8 +6455,8 @@ impl App {
                 tab.terminal.scroll(Scroll::Bottom);
                 tab.dirty = true;
             }
-            (Ok(_), _) => self.notify("Send ASCII File: no connected session."),
-            (Err(e), _) => self.notify(format!("Cannot send {}: {e}", path.display())),
+            (Ok(_), _) => self.notify(tr!("Send ASCII File: no connected session.")),
+            (Err(e), _) => self.notify(tr!("Cannot send {}: {}", path.display(), e)),
         }
     }
 
@@ -6477,7 +6483,7 @@ impl App {
             for tab in &mut self.tabs[before..] {
                 match SessionLog::open(&path, tab.log_timestamps, tab.log_raw) {
                     Ok(log) => (tab.log, tab.log_path) = (Some(log), Some(path.clone())),
-                    Err(e) => return self.notify(format!("Cannot open {}: {e}", path.display())),
+                    Err(e) => return self.notify(tr!("Cannot open {}: {}", path.display(), e)),
                 }
             }
         }
@@ -6489,7 +6495,7 @@ impl App {
             return;
         };
         if let Some((_, path)) = tab.cast.take() {
-            return self.notify(format!("Stopped recording to {}.", path.display()));
+            return self.notify(tr!("Stopped recording to {}.", path.display()));
         }
         let Some(path) = rfd::FileDialog::new()
             .set_title("Record Session")
@@ -6503,9 +6509,9 @@ impl App {
         match crate::cast::Recording::create(&path, cols, rows) {
             Ok(cast) => {
                 tab.cast = Some((cast, path.clone()));
-                self.notify(format!("Recording to {}; play it with asciinema play.", path.display()));
+                self.notify(tr!("Recording to {}; play it with asciinema play.", path.display()));
             }
-            Err(e) => self.notify(format!("Cannot create {}: {e}", path.display())),
+            Err(e) => self.notify(tr!("Cannot create {}: {}", path.display(), e)),
         }
     }
 
@@ -6517,11 +6523,11 @@ impl App {
             tab.log = None;
             // Stopped means stopped: the session's own log file is not reopened on reconnect.
             tab.log_template = None;
-            return self.notify(format!("Stopped logging to {}.", path.display()));
+            return self.notify(tr!("Stopped logging to {}.", path.display()));
         }
         let Some(path) = rfd::FileDialog::new()
             .set_title("Log Session")
-            .add_filter("Log files", &["log", "txt"])
+            .add_filter(tr!("Log files"), &["log", "txt"])
             .set_file_name(format!("{}.log", tab.title().replace(['/', '\\', ':', '@'], "_")))
             .save_file()
         else {
@@ -6532,9 +6538,9 @@ impl App {
                 // Only a live connection writes; otherwise the next connect opens it.
                 tab.log = (tab.state != State::Closed).then_some(log);
                 tab.log_path = Some(path.clone());
-                self.notify(format!("Logging to {}.", path.display()));
+                self.notify(tr!("Logging to {}.", path.display()));
             }
-            Err(e) => self.notify(format!("Cannot open {}: {e}", path.display())),
+            Err(e) => self.notify(tr!("Cannot open {}: {}", path.display(), e)),
         }
     }
 
@@ -6544,7 +6550,7 @@ impl App {
         let list = match list {
             Ok(list) => list.unwrap_or_default(),
             Err(e) => {
-                self.notify(format!("Cannot read known_hosts: {e}"));
+                self.notify(tr!("Cannot read known_hosts: {}", e));
                 Vec::new()
             }
         };
@@ -6561,15 +6567,15 @@ impl App {
     fn export_sessions(&mut self) {
         let Some(path) = rfd::FileDialog::new()
             .set_title("Export Sessions")
-            .add_filter("OpenCRT sessions", &["toml"])
+            .add_filter(tr!("OpenCRT sessions"), &["toml"])
             .set_file_name("opencrt-sessions.toml")
             .save_file()
         else {
             return;
         };
         match config::save(&path, &self.store) {
-            Ok(()) => self.notify(format!("Exported {} sessions to {}.", self.store.sessions.len(), path.display())),
-            Err(e) => self.notify(format!("Cannot export to {}: {e:#}", path.display())),
+            Ok(()) => self.notify(tr!("Exported {} sessions to {}.", self.store.sessions.len(), path.display())),
+            Err(e) => self.notify(tr!("Cannot export to {}: {}", path.display(), format!("{:#}", e))),
         }
     }
 
@@ -6578,7 +6584,7 @@ impl App {
     fn import_sessions(&mut self) {
         let Some(paths) = rfd::FileDialog::new()
             .set_title("Import Sessions")
-            .add_filter("Sessions", &["toml", "csv", "tsv", "txt", "rdp"])
+            .add_filter(tr!("Sessions"), &["toml", "csv", "tsv", "txt", "rdp"])
             .pick_files()
         else {
             return;
@@ -6612,13 +6618,13 @@ impl App {
         };
         let other = match other {
             Ok(other) => other,
-            Err(e) => return self.notify(format!("Cannot import {}: {e}", path.display())),
+            Err(e) => return self.notify(tr!("Cannot import {}: {}", path.display(), e)),
         };
         let (added, skipped) = sessions::merge(&mut self.store, other);
         self.expanded.extend(sessions::all_folders(&self.store));
         self.save_store();
-        let existed = if skipped > 0 { format!("; {skipped} already existed") } else { String::new() };
-        self.notify(format!("Imported {added} sessions from {}{existed}.{note}", path.display()));
+        let existed = if skipped > 0 { tr!("; already there: {}", skipped) } else { String::new() };
+        self.notify(tr!("Imported {} sessions from {}{}.{}", added, path.display(), existed, note));
     }
 
     /// Tools > Import OpenSSH Config: add a session (in folder "Imported") for
@@ -6638,7 +6644,7 @@ impl App {
         };
         let text = match std::fs::read_to_string(&path) {
             Ok(text) => text,
-            Err(e) => return self.notify(format!("Cannot read {}: {e}", path.display())),
+            Err(e) => return self.notify(tr!("Cannot read {}: {}", path.display(), e)),
         };
         let local_user = std::env::var("USERNAME").or_else(|_| std::env::var("USER")).unwrap_or_default();
         let (mut added, mut skipped) = (0, 0);
@@ -6660,8 +6666,8 @@ impl App {
             self.expanded.insert(FOLDER.into());
             self.save_store();
         }
-        let existed = if skipped > 0 { format!("; {skipped} already existed") } else { String::new() };
-        self.notify(format!("Imported {added} sessions from {}{existed}.", path.display()));
+        let existed = if skipped > 0 { tr!("; already there: {}", skipped) } else { String::new() };
+        self.notify(tr!("Imported {} sessions from {}{}.", added, path.display(), existed));
     }
 
     /// Tools > Import SecureCRT Sessions: read the session files under a
@@ -6669,7 +6675,7 @@ impl App {
     /// "SecureCRT", keeping their folder tree. Passwords are not imported;
     /// sessions that already exist under the same name are left alone.
     fn import_securecrt(&mut self) {
-        let mut dialog = rfd::FileDialog::new().set_title("Import SecureCRT Sessions (pick the Config folder)");
+        let mut dialog = rfd::FileDialog::new().set_title(tr!("Import SecureCRT Sessions (pick the Config folder)"));
         if let Some(dir) = sessions::vandyke_dir().filter(|d| d.is_dir()) {
             dialog = dialog.set_directory(dir);
         }
@@ -6683,8 +6689,8 @@ impl App {
         let (added, skipped) = sessions::merge(&mut self.store, found);
         self.expanded.insert("SecureCRT".into());
         self.save_store();
-        let existed = if skipped > 0 { format!("; {skipped} already existed") } else { String::new() };
-        let other = if not_imported > 0 { format!("; {not_imported} not imported (unreadable or unsupported protocol)") } else { String::new() };
+        let existed = if skipped > 0 { tr!("; already there: {}", skipped) } else { String::new() };
+        let other = if not_imported > 0 { tr!("; not imported (unreadable or unsupported protocol): {}", not_imported) } else { String::new() };
         // Button bars and keyword lists sit beside the Sessions folder; ones already here are kept.
         let home = std::env::home_dir().map(|h| h.display().to_string()).unwrap_or_default();
         let found = sessions::securecrt_extras(root.parent().unwrap_or(&root), &home);
@@ -6697,17 +6703,10 @@ impl App {
         let sets: Vec<_> = found.keyword_sets.into_iter().filter(|(name, _)| !known.contains(name)).collect();
         let mut extras = String::new();
         if !buttons.is_empty() || !bars.is_empty() || !sets.is_empty() {
-            let plural = |n: usize, word: &str| format!("{n} {word}{}", if n == 1 { "" } else { "s" });
-            extras = format!(
-                " Added {}, {} and {}",
-                plural(bars.len(), "button bar"),
-                plural(buttons.len(), "button"),
-                plural(sets.len(), "keyword list")
-            );
+            extras = tr!(" Added button bars: {}, buttons: {}, keyword lists: {}.", bars.len(), buttons.len(), sets.len());
             if found.left_out > 0 {
-                extras += &format!(" ({} left out: SecureCRT menu functions)", plural(found.left_out, "button"));
+                extras += &tr!(" Buttons left out (SecureCRT menu functions): {}.", found.left_out);
             }
-            extras.push('.');
             self.options.button_bars.extend(bars);
             self.options.buttons.extend(buttons);
             for (name, lines) in sets {
@@ -6718,7 +6717,7 @@ impl App {
             self.shown_bar = None;
             self.save_options();
         }
-        self.notify(format!("Imported {added} sessions from {}{existed}{other}.{extras}", root.display()));
+        self.notify(tr!("Imported {} sessions from {}{}{}.{}", added, root.display(), existed, other, extras));
         // Saved passwords of sessions that have no credential yet: ask for SecureCRT's passphrase.
         self.securecrt_passwords = passwords
             .into_iter()
@@ -6732,9 +6731,9 @@ impl App {
     /// Script > Run: run a script file in the active session.
     fn run_script_file(&mut self) {
         if self.tabs.is_empty() {
-            return self.notify("Run Script: open a session first.");
+            return self.notify(tr!("Run Script: open a session first."));
         }
-        let Some(path) = scripts_dialog().set_title("Run Script").add_filter("Scripts", &["rhai", "py", "txt", "script"]).add_filter("All files", &["*"]).pick_file() else {
+        let Some(path) = scripts_dialog().set_title(tr!("Run Script")).add_filter(tr!("Scripts"), &["rhai", "py", "txt", "script"]).add_filter(tr!("All files"), &["*"]).pick_file() else {
             return;
         };
         self.run_script_path(&path);
@@ -6745,7 +6744,7 @@ impl App {
     fn save_snapshot(&mut self, name: &str) {
         let open: Vec<&Tab> = self.tabs.iter().filter(|t| t.session.is_some()).collect();
         if open.is_empty() {
-            return self.notify("Snapshots keep saved sessions; none are open.");
+            return self.notify(tr!("Snapshots keep saved sessions; none are open."));
         }
         let layout = match self.layout {
             Layout::Tabs => "tabs",
@@ -6762,7 +6761,7 @@ impl App {
         self.options.snapshots.retain(|s| !s.name.eq_ignore_ascii_case(name));
         self.options.snapshots.push(snapshot);
         self.save_options();
-        self.notify(format!("Saved the snapshot \"{name}\" ({count} sessions)."));
+        self.notify(tr!("Saved the snapshot \"{}\" ({} sessions).", name, count));
     }
 
     /// File > Snapshots > (name): open its sessions in their groups and layout.
@@ -6846,13 +6845,13 @@ impl App {
                     ui.set_scratch_sel_end(end as i32);
                     ui.set_scratch_sel_serial(ui.get_scratch_sel_serial() + 1);
                 } else {
-                    self.notify("No connected session to send to.");
+                    self.notify(tr!("No connected session to send to."));
                 }
             }
             "all" => {
                 let all = text.lines().map(|l| format!("{l}\r")).collect::<String>();
                 if !self.send_to(ui.get_cw_target(), all.into_bytes()) {
-                    self.notify("No connected session to send to.");
+                    self.notify(tr!("No connected session to send to."));
                 }
             }
             "open" => {
@@ -6862,7 +6861,7 @@ impl App {
                             ui.set_scratch_text(text.into());
                             self.scratch_line = 0;
                         }
-                        Err(e) => self.notify(format!("Cannot read {}: {e}", path.display())),
+                        Err(e) => self.notify(tr!("Cannot read {}: {}", path.display(), e)),
                     }
                 }
             }
@@ -6870,7 +6869,7 @@ impl App {
                 if let Some(path) = rfd::FileDialog::new().set_title("Save Scratchpad").set_file_name("scratchpad.txt").save_file()
                     && let Err(e) = std::fs::write(&path, text)
                 {
-                    self.notify(format!("Cannot write {}: {e}", path.display()));
+                    self.notify(tr!("Cannot write {}: {}", path.display(), e));
                 }
             }
             _ => {}
@@ -6883,7 +6882,7 @@ impl App {
         match kind {
             ActionKind::Send => {
                 if !self.send_input(input::unescape(text)) {
-                    self.notify("No connected session to send to.");
+                    self.notify(tr!("No connected session to send to."));
                 }
             }
             ActionKind::Script => self.run_script_path(Path::new(text.trim())),
@@ -6891,21 +6890,21 @@ impl App {
             ActionKind::Run => {
                 let args = crate::forward::split_args(text);
                 let Some((program, rest)) = args.split_first() else {
-                    return self.notify("Run: no program given.");
+                    return self.notify(tr!("Run: no program given."));
                 };
                 match std::process::Command::new(program).args(rest).spawn() {
                     Ok(mut child) => {
                         std::thread::spawn(move || child.wait());
                     }
-                    Err(e) => self.notify(format!("Cannot run {program}: {e}")),
+                    Err(e) => self.notify(tr!("Cannot run {}: {}", program, e)),
                 }
             }
             ActionKind::Telnet => {
                 let tab = self.tabs.get(self.active).filter(|t| t.target.protocol == Protocol::Telnet && t.state == State::Connected);
                 match (tab.and_then(|t| t.ssh.as_ref()), input::telnet_command(text)) {
                     (Some(ssh), Some(code)) => ssh.send_telnet(code),
-                    (None, _) => self.notify("Telnet commands need a connected Telnet session."),
-                    (_, None) => self.notify(format!("Unknown Telnet command \"{}\".", text.trim())),
+                    (None, _) => self.notify(tr!("Telnet commands need a connected Telnet session.")),
+                    (_, None) => self.notify(tr!("Unknown Telnet command \"{}\".", text.trim())),
                 }
             }
         }
@@ -6915,7 +6914,7 @@ impl App {
     fn run_script_path(&mut self, path: &Path) {
         let name = file_name(path);
         if self.tabs.is_empty() {
-            return self.notify(format!("Script {name}: open a session first."));
+            return self.notify(tr!("Script {}: open a session first.", name));
         }
         let path = PathBuf::from(config::expand_env(&path.to_string_lossy()));
         if is_python(&path) && python::program(&self.options.python).is_none() {
@@ -6929,19 +6928,19 @@ impl App {
                 return;
             };
             match tab.start_script(&path) {
-                Ok(()) => tab.status = format!("Running script {name}..."),
+                Ok(()) => tab.status = tr!("Running script {}...", name),
                 Err(e) => self.notify(format!("Script {name}: {e}")),
             }
             return;
         }
         if self.tabs.get(self.active).is_none_or(|t| t.state == State::Closed) {
-            return self.notify("Run Script: no connected session.");
+            return self.notify(tr!("Run Script: no connected session."));
         }
         match load_script(&path) {
             Ok(runner) => {
                 if let Some(tab) = self.active_tab() {
                     tab.script = Some(runner);
-                    tab.status = format!("Running script {name}...");
+                    tab.status = tr!("Running script {}...", name);
                     tab.run_script();
                 }
             }
@@ -6953,8 +6952,8 @@ impl App {
     /// "check", "run", "close"); "show" opens it.
     fn script_editor(&mut self, act: &str, ui: &MainWindow) {
         let text = ui.get_se_text().to_string();
-        let name = self.script_file.as_deref().map_or("New script".to_string(), file_name);
-        let dialog = || rfd::FileDialog::new().add_filter("Rhai scripts", &["rhai"]);
+        let name = self.script_file.as_deref().map_or(tr!("New script"), file_name);
+        let dialog = || rfd::FileDialog::new().add_filter(tr!("Rhai scripts"), &["rhai"]);
         let message = match act {
             "show" => String::new(),
             "open" => match dialog().set_title("Open Script").pick_file() {
@@ -6964,7 +6963,7 @@ impl App {
                         self.script_file = Some(path);
                         String::new()
                     }
-                    Err(e) => format!("Cannot open {}: {e}", path.display()),
+                    Err(e) => tr!("Cannot open {}: {}", path.display(), e),
                 },
                 None => return,
             },
@@ -6979,19 +6978,19 @@ impl App {
                 match std::fs::write(&path, &text) {
                     Ok(()) => {
                         self.script_file = Some(path.clone());
-                        format!("Saved {}.", path.display())
+                        tr!("Saved {}.", path.display())
                     }
-                    Err(e) => format!("Cannot save {}: {e}", path.display()),
+                    Err(e) => tr!("Cannot save {}: {}", path.display(), e),
                 }
             }
             "check" | "run" => match rhaiscript::check(&text) {
                 Err(e) => format!("Error: {e}"),
-                Ok(()) if act == "check" => "No syntax errors.".into(),
+                Ok(()) if act == "check" => tr!("No syntax errors."),
                 Ok(()) => {
                     let path = self.script_file.clone();
                     if let Some(tab) = self.active_tab() {
                         tab.rhai = Some(rhaiscript::Script::start(&name, path, text, Vec::new(), tab.script_folders()));
-                        tab.status = format!("Running script {name}...");
+                        tab.status = tr!("Running script {}...", name);
                     }
                     ui.set_dialog(DIALOG_NONE);
                     return ui.invoke_focus_terminal();
@@ -7002,7 +7001,7 @@ impl App {
                 return ui.invoke_focus_terminal();
             }
         };
-        let name = self.script_file.as_deref().map_or("New script".to_string(), file_name);
+        let name = self.script_file.as_deref().map_or(tr!("New script"), file_name);
         ui.set_se_title(format!("Script Editor - {name}").into());
         ui.set_se_message(message.into());
         ui.set_dialog(DIALOG_SCRIPT_EDITOR);
@@ -7016,20 +7015,20 @@ impl App {
         };
         let Some(recorder) = tab.recorder.take() else {
             tab.recorder = Some(script::Recorder::default());
-            return self.notify("Recording: lines you type are added to a script until Script > Stop Recording.");
+            return self.notify(tr!("Recording: lines you type are added to a script until Script > Stop Recording."));
         };
         let script = recorder.finish();
         let Some(path) = rfd::FileDialog::new()
             .set_title("Save Recorded Script")
-            .add_filter("Rhai scripts", &["rhai"])
+            .add_filter(tr!("Rhai scripts"), &["rhai"])
             .set_file_name("recorded.rhai")
             .save_file()
         else {
-            return self.notify("Recording discarded.");
+            return self.notify(tr!("Recording discarded."));
         };
         match std::fs::write(&path, script) {
-            Ok(()) => self.notify(format!("Script saved to {}.", path.display())),
-            Err(e) => self.notify(format!("Cannot save {}: {e}", path.display())),
+            Ok(()) => self.notify(tr!("Script saved to {}.", path.display())),
+            Err(e) => self.notify(tr!("Cannot save {}: {}", path.display(), e)),
         }
     }
 
@@ -7038,7 +7037,7 @@ impl App {
     /// together are asked about once).
     fn dropped_file(&mut self, path: &Path, ui: &MainWindow) {
         let Some(tab) = self.tabs.get_mut(self.active).filter(|t| t.state == State::Connected) else {
-            return self.notify("Drop files on a connected session to upload them.");
+            return self.notify(tr!("Drop files on a connected session to upload them."));
         };
         if let Some(files) = tab.files.as_mut() {
             if let Err(e) = files.upload(&[path.to_path_buf()]) {
@@ -7062,7 +7061,7 @@ impl App {
             how => return self.send_dropped(how),
         }
         let names: Vec<String> = self.dropped.iter().map(|p| file_name(p)).collect();
-        ui.set_drop_message(format!("Send {} with:", names.join(", ")).into());
+        ui.set_drop_message(tr!("Send {} with:", names.join(", ")).into());
         ui.set_drop_sftp(ssh);
         ui.set_drop_always(false);
         ui.set_dialog(DIALOG_DROP);
@@ -7077,7 +7076,7 @@ impl App {
             return self.sftp_put(&files);
         }
         if files.len() > 1 {
-            self.notify(format!("Only {} is sent: this protocol takes one file at a time.", file_name(&first)));
+            self.notify(tr!("Only {} is sent: this protocol takes one file at a time.", file_name(&first)));
         }
         match how {
             "xmodem" | "ymodem" | "kermit" => self.transfer(how, true, Some(first)),
@@ -7085,7 +7084,7 @@ impl App {
             "binary" => self.send_binary_file(Some(first)),
             _ => {
                 if let Some(tab) = self.tabs.get_mut(self.active) {
-                    tab.status = format!("Run rz on the host to receive {}.", first.display());
+                    tab.status = tr!("Run rz on the host to receive {}.", first.display());
                     tab.upload = Some(first);
                     tab.dirty = true;
                 }
@@ -7150,20 +7149,20 @@ impl App {
             None => Err("no session is open".into()),
         };
         if let Err(e) = result {
-            self.notify(format!("Cannot start the transfer: {e}."));
+            self.notify(tr!("Cannot start the transfer: {}.", e));
         }
     }
 
     /// Transfer > Zmodem Upload: choose a file to send when the host runs `rz`.
     fn zmodem_upload(&mut self) {
         let Some(tab) = self.tabs.get_mut(self.active).filter(|t| t.state == State::Connected) else {
-            self.notify("Zmodem Upload: no connected session.");
+            self.notify(tr!("Zmodem Upload: no connected session."));
             return;
         };
         let Some(path) = rfd::FileDialog::new().set_title("Zmodem Upload").pick_file() else {
             return;
         };
-        tab.status = format!("Run rz on the host to receive {}.", path.display());
+        tab.status = tr!("Run rz on the host to receive {}.", path.display());
         tab.upload = Some(path);
     }
 
@@ -7262,7 +7261,7 @@ impl App {
         let index = usize::try_from(index).ok().filter(|i| *i < self.commands(list).len());
         let button = index.map(|i| self.commands(list)[i].clone()).unwrap_or_default();
         self.editing_button = Some((list, index));
-        ui.set_bb_title(if list == Commands::Bar { "Button Bar Button" } else { "Command" }.into());
+        ui.set_bb_title(if list == Commands::Bar { tr!("Button Bar Button") } else { tr!("Command") }.into());
         ui.set_bb_show_folder(list == Commands::Manager);
         ui.set_bb_kind(input::ActionKind::ALL.iter().position(|k| *k == button.kind).unwrap_or(0) as i32);
         ui.set_bb_color(TAB_COLORS.iter().position(|(n, _)| *n == button.color).map_or(0, |i| i as i32 + 1));
@@ -7293,11 +7292,11 @@ impl App {
             bar: bar_only(ui.get_bb_bar().trim().to_string()),
         };
         let error = if button.label.is_empty() || button.text.trim().is_empty() {
-            "Enter a label and what the button does."
+            tr!("Enter a label and what the button does.")
         } else if kind == input::ActionKind::Telnet && input::telnet_command(&button.text).is_none() {
-            "Telnet commands are brk, ip, ao, ayt, ec, el, ga and nop."
+            tr!("Telnet commands are brk, ip, ao, ayt, ec, el, ga and nop.")
         } else {
-            ""
+            String::new()
         };
         if !error.is_empty() {
             return ui.set_bb_error(error.into());
@@ -7319,9 +7318,43 @@ impl App {
 
     fn bar_button_delete(&mut self, list: Commands, index: usize, ui: &MainWindow) {
         if let Some(button) = self.commands(list).get(index) {
-            let kind = if list == Commands::Bar { "button" } else { "command" };
-            let message = format!("Delete the {kind} \"{}\"?", button.label);
+            let message = match list {
+                Commands::Bar => tr!("Delete the button \"{}\"?", button.label),
+                _ => tr!("Delete the command \"{}\"?", button.label),
+            };
             self.ask_confirm(ui, &message, Deletion::Button(list, index));
+        }
+    }
+
+    // --- Language menu ---
+
+    /// The Language menu: Follow the system, English and the languages outside
+    /// Europe, then the European ones in three submenus; the chosen one checked.
+    /// Entries are numbered across all four lists, in `language_codes` order.
+    fn show_languages(&self, ui: &MainWindow) {
+        let names = |codes: &[&str]| ModelRc::new(VecModel::from(codes.iter().map(|l| SharedString::from(crate::lang::native_name(l))).collect::<Vec<_>>()));
+        let [top, west, north, east] = crate::lang::menu_groups();
+        let mut first: Vec<SharedString> = vec![ui.invoke_follow_system_label(), "English".into()];
+        first.extend(top.iter().map(|l| SharedString::from(crate::lang::native_name(l))));
+        ui.set_language_names(ModelRc::new(VecModel::from(first)));
+        ui.set_language_west(names(&west));
+        ui.set_language_north(names(&north));
+        ui.set_language_east(names(&east));
+        let current = language_codes().iter().position(|c| *c == self.options.language).unwrap_or(0);
+        ui.set_language_current(current as i32);
+    }
+
+    /// Language menu entry `index` (see `show_languages`).
+    fn pick_language(&mut self, index: usize, ui: &MainWindow) {
+        let code = language_codes().get(index).copied().unwrap_or("");
+        self.options.language = code.to_string();
+        crate::lang::apply(code);
+        self.save_options();
+        self.show_languages(ui);
+        // Texts drawn or set from Rust only change when shown again.
+        self.draw_dock_labels(ui);
+        if self.tabs.is_empty() {
+            ui.set_status_text(tr!("Ready").into());
         }
     }
 
@@ -7335,7 +7368,7 @@ impl App {
         // The named colours, then Custom with the picked keyword's own colour.
         let picked = self.kw_row.and_then(|i| self.kw_lists[self.kw_list].rows.get(i)).and_then(|r| r.custom);
         let mut colours = render::keyword_colours();
-        colours.push(("Custom".to_string(), picked.unwrap_or(CUSTOM_KEYWORD_COLOUR)));
+        colours.push((tr!("Custom"), picked.unwrap_or(CUSTOM_KEYWORD_COLOUR)));
         let dot = |[r, g, b]: [u8; 3]| slint::Color::from_rgb_u8(r, g, b);
         editor.set_colours(ModelRc::new(VecModel::from(colours.iter().map(|(n, _)| SharedString::from(n.as_str())).collect::<Vec<_>>())));
         editor.set_colour_dots(ModelRc::new(VecModel::from(colours.iter().map(|(_, c)| dot(*c)).collect::<Vec<_>>())));
@@ -7430,7 +7463,7 @@ impl App {
 
     fn kw_new_list(&mut self, ui: &MainWindow) {
         let taken = |name: &str| self.kw_lists.iter().any(|l| l.name.eq_ignore_ascii_case(name));
-        let name = (1..).map(|n| if n == 1 { "New list".to_string() } else { format!("New list {n}") }).find(|n| !taken(n)).unwrap_or_default();
+        let name = (1..).map(|n| if n == 1 { tr!("New list") } else { tr!("New list {}", n) }).find(|n| !taken(n)).unwrap_or_default();
         self.kw_lists.push(render::KeywordList { name, was: None, rows: Vec::new() });
         self.kw_pick_list(self.kw_lists.len() - 1, ui);
     }
@@ -7555,7 +7588,7 @@ impl App {
         let keepalive = ui.get_go_keepalive().trim().parse::<u64>().ok().filter(|v| *v <= 86_400);
         let (Some(font_size), Some(scrollback), Some(keepalive)) = (font_size, scrollback, keepalive) else {
             ui.set_go_error(
-                "Font size must be 6 to 48, scrollback 0 to 1000000 lines, and keepalive 0 to 86400 seconds.".into(),
+                tr!("Font size must be 6 to 48, scrollback 0 to 1000000 lines, and keepalive 0 to 86400 seconds.").into(),
             );
             return;
         };
@@ -7564,12 +7597,12 @@ impl App {
         let ui_font_size = ui.get_go_ui_font_size().trim().parse::<f32>().ok().filter(|v| (9.0..=20.0).contains(v));
         let (Some(recent_count), Some(warn_count), Some(ui_font_size)) = (recent_count, warn_count, ui_font_size) else {
             return ui.set_go_error(
-                format!("General: recent sessions must be 0 to {RECENT_MAX}, the Connect All warning 0 to 1000, and the interface font size 9 to 20.").into(),
+                tr!("General: recent sessions must be 0 to {}, the Connect All warning 0 to 1000, and the interface font size 9 to 20.", RECENT_MAX).into(),
             );
         };
         let global_key = ui.get_go_global_key().trim().to_string();
         if !global_key.is_empty() && !Path::new(&config::expand_env(&global_key)).is_file() {
-            return ui.set_go_error("Connection: the default SSH2 key file does not exist.".into());
+            return ui.set_go_error(tr!("Connection: the default SSH2 key file does not exist.").into());
         }
         let (print_font, print_margin) = (ui.get_go_print_font(), ui.get_go_print_margin());
         let number = |text: &str, max: u32| match text.trim() {
@@ -7577,15 +7610,15 @@ impl App {
             n => n.parse::<u32>().ok().filter(|n| *n <= max),
         };
         let (Some(print_font), Some(print_margin)) = (number(&print_font, 72), number(&print_margin, 100)) else {
-            return ui.set_go_error("Printing: the font size (up to 72) and margins (up to 100 mm) must be whole numbers.".into());
+            return ui.set_go_error(tr!("Printing: the font size (up to 72) and margins (up to 100 mm) must be whole numbers.").into());
         };
         let download_folder = ui.get_go_download().trim().to_string();
         if !download_folder.is_empty() && !Path::new(&config::expand_env(&download_folder)).is_dir() {
-            return ui.set_go_error("File Transfer: the download folder does not exist.".into());
+            return ui.set_go_error(tr!("File Transfer: the download folder does not exist.").into());
         }
         let config_dir = ui.get_go_config_dir().trim().to_string();
         if !config_dir.is_empty() && !Path::new(&config_dir).is_absolute() {
-            return ui.set_go_error("General: the configuration folder must be a full path.".into());
+            return ui.set_go_error(tr!("General: the configuration folder must be a full path.").into());
         }
         let git_url = ui.get_go_git_url().trim().to_string();
         if !git_url.is_empty() && crate::gitsync::remote().is_none_or(|r| r.url != git_url) && !crate::gitsync::git_installed() {
@@ -7594,11 +7627,11 @@ impl App {
                 "macos" => "install Apple's command line developer tools (xcode-select --install)",
                 _ => "install it with your package manager",
             };
-            return ui.set_go_error(format!("Settings Sync needs git, which is not installed: {how}.").into());
+            return ui.set_go_error(tr!("Settings Sync needs git, which is not installed: {}.", how).into());
         }
         let tftp_allow = ui.get_go_tftp_allow().trim().to_string();
         if crate::forward::parse_allow(&tftp_allow).is_none() {
-            return ui.set_go_error("File Transfer: TFTP addresses must be IP addresses or networks such as 192.168.1.0/24.".into());
+            return ui.set_go_error(tr!("File Transfer: TFTP addresses must be IP addresses or networks such as 192.168.1.0/24.").into());
         }
         let key_lines: Vec<String> = ui.get_go_key_map().lines().map(String::from).collect();
         match input::parse_key_map(&key_lines) {
@@ -7703,7 +7736,7 @@ impl App {
             restart = match crate::gitsync::configure(remote, token) {
                 Ok(note) => Some(format!("{note} Restart OpenCRT now?")),
                 Err(e) => {
-                    failed = Some(format!("Settings Sync: the repository was not set up: {e:#}"));
+                    failed = Some(tr!("Settings Sync: the repository was not set up: {}", format!("{:#}", e)));
                     None
                 }
             };
@@ -7711,13 +7744,13 @@ impl App {
             let shown = if config_dir.is_empty() { "the default folder" } else { &config_dir };
             restart = match config::choose_dir(&config_dir) {
                 Ok(copied) => {
-                    let copied = if copied { " (your current settings were copied there)" } else { "" };
+                    let copied = if copied { tr!(" (your current settings were copied there)") } else { String::new() };
                     let live = self.tabs.iter().filter(|t| t.state != State::Closed).count();
-                    let closes = if live > 0 { " Connected sessions will be disconnected." } else { "" };
-                    Some(format!("Settings now live in {shown}{copied}. Restart OpenCRT to use them?{closes}"))
+                    let closes = if live > 0 { tr!(" Connected sessions will be disconnected.") } else { String::new() };
+                    Some(tr!("Settings now live in {}{}. Restart OpenCRT to use them?{}", shown, copied, closes))
                 }
                 Err(e) => {
-                    self.notify(format!("Configuration folder not changed: {e:#}"));
+                    self.notify(tr!("Configuration folder not changed: {}", format!("{:#}", e)));
                     None
                 }
             };
@@ -7741,7 +7774,7 @@ impl App {
             Ok(_) => {
                 let _ = slint::quit_event_loop();
             }
-            Err(e) => self.notify(format!("Cannot restart OpenCRT ({e}); the new configuration folder is used from the next start.")),
+            Err(e) => self.notify(tr!("Cannot restart OpenCRT ({}); the new configuration folder is used from the next start.", e)),
         }
     }
 }
@@ -7805,12 +7838,12 @@ fn fit_image(image: [f32; 4], fit: (usize, usize), pixels: (usize, usize), scale
     ([image[0] + (image[2] - w) / 2.0, image[1] + (image[3] - h) / 2.0, w, h], [zoom; 2])
 }
 
-fn rdp_size_problem(width: &str, height: &str) -> Option<&'static str> {
+fn rdp_size_problem(width: &str, height: &str) -> Option<String> {
     let ok = |v: &str| v.parse::<u16>().is_ok_and(|n| (200..=8192).contains(&n));
     match (width.is_empty(), height.is_empty()) {
         (true, true) => None,
         _ if ok(width) && ok(height) => None,
-        _ => Some("Remote Desktop: enter both width and height (200 to 8192 pixels), or leave both blank to fit the window."),
+        _ => Some(tr!("Remote Desktop: enter both width and height (200 to 8192 pixels), or leave both blank to fit the window.")),
     }
 }
 
@@ -8042,9 +8075,9 @@ enum ScriptAnswer {
 
 /// A script's message box (`input` None) or prompt.
 fn show_script_dialog(ui: &MainWindow, title: &str, text: &str, input: Option<&str>, secret: bool) {
-    let buttons: &[&str] = if input.is_some() { &["OK", "Cancel"] } else { &["OK"] };
-    ui.set_script_buttons(ModelRc::new(VecModel::from(buttons.iter().map(|&b| SharedString::from(b)).collect::<Vec<_>>())));
-    ui.set_script_title(if title.is_empty() { "Script" } else { title }.into());
+    let buttons = if input.is_some() { vec![tr!("OK"), tr!("Cancel")] } else { vec![tr!("OK")] };
+    ui.set_script_buttons(ModelRc::new(VecModel::from(buttons.into_iter().map(SharedString::from).collect::<Vec<_>>())));
+    ui.set_script_title(if title.is_empty() { tr!("Script") } else { title.to_string() }.into());
     ui.set_script_text(text.into());
     ui.set_script_input(input.is_some());
     ui.set_script_secret(secret);
@@ -8056,9 +8089,9 @@ fn show_script_dialog(ui: &MainWindow, title: &str, text: &str, input: Option<&s
 fn forward_row(f: &Forward) -> ForwardRow {
     let listen = if f.bind.is_empty() { f.port.to_string() } else { format!("{}:{}", f.bind, f.port) };
     let (kind, dest) = match f.kind {
-        ForwardKind::Local => ("Local", if f.host.is_empty() { "SSH server".into() } else { f.host.clone() }),
-        ForwardKind::Remote => ("Remote", if f.host.is_empty() { "this machine".into() } else { f.host.clone() }),
-        ForwardKind::Dynamic => ("SOCKS", "any (SOCKS)".to_string()),
+        ForwardKind::Local => (tr!("Local"), if f.host.is_empty() { tr!("SSH server") } else { f.host.clone() }),
+        ForwardKind::Remote => (tr!("Remote"), if f.host.is_empty() { tr!("this machine") } else { f.host.clone() }),
+        ForwardKind::Dynamic => ("SOCKS".to_string(), tr!("any (SOCKS)")),
     };
     let dest = if f.kind == ForwardKind::Dynamic { dest } else { format!("{dest}:{}", f.host_port) };
     let app = std::path::Path::new(&f.application).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
@@ -8253,7 +8286,7 @@ fn lock_keys() -> Option<(bool, bool)> {
 
 fn update_status_empty(ui: &MainWindow) {
     ui.set_terminal_bg(slint::Color::from_rgb_u8(0, 0, 0));
-    ui.set_status_text("Ready".into());
+    ui.set_status_text(tr!("Ready").into());
     for set in [MainWindow::set_status_cipher, MainWindow::set_status_load, MainWindow::set_status_pos, MainWindow::set_status_size, MainWindow::set_status_emulation] {
         set(ui, SharedString::new());
     }
@@ -8270,6 +8303,11 @@ fn update_status_empty(ui: &MainWindow) {
     ui.set_mouse_reporting(false);
     ui.set_remote_desktop(false);
     ui.set_ssh_active(false);
+}
+
+/// The Language menu's entries as language codes ("" follows the system).
+fn language_codes() -> Vec<&'static str> {
+    ["", "en"].into_iter().chain(crate::lang::menu_groups().into_iter().flatten()).collect()
 }
 
 /// Build the window, wire its callbacks and run until it closes.
@@ -8367,7 +8405,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
             tab.dirty = true;
             tab.terminal.find(&text, match_case, backwards)
         });
-        ui.set_find_status(if found || text.is_empty() { "" } else { "Not found" }.into());
+        ui.set_find_status(if found || text.is_empty() { String::new() } else { tr!("Not found") }.into());
     });
     on!(on_browse, |app, ui, field| app.browse(&field, &ui));
     on!(on_bar_button, |app, ui, index| app.bar_button(Commands::Bar, index as usize, &ui));
@@ -8392,13 +8430,13 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         // Typed characters already went; Enter is all that is left to send.
         let bytes = if immediate { b"\r".to_vec() } else { format!("{text}\r").into_bytes() };
         if !app.send_to(ui.get_cw_target(), bytes) {
-            app.notify("No connected session to send the command to.");
+            app.notify(tr!("No connected session to send the command to."));
         }
         if !immediate && !text.trim().is_empty() {
             app.cw_history.retain(|h| *h != text);
             app.cw_history.insert(0, text);
             app.cw_history.truncate(30);
-            let history: Vec<SharedString> = std::iter::once("History".into()).chain(app.cw_history.iter().map(SharedString::from)).collect();
+            let history: Vec<SharedString> = std::iter::once(tr!("History").into()).chain(app.cw_history.iter().map(SharedString::from)).collect();
             ui.set_cw_history(ModelRc::new(VecModel::from(history)));
         }
         ui.set_cw_text(SharedString::new());
@@ -8606,6 +8644,9 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_show_menubar(app.options.show_menubar);
         ui.set_show_connect_bar(app.options.show_connect_bar);
         ui.set_theme_mode(app.options.theme.index());
+        // The chosen language, or the system's; also loads the Rust texts' translations.
+        crate::lang::apply(&app.options.language);
+        app.show_languages(&ui);
         apply_desktop_colours(&ui, app.options.theme);
         ui.global::<crate::Theme>().set_ui_scale(app.options.ui_scale());
         crate::proxy::set_firewalls(&app.options.firewalls);
@@ -9132,7 +9173,7 @@ mod tests {
     fn command_line_is_parsed_like_securecrt() {
         let t = parse_args(&args(&["/ssh2", "/P", "2222", "example.com"])).unwrap();
         assert_eq!((t.protocol, t.host.as_str(), t.port), (Protocol::Ssh2, "example.com", 2222));
-        assert_eq!(t.problem(), Some("Enter a username."));
+        assert_eq!(t.problem().as_deref(), Some("Enter a username."));
 
         let t = parse_args(&args(&["/SSH2", "/L", "me", "host"])).unwrap();
         assert_eq!((t.user.as_str(), t.port, t.problem()), ("me", 22, None));

@@ -2,6 +2,7 @@
 //! the transfer queue below them. The worker in `sftp` does the listing and
 //! copying; the queue lives here and goes to it one job at a time.
 
+use crate::tr;
 use std::cmp::Ordering;
 use std::path::Path;
 use std::rc::Rc;
@@ -199,7 +200,7 @@ fn summary(files: usize, folders: usize, bytes: u64, selected: bool) -> String {
     let plural = |n: usize, word: &str| format!("{n} {word}{}", if n == 1 { "" } else { "s" });
     let what = match (files, folders) {
         (0, 0) if selected => return String::new(),
-        (0, 0) => return "Empty folder.".into(),
+        (0, 0) => return tr!("Empty folder."),
         (f, 0) => plural(f, "file"),
         (0, d) => plural(d, "folder"),
         (f, d) => format!("{} and {}", plural(f, "file"), plural(d, "folder")),
@@ -469,7 +470,7 @@ impl Browser {
     fn queue(&mut self, from: Side, entries: &[Entry]) -> Result<(), String> {
         let [local, remote] = &self.lists;
         if local.dir.is_empty() || remote.dir.is_empty() {
-            return Err("Open a folder on both sides first.".into());
+            return Err(tr!("Open a folder on both sides first."));
         }
         let mut skipped = Vec::new();
         let mut jobs = Vec::new();
@@ -489,7 +490,7 @@ impl Browser {
         self.dirty = true;
         match skipped.is_empty() {
             true => Ok(()),
-            false => Err(format!("Not copied (unsafe local name): {}", skipped.join(", "))),
+            false => Err(tr!("Not copied (unsafe local name): {}", skipped.join(", "))),
         }
     }
 
@@ -497,7 +498,7 @@ impl Browser {
     pub fn upload(&mut self, paths: &[std::path::PathBuf]) -> Result<(), String> {
         let remote = &self.lists[Side::Remote as usize];
         if remote.dir.is_empty() {
-            return Err("The remote folder is not open yet.".into());
+            return Err(tr!("The remote folder is not open yet."));
         }
         let jobs: Vec<Job> = paths
             .iter()
@@ -519,9 +520,9 @@ impl Browser {
     /// copy, open it, and upload it again each time it is saved.
     pub fn edit(&mut self) -> Result<(), String> {
         let picked: Vec<Entry> = self.lists[Side::Remote as usize].picked().cloned().collect();
-        let [entry] = &picked[..] else { return Err("Pick one remote file to edit.".into()) };
+        let [entry] = &picked[..] else { return Err(tr!("Pick one remote file to edit.")) };
         if entry.dir || !sftp::plain_name(&entry.name) {
-            return Err("Pick one remote file to edit.".into());
+            return Err(tr!("Pick one remote file to edit."));
         }
         if runs_when_opened(&entry.name) {
             return Err(format!("{} would run, not open in an editor: download it instead.", entry.name));
@@ -532,14 +533,14 @@ impl Browser {
                 static FOLDERS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
                 let n = FOLDERS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                 let dir = std::env::temp_dir().join(format!("opencrt-edit-{}-{n}", std::process::id()));
-                private_dir(&dir).map_err(|e| format!("Cannot make {}: {e}", dir.display()))?;
+                private_dir(&dir).map_err(|e| tr!("Cannot make {}: {}", dir.display(), e))?;
                 self.edit_dir = Some(EditDir(dir.clone()));
                 dir
             }
         };
         // A folder per edit, so two files of the same name do not clash.
         let own = dir.join((self.next_id + 1).to_string());
-        std::fs::create_dir_all(&own).map_err(|e| format!("Cannot make {}: {e}", own.display()))?;
+        std::fs::create_dir_all(&own).map_err(|e| tr!("Cannot make {}: {}", own.display(), e))?;
         let remote = self.lists[Side::Remote as usize].path(Side::Remote, &entry.name);
         let job = Job { id: 0, upload: false, local: own.join(&entry.name), remote, dir: false, size: entry.size, overwrite: true };
         let item = self.item(job);
@@ -662,7 +663,7 @@ impl Browser {
             self.queues[WAITING][0].job.overwrite = true;
         } else {
             let mut item = self.queues[WAITING].remove(0);
-            (item.error, item.selected) = ("Not overwritten: the file exists".into(), false);
+            (item.error, item.selected) = (tr!("Not overwritten: the file exists"), false);
             self.queues[FAILED].push(item);
         }
         self.dirty = true;
@@ -735,7 +736,7 @@ impl Browser {
                 return e.clone();
             }
             if list.entries.is_empty() && !list.all.is_empty() {
-                return "Nothing to show: the filter or Show hidden files hides it all.".into();
+                return tr!("Nothing to show: the filter or Show hidden files hides it all.");
             }
             let picked: Vec<&Entry> = list.picked().collect();
             let (shown, selected): (Vec<&Entry>, bool) = if picked.is_empty() { (list.entries.iter().collect(), false) } else { (picked, true) };
@@ -799,7 +800,7 @@ impl Browser {
         let status = match self.shown {
             FAILED => item.error.clone(),
             FINISHED => "Done".into(),
-            _ if i == 0 && self.asking.is_some() => "The file exists: overwrite?".into(),
+            _ if i == 0 && self.asking.is_some() => tr!("The file exists: overwrite?"),
             _ if running => {
                 let secs = self.running.map_or(0.0, |(_, s)| s.elapsed().as_secs_f64());
                 sftp::progress(item.done, item.job.size, secs)

@@ -13,6 +13,7 @@
 //! cannot be swapped; `check` is the header text encrypted, to tell a wrong
 //! master password. The key is kept in memory once unlocked, until exit.
 
+use crate::tr;
 use std::path::Path;
 use std::sync::Mutex;
 
@@ -99,7 +100,7 @@ pub fn unlock(dir: &Path, password: &str) -> Result<(), String> {
             return Ok(());
         }
     }
-    Err("That is not the master password.".into())
+    Err(tr!("That is not the master password."))
 }
 
 /// Every saved password, decrypted (the file must be unlocked).

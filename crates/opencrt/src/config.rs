@@ -1,5 +1,6 @@
 //! Per-user configuration: locations, saved sessions and global options.
 
+use crate::tr;
 use std::path::{Path, PathBuf};
 
 use anyhow::Context;
@@ -588,6 +589,8 @@ pub struct Options {
     pub bell: Bell,
     /// Light or dark window chrome, or whatever the system uses.
     pub theme: UiTheme,
+    /// Interface language (a folder under `lang/`): "" follows the system, "en" is English.
+    pub language: String,
     /// Menus, tabs, dialogs and other window text, in logical pixels.
     pub ui_font_size: f32,
     /// Show the menu bar (when hidden, the terminal's right-click menu brings it back).
@@ -802,7 +805,7 @@ pub fn adopt_keychain_secrets(accounts: &[String]) -> Result<(), String> {
 /// Remove the master password: the secrets go back to the keychain.
 pub fn remove_master_password() -> Result<(), String> {
     if portable_dir().is_some() {
-        return Err("The portable version keeps saved passwords only under its master password; change it instead.".into());
+        return Err(tr!("The portable version keeps saved passwords only under its master password; change it instead."));
     }
     let dir = vault_dir().ok_or("no master password is set")?;
     for (account, secret) in crate::vault::all(&dir)? {
@@ -1113,6 +1116,7 @@ impl Default for Options {
             cursor: Cursor::Block,
             bell: Bell::Visual,
             theme: UiTheme::System,
+            language: String::new(),
             // macOS menus use 13 points; Linux follows the desktop's font.
             #[cfg(target_os = "macos")]
             ui_font_size: 13.0,

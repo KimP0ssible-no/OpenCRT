@@ -1,5 +1,6 @@
 //! Saved-session tree for the Session Manager.
 
+use crate::tr;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
@@ -265,7 +266,7 @@ pub fn from_rdp_file(text: &str, name: &str, base: &Session) -> Result<Session, 
 /// each starting from `base`. Also returns the column names it did not use.
 pub fn from_delimited(text: &str, base: &Session) -> Result<(Vec<Session>, Vec<String>), String> {
     let mut lines = text.lines().filter(|l| !l.trim().is_empty());
-    let header = lines.next().ok_or("The file is empty.")?;
+    let header = lines.next().ok_or(tr!("The file is empty."))?;
     let sep = ['\t', ';', ','].into_iter().max_by_key(|&c| header.matches(c).count()).unwrap_or(',');
     let columns: Vec<String> = split_delimited(header.trim_start_matches('\u{feff}'), sep)
         .into_iter()
@@ -286,7 +287,7 @@ pub fn from_delimited(text: &str, base: &Session) -> Result<(Vec<Session>, Vec<S
         })
     };
     if !columns.iter().any(|c| field(c) == Some("host")) {
-        return Err("The first line must name the columns, including a host (or hostname) column.".into());
+        return Err(tr!("The first line must name the columns, including a host (or hostname) column."));
     }
     let ignored = columns.iter().filter(|c| field(c).is_none()).cloned().collect();
     let mut out = Vec::new();
@@ -302,7 +303,7 @@ pub fn from_delimited(text: &str, base: &Session) -> Result<(Vec<Session>, Vec<S
                 Some("folder") => session.folder = normalize_folder(&value),
                 Some("key") => session.key_path = value,
                 Some("notes") => session.notes = value,
-                Some("port") => port = Some(value.parse::<u16>().map_err(|_| format!("Line {}: bad port \"{value}\".", n + 2))?),
+                Some("port") => port = Some(value.parse::<u16>().map_err(|_| tr!("Line {}: bad port \"{}\".", n + 2, value))?),
                 Some("protocol") => {
                     session.protocol = match value.to_lowercase().as_str() {
                         "ssh" | "ssh2" => Protocol::Ssh2,
@@ -313,7 +314,7 @@ pub fn from_delimited(text: &str, base: &Session) -> Result<(Vec<Session>, Vec<S
                         "rdp" => Protocol::Rdp,
                         "rlogin" => Protocol::Rlogin,
                         "vnc" => Protocol::Vnc,
-                        _ => return Err(format!("Line {}: unknown protocol \"{value}\".", n + 2)),
+                        _ => return Err(tr!("Line {}: unknown protocol \"{}\".", n + 2, value)),
                     }
                 }
                 Some(_) => {
@@ -360,7 +361,7 @@ pub fn merge(store: &mut SessionStore, other: SessionStore) -> (usize, usize) {
 pub fn rename_folder(store: &mut SessionStore, old: &str, name: &str) -> Result<String, String> {
     let name = normalize_folder(name);
     if name.is_empty() || name.contains('/') {
-        return Err("Enter a folder name (without \"/\").".into());
+        return Err(tr!("Enter a folder name (without \"/\")."));
     }
     let new = match old.rsplit_once('/') {
         Some((parent, _)) => format!("{parent}/{name}"),
@@ -669,7 +670,7 @@ pub fn scan_securecrt(picked: &Path) -> Result<(PathBuf, SessionStore, usize, Se
     let mut dirs = vec![(root.clone(), "SecureCRT".to_string())];
     while let Some((dir, folder)) = dirs.pop() {
         found.folders.push(folder.clone());
-        let entries = std::fs::read_dir(&dir).map_err(|e| format!("Cannot read {}: {e}", dir.display()))?;
+        let entries = std::fs::read_dir(&dir).map_err(|e| tr!("Cannot read {}: {}", dir.display(), e))?;
         for entry in entries.flatten() {
             let path = entry.path();
             let name = entry.file_name().to_string_lossy().into_owned();
@@ -696,7 +697,7 @@ pub fn scan_securecrt(picked: &Path) -> Result<(PathBuf, SessionStore, usize, Se
         }
     }
     if found.sessions.is_empty() {
-        return Err(format!("No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder.", picked.display()));
+        return Err(tr!("No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder.", picked.display()));
     }
     Ok((root, found, not_imported, passwords))
 }

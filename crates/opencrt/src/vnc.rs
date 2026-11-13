@@ -6,6 +6,7 @@
 //! as X11 keysyms (`ToHelper::KeySym`), which is what VNC servers expect.
 //! VNC itself is not encrypted: a jump host (SSH tunnel) is the way to secure it.
 
+use crate::tr;
 use anyhow::{Context as _, anyhow, bail};
 use des::Des;
 use des::cipher::{Block, BlockCipherEncrypt, KeyInit};
@@ -69,7 +70,7 @@ pub fn connect(settings: Settings) -> (SshHandle, crate::rdp::Input) {
                 match session(&settings, tunnel, password.clone(), no_vencrypt, &mut input_rx, io).await {
                     Err(e) if !no_vencrypt && e.is::<AnonymousTls>() => no_vencrypt = true,
                     Err(e) if password.is_some() && e.is::<Refused>() => {
-                        let note = format!("\x1b[33mThe saved password was not accepted ({e}); enter it again.\x1b[0m\r\n");
+                        let note = format!("\x1b[33m{}\x1b[0m\r\n", tr!("The saved password was not accepted ({}); enter it again.", e));
                         let _ = io.output.send(SshEvent::Data(note.into_bytes()));
                         password = None;
                     }
@@ -182,7 +183,7 @@ impl Login<'_> {
 
     async fn user(&mut self) -> anyhow::Result<String> {
         if self.user.is_empty() {
-            self.user = self.ask(format!("Username for {}:", self.host), true, ssh::PromptKind::Other).await?;
+            self.user = self.ask(tr!("Username for {}:", self.host), true, ssh::PromptKind::Other).await?;
         }
         Ok(self.user.clone())
     }
@@ -273,7 +274,7 @@ async fn handshake(mut s: Box<dyn crate::proxy::Stream>, mut login: Login<'_>) -
         }
         Auth::Plain => {
             let user = login.user().await?;
-            let password = login.password(format!("Password for {user} on {}:", login.host)).await?;
+            let password = login.password(tr!("Password for {} on {}:", user, login.host)).await?;
             s.write_all(&(user.len() as u32).to_be_bytes()).await?;
             s.write_all(&(password.len() as u32).to_be_bytes()).await?;
             s.write_all(user.as_bytes()).await?;
@@ -379,7 +380,7 @@ async fn apple_login(s: &mut Box<dyn crate::proxy::Stream>, login: &mut Login<'_
     s.read_exact(&mut prime).await?;
     s.read_exact(&mut theirs).await?;
     let user = login.user().await?;
-    let password = login.password(format!("Password for {user} on {}:", login.host)).await?;
+    let password = login.password(tr!("Password for {} on {}:", user, login.host)).await?;
     s.write_all(&apple_response(generator, &prime, &theirs, &user, &password, &random_bytes(len + 128))?).await?;
     Ok(())
 }

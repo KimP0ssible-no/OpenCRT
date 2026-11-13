@@ -3070,7 +3070,7 @@ component SchemesDialog inherits DialogFrame {
                         x: 6px;
                         width: parent.width - 12px;
                         height: parent.height;
-                        text: name == root.default-name ? name + "  (default)" : name;
+                        text: name == root.default-name ? @tr("{}  (default)", name) : name;
                         vertical-alignment: center;
                         overflow: elide;
                     }

@@ -7,8 +7,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);\n"
 
-#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5604
-#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5604
+#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5614
+#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5614
 msgid "Session Manager"
 msgstr "Upravitelj sej"
 
@@ -17,7 +17,7 @@ msgstr "Upravitelj sej"
 msgid "Connect"
 msgstr "Poveži"
 
-#: crates/opencrt/ui/main.slint:364 crates/opencrt/ui/main.slint:6781
+#: crates/opencrt/ui/main.slint:364 crates/opencrt/ui/main.slint:6791
 msgid "New Session"
 msgstr "Nova seja"
 
@@ -30,8 +30,8 @@ msgid "Properties"
 msgstr "Lastnosti"
 
 #: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508
-#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142
-#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3142 crates/opencrt/ui/main.slint:5504
+#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3145
+#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3145 crates/opencrt/ui/main.slint:5514
 msgid "Delete"
 msgstr "Izbriši"
 
@@ -79,15 +79,15 @@ msgstr "Podvoji..."
 msgid "Cut"
 msgstr "Izreži"
 
-#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5525
-#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5525 crates/opencrt/ui/main.slint:6311
+#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5535
+#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5535 crates/opencrt/ui/main.slint:6321
 msgid "Copy"
 msgstr "Kopiraj"
 
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5535
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4011 crates/opencrt/ui/main.slint:4158 crates/opencrt/ui/main.slint:5535 crates/opencrt/ui/main.slint:6326
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4019
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4019 crates/opencrt/ui/main.slint:4166
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4019 crates/opencrt/ui/main.slint:4166 crates/opencrt/ui/main.slint:5545
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4019 crates/opencrt/ui/main.slint:4166 crates/opencrt/ui/main.slint:5545 crates/opencrt/ui/main.slint:6336
 msgid "Paste"
 msgstr "Prilepi"
 
@@ -100,7 +100,7 @@ msgstr "Preimenuj..."
 msgid "New Session..."
 msgstr "Nova seja..."
 
-#: crates/opencrt/ui/main.slint:517 crates/opencrt/ui/main.slint:4381
+#: crates/opencrt/ui/main.slint:517 crates/opencrt/ui/main.slint:4389
 msgid "New Folder..."
 msgstr "Nova mapa..."
 
@@ -113,12 +113,12 @@ msgid "Filter (Ctrl+click picks several)"
 msgstr "Filter (Ctrl+klik izbere več)"
 
 #: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897
-#: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897 crates/opencrt/ui/main.slint:5992
+#: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897 crates/opencrt/ui/main.slint:6002
 msgid "Reconnect"
 msgstr "Ponovno poveži"
 
 #: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902
-#: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902 crates/opencrt/ui/main.slint:5999
+#: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902 crates/opencrt/ui/main.slint:6009
 msgid "Disconnect"
 msgstr "Prekini povezavo"
 
@@ -127,13 +127,13 @@ msgid "Lock"
 msgstr "Zakleni"
 
 #: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7118
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4143 crates/opencrt/ui/main.slint:7118 crates/opencrt/ui/main.slint:7295
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4151
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4151 crates/opencrt/ui/main.slint:7128
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4151 crates/opencrt/ui/main.slint:7128 crates/opencrt/ui/main.slint:7307
 msgid "Close"
 msgstr "Zapri"
 
-#: crates/opencrt/ui/main.slint:717 crates/opencrt/ui/main.slint:5609
+#: crates/opencrt/ui/main.slint:717 crates/opencrt/ui/main.slint:5619
 msgid "Command Manager"
 msgstr "Upravitelj ukazov"
 
@@ -168,7 +168,7 @@ msgid "Send"
 msgstr "Pošlji"
 
 #: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414
-#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414 crates/opencrt/ui/main.slint:7179
+#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414 crates/opencrt/ui/main.slint:7189
 msgid "Edit..."
 msgstr "Uredi..."
 
@@ -180,7 +180,7 @@ msgstr "Kopiraj v vrstico gumbov"
 msgid "New Command..."
 msgstr "Nov ukaz..."
 
-#: crates/opencrt/ui/main.slint:907 crates/opencrt/ui/main.slint:5438
+#: crates/opencrt/ui/main.slint:907 crates/opencrt/ui/main.slint:5448
 msgid "Clone Session"
 msgstr "Kloniraj sejo"
 
@@ -196,7 +196,7 @@ msgstr "Pošlji Ctrl+Alt+Del"
 msgid "Send Windows Key"
 msgstr "Pošlji tipko Windows"
 
-#: crates/opencrt/ui/main.slint:935 crates/opencrt/ui/main.slint:5659
+#: crates/opencrt/ui/main.slint:935 crates/opencrt/ui/main.slint:5669
 msgid "Session Options..."
 msgstr "Možnosti seje..."
 
@@ -240,19 +240,19 @@ msgstr "Zapri druge zavihke"
 msgid "Scratchpad"
 msgstr "Beležka"
 
-#: crates/opencrt/ui/main.slint:1115 crates/opencrt/ui/main.slint:6544
+#: crates/opencrt/ui/main.slint:1115 crates/opencrt/ui/main.slint:6554
 msgid "Send to"
 msgstr "Pošlji v"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6551
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6561
 msgid "the active tab"
 msgstr "aktivni zavihek"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6551
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6561
 msgid "all tabs"
 msgstr "vse zavihke"
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6551
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6561
 msgid "tabs on screen"
 msgstr "zavihke na zaslonu"
 
@@ -268,7 +268,7 @@ msgstr "Pošlji naslednjo vrstico"
 msgid "Send All"
 msgstr "Pošlji vse"
 
-#: crates/opencrt/ui/main.slint:1148 crates/opencrt/ui/main.slint:4120
+#: crates/opencrt/ui/main.slint:1148 crates/opencrt/ui/main.slint:4128
 msgid "Open..."
 msgstr "Odpri..."
 
@@ -313,11 +313,11 @@ msgstr "Sprejmi enkrat"
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7376
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3870 crates/opencrt/ui/main.slint:4000 crates/opencrt/ui/main.slint:4091 crates/opencrt/ui/main.slint:7376
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3878
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3878 crates/opencrt/ui/main.slint:4008
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3878 crates/opencrt/ui/main.slint:4008 crates/opencrt/ui/main.slint:4099
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3878 crates/opencrt/ui/main.slint:4008 crates/opencrt/ui/main.slint:4099 crates/opencrt/ui/main.slint:7388
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3878 crates/opencrt/ui/main.slint:4008 crates/opencrt/ui/main.slint:4099 crates/opencrt/ui/main.slint:7388
 msgid "Cancel"
 msgstr "Prekliči"
 
@@ -341,9 +341,9 @@ msgstr "Shrani geslo (ko prijava uspe)"
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3920 crates/opencrt/ui/main.slint:4285 crates/opencrt/ui/main.slint:7444
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3928
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3928 crates/opencrt/ui/main.slint:4293
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3928 crates/opencrt/ui/main.slint:4293 crates/opencrt/ui/main.slint:7456
 msgid "OK"
 msgstr "V redu"
 
@@ -393,7 +393,7 @@ msgid "Port:"
 msgstr "Vrata:"
 
 #: crates/opencrt/ui/main.slint:1578 crates/opencrt/ui/main.slint:2597
-#: crates/opencrt/ui/main.slint:1578 crates/opencrt/ui/main.slint:2597 crates/opencrt/ui/main.slint:3364
+#: crates/opencrt/ui/main.slint:1578 crates/opencrt/ui/main.slint:2597 crates/opencrt/ui/main.slint:3372
 msgid "Username:"
 msgstr "Uporabniško ime:"
 
@@ -440,7 +440,7 @@ msgid "Parity:"
 msgstr "Pariteta:"
 
 #: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644
-#: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644 crates/opencrt/ui/main.slint:7413
+#: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644 crates/opencrt/ui/main.slint:7425
 msgid "None"
 msgstr "Brez"
 
@@ -472,7 +472,7 @@ msgstr "RTS/CTS"
 msgid "Opens your default shell (PowerShell on Windows, $SHELL elsewhere)."
 msgstr "Odpre vašo privzeto lupino (PowerShell v sistemu Windows, drugje $SHELL)."
 
-#: crates/opencrt/ui/main.slint:1674 crates/opencrt/ui/main.slint:5950
+#: crates/opencrt/ui/main.slint:1674 crates/opencrt/ui/main.slint:5960
 msgid "Quick Connect"
 msgstr "Hitra povezava"
 
@@ -488,11 +488,11 @@ msgstr "Gesla in gesla ključev vnesete, ko jih strežnik potrebuje."
 msgid "Session Options ({} sessions)"
 msgstr "Možnosti seje (sej: {})"
 
-#: crates/opencrt/ui/main.slint:1816 crates/opencrt/ui/main.slint:6050
+#: crates/opencrt/ui/main.slint:1816 crates/opencrt/ui/main.slint:6060
 msgid "Session Options"
 msgstr "Možnosti seje"
 
-#: crates/opencrt/ui/main.slint:1836 crates/opencrt/ui/main.slint:3239
+#: crates/opencrt/ui/main.slint:1836 crates/opencrt/ui/main.slint:3247
 msgid "Connection"
 msgstr "Povezava"
 
@@ -500,7 +500,7 @@ msgstr "Povezava"
 msgid "Authentication"
 msgstr "Overjanje"
 
-#: crates/opencrt/ui/main.slint:1836 crates/opencrt/ui/main.slint:3239
+#: crates/opencrt/ui/main.slint:1836 crates/opencrt/ui/main.slint:3247
 msgid "Terminal"
 msgstr "Terminal"
 
@@ -520,7 +520,7 @@ msgstr "Posredovanje vrat"
 msgid "Logon Script"
 msgstr "Prijavni skript"
 
-#: crates/opencrt/ui/main.slint:1836 crates/opencrt/ui/main.slint:3239
+#: crates/opencrt/ui/main.slint:1836 crates/opencrt/ui/main.slint:3247
 msgid "Keyboard"
 msgstr "Tipkovnica"
 
@@ -532,7 +532,7 @@ msgstr "Oddaljeno namizje"
 msgid "Session name:"
 msgstr "Ime seje:"
 
-#: crates/opencrt/ui/main.slint:1874 crates/opencrt/ui/main.slint:7426
+#: crates/opencrt/ui/main.slint:1874 crates/opencrt/ui/main.slint:7438
 msgid "Folder:"
 msgstr "Mapa:"
 
@@ -786,27 +786,27 @@ msgstr "Nabor ključnih besed:"
 msgid "Tab colour:"
 msgstr "Barva zavihka:"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7425
 msgid "Red"
 msgstr "Rdeča"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7425
 msgid "Orange"
 msgstr "Oranžna"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7425
 msgid "Yellow"
 msgstr "Rumena"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7425
 msgid "Green"
 msgstr "Zelena"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7425
 msgid "Blue"
 msgstr "Modra"
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7413
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7425
 msgid "Purple"
 msgstr "Vijolična"
 
@@ -984,7 +984,7 @@ msgid ""
 "run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
 msgstr "Tipka = kaj naredi. Tipke: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, Enter, Escape, Space ali znak, s Ctrl+ Alt+ Shift+ (znaki potrebujejo Ctrl ali Alt). Besedilo se pošlje (\\r je Enter); ali script: datoteka, menu: ukaz, run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
 
-#: crates/opencrt/ui/main.slint:2320 crates/opencrt/ui/main.slint:7403
+#: crates/opencrt/ui/main.slint:2320 crates/opencrt/ui/main.slint:7415
 msgid "Script file:"
 msgstr "Datoteka skripta:"
 
@@ -1018,8 +1018,8 @@ msgstr "Uporabi $DISPLAY, sicer zaslon 0 na tem računalniku. Strežnik X mora s
 msgid "Port forwards (SSH2 only):"
 msgstr "Posredovanja vrat (samo SSH2):"
 
-#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7077
-#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7077
+#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7087
+#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7087
 msgid "Name"
 msgstr "Ime"
 
@@ -1039,15 +1039,15 @@ msgstr "Cilj"
 msgid "Application"
 msgstr "Aplikacija"
 
-#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7104
-#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7104 crates/opencrt/ui/main.slint:7286
+#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7114
+#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7114 crates/opencrt/ui/main.slint:7298
 msgid "Add..."
 msgstr "Dodaj..."
 
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7113
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3822 crates/opencrt/ui/main.slint:4613 crates/opencrt/ui/main.slint:7113 crates/opencrt/ui/main.slint:7290
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3830
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3830 crates/opencrt/ui/main.slint:4621
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3830 crates/opencrt/ui/main.slint:4621 crates/opencrt/ui/main.slint:7123
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3830 crates/opencrt/ui/main.slint:4621 crates/opencrt/ui/main.slint:7123 crates/opencrt/ui/main.slint:7302
 msgid "Remove"
 msgstr "Odstrani"
 
@@ -1056,8 +1056,8 @@ msgid "Port Forward Properties"
 msgstr "Lastnosti posredovanja vrat"
 
 #: crates/opencrt/ui/main.slint:2467 crates/opencrt/ui/main.slint:2588
-#: crates/opencrt/ui/main.slint:2467 crates/opencrt/ui/main.slint:2588 crates/opencrt/ui/main.slint:3081
-#: crates/opencrt/ui/main.slint:2467 crates/opencrt/ui/main.slint:2588 crates/opencrt/ui/main.slint:3081
+#: crates/opencrt/ui/main.slint:2467 crates/opencrt/ui/main.slint:2588 crates/opencrt/ui/main.slint:3084
+#: crates/opencrt/ui/main.slint:2467 crates/opencrt/ui/main.slint:2588 crates/opencrt/ui/main.slint:3084
 msgid "Name:"
 msgstr "Ime:"
 
@@ -1162,8 +1162,8 @@ msgstr "prazno = obdrži shranjeno geslo"
 msgid "blank to be asked each time"
 msgstr "prazno = vprašaj vsakič"
 
-#: crates/opencrt/ui/main.slint:2614 crates/opencrt/ui/main.slint:3977
-#: crates/opencrt/ui/main.slint:2614 crates/opencrt/ui/main.slint:3977
+#: crates/opencrt/ui/main.slint:2614 crates/opencrt/ui/main.slint:3985
+#: crates/opencrt/ui/main.slint:2614 crates/opencrt/ui/main.slint:3985
 msgid "Confirm:"
 msgstr "Potrdi:"
 
@@ -1211,11 +1211,11 @@ msgstr "ID uporabnika:"
 msgid "kept in the system keychain"
 msgstr "shranjeno v sistemski verigi ključev"
 
-#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7403
+#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7415
 msgid "Send:"
 msgstr "Pošlji:"
 
-#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7403
+#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7415
 msgid "Command:"
 msgstr "Ukaz:"
 
@@ -1237,210 +1237,218 @@ msgid ""
 "command's input and output."
 msgstr "%h in %p postaneta ciljni gostitelj in vrata. Seja komunicira prek vhoda in izhoda ukaza."
 
-#: crates/opencrt/ui/main.slint:3030
+#: crates/opencrt/ui/main.slint:3033
 msgid "Colour Schemes"
 msgstr "Barvne sheme"
 
-#: crates/opencrt/ui/main.slint:3091
+#: crates/opencrt/ui/main.slint:3073
+msgid "{}  (default)"
+msgstr "{}  (privzeto)"
+
+#: crates/opencrt/ui/main.slint:3094
 msgid "Foreground:"
 msgstr "Ospredje:"
 
-#: crates/opencrt/ui/main.slint:3093
+#: crates/opencrt/ui/main.slint:3096
 msgid "Background:"
 msgstr "Ozadje:"
 
-#: crates/opencrt/ui/main.slint:3097 crates/opencrt/ui/main.slint:3439
+#: crates/opencrt/ui/main.slint:3100 crates/opencrt/ui/main.slint:3447
 msgid "Cursor:"
 msgstr "Kazalka:"
 
-#: crates/opencrt/ui/main.slint:3098 crates/opencrt/ui/main.slint:3100
+#: crates/opencrt/ui/main.slint:3101 crates/opencrt/ui/main.slint:3103
 msgid "inverse"
 msgstr "obratno"
 
-#: crates/opencrt/ui/main.slint:3099
+#: crates/opencrt/ui/main.slint:3102
 msgid "Selection:"
 msgstr "Izbor:"
 
-#: crates/opencrt/ui/main.slint:3103
+#: crates/opencrt/ui/main.slint:3106
 msgid ""
 "ANSI colours (black, red, green, yellow, blue, magenta, cyan, white; then "
 "bright):"
 msgstr "Barve ANSI (črna, rdeča, zelena, rumena, modra, magenta, cian, bela; nato svetle):"
 
-#: crates/opencrt/ui/main.slint:3117
+#: crates/opencrt/ui/main.slint:3120
 msgid "Colours are #rrggbb. Cursor and selection may be left blank."
 msgstr "Barve so v obliki #rrggbb. Kazalka in izbor sta lahko prazna."
 
-#: crates/opencrt/ui/main.slint:3117
+#: crates/opencrt/ui/main.slint:3120
 msgid "Built-in schemes cannot be changed: New makes an editable copy."
 msgstr "Vgrajenih shem ni mogoče spreminjati: Novo ustvari kopijo, ki jo lahko urejate."
 
-#: crates/opencrt/ui/main.slint:3131
+#: crates/opencrt/ui/main.slint:3134
 msgid "New"
 msgstr "Novo"
 
-#: crates/opencrt/ui/main.slint:3147 crates/opencrt/ui/main.slint:4124
+#: crates/opencrt/ui/main.slint:3150 crates/opencrt/ui/main.slint:4132
 msgid "Save"
 msgstr "Shrani"
 
-#: crates/opencrt/ui/main.slint:3220
+#: crates/opencrt/ui/main.slint:3155
+msgid "Use as Default"
+msgstr "Uporabi kot privzeto"
+
+#: crates/opencrt/ui/main.slint:3228
 msgid "Global Options"
 msgstr "Globalne možnosti"
 
-#: crates/opencrt/ui/main.slint:3239
+#: crates/opencrt/ui/main.slint:3247
 msgid "General"
 msgstr "Splošno"
 
-#: crates/opencrt/ui/main.slint:3239
+#: crates/opencrt/ui/main.slint:3247
 msgid "Mouse"
 msgstr "Miška"
 
-#: crates/opencrt/ui/main.slint:3239
+#: crates/opencrt/ui/main.slint:3247
 msgid "Highlighting"
 msgstr "Označevanje"
 
-#: crates/opencrt/ui/main.slint:3239
+#: crates/opencrt/ui/main.slint:3247
 msgid "File Transfer"
 msgstr "Prenos datotek"
 
-#: crates/opencrt/ui/main.slint:3239
+#: crates/opencrt/ui/main.slint:3247
 msgid "Printing"
 msgstr "Tiskanje"
 
-#: crates/opencrt/ui/main.slint:3239
+#: crates/opencrt/ui/main.slint:3247
 msgid "Settings Sync"
 msgstr "Sinhronizacija nastavitev"
 
-#: crates/opencrt/ui/main.slint:3267
+#: crates/opencrt/ui/main.slint:3275
 msgid "Theme:"
 msgstr "Tema:"
 
-#: crates/opencrt/ui/main.slint:3269 crates/opencrt/ui/main.slint:5241
+#: crates/opencrt/ui/main.slint:3277 crates/opencrt/ui/main.slint:5251
 msgid "Follow the system"
 msgstr "Sledi sistemu"
 
-#: crates/opencrt/ui/main.slint:3269
+#: crates/opencrt/ui/main.slint:3277
 msgid "Light"
 msgstr "Svetla"
 
-#: crates/opencrt/ui/main.slint:3269
+#: crates/opencrt/ui/main.slint:3277
 msgid "Dark"
 msgstr "Temna"
 
-#: crates/opencrt/ui/main.slint:3274
+#: crates/opencrt/ui/main.slint:3282
 msgid "Show menu bar (right-click the terminal to bring it back)"
 msgstr "Prikaži menijsko vrstico (z desnim klikom terminala jo vrnete)"
 
-#: crates/opencrt/ui/main.slint:3278
+#: crates/opencrt/ui/main.slint:3286
 msgid "Show connect bar"
 msgstr "Prikaži vrstico za povezavo"
 
-#: crates/opencrt/ui/main.slint:3282
+#: crates/opencrt/ui/main.slint:3290
 msgid "Show the server's load in the status bar (Linux hosts over SSH)"
 msgstr "Prikaži obremenitev strežnika v vrstici stanja (gostitelji Linux prek SSH)"
 
-#: crates/opencrt/ui/main.slint:3286
+#: crates/opencrt/ui/main.slint:3294
 msgid "Ask before closing a connected tab or exiting"
 msgstr "Vprašaj pred zapiranjem povezanega zavihka ali izhodom"
 
-#: crates/opencrt/ui/main.slint:3290
+#: crates/opencrt/ui/main.slint:3298
 msgid "Check for a new version at start-up and once a day"
 msgstr "Ob zagonu in enkrat na dan preveri, ali je na voljo nova različica"
 
-#: crates/opencrt/ui/main.slint:3297
+#: crates/opencrt/ui/main.slint:3305
 msgid "Interface font size:"
 msgstr "Velikost pisave vmesnika:"
 
-#: crates/opencrt/ui/main.slint:3300
+#: crates/opencrt/ui/main.slint:3308
 msgid "9 to 20"
 msgstr "9 do 20"
 
-#: crates/opencrt/ui/main.slint:3304
+#: crates/opencrt/ui/main.slint:3312
 msgid "Recent sessions in the File menu:"
 msgstr "Nedavne seje v meniju Datoteka:"
 
-#: crates/opencrt/ui/main.slint:3307
+#: crates/opencrt/ui/main.slint:3315
 msgid "0 to 16"
 msgstr "0 do 16"
 
-#: crates/opencrt/ui/main.slint:3311
+#: crates/opencrt/ui/main.slint:3319
 msgid "Ask before Connect All opens more than:"
 msgstr "Vprašaj, preden Poveži vse odpre več kot:"
 
-#: crates/opencrt/ui/main.slint:3314
+#: crates/opencrt/ui/main.slint:3322
 msgid "sessions; 0 = never ask"
 msgstr "sej; 0 = nikoli ne vprašaj"
 
-#: crates/opencrt/ui/main.slint:3320
+#: crates/opencrt/ui/main.slint:3328
 msgid "Configuration folder:"
 msgstr "Mapa konfiguracije:"
 
-#: crates/opencrt/ui/main.slint:3323
+#: crates/opencrt/ui/main.slint:3331
 msgid "blank for the default"
 msgstr "prazno = privzeto"
 
-#: crates/opencrt/ui/main.slint:3331
+#: crates/opencrt/ui/main.slint:3339
 msgid ""
 "Used from the next start. Your settings are copied there if it has none yet. "
 "A settings repository (Settings Sync) takes its place."
 msgstr "Uporabi se ob naslednjem zagonu. Če mapa še nima nastavitev, se vanjo kopirajo vaše. Repozitorij nastavitev (Sinhronizacija nastavitev) ima prednost pred njo."
 
-#: crates/opencrt/ui/main.slint:3338
+#: crates/opencrt/ui/main.slint:3346
 msgid "Python for .py scripts:"
 msgstr "Python za skripte .py:"
 
-#: crates/opencrt/ui/main.slint:3341
+#: crates/opencrt/ui/main.slint:3349
 msgid "blank: python3 on Linux, else downloaded on first use"
 msgstr "prazno: python3 v Linuxu, drugje se prenese ob prvi uporabi"
 
-#: crates/opencrt/ui/main.slint:3349
+#: crates/opencrt/ui/main.slint:3357
 msgid ""
 "Keep your sessions, options and host keys in a private git repository, "
 "shared by every computer that uses it. Passwords and this computer's own "
 "settings (window, folders, key files) stay here. Needs git installed."
 msgstr "Seje, možnosti in ključe gostiteljev hranite v zasebnem repozitoriju git, ki si ga delijo vsi računalniki, ki ga uporabljajo. Gesla in lastne nastavitve tega računalnika (okno, mape, datoteke ključev) ostanejo tukaj. Potreben je nameščen git."
 
-#: crates/opencrt/ui/main.slint:3356
+#: crates/opencrt/ui/main.slint:3364
 msgid "Repository:"
 msgstr "Repozitorij:"
 
-#: crates/opencrt/ui/main.slint:3360
+#: crates/opencrt/ui/main.slint:3368
 msgid "blank: not used; https://... or git@host:user/repo.git"
 msgstr "prazno: ni v uporabi; https://... ali git@host:user/repo.git"
 
-#: crates/opencrt/ui/main.slint:3368
+#: crates/opencrt/ui/main.slint:3376
 msgid "HTTPS: your username on the server"
 msgstr "HTTPS: vaše uporabniško ime na strežniku"
 
-#: crates/opencrt/ui/main.slint:3372
+#: crates/opencrt/ui/main.slint:3380
 msgid "Password or token:"
 msgstr "Geslo ali žeton:"
 
-#: crates/opencrt/ui/main.slint:3377
+#: crates/opencrt/ui/main.slint:3385
 msgid "saved; type to replace it"
 msgstr "shranjeno; vnesite novo vrednost za zamenjavo"
 
-#: crates/opencrt/ui/main.slint:3377
+#: crates/opencrt/ui/main.slint:3385
 msgid "HTTPS: a personal access token"
 msgstr "HTTPS: osebni žeton za dostop"
 
-#: crates/opencrt/ui/main.slint:3381
+#: crates/opencrt/ui/main.slint:3389
 msgid "SSH key file:"
 msgstr "Datoteka ključa SSH:"
 
-#: crates/opencrt/ui/main.slint:3384
+#: crates/opencrt/ui/main.slint:3392
 msgid "SSH: blank for your SSH agent and ~/.ssh/config"
 msgstr "SSH: prazno za vašega agenta SSH in ~/.ssh/config"
 
-#: crates/opencrt/ui/main.slint:3395
+#: crates/opencrt/ui/main.slint:3403
 msgid "Git is not installed on this computer."
 msgstr "Git na tem računalniku ni nameščen."
 
-#: crates/opencrt/ui/main.slint:3399
+#: crates/opencrt/ui/main.slint:3407
 msgid "Download Git for Windows"
 msgstr "Prenesi Git for Windows"
 
-#: crates/opencrt/ui/main.slint:3408
+#: crates/opencrt/ui/main.slint:3416
 msgid ""
 "HTTPS: leave username and token blank to use git's own credential manager. "
 "The token is kept in the system keychain. Changes are sent as you make them; "
@@ -1448,335 +1456,335 @@ msgid ""
 "start: an empty repository gets your current settings."
 msgstr "HTTPS: pustite uporabniško ime in žeton prazna, da uporabite gitov upravitelj poverilnic. Žeton je shranjen v sistemski verigi ključev. Spremembe se pošiljajo sproti; spremembe drugih računalnikov prispejo ob zagonu OpenCRT. Uporabi se ob naslednjem zagonu: prazen repozitorij dobi vaše trenutne nastavitve."
 
-#: crates/opencrt/ui/main.slint:3417
+#: crates/opencrt/ui/main.slint:3425
 msgid "Font:"
 msgstr "Pisava:"
 
-#: crates/opencrt/ui/main.slint:3424
+#: crates/opencrt/ui/main.slint:3432
 msgid "Font size:"
 msgstr "Velikost pisave:"
 
-#: crates/opencrt/ui/main.slint:3428
+#: crates/opencrt/ui/main.slint:3436
 msgid "Scrollback lines:"
 msgstr "Vrstice zgodovine izpisa:"
 
-#: crates/opencrt/ui/main.slint:3432
+#: crates/opencrt/ui/main.slint:3440
 msgid "Default colour scheme:"
 msgstr "Privzeta barvna shema:"
 
-#: crates/opencrt/ui/main.slint:3441
+#: crates/opencrt/ui/main.slint:3449
 msgid "Block"
 msgstr "Blok"
 
-#: crates/opencrt/ui/main.slint:3441
+#: crates/opencrt/ui/main.slint:3449
 msgid "Underline"
 msgstr "Podčrtaj"
 
-#: crates/opencrt/ui/main.slint:3441
+#: crates/opencrt/ui/main.slint:3449
 msgid "Vertical bar"
 msgstr "Navpična črta"
 
-#: crates/opencrt/ui/main.slint:3446
+#: crates/opencrt/ui/main.slint:3454
 msgid "Bell:"
 msgstr "Zvonec:"
 
-#: crates/opencrt/ui/main.slint:3448
+#: crates/opencrt/ui/main.slint:3456
 msgid "Flash the window"
 msgstr "Utripni z oknom"
 
-#: crates/opencrt/ui/main.slint:3448
+#: crates/opencrt/ui/main.slint:3456
 msgid "Play a sound"
 msgstr "Predvajaj zvok"
 
-#: crates/opencrt/ui/main.slint:3448
+#: crates/opencrt/ui/main.slint:3456
 msgid "Off"
 msgstr "Izklopljeno"
 
-#: crates/opencrt/ui/main.slint:3454
+#: crates/opencrt/ui/main.slint:3462
 msgid "Copy on select"
 msgstr "Kopiraj ob izbiri"
 
-#: crates/opencrt/ui/main.slint:3458
+#: crates/opencrt/ui/main.slint:3466
 msgid "Paste on right-click (instead of the menu)"
 msgstr "Prilepi z desnim klikom (namesto menija)"
 
-#: crates/opencrt/ui/main.slint:3462
+#: crates/opencrt/ui/main.slint:3470
 msgid "Paste on middle-click"
 msgstr "Prilepi s srednjim klikom"
 
-#: crates/opencrt/ui/main.slint:3466
+#: crates/opencrt/ui/main.slint:3474
 msgid "Let programs on the host copy to the clipboard (OSC 52, e.g. tmux, vim)"
 msgstr "Dovoli programom na gostitelju kopiranje v odložišče (OSC 52, npr. tmux, vim)"
 
-#: crates/opencrt/ui/main.slint:3470
+#: crates/opencrt/ui/main.slint:3478
 msgid "Ask before pasting more than one line"
 msgstr "Vprašaj pred lepljenjem več kot ene vrstice"
 
-#: crates/opencrt/ui/main.slint:3476
+#: crates/opencrt/ui/main.slint:3484
 msgid "Send delays (ms):"
 msgstr "Zakasnitve pošiljanja (ms):"
 
-#: crates/opencrt/ui/main.slint:3483
+#: crates/opencrt/ui/main.slint:3491
 msgid "per character"
 msgstr "na znak"
 
-#: crates/opencrt/ui/main.slint:3492
+#: crates/opencrt/ui/main.slint:3500
 msgid "per line"
 msgstr "na vrstico"
 
-#: crates/opencrt/ui/main.slint:3498
+#: crates/opencrt/ui/main.slint:3506
 msgid "Wait for prompt:"
 msgstr "Počakaj na poziv:"
 
-#: crates/opencrt/ui/main.slint:3501
+#: crates/opencrt/ui/main.slint:3509
 msgid "e.g. \"# \" before each next line (blank: do not wait)"
 msgstr "npr. \"# \" pred vsako naslednjo vrstico (prazno: ne čakaj)"
 
-#: crates/opencrt/ui/main.slint:3506
+#: crates/opencrt/ui/main.slint:3514
 msgid "Web search:"
 msgstr "Spletno iskanje:"
 
-#: crates/opencrt/ui/main.slint:3509
+#: crates/opencrt/ui/main.slint:3517
 msgid "address with %s for the selected text"
 msgstr "naslov s %s za izbrano besedilo"
 
-#: crates/opencrt/ui/main.slint:3514
+#: crates/opencrt/ui/main.slint:3522
 msgid "Word delimiters:"
 msgstr "Ločila besed:"
 
-#: crates/opencrt/ui/main.slint:3517
+#: crates/opencrt/ui/main.slint:3525
 msgid "e.g. ,:;\"'()[]{{}}<> (blank for default)"
 msgstr "npr. ,:;\"'()[]{{}}<> (prazno za privzeto)"
 
-#: crates/opencrt/ui/main.slint:3523
+#: crates/opencrt/ui/main.slint:3531
 msgid "SSH keepalive (seconds):"
 msgstr "SSH keepalive (sekunde):"
 
-#: crates/opencrt/ui/main.slint:3526
+#: crates/opencrt/ui/main.slint:3534
 msgid "0 = off"
 msgstr "0 = izklopljeno"
 
-#: crates/opencrt/ui/main.slint:3530
+#: crates/opencrt/ui/main.slint:3538
 msgid "Default SSH2 key file:"
 msgstr "Privzeta datoteka ključa SSH2:"
 
-#: crates/opencrt/ui/main.slint:3533
+#: crates/opencrt/ui/main.slint:3541
 msgid "blank = SSH agent"
 msgstr "prazno = agent SSH"
 
-#: crates/opencrt/ui/main.slint:3542
+#: crates/opencrt/ui/main.slint:3550
 msgid "Reconnect automatically when a connection drops"
 msgstr "Samodejno ponovno poveži, ko povezava pade"
 
-#: crates/opencrt/ui/main.slint:3546
+#: crates/opencrt/ui/main.slint:3554
 msgid ""
 "Allow legacy SSH2 algorithms for every host (old network devices; modern "
 "ones still come first)"
 msgstr "Dovoli zastarele algoritme SSH2 za vse gostitelje (stare omrežne naprave; sodobni algoritmi imajo še vedno prednost)"
 
-#: crates/opencrt/ui/main.slint:3550
+#: crates/opencrt/ui/main.slint:3558
 msgid "Save new SSH2 host keys without asking (a changed key is still refused)"
 msgstr "Shrani nove ključe gostiteljev SSH2 brez vprašanja (spremenjen ključ se še vedno zavrne)"
 
-#: crates/opencrt/ui/main.slint:3554
+#: crates/opencrt/ui/main.slint:3562
 msgid ""
 "Not recommended: the first connection to a host can no longer be checked "
 "against its real fingerprint. Use it for lab networks or many new devices."
 msgstr "Ni priporočljivo: prve povezave z gostiteljem ni več mogoče preveriti z njegovim pravim prstnim odtisom. Uporabite to za laboratorijska omrežja ali veliko novih naprav."
 
-#: crates/opencrt/ui/main.slint:3560
+#: crates/opencrt/ui/main.slint:3568
 msgid "Remember passwords and key passphrases until OpenCRT closes"
 msgstr "Zapomni si gesla in gesla ključev, dokler se OpenCRT ne zapre"
 
-#: crates/opencrt/ui/main.slint:3564
+#: crates/opencrt/ui/main.slint:3572
 msgid "Reopen saved sessions that were open at exit"
 msgstr "Znova odpri shranjene seje, ki so bile odprte ob izhodu"
 
-#: crates/opencrt/ui/main.slint:3568
+#: crates/opencrt/ui/main.slint:3576
 msgid "Keepalive applies to sessions opened from now on."
 msgstr "Keepalive velja za seje, odprte od zdaj naprej."
 
-#: crates/opencrt/ui/main.slint:3574
+#: crates/opencrt/ui/main.slint:3582
 msgid "Download folder:"
 msgstr "Mapa za prenose:"
 
-#: crates/opencrt/ui/main.slint:3577
+#: crates/opencrt/ui/main.slint:3585
 msgid "blank for your Downloads folder"
 msgstr "prazno = vaša mapa Prenosi"
 
-#: crates/opencrt/ui/main.slint:3585
+#: crates/opencrt/ui/main.slint:3593
 msgid "Run a TFTP server on this folder (UDP port 69)"
 msgstr "Zaženi strežnik TFTP na tej mapi (vrata UDP 69)"
 
-#: crates/opencrt/ui/main.slint:3590
+#: crates/opencrt/ui/main.slint:3598
 msgid "TFTP clients:"
 msgstr "Odjemalci TFTP:"
 
-#: crates/opencrt/ui/main.slint:3594
+#: crates/opencrt/ui/main.slint:3602
 msgid "e.g. 192.168.1.0/24, 10.0.0.5 (blank for any)"
 msgstr "npr. 192.168.1.0/24, 10.0.0.5 (prazno = vsi)"
 
-#: crates/opencrt/ui/main.slint:3599
+#: crates/opencrt/ui/main.slint:3607
 msgid "Dropped files:"
 msgstr "Spuščene datoteke:"
 
-#: crates/opencrt/ui/main.slint:3601
+#: crates/opencrt/ui/main.slint:3609
 msgid "Ask each time"
 msgstr "Vprašaj vsakič"
 
-#: crates/opencrt/ui/main.slint:3601 crates/opencrt/ui/main.slint:4052
+#: crates/opencrt/ui/main.slint:3609 crates/opencrt/ui/main.slint:4060
 msgid "Zmodem"
 msgstr "Zmodem"
 
-#: crates/opencrt/ui/main.slint:3601 crates/opencrt/ui/main.slint:4057
+#: crates/opencrt/ui/main.slint:3609 crates/opencrt/ui/main.slint:4065
 msgid "Xmodem"
 msgstr "Xmodem"
 
-#: crates/opencrt/ui/main.slint:3601 crates/opencrt/ui/main.slint:4061
+#: crates/opencrt/ui/main.slint:3609 crates/opencrt/ui/main.slint:4069
 msgid "Ymodem"
 msgstr "Ymodem"
 
-#: crates/opencrt/ui/main.slint:3601 crates/opencrt/ui/main.slint:4065
+#: crates/opencrt/ui/main.slint:3609 crates/opencrt/ui/main.slint:4073
 msgid "Kermit"
 msgstr "Kermit"
 
-#: crates/opencrt/ui/main.slint:3601 crates/opencrt/ui/main.slint:4073
+#: crates/opencrt/ui/main.slint:3609 crates/opencrt/ui/main.slint:4081
 msgid "ASCII"
 msgstr "ASCII"
 
-#: crates/opencrt/ui/main.slint:3601 crates/opencrt/ui/main.slint:4077
+#: crates/opencrt/ui/main.slint:3609 crates/opencrt/ui/main.slint:4085
 msgid "Binary"
 msgstr "Binarno"
 
-#: crates/opencrt/ui/main.slint:3601
+#: crates/opencrt/ui/main.slint:3609
 msgid "SFTP (SSH sessions)"
 msgstr "SFTP (seje SSH)"
 
-#: crates/opencrt/ui/main.slint:3606
+#: crates/opencrt/ui/main.slint:3614
 msgid ""
 "Zmodem and Ymodem downloads are saved here, and TFTP clients such as routers "
 "can fetch files from it or upload into it. Existing files are never "
 "overwritten."
 msgstr "Prenosi Zmodem in Ymodem se shranijo sem, odjemalci TFTP, kot so usmerjevalniki, pa lahko iz te mape prenašajo datoteke ali vanjo nalagajo. Obstoječe datoteke se nikoli ne prepišejo."
 
-#: crates/opencrt/ui/main.slint:3613
+#: crates/opencrt/ui/main.slint:3621
 msgid "Printer:"
 msgstr "Tiskalnik:"
 
-#: crates/opencrt/ui/main.slint:3616
+#: crates/opencrt/ui/main.slint:3624
 msgid "blank for the default printer"
 msgstr "prazno = privzeti tiskalnik"
 
-#: crates/opencrt/ui/main.slint:3621
+#: crates/opencrt/ui/main.slint:3629
 msgid "Font size (points):"
 msgstr "Velikost pisave (točke):"
 
-#: crates/opencrt/ui/main.slint:3625 crates/opencrt/ui/main.slint:3634
+#: crates/opencrt/ui/main.slint:3633 crates/opencrt/ui/main.slint:3642
 msgid "default"
 msgstr "privzeto"
 
-#: crates/opencrt/ui/main.slint:3628
+#: crates/opencrt/ui/main.slint:3636
 msgid "Margins (mm):"
 msgstr "Robovi (mm):"
 
-#: crates/opencrt/ui/main.slint:3638
+#: crates/opencrt/ui/main.slint:3646
 msgid ""
 "File > Print Screen, Print Selection and Auto Print, and printing asked for "
 "by the host (CSI 5i / 4i), go to this printer. On Windows they print through "
 "Notepad, which uses its own font and margins."
 msgstr "Datoteka > Natisni zaslon, Natisni izbor in Samodejno tiskanje ter tiskanje, ki ga zahteva gostitelj (CSI 5i / 4i), gredo na ta tiskalnik. V sistemu Windows se tiska prek Beležnice, ki uporablja svojo pisavo in robove."
 
-#: crates/opencrt/ui/main.slint:3646
+#: crates/opencrt/ui/main.slint:3654
 msgid ""
 "Keywords are highlighted in any case. A session uses the Default list unless "
 "it chooses a named one (Session Options > Appearance)."
 msgstr "Ključne besede so označene ne glede na velikost črk. Seja uporablja Privzeti seznam, razen če izbere poimenovanega (Možnosti seje > Videz)."
 
-#: crates/opencrt/ui/main.slint:3653
+#: crates/opencrt/ui/main.slint:3661
 msgid "List:"
 msgstr "Seznam:"
 
-#: crates/opencrt/ui/main.slint:3661
+#: crates/opencrt/ui/main.slint:3669
 msgid "New List"
 msgstr "Nov seznam"
 
-#: crates/opencrt/ui/main.slint:3665
+#: crates/opencrt/ui/main.slint:3673
 msgid "Delete List"
 msgstr "Izbriši seznam"
 
-#: crates/opencrt/ui/main.slint:3677
+#: crates/opencrt/ui/main.slint:3685
 msgid "the Default list has no name"
 msgstr "Privzeti seznam nima imena"
 
-#: crates/opencrt/ui/main.slint:3699
+#: crates/opencrt/ui/main.slint:3707
 msgid "Keyword"
 msgstr "Ključna beseda"
 
-#: crates/opencrt/ui/main.slint:3700
+#: crates/opencrt/ui/main.slint:3708
 msgid "Colour"
 msgstr "Barva"
 
-#: crates/opencrt/ui/main.slint:3701
+#: crates/opencrt/ui/main.slint:3709
 msgid "Style"
 msgstr "Slog"
 
-#: crates/opencrt/ui/main.slint:3743
+#: crates/opencrt/ui/main.slint:3751
 msgid "Keyword:"
 msgstr "Ključna beseda:"
 
-#: crates/opencrt/ui/main.slint:3748
+#: crates/opencrt/ui/main.slint:3756
 msgid "regular expression"
 msgstr "regularni izraz"
 
-#: crates/opencrt/ui/main.slint:3748
+#: crates/opencrt/ui/main.slint:3756
 msgid "word or phrase"
 msgstr "beseda ali besedna zveza"
 
-#: crates/opencrt/ui/main.slint:3755 crates/opencrt/ui/main.slint:7411
+#: crates/opencrt/ui/main.slint:3763 crates/opencrt/ui/main.slint:7423
 msgid "Colour:"
 msgstr "Barva:"
 
-#: crates/opencrt/ui/main.slint:3767
+#: crates/opencrt/ui/main.slint:3775
 msgid "#rrggbb"
 msgstr "#rrggbb"
 
-#: crates/opencrt/ui/main.slint:3780
+#: crates/opencrt/ui/main.slint:3788
 msgid "Regular expression"
 msgstr "Regularni izraz"
 
-#: crates/opencrt/ui/main.slint:3786
+#: crates/opencrt/ui/main.slint:3794
 msgid "Whole words"
 msgstr "Cele besede"
 
-#: crates/opencrt/ui/main.slint:3792
+#: crates/opencrt/ui/main.slint:3800
 msgid "Whole line"
 msgstr "Cela vrstica"
 
-#: crates/opencrt/ui/main.slint:3802
+#: crates/opencrt/ui/main.slint:3810
 msgid "Colour the text only"
 msgstr "Obarvaj samo besedilo"
 
-#: crates/opencrt/ui/main.slint:3808
+#: crates/opencrt/ui/main.slint:3816
 msgid "Bold"
 msgstr "Krepko"
 
-#: crates/opencrt/ui/main.slint:3818
+#: crates/opencrt/ui/main.slint:3826
 msgid "Add"
 msgstr "Dodaj"
 
-#: crates/opencrt/ui/main.slint:3831
+#: crates/opencrt/ui/main.slint:3839
 msgid "Mapped keys (one per line):"
 msgstr "Preslikane tipke (ena na vrstico):"
 
-#: crates/opencrt/ui/main.slint:3836 crates/opencrt/ui/main.slint:7029
+#: crates/opencrt/ui/main.slint:3844 crates/opencrt/ui/main.slint:7039
 msgid "Import..."
 msgstr "Uvozi..."
 
-#: crates/opencrt/ui/main.slint:3840 crates/opencrt/ui/main.slint:7037
+#: crates/opencrt/ui/main.slint:3848 crates/opencrt/ui/main.slint:7047
 msgid "Export..."
 msgstr "Izvozi..."
 
-#: crates/opencrt/ui/main.slint:3850
+#: crates/opencrt/ui/main.slint:3858
 msgid ""
 "Key = what it does, e.g. F5 = show running-config\\r, Ctrl+K = menu: clear-"
 "screen, Alt+F1 = run: wireshark. Keys: F1-F24, Up, Home, PageUp, Insert, "
@@ -1786,33 +1794,33 @@ msgid ""
 "their own (Session Options > Keyboard)."
 msgstr "Tipka = kaj naredi, npr. F5 = show running-config\\r, Ctrl+K = menu: clear-screen, Alt+F1 = run: wireshark. Tipke: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, Enter, Escape, Space ali znak (s Ctrl ali Alt), ter Ctrl+ Alt+ Shift+. Besedilo se pošlje (\\r je Enter); ali script: datoteka, menu: ukaz, run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop. Seje lahko dodajo svoje (Možnosti seje > Tipkovnica)."
 
-#: crates/opencrt/ui/main.slint:3893
+#: crates/opencrt/ui/main.slint:3901
 msgid "Yes"
 msgstr "Da"
 
-#: crates/opencrt/ui/main.slint:3898
+#: crates/opencrt/ui/main.slint:3906
 msgid "No"
 msgstr "Ne"
 
-#: crates/opencrt/ui/main.slint:3942
+#: crates/opencrt/ui/main.slint:3950
 msgid "Unlock Saved Passwords"
 msgstr "Odkleni shranjena gesla"
 
-#: crates/opencrt/ui/main.slint:3942
+#: crates/opencrt/ui/main.slint:3950
 msgid "Import SecureCRT Passwords"
 msgstr "Uvozi gesla SecureCRT"
 
-#: crates/opencrt/ui/main.slint:3942
+#: crates/opencrt/ui/main.slint:3950
 msgid "Master Password"
 msgstr "Glavno geslo"
 
-#: crates/opencrt/ui/main.slint:3946
+#: crates/opencrt/ui/main.slint:3954
 msgid ""
 "Saved passwords and key passphrases are protected by the master password. "
 "Enter it to use them until OpenCRT closes."
 msgstr "Shranjena gesla in gesla ključev ščiti glavno geslo. Vnesite ga, da jih lahko uporabljate, dokler se OpenCRT ne zapre."
 
-#: crates/opencrt/ui/main.slint:3948
+#: crates/opencrt/ui/main.slint:3956
 msgid ""
 "{} imported sessions have saved passwords. Enter SecureCRT's Config "
 "Passphrase (SecureCRT asks for it when it starts) to import them. If "
@@ -1820,7 +1828,7 @@ msgid ""
 "window, then import again."
 msgstr "Uvožene seje s shranjenimi gesli: {}. Za uvoz gesel vnesite Config Passphrase programa SecureCRT (SecureCRT ga zahteva ob zagonu). Če ga SecureCRT nima, ga nastavite z ukazom Change Passphrase... v njegovem začetnem oknu in nato znova uvozite."
 
-#: crates/opencrt/ui/main.slint:3950
+#: crates/opencrt/ui/main.slint:3958
 msgid ""
 "Keep saved passwords and key passphrases in the settings folder, encrypted "
 "with a master password, instead of this computer's keychain. Settings Sync "
@@ -1828,887 +1836,887 @@ msgid ""
 "recovered: the saved passwords would have to be entered again."
 msgstr "Shranjena gesla in gesla ključev hranite v mapi z nastavitvami, šifrirana z glavnim geslom, namesto v verigi ključev tega računalnika. Sinhronizacija nastavitev jih prenaša, še vedno šifrirana. Pozabljenega glavnega gesla ni mogoče obnoviti: shranjena gesla bi bilo treba vnesti znova."
 
-#: crates/opencrt/ui/main.slint:3951
+#: crates/opencrt/ui/main.slint:3959
 msgid ""
 "Change the master password, or remove it to move the saved passwords back to "
 "this computer's keychain."
 msgstr "Spremenite glavno geslo ali ga odstranite, da shranjena gesla premaknete nazaj v verigo ključev tega računalnika."
 
-#: crates/opencrt/ui/main.slint:3955
+#: crates/opencrt/ui/main.slint:3963
 msgid "Master password:"
 msgstr "Glavno geslo:"
 
-#: crates/opencrt/ui/main.slint:3955
+#: crates/opencrt/ui/main.slint:3963
 msgid "Config passphrase:"
 msgstr "Config Passphrase:"
 
-#: crates/opencrt/ui/main.slint:3955
+#: crates/opencrt/ui/main.slint:3963
 msgid "Current password:"
 msgstr "Trenutno geslo:"
 
-#: crates/opencrt/ui/main.slint:3964
+#: crates/opencrt/ui/main.slint:3972
 msgid "New password:"
 msgstr "Novo geslo:"
 
-#: crates/opencrt/ui/main.slint:3995
+#: crates/opencrt/ui/main.slint:4003
 msgid "Unlock"
 msgstr "Odkleni"
 
-#: crates/opencrt/ui/main.slint:3995
+#: crates/opencrt/ui/main.slint:4003
 msgid "Set"
 msgstr "Nastavi"
 
-#: crates/opencrt/ui/main.slint:3995
+#: crates/opencrt/ui/main.slint:4003
 msgid "Import"
 msgstr "Uvozi"
 
-#: crates/opencrt/ui/main.slint:3995
+#: crates/opencrt/ui/main.slint:4003
 msgid "Change"
 msgstr "Spremeni"
 
-#: crates/opencrt/ui/main.slint:4000
+#: crates/opencrt/ui/main.slint:4008
 msgid "Skip"
 msgstr "Preskoči"
 
-#: crates/opencrt/ui/main.slint:4042
+#: crates/opencrt/ui/main.slint:4050
 msgid "Send Files"
 msgstr "Pošlji datoteke"
 
-#: crates/opencrt/ui/main.slint:4081
+#: crates/opencrt/ui/main.slint:4089
 msgid "SFTP"
 msgstr "SFTP"
 
-#: crates/opencrt/ui/main.slint:4086
+#: crates/opencrt/ui/main.slint:4094
 msgid "Always send dropped files this way (Global Options > File Transfer)"
 msgstr "Spuščene datoteke vedno pošlji na ta način (Globalne možnosti > Prenos datotek)"
 
-#: crates/opencrt/ui/main.slint:4110
+#: crates/opencrt/ui/main.slint:4118
 msgid "wait_for(\"login:\", 10);\nsend(\"admin\\r\");"
 msgstr "wait_for(\"login:\", 10);\nsend(\"admin\\r\");"
 
-#: crates/opencrt/ui/main.slint:4128
+#: crates/opencrt/ui/main.slint:4136
 msgid "Save As..."
 msgstr "Shrani kot..."
 
-#: crates/opencrt/ui/main.slint:4132
+#: crates/opencrt/ui/main.slint:4140
 msgid "Check"
 msgstr "Preveri"
 
-#: crates/opencrt/ui/main.slint:4137
+#: crates/opencrt/ui/main.slint:4145
 msgid "Run"
 msgstr "Zaženi"
 
-#: crates/opencrt/ui/main.slint:4156
+#: crates/opencrt/ui/main.slint:4164
 msgid "Cmd+O"
 msgstr "Cmd+O"
 
-#: crates/opencrt/ui/main.slint:4156
+#: crates/opencrt/ui/main.slint:4164
 msgid "Ctrl+Shift+T"
 msgstr "Ctrl+Shift+T"
 
-#: crates/opencrt/ui/main.slint:4156
+#: crates/opencrt/ui/main.slint:4164
 msgid "Quick Open: find a saved session or type a host"
 msgstr "Hitro odpiranje: poiščite shranjeno sejo ali vnesite gostitelja"
 
-#: crates/opencrt/ui/main.slint:4157
+#: crates/opencrt/ui/main.slint:4165
 msgid "Cmd+C"
 msgstr "Cmd+C"
 
-#: crates/opencrt/ui/main.slint:4157
+#: crates/opencrt/ui/main.slint:4165
 msgid "Ctrl+C, Ctrl+Insert"
 msgstr "Ctrl+C, Ctrl+Insert"
 
-#: crates/opencrt/ui/main.slint:4157
+#: crates/opencrt/ui/main.slint:4165
 msgid "Copy the selection"
 msgstr "Kopiraj izbor"
 
-#: crates/opencrt/ui/main.slint:4157
+#: crates/opencrt/ui/main.slint:4165
 msgid "Copy the selection (with none, Ctrl+C goes to the host)"
 msgstr "Kopiraj izbor (brez izbora gre Ctrl+C gostitelju)"
 
-#: crates/opencrt/ui/main.slint:4158
+#: crates/opencrt/ui/main.slint:4166
 msgid "Cmd+V"
 msgstr "Cmd+V"
 
-#: crates/opencrt/ui/main.slint:4158
+#: crates/opencrt/ui/main.slint:4166
 msgid "Ctrl+V, Shift+Insert"
 msgstr "Ctrl+V, Shift+Insert"
 
-#: crates/opencrt/ui/main.slint:4159
+#: crates/opencrt/ui/main.slint:4167
 msgid "Middle click"
 msgstr "Srednji klik"
 
-#: crates/opencrt/ui/main.slint:4160
+#: crates/opencrt/ui/main.slint:4168
 msgid "Ctrl+Tab"
 msgstr "Ctrl+Tab"
 
-#: crates/opencrt/ui/main.slint:4160
+#: crates/opencrt/ui/main.slint:4168
 msgid "Next tab"
 msgstr "Naslednji zavihek"
 
-#: crates/opencrt/ui/main.slint:4161
+#: crates/opencrt/ui/main.slint:4169
 msgid "Ctrl+Shift+Tab"
 msgstr "Ctrl+Shift+Tab"
 
-#: crates/opencrt/ui/main.slint:4161
+#: crates/opencrt/ui/main.slint:4169
 msgid "Previous tab"
 msgstr "Prejšnji zavihek"
 
-#: crates/opencrt/ui/main.slint:4162
+#: crates/opencrt/ui/main.slint:4170
 msgid "Cmd+1 ... Cmd+9"
 msgstr "Cmd+1 ... Cmd+9"
 
-#: crates/opencrt/ui/main.slint:4162
+#: crates/opencrt/ui/main.slint:4170
 msgid "Alt+1 ... Alt+9"
 msgstr "Alt+1 ... Alt+9"
 
-#: crates/opencrt/ui/main.slint:4162
+#: crates/opencrt/ui/main.slint:4170
 msgid "Go to tab 1 to 9"
 msgstr "Pojdi na zavihek od 1 do 9"
 
-#: crates/opencrt/ui/main.slint:4163
+#: crates/opencrt/ui/main.slint:4171
 msgid "Option+Return"
 msgstr "Option+Return"
 
-#: crates/opencrt/ui/main.slint:4163
+#: crates/opencrt/ui/main.slint:4171
 msgid "Alt+Enter"
 msgstr "Alt+Enter"
 
-#: crates/opencrt/ui/main.slint:4163
+#: crates/opencrt/ui/main.slint:4171
 msgid "Full screen"
 msgstr "Celozaslonski način"
 
-#: crates/opencrt/ui/main.slint:4164
+#: crates/opencrt/ui/main.slint:4172
 msgid "Shift+PageUp, Shift+PageDown"
 msgstr "Shift+PageUp, Shift+PageDown"
 
-#: crates/opencrt/ui/main.slint:4164
+#: crates/opencrt/ui/main.slint:4172
 msgid "Scroll back or forward a page"
 msgstr "Pomakni se za stran nazaj ali naprej"
 
-#: crates/opencrt/ui/main.slint:4165
+#: crates/opencrt/ui/main.slint:4173
 msgid "Cmd+wheel"
 msgstr "Cmd+kolesce"
 
-#: crates/opencrt/ui/main.slint:4165
+#: crates/opencrt/ui/main.slint:4173
 msgid "Ctrl+wheel"
 msgstr "Ctrl+kolesce"
 
-#: crates/opencrt/ui/main.slint:4165
+#: crates/opencrt/ui/main.slint:4173
 msgid "Font size"
 msgstr "Velikost pisave"
 
-#: crates/opencrt/ui/main.slint:4166
+#: crates/opencrt/ui/main.slint:4174
 msgid "Cmd+click"
 msgstr "Cmd+klik"
 
-#: crates/opencrt/ui/main.slint:4166
+#: crates/opencrt/ui/main.slint:4174
 msgid "Ctrl+click"
 msgstr "Ctrl+klik"
 
-#: crates/opencrt/ui/main.slint:4166
+#: crates/opencrt/ui/main.slint:4174
 msgid "Open a web address in the browser"
 msgstr "Odpri spletni naslov v brskalniku"
 
-#: crates/opencrt/ui/main.slint:4167
+#: crates/opencrt/ui/main.slint:4175
 msgid "Enter"
 msgstr "Enter"
 
-#: crates/opencrt/ui/main.slint:4167
+#: crates/opencrt/ui/main.slint:4175
 msgid "Reconnect a disconnected tab"
 msgstr "Ponovno poveži prekinjen zavihek"
 
-#: crates/opencrt/ui/main.slint:4168
+#: crates/opencrt/ui/main.slint:4176
 msgid "Ctrl+C, Escape"
 msgstr "Ctrl+C, Escape"
 
-#: crates/opencrt/ui/main.slint:4168
+#: crates/opencrt/ui/main.slint:4176
 msgid "Cancel a file transfer"
 msgstr "Prekliči prenos datoteke"
 
-#: crates/opencrt/ui/main.slint:4169
+#: crates/opencrt/ui/main.slint:4177
 msgid "Cmd+K, Cmd+T"
 msgstr "Cmd+K, Cmd+T"
 
-#: crates/opencrt/ui/main.slint:4169
+#: crates/opencrt/ui/main.slint:4177
 msgid "Quick Connect, Connect in Tab"
 msgstr "Hitra povezava, Poveži v zavihku"
 
-#: crates/opencrt/ui/main.slint:4170
+#: crates/opencrt/ui/main.slint:4178
 msgid "Cmd+E"
 msgstr "Cmd+E"
 
-#: crates/opencrt/ui/main.slint:4170
+#: crates/opencrt/ui/main.slint:4178
 msgid "Open a saved session (the Session Manager's filter)"
 msgstr "Odpri shranjeno sejo (filter Upravitelja sej)"
 
-#: crates/opencrt/ui/main.slint:4171
+#: crates/opencrt/ui/main.slint:4179
 msgid "Cmd+L"
 msgstr "Cmd+L"
 
-#: crates/opencrt/ui/main.slint:4171
+#: crates/opencrt/ui/main.slint:4179
 msgid "Connect a local shell"
 msgstr "Poveži lokalno lupino"
 
-#: crates/opencrt/ui/main.slint:4173 crates/opencrt/ui/main.slint:5902
+#: crates/opencrt/ui/main.slint:4181 crates/opencrt/ui/main.slint:5912
 msgid "Keyboard Shortcuts"
 msgstr "Bližnjice na tipkovnici"
 
-#: crates/opencrt/ui/main.slint:4193
+#: crates/opencrt/ui/main.slint:4201
 msgid ""
 "Add your own in Global Options > Keyboard, or per session in Session Options "
 "> Keyboard. For example, F1 = menu: shortcuts opens this list."
 msgstr "Svoje bližnjice dodajte v Globalne možnosti > Tipkovnica ali za posamezno sejo v Možnosti seje > Tipkovnica. Na primer F1 = menu: shortcuts odpre ta seznam."
 
-#: crates/opencrt/ui/main.slint:4217 crates/opencrt/ui/main.slint:5910
+#: crates/opencrt/ui/main.slint:4225 crates/opencrt/ui/main.slint:5920
 msgid "About OpenCRT"
 msgstr "O programu OpenCRT"
 
-#: crates/opencrt/ui/main.slint:4229
+#: crates/opencrt/ui/main.slint:4237
 msgid "Version {}"
 msgstr "Različica {}"
 
-#: crates/opencrt/ui/main.slint:4234
+#: crates/opencrt/ui/main.slint:4242
 msgid "Secure terminal client for Windows, macOS and Linux."
 msgstr "Varen terminalski odjemalec za Windows, macOS in Linux."
 
-#: crates/opencrt/ui/main.slint:4238
+#: crates/opencrt/ui/main.slint:4246
 msgid "© 2026 Kim Attree"
 msgstr "© 2026 Kim Attree"
 
-#: crates/opencrt/ui/main.slint:4246
+#: crates/opencrt/ui/main.slint:4254
 msgid "Protocols"
 msgstr "Protokoli"
 
-#: crates/opencrt/ui/main.slint:4247
+#: crates/opencrt/ui/main.slint:4255
 msgid "SSH2, SFTP, Telnet, RDP, VNC, serial, raw TCP, local shell"
 msgstr "SSH2, SFTP, Telnet, RDP, VNC, serijska povezava, surovi TCP, lokalna lupina"
 
-#: crates/opencrt/ui/main.slint:4250
+#: crates/opencrt/ui/main.slint:4258
 msgid "Config"
 msgstr "Konfiguracija"
 
-#: crates/opencrt/ui/main.slint:4254
+#: crates/opencrt/ui/main.slint:4262
 msgid "Licence"
 msgstr "Licenca"
 
-#: crates/opencrt/ui/main.slint:4255
+#: crates/opencrt/ui/main.slint:4263
 msgid "GPL-3.0-only, as built with Slint; source code Apache-2.0"
 msgstr "GPL-3.0-only, kot je zgrajeno s Slint; izvorna koda Apache-2.0"
 
-#: crates/opencrt/ui/main.slint:4258
+#: crates/opencrt/ui/main.slint:4266
 msgid "Fonts"
 msgstr "Pisave"
 
-#: crates/opencrt/ui/main.slint:4259
+#: crates/opencrt/ui/main.slint:4267
 msgid "IBM Plex Sans and Mono, SIL Open Font License 1.1"
 msgstr "IBM Plex Sans in Mono, SIL Open Font License 1.1"
 
-#: crates/opencrt/ui/main.slint:4272 crates/opencrt/ui/main.slint:5906
+#: crates/opencrt/ui/main.slint:4280 crates/opencrt/ui/main.slint:5916
 msgid "Check for Updates"
 msgstr "Preveri posodobitve"
 
-#: crates/opencrt/ui/main.slint:4276
+#: crates/opencrt/ui/main.slint:4284
 msgid "Release Notes"
 msgstr "Opombe ob izdaji"
 
-#: crates/opencrt/ui/main.slint:4280
+#: crates/opencrt/ui/main.slint:4288
 msgid "Update Now"
 msgstr "Posodobi zdaj"
 
-#: crates/opencrt/ui/main.slint:4372
+#: crates/opencrt/ui/main.slint:4380
 msgid "Download"
 msgstr "Prenesi"
 
-#: crates/opencrt/ui/main.slint:4372
+#: crates/opencrt/ui/main.slint:4380
 msgid "Upload"
 msgstr "Naloži"
 
-#: crates/opencrt/ui/main.slint:4376
+#: crates/opencrt/ui/main.slint:4384
 msgid "Edit (opens here, uploads on save)"
 msgstr "Uredi (odpre se tukaj, naloži ob shranjevanju)"
 
-#: crates/opencrt/ui/main.slint:4393
+#: crates/opencrt/ui/main.slint:4401
 msgid "Copy Path"
 msgstr "Kopiraj pot"
 
-#: crates/opencrt/ui/main.slint:4398
+#: crates/opencrt/ui/main.slint:4406
 msgid "Refresh"
 msgstr "Osveži"
 
-#: crates/opencrt/ui/main.slint:4407
+#: crates/opencrt/ui/main.slint:4415
 msgid "Remote site:"
 msgstr "Oddaljeno mesto:"
 
-#: crates/opencrt/ui/main.slint:4407
+#: crates/opencrt/ui/main.slint:4415
 msgid "Local site:"
 msgstr "Lokalno mesto:"
 
-#: crates/opencrt/ui/main.slint:4415
+#: crates/opencrt/ui/main.slint:4423
 msgid "Up"
 msgstr "Gor"
 
-#: crates/opencrt/ui/main.slint:4425
+#: crates/opencrt/ui/main.slint:4433
 msgid "Filename"
 msgstr "Ime datoteke"
 
-#: crates/opencrt/ui/main.slint:4433
+#: crates/opencrt/ui/main.slint:4441
 msgid "Filesize"
 msgstr "Velikost datoteke"
 
-#: crates/opencrt/ui/main.slint:4442
+#: crates/opencrt/ui/main.slint:4450
 msgid "Filetype"
 msgstr "Vrsta datoteke"
 
-#: crates/opencrt/ui/main.slint:4450
+#: crates/opencrt/ui/main.slint:4458
 msgid "Last modified"
 msgstr "Zadnja sprememba"
 
-#: crates/opencrt/ui/main.slint:4458
+#: crates/opencrt/ui/main.slint:4466
 msgid "Permissions"
 msgstr "Dovoljenja"
 
-#: crates/opencrt/ui/main.slint:4466
+#: crates/opencrt/ui/main.slint:4474
 msgid "Owner/Group"
 msgstr "Lastnik/skupina"
 
-#: crates/opencrt/ui/main.slint:4564
+#: crates/opencrt/ui/main.slint:4572
 msgid "Filter"
 msgstr "Filter"
 
-#: crates/opencrt/ui/main.slint:4569
+#: crates/opencrt/ui/main.slint:4577
 msgid "Hidden"
 msgstr "Skrite"
 
-#: crates/opencrt/ui/main.slint:4574
+#: crates/opencrt/ui/main.slint:4582
 msgid "Follow shell"
 msgstr "Sledi lupini"
 
-#: crates/opencrt/ui/main.slint:4605
+#: crates/opencrt/ui/main.slint:4613
 msgid "Cancel Transfer"
 msgstr "Prekliči prenos"
 
-#: crates/opencrt/ui/main.slint:4609
+#: crates/opencrt/ui/main.slint:4617
 msgid "Retry"
 msgstr "Poskusi znova"
 
-#: crates/opencrt/ui/main.slint:4617
+#: crates/opencrt/ui/main.slint:4625
 msgid "Clear List"
 msgstr "Počisti seznam"
 
-#: crates/opencrt/ui/main.slint:4628
+#: crates/opencrt/ui/main.slint:4636
 msgid "Local file"
 msgstr "Lokalna datoteka"
 
-#: crates/opencrt/ui/main.slint:4633
+#: crates/opencrt/ui/main.slint:4641
 msgid "Direction"
 msgstr "Smer"
 
-#: crates/opencrt/ui/main.slint:4638
+#: crates/opencrt/ui/main.slint:4646
 msgid "Remote file"
 msgstr "Oddaljena datoteka"
 
-#: crates/opencrt/ui/main.slint:4643
+#: crates/opencrt/ui/main.slint:4651
 msgid "Size"
 msgstr "Velikost"
 
-#: crates/opencrt/ui/main.slint:4649
+#: crates/opencrt/ui/main.slint:4657
 msgid "Reason"
 msgstr "Razlog"
 
-#: crates/opencrt/ui/main.slint:4649
+#: crates/opencrt/ui/main.slint:4657
 msgid "Status"
 msgstr "Stanje"
 
-#: crates/opencrt/ui/main.slint:4726
+#: crates/opencrt/ui/main.slint:4734
 msgid "Queued files ({})"
 msgstr "Datoteke v čakalni vrsti ({})"
 
-#: crates/opencrt/ui/main.slint:4726
+#: crates/opencrt/ui/main.slint:4734
 msgid "Failed transfers ({})"
 msgstr "Neuspeli prenosi ({})"
 
-#: crates/opencrt/ui/main.slint:4726
+#: crates/opencrt/ui/main.slint:4734
 msgid "Successful transfers ({})"
 msgstr "Uspešni prenosi ({})"
 
-#: crates/opencrt/ui/main.slint:4828
+#: crates/opencrt/ui/main.slint:4836
 msgid "Quick Open"
 msgstr "Hitro odpiranje"
 
-#: crates/opencrt/ui/main.slint:4856
+#: crates/opencrt/ui/main.slint:4864
 msgid "Search saved sessions, or type user@host"
 msgstr "Iščite shranjene seje ali vnesite user@host"
 
-#: crates/opencrt/ui/main.slint:4895
+#: crates/opencrt/ui/main.slint:4903
 msgid "No saved session matches."
 msgstr "Nobena shranjena seja se ne ujema."
 
-#: crates/opencrt/ui/main.slint:4895
+#: crates/opencrt/ui/main.slint:4903
 msgid "Enter connects  ·  Shift+Enter opens an SFTP GUI tab  ·  Esc closes"
 msgstr "Enter poveže  ·  Shift+Enter odpre zavihek SFTP GUI  ·  Esc zapre"
 
-#: crates/opencrt/ui/main.slint:4965
+#: crates/opencrt/ui/main.slint:4973
 msgid "Ready"
 msgstr "Pripravljeno"
 
-#: crates/opencrt/ui/main.slint:5274 crates/opencrt/ui/main.slint:5745
+#: crates/opencrt/ui/main.slint:5284 crates/opencrt/ui/main.slint:5755
 msgid "Script"
 msgstr "Skript"
 
-#: crates/opencrt/ui/main.slint:5420
+#: crates/opencrt/ui/main.slint:5430
 msgid "File"
 msgstr "Datoteka"
 
-#: crates/opencrt/ui/main.slint:5422
+#: crates/opencrt/ui/main.slint:5432
 msgid "Quick Connect..."
 msgstr "Hitra povezava..."
 
-#: crates/opencrt/ui/main.slint:5426
+#: crates/opencrt/ui/main.slint:5436
 msgid "Quick Open... (Cmd+O)"
 msgstr "Hitro odpiranje... (Cmd+O)"
 
-#: crates/opencrt/ui/main.slint:5426
+#: crates/opencrt/ui/main.slint:5436
 msgid "Quick Open... (Ctrl+Shift+T)"
 msgstr "Hitro odpiranje... (Ctrl+Shift+T)"
 
-#: crates/opencrt/ui/main.slint:5430
+#: crates/opencrt/ui/main.slint:5440
 msgid "Connect in Tab..."
 msgstr "Poveži v zavihku..."
 
-#: crates/opencrt/ui/main.slint:5434 crates/opencrt/ui/main.slint:5962
+#: crates/opencrt/ui/main.slint:5444 crates/opencrt/ui/main.slint:5972
 msgid "Connect Local Shell"
 msgstr "Poveži lokalno lupino"
 
-#: crates/opencrt/ui/main.slint:5454
+#: crates/opencrt/ui/main.slint:5464
 msgid "Disconnect All"
 msgstr "Prekini vse povezave"
 
-#: crates/opencrt/ui/main.slint:5459
+#: crates/opencrt/ui/main.slint:5469
 msgid "Close Tab"
 msgstr "Zapri zavihek"
 
-#: crates/opencrt/ui/main.slint:5465
+#: crates/opencrt/ui/main.slint:5475
 msgid "Stop Logging"
 msgstr "Ustavi beleženje"
 
-#: crates/opencrt/ui/main.slint:5465
+#: crates/opencrt/ui/main.slint:5475
 msgid "Log Session..."
 msgstr "Beleži sejo..."
 
-#: crates/opencrt/ui/main.slint:5470
+#: crates/opencrt/ui/main.slint:5480
 msgid "Stop Recording"
 msgstr "Ustavi snemanje"
 
-#: crates/opencrt/ui/main.slint:5470
+#: crates/opencrt/ui/main.slint:5480
 msgid "Record Session (asciicast)..."
 msgstr "Snemaj sejo (asciicast)..."
 
-#: crates/opencrt/ui/main.slint:5476 crates/opencrt/ui/main.slint:6043
+#: crates/opencrt/ui/main.slint:5486 crates/opencrt/ui/main.slint:6053
 msgid "Print Screen"
 msgstr "Natisni zaslon"
 
-#: crates/opencrt/ui/main.slint:5481
+#: crates/opencrt/ui/main.slint:5491
 msgid "Print Selection"
 msgstr "Natisni izbor"
 
-#: crates/opencrt/ui/main.slint:5486
+#: crates/opencrt/ui/main.slint:5496
 msgid "Stop Auto Print"
 msgstr "Ustavi samodejno tiskanje"
 
-#: crates/opencrt/ui/main.slint:5486
+#: crates/opencrt/ui/main.slint:5496
 msgid "Auto Print"
 msgstr "Samodejno tiskanje"
 
-#: crates/opencrt/ui/main.slint:5492
+#: crates/opencrt/ui/main.slint:5502
 msgid "Snapshots"
 msgstr "Posnetki"
 
-#: crates/opencrt/ui/main.slint:5494
+#: crates/opencrt/ui/main.slint:5504
 msgid "Save Snapshot..."
 msgstr "Shrani posnetek..."
 
-#: crates/opencrt/ui/main.slint:5518
+#: crates/opencrt/ui/main.slint:5528
 msgid "Exit"
 msgstr "Izhod"
 
-#: crates/opencrt/ui/main.slint:5523
+#: crates/opencrt/ui/main.slint:5533
 msgid "Edit"
 msgstr "Urejanje"
 
-#: crates/opencrt/ui/main.slint:5530 crates/opencrt/ui/main.slint:6316
+#: crates/opencrt/ui/main.slint:5540 crates/opencrt/ui/main.slint:6326
 msgid "Copy with Colours"
 msgstr "Kopiraj z barvami"
 
-#: crates/opencrt/ui/main.slint:5540
+#: crates/opencrt/ui/main.slint:5550
 msgid "Copy and Paste"
 msgstr "Kopiraj in prilepi"
 
-#: crates/opencrt/ui/main.slint:5545 crates/opencrt/ui/main.slint:6332
+#: crates/opencrt/ui/main.slint:5555 crates/opencrt/ui/main.slint:6342
 msgid "Select All"
 msgstr "Izberi vse"
 
-#: crates/opencrt/ui/main.slint:5550
+#: crates/opencrt/ui/main.slint:5560
 msgid "Find..."
 msgstr "Najdi..."
 
-#: crates/opencrt/ui/main.slint:5560
+#: crates/opencrt/ui/main.slint:5570
 msgid "Clear Screen"
 msgstr "Počisti zaslon"
 
-#: crates/opencrt/ui/main.slint:5565 crates/opencrt/ui/main.slint:6336
+#: crates/opencrt/ui/main.slint:5575 crates/opencrt/ui/main.slint:6346
 msgid "Clear Scrollback"
 msgstr "Počisti zgodovino izpisa"
 
-#: crates/opencrt/ui/main.slint:5570
+#: crates/opencrt/ui/main.slint:5580
 msgid "Clear Screen and Scrollback"
 msgstr "Počisti zaslon in zgodovino izpisa"
 
-#: crates/opencrt/ui/main.slint:5575
+#: crates/opencrt/ui/main.slint:5585
 msgid "Reset Terminal"
 msgstr "Ponastavi terminal"
 
-#: crates/opencrt/ui/main.slint:5580 crates/opencrt/ui/main.slint:6340
+#: crates/opencrt/ui/main.slint:5590 crates/opencrt/ui/main.slint:6350
 msgid "Send Break"
 msgstr "Pošlji Break"
 
-#: crates/opencrt/ui/main.slint:5586
+#: crates/opencrt/ui/main.slint:5596
 msgid "Send Input to All Tabs"
 msgstr "Pošiljaj vnos v vse zavihke"
 
-#: crates/opencrt/ui/main.slint:5592
+#: crates/opencrt/ui/main.slint:5602
 msgid "View"
 msgstr "Pogled"
 
-#: crates/opencrt/ui/main.slint:5594
+#: crates/opencrt/ui/main.slint:5604
 msgid "Toolbar"
 msgstr "Orodna vrstica"
 
-#: crates/opencrt/ui/main.slint:5599
+#: crates/opencrt/ui/main.slint:5609
 msgid "Status Bar"
 msgstr "Vrstica stanja"
 
-#: crates/opencrt/ui/main.slint:5614
+#: crates/opencrt/ui/main.slint:5624
 msgid "Command Window"
 msgstr "Ukazno okno"
 
-#: crates/opencrt/ui/main.slint:5619
+#: crates/opencrt/ui/main.slint:5629
 msgid "Hex View"
 msgstr "Šestnajstiški pogled"
 
-#: crates/opencrt/ui/main.slint:5624
+#: crates/opencrt/ui/main.slint:5634
 msgid "Show Control Characters"
 msgstr "Prikaži kontrolne znake"
 
-#: crates/opencrt/ui/main.slint:5630
+#: crates/opencrt/ui/main.slint:5640
 msgid "Button Bar"
 msgstr "Vrstica gumbov"
 
-#: crates/opencrt/ui/main.slint:5636
+#: crates/opencrt/ui/main.slint:5646
 msgid "Full Screen"
 msgstr "Celozaslonski način"
 
-#: crates/opencrt/ui/main.slint:5641
+#: crates/opencrt/ui/main.slint:5651
 msgid "Always on Top"
 msgstr "Vedno na vrhu"
 
-#: crates/opencrt/ui/main.slint:5648
+#: crates/opencrt/ui/main.slint:5658
 msgid "Larger Font"
 msgstr "Večja pisava"
 
-#: crates/opencrt/ui/main.slint:5652
+#: crates/opencrt/ui/main.slint:5662
 msgid "Smaller Font"
 msgstr "Manjša pisava"
 
-#: crates/opencrt/ui/main.slint:5657
+#: crates/opencrt/ui/main.slint:5667
 msgid "Options"
 msgstr "Možnosti"
 
-#: crates/opencrt/ui/main.slint:5664
+#: crates/opencrt/ui/main.slint:5674
 msgid "Default Session..."
 msgstr "Privzeta seja..."
 
-#: crates/opencrt/ui/main.slint:5668
+#: crates/opencrt/ui/main.slint:5678
 msgid "Firewalls..."
 msgstr "Požarni zidovi..."
 
-#: crates/opencrt/ui/main.slint:5672
+#: crates/opencrt/ui/main.slint:5682
 msgid "Colour Schemes..."
 msgstr "Barvne sheme..."
 
-#: crates/opencrt/ui/main.slint:5676
+#: crates/opencrt/ui/main.slint:5686
 msgid "Global Options..."
 msgstr "Globalne možnosti..."
 
-#: crates/opencrt/ui/main.slint:5681
+#: crates/opencrt/ui/main.slint:5691
 msgid "Transfer"
 msgstr "Prenos"
 
-#: crates/opencrt/ui/main.slint:5693
+#: crates/opencrt/ui/main.slint:5703
 msgid "Send ASCII File..."
 msgstr "Pošlji datoteko ASCII..."
 
-#: crates/opencrt/ui/main.slint:5698
+#: crates/opencrt/ui/main.slint:5708
 msgid "Send Binary File..."
 msgstr "Pošlji binarno datoteko..."
 
-#: crates/opencrt/ui/main.slint:5703
+#: crates/opencrt/ui/main.slint:5713
 msgid "Stop Receive ASCII"
 msgstr "Ustavi prejemanje ASCII"
 
-#: crates/opencrt/ui/main.slint:5703
+#: crates/opencrt/ui/main.slint:5713
 msgid "Receive ASCII..."
 msgstr "Prejmi ASCII..."
 
-#: crates/opencrt/ui/main.slint:5708
+#: crates/opencrt/ui/main.slint:5718
 msgid "Zmodem Upload..."
 msgstr "Nalaganje Zmodem..."
 
-#: crates/opencrt/ui/main.slint:5714
+#: crates/opencrt/ui/main.slint:5724
 msgid "Send Xmodem..."
 msgstr "Pošlji Xmodem..."
 
-#: crates/opencrt/ui/main.slint:5719
+#: crates/opencrt/ui/main.slint:5729
 msgid "Receive Xmodem..."
 msgstr "Prejmi Xmodem..."
 
-#: crates/opencrt/ui/main.slint:5724
+#: crates/opencrt/ui/main.slint:5734
 msgid "Send Ymodem..."
 msgstr "Pošlji Ymodem..."
 
-#: crates/opencrt/ui/main.slint:5729
+#: crates/opencrt/ui/main.slint:5739
 msgid "Receive Ymodem"
 msgstr "Prejmi Ymodem"
 
-#: crates/opencrt/ui/main.slint:5734
+#: crates/opencrt/ui/main.slint:5744
 msgid "Send Kermit..."
 msgstr "Pošlji Kermit..."
 
-#: crates/opencrt/ui/main.slint:5739
+#: crates/opencrt/ui/main.slint:5749
 msgid "Receive Kermit"
 msgstr "Prejmi Kermit"
 
-#: crates/opencrt/ui/main.slint:5747
+#: crates/opencrt/ui/main.slint:5757
 msgid "Run..."
 msgstr "Zaženi..."
 
-#: crates/opencrt/ui/main.slint:5757
+#: crates/opencrt/ui/main.slint:5767
 msgid "Script Editor..."
 msgstr "Urejevalnik skriptov..."
 
-#: crates/opencrt/ui/main.slint:5762
+#: crates/opencrt/ui/main.slint:5772
 msgid "Stop Recording..."
 msgstr "Ustavi snemanje..."
 
-#: crates/opencrt/ui/main.slint:5762
+#: crates/opencrt/ui/main.slint:5772
 msgid "Start Recording"
 msgstr "Začni snemanje"
 
-#: crates/opencrt/ui/main.slint:5768
+#: crates/opencrt/ui/main.slint:5778
 msgid "Tools"
 msgstr "Orodja"
 
-#: crates/opencrt/ui/main.slint:5770
+#: crates/opencrt/ui/main.slint:5780
 msgid "Create Public Key..."
 msgstr "Ustvari javni ključ..."
 
-#: crates/opencrt/ui/main.slint:5774
+#: crates/opencrt/ui/main.slint:5784
 msgid "Host Keys..."
 msgstr "Ključi gostiteljev..."
 
-#: crates/opencrt/ui/main.slint:5778
+#: crates/opencrt/ui/main.slint:5788
 msgid "Credentials Manager..."
 msgstr "Upravitelj poverilnic..."
 
-#: crates/opencrt/ui/main.slint:5782
+#: crates/opencrt/ui/main.slint:5792
 msgid "Master Password..."
 msgstr "Glavno geslo..."
 
-#: crates/opencrt/ui/main.slint:5786
+#: crates/opencrt/ui/main.slint:5796
 msgid "Agent Keys..."
 msgstr "Ključi agenta..."
 
-#: crates/opencrt/ui/main.slint:5790
+#: crates/opencrt/ui/main.slint:5800
 msgid "Public Key Assistant..."
 msgstr "Pomočnik za javne ključe..."
 
-#: crates/opencrt/ui/main.slint:5794
+#: crates/opencrt/ui/main.slint:5804
 msgid "Convert Private Key to OpenSSH..."
 msgstr "Pretvori zasebni ključ v OpenSSH..."
 
-#: crates/opencrt/ui/main.slint:5799
+#: crates/opencrt/ui/main.slint:5809
 msgid "Import OpenSSH Config"
 msgstr "Uvozi konfiguracijo OpenSSH"
 
-#: crates/opencrt/ui/main.slint:5803
+#: crates/opencrt/ui/main.slint:5813
 msgid "Import SecureCRT Sessions..."
 msgstr "Uvozi seje SecureCRT..."
 
-#: crates/opencrt/ui/main.slint:5807
+#: crates/opencrt/ui/main.slint:5817
 msgid "Import Sessions..."
 msgstr "Uvozi seje..."
 
-#: crates/opencrt/ui/main.slint:5811
+#: crates/opencrt/ui/main.slint:5821
 msgid "Export Sessions..."
 msgstr "Izvozi seje..."
 
-#: crates/opencrt/ui/main.slint:5816
+#: crates/opencrt/ui/main.slint:5826
 msgid "Window"
 msgstr "Okno"
 
-#: crates/opencrt/ui/main.slint:5818
+#: crates/opencrt/ui/main.slint:5828
 msgid "Next Tab"
 msgstr "Naslednji zavihek"
 
-#: crates/opencrt/ui/main.slint:5823
+#: crates/opencrt/ui/main.slint:5833
 msgid "Previous Tab"
 msgstr "Prejšnji zavihek"
 
-#: crates/opencrt/ui/main.slint:5829
+#: crates/opencrt/ui/main.slint:5839
 msgid "Tile Vertically"
 msgstr "Razporedi navpično"
 
-#: crates/opencrt/ui/main.slint:5834
+#: crates/opencrt/ui/main.slint:5844
 msgid "Tile Horizontally"
 msgstr "Razporedi vodoravno"
 
-#: crates/opencrt/ui/main.slint:5839
+#: crates/opencrt/ui/main.slint:5849
 msgid "Untile"
 msgstr "Prekliči razporeditev"
 
-#: crates/opencrt/ui/main.slint:5843
+#: crates/opencrt/ui/main.slint:5853
 msgid "Merge Tab Groups"
 msgstr "Združi skupine zavihkov"
 
-#: crates/opencrt/ui/main.slint:5860
+#: crates/opencrt/ui/main.slint:5870
 msgid "Language"
 msgstr "Jezik"
 
-#: crates/opencrt/ui/main.slint:5869
+#: crates/opencrt/ui/main.slint:5879
 msgid "Western and Southern Europe"
 msgstr "Zahodna in južna Evropa"
 
-#: crates/opencrt/ui/main.slint:5879
+#: crates/opencrt/ui/main.slint:5889
 msgid "Northern Europe"
 msgstr "Severna Evropa"
 
-#: crates/opencrt/ui/main.slint:5889
+#: crates/opencrt/ui/main.slint:5899
 msgid "Central and Eastern Europe"
 msgstr "Srednja in vzhodna Evropa"
 
-#: crates/opencrt/ui/main.slint:5900
+#: crates/opencrt/ui/main.slint:5910
 msgid "Help"
 msgstr "Pomoč"
 
-#: crates/opencrt/ui/main.slint:5956
+#: crates/opencrt/ui/main.slint:5966
 msgid "Connect in Tab"
 msgstr "Poveži v zavihku"
 
-#: crates/opencrt/ui/main.slint:5976
+#: crates/opencrt/ui/main.slint:5986
 msgid "PowerShell"
 msgstr "PowerShell"
 
-#: crates/opencrt/ui/main.slint:5980
+#: crates/opencrt/ui/main.slint:5990
 msgid "Command Prompt (classic)"
 msgstr "Ukazni poziv (klasični)"
 
-#: crates/opencrt/ui/main.slint:5985
+#: crates/opencrt/ui/main.slint:5995
 msgid "WSL: {}"
 msgstr "WSL: {}"
 
-#: crates/opencrt/ui/main.slint:6010
+#: crates/opencrt/ui/main.slint:6020
 msgid "Quick connect: user@host"
 msgstr "Hitra povezava: user@host"
 
-#: crates/opencrt/ui/main.slint:6030
+#: crates/opencrt/ui/main.slint:6040
 msgid "Find"
 msgstr "Najdi"
 
-#: crates/opencrt/ui/main.slint:6038
+#: crates/opencrt/ui/main.slint:6048
 msgid "Highlight words"
 msgstr "Označi besede"
 
-#: crates/opencrt/ui/main.slint:6290 crates/opencrt/ui/main.slint:6943
+#: crates/opencrt/ui/main.slint:6300 crates/opencrt/ui/main.slint:6953
 msgid "OpenCRT"
 msgstr "OpenCRT"
 
-#: crates/opencrt/ui/main.slint:6296
+#: crates/opencrt/ui/main.slint:6306
 msgid "File > Quick Connect, or type user@host in the toolbar's connect bar."
 msgstr "Datoteka > Hitra povezava ali vnesite user@host v vrstico za povezavo v orodni vrstici."
 
-#: crates/opencrt/ui/main.slint:6306
+#: crates/opencrt/ui/main.slint:6316
 msgid "Show Menu Bar"
 msgstr "Prikaži menijsko vrstico"
 
-#: crates/opencrt/ui/main.slint:6321
+#: crates/opencrt/ui/main.slint:6331
 msgid "Search the Web"
 msgstr "Išči po spletu"
 
-#: crates/opencrt/ui/main.slint:6433
+#: crates/opencrt/ui/main.slint:6443
 msgid "Default"
 msgstr "Privzeto"
 
-#: crates/opencrt/ui/main.slint:6448
+#: crates/opencrt/ui/main.slint:6458
 msgid "New Bar..."
 msgstr "Nova vrstica..."
 
-#: crates/opencrt/ui/main.slint:6452
+#: crates/opencrt/ui/main.slint:6462
 msgid "Rename Bar..."
 msgstr "Preimenuj vrstico..."
 
-#: crates/opencrt/ui/main.slint:6457
+#: crates/opencrt/ui/main.slint:6467
 msgid "Delete Bar..."
 msgstr "Izbriši vrstico..."
 
-#: crates/opencrt/ui/main.slint:6488
+#: crates/opencrt/ui/main.slint:6498
 msgid "Add a button that sends a command, e.g. show version\\r"
 msgstr "Dodajte gumb, ki pošlje ukaz, npr. show version\\r"
 
-#: crates/opencrt/ui/main.slint:6511
+#: crates/opencrt/ui/main.slint:6521
 msgid "Nothing received yet in this tab."
 msgstr "V tem zavihku še ni bilo nič prejeto."
 
-#: crates/opencrt/ui/main.slint:6559
+#: crates/opencrt/ui/main.slint:6569
 msgid "characters are sent as you type; Enter sends Enter"
 msgstr "znaki se pošiljajo med tipkanjem; Enter pošlje Enter"
 
-#: crates/opencrt/ui/main.slint:6559
+#: crates/opencrt/ui/main.slint:6569
 msgid "type a command and press Enter"
 msgstr "vnesite ukaz in pritisnite Enter"
 
-#: crates/opencrt/ui/main.slint:6575
+#: crates/opencrt/ui/main.slint:6585
 msgid "History"
 msgstr "Zgodovina"
 
-#: crates/opencrt/ui/main.slint:6586
+#: crates/opencrt/ui/main.slint:6596
 msgid "Send characters immediately"
 msgstr "Pošlji znake takoj"
 
-#: crates/opencrt/ui/main.slint:6607
+#: crates/opencrt/ui/main.slint:6617
 msgid "Find:"
 msgstr "Najdi:"
 
-#: crates/opencrt/ui/main.slint:6614
+#: crates/opencrt/ui/main.slint:6624
 msgid "text to find (Enter = next)"
 msgstr "besedilo za iskanje (Enter = naslednje)"
 
-#: crates/opencrt/ui/main.slint:6620
+#: crates/opencrt/ui/main.slint:6630
 msgid "Next"
 msgstr "Naslednje"
 
-#: crates/opencrt/ui/main.slint:6624
+#: crates/opencrt/ui/main.slint:6634
 msgid "Previous"
 msgstr "Prejšnje"
 
-#: crates/opencrt/ui/main.slint:6628
+#: crates/opencrt/ui/main.slint:6638
 msgid "Match case"
 msgstr "Razlikuj velike in male črke"
 
-#: crates/opencrt/ui/main.slint:6677
+#: crates/opencrt/ui/main.slint:6687
 msgid "OpenCRT {} available"
 msgstr "Na voljo je OpenCRT {}"
 
-#: crates/opencrt/ui/main.slint:6692
+#: crates/opencrt/ui/main.slint:6702
 msgid "{n} tunnel tab"
 msgid_plural "{n} tunnel tabs"
 msgstr[0] "{n} zavihek tunela"
@@ -2716,198 +2724,198 @@ msgstr[1] "{n} zavihka tunela"
 msgstr[2] "{n} zavihki tunela"
 msgstr[3] "{n} zavihkov tunela"
 
-#: crates/opencrt/ui/main.slint:6716
+#: crates/opencrt/ui/main.slint:6726
 msgid "ALL TABS"
 msgstr "VSI ZAVIHKI"
 
-#: crates/opencrt/ui/main.slint:6721
+#: crates/opencrt/ui/main.slint:6731
 msgid "LOG"
 msgstr "LOG"
 
-#: crates/opencrt/ui/main.slint:6725
+#: crates/opencrt/ui/main.slint:6735
 msgid "CAP"
 msgstr "CAP"
 
-#: crates/opencrt/ui/main.slint:6730
+#: crates/opencrt/ui/main.slint:6740
 msgid "NUM"
 msgstr "NUM"
 
-#: crates/opencrt/ui/main.slint:6781
+#: crates/opencrt/ui/main.slint:6791
 msgid "Session Options - {}"
 msgstr "Možnosti seje - {}"
 
-#: crates/opencrt/ui/main.slint:6990
+#: crates/opencrt/ui/main.slint:7000
 msgid "Host Keys"
 msgstr "Ključi gostiteljev"
 
-#: crates/opencrt/ui/main.slint:6993
+#: crates/opencrt/ui/main.slint:7003
 msgid ""
 "Keys of the SSH servers you have accepted. Remove one when a server's key "
 "has changed for a known reason (for example after a reinstall); you are "
 "asked to accept the new key at the next connection."
 msgstr "Ključi strežnikov SSH, ki ste jih sprejeli. Ključ odstranite, ko se je ključ strežnika spremenil iz znanega razloga (na primer po ponovni namestitvi); ob naslednji povezavi boste pozvani, da sprejmete novi ključ."
 
-#: crates/opencrt/ui/main.slint:7003
+#: crates/opencrt/ui/main.slint:7013
 msgid "No saved host keys."
 msgstr "Ni shranjenih ključev gostiteljev."
 
-#: crates/opencrt/ui/main.slint:7033
+#: crates/opencrt/ui/main.slint:7043
 msgid "Import SecureCRT..."
 msgstr "Uvozi SecureCRT..."
 
-#: crates/opencrt/ui/main.slint:7057
+#: crates/opencrt/ui/main.slint:7067
 msgid "Credentials Manager"
 msgstr "Upravitelj poverilnic"
 
-#: crates/opencrt/ui/main.slint:7060
+#: crates/opencrt/ui/main.slint:7070
 msgid ""
 "Saved logins for SSH2, Telnet, RDP and VNC sessions. Pick one in Session "
 "Options > Authentication; its password is kept in the system keychain."
 msgstr "Shranjene prijave za seje SSH2, Telnet, RDP in VNC. Poverilnico izberite v Možnosti seje > Overjanje; njeno geslo je shranjeno v sistemski verigi ključev."
 
-#: crates/opencrt/ui/main.slint:7078
+#: crates/opencrt/ui/main.slint:7088
 msgid "Username"
 msgstr "Uporabniško ime"
 
-#: crates/opencrt/ui/main.slint:7128
+#: crates/opencrt/ui/main.slint:7138
 msgid "Firewalls"
 msgstr "Požarni zidovi"
 
-#: crates/opencrt/ui/main.slint:7131
+#: crates/opencrt/ui/main.slint:7141
 msgid ""
 "Proxies and gateways defined once and used by name: type a firewall's name "
 "into a session's Proxy field (Session Options > Connection)."
 msgstr "Posredniki in prehodi, določeni enkrat in uporabljeni po imenu: ime požarnega zidu vnesite v polje Posrednik v seji (Možnosti seje > Povezava)."
 
-#: crates/opencrt/ui/main.slint:7149
+#: crates/opencrt/ui/main.slint:7159
 msgid "Proxy"
 msgstr "Posrednik"
 
-#: crates/opencrt/ui/main.slint:7243
+#: crates/opencrt/ui/main.slint:7255
 msgid "Agent Keys"
 msgstr "Ključi agenta"
 
-#: crates/opencrt/ui/main.slint:7246
+#: crates/opencrt/ui/main.slint:7258
 msgid ""
 "Keys held by OpenCRT's own SSH agent. While it holds keys, sessions without "
 "a key file log in with them and forwarded agents use them; otherwise the "
 "system's agent is used. Keys stay in memory until OpenCRT closes."
 msgstr "Ključi, ki jih hrani lastni agent SSH programa OpenCRT. Dokler hrani ključe, se seje brez datoteke ključa prijavijo z njimi in jih uporabljajo posredovani agenti; sicer se uporabi sistemski agent. Ključi ostanejo v pomnilniku, dokler se OpenCRT ne zapre."
 
-#: crates/opencrt/ui/main.slint:7256
+#: crates/opencrt/ui/main.slint:7268
 msgid "No keys loaded."
 msgstr "Ni naloženih ključev."
 
-#: crates/opencrt/ui/main.slint:7281
+#: crates/opencrt/ui/main.slint:7293
 msgid ""
 "Load these keys when OpenCRT starts (their file names are saved; passphrases "
 "are asked for)"
 msgstr "Naloži te ključe ob zagonu OpenCRT (shranijo se imena datotek; gesla ključev bodo zahtevana)"
 
-#: crates/opencrt/ui/main.slint:7312
+#: crates/opencrt/ui/main.slint:7324
 msgid "Create Public Key"
 msgstr "Ustvari javni ključ"
 
-#: crates/opencrt/ui/main.slint:7315
+#: crates/opencrt/ui/main.slint:7327
 msgid ""
 "Creates a key pair in OpenSSH format. Add the public key (copied to the "
 "clipboard when done) to ~/.ssh/authorized_keys on the server, or use Tools > "
 "Public Key Assistant."
 msgstr "Ustvari par ključev v obliki OpenSSH. Javni ključ (ob koncu kopiran v odložišče) dodajte v ~/.ssh/authorized_keys na strežniku ali uporabite Orodja > Pomočnik za javne ključe."
 
-#: crates/opencrt/ui/main.slint:7328
+#: crates/opencrt/ui/main.slint:7340
 msgid "Passphrase:"
 msgstr "Geslo ključa:"
 
-#: crates/opencrt/ui/main.slint:7332
+#: crates/opencrt/ui/main.slint:7344
 msgid "recommended"
 msgstr "priporočeno"
 
-#: crates/opencrt/ui/main.slint:7346
+#: crates/opencrt/ui/main.slint:7358
 msgid "Comment:"
 msgstr "Komentar:"
 
-#: crates/opencrt/ui/main.slint:7353
+#: crates/opencrt/ui/main.slint:7365
 msgid "Save as:"
 msgstr "Shrani kot:"
 
-#: crates/opencrt/ui/main.slint:7370
+#: crates/opencrt/ui/main.slint:7382
 msgid "Creating..."
 msgstr "Ustvarjanje..."
 
-#: crates/opencrt/ui/main.slint:7370
+#: crates/opencrt/ui/main.slint:7382
 msgid "Create"
 msgstr "Ustvari"
 
-#: crates/opencrt/ui/main.slint:7388
+#: crates/opencrt/ui/main.slint:7400
 msgid "Label:"
 msgstr "Oznaka:"
 
-#: crates/opencrt/ui/main.slint:7396
+#: crates/opencrt/ui/main.slint:7408
 msgid "Action:"
 msgstr "Dejanje:"
 
-#: crates/opencrt/ui/main.slint:7398
+#: crates/opencrt/ui/main.slint:7410
 msgid "Send text"
 msgstr "Pošlji besedilo"
 
-#: crates/opencrt/ui/main.slint:7398
+#: crates/opencrt/ui/main.slint:7410
 msgid "Run a script"
 msgstr "Zaženi skript"
 
-#: crates/opencrt/ui/main.slint:7398
+#: crates/opencrt/ui/main.slint:7410
 msgid "Menu command"
 msgstr "Ukaz menija"
 
-#: crates/opencrt/ui/main.slint:7398
+#: crates/opencrt/ui/main.slint:7410
 msgid "Run a program"
 msgstr "Zaženi program"
 
-#: crates/opencrt/ui/main.slint:7398
+#: crates/opencrt/ui/main.slint:7410
 msgid "Telnet command"
 msgstr "Ukaz Telnet"
 
-#: crates/opencrt/ui/main.slint:7403
+#: crates/opencrt/ui/main.slint:7415
 msgid "Menu command:"
 msgstr "Ukaz menija:"
 
-#: crates/opencrt/ui/main.slint:7403
+#: crates/opencrt/ui/main.slint:7415
 msgid "Program:"
 msgstr "Program:"
 
-#: crates/opencrt/ui/main.slint:7406
+#: crates/opencrt/ui/main.slint:7418
 msgid "e.g. show version\\r"
 msgstr "npr. show version\\r"
 
-#: crates/opencrt/ui/main.slint:7406
+#: crates/opencrt/ui/main.slint:7418
 msgid "e.g. /home/me/scripts/login.rhai"
 msgstr "npr. /home/me/scripts/login.rhai"
 
-#: crates/opencrt/ui/main.slint:7406
+#: crates/opencrt/ui/main.slint:7418
 msgid "e.g. clear-screen, reconnect, sftp-tab"
 msgstr "npr. clear-screen, reconnect, sftp-tab"
 
-#: crates/opencrt/ui/main.slint:7406
+#: crates/opencrt/ui/main.slint:7418
 msgid "e.g. wireshark -k"
 msgstr "npr. wireshark -k"
 
-#: crates/opencrt/ui/main.slint:7406
+#: crates/opencrt/ui/main.slint:7418
 msgid "brk, ip, ao, ayt, ec, el, ga or nop"
 msgstr "brk, ip, ao, ayt, ec, el, ga ali nop"
 
-#: crates/opencrt/ui/main.slint:7418
+#: crates/opencrt/ui/main.slint:7430
 msgid "Bar:"
 msgstr "Vrstica:"
 
-#: crates/opencrt/ui/main.slint:7421
+#: crates/opencrt/ui/main.slint:7433
 msgid "blank: the default bar (sessions choose theirs)"
 msgstr "prazno: privzeta vrstica (seje izberejo svojo)"
 
-#: crates/opencrt/ui/main.slint:7429
+#: crates/opencrt/ui/main.slint:7441
 msgid "optional, e.g. Cisco"
 msgstr "neobvezno, npr. Cisco"
 
-#: crates/opencrt/ui/main.slint:7434
+#: crates/opencrt/ui/main.slint:7446
 msgid "\\r is Enter, \\n a line feed, \\t Tab, \\e Escape and \\\\ a backslash."
 msgstr "\\r je Enter, \\n pomik v novo vrstico, \\t Tab, \\e Escape in \\\\ poševnica nazaj."
 
@@ -2975,7 +2983,7 @@ msgstr "Zmodem: prejemanje v {}"
 msgid "Zmodem: sending {}"
 msgstr "Zmodem: pošiljanje {}"
 
-#: crates/opencrt/src/app.rs:1101 crates/opencrt/src/app.rs:7062 crates/opencrt/src/app.rs:7140
+#: crates/opencrt/src/app.rs:1101 crates/opencrt/src/app.rs:7087 crates/opencrt/src/app.rs:7165
 msgid "Run rz on the host to receive {}."
 msgstr "Na gostitelju zaženite rz, da prejme {}."
 
@@ -3011,7 +3019,7 @@ msgstr "Povezovanje z {}..."
 msgid "Logon script {}: {}"
 msgstr "Prijavni skript {}: {}"
 
-#: crates/opencrt/src/app.rs:1355 crates/opencrt/src/app.rs:5182
+#: crates/opencrt/src/app.rs:1355 crates/opencrt/src/app.rs:5183
 msgid "Logon script: {}"
 msgstr "Prijavni skript: {}"
 
@@ -3023,7 +3031,7 @@ msgstr "Ukaz pred povezavo: {}"
 msgid "Press Enter to reconnect."
 msgstr "Pritisnite Enter za ponovno povezavo."
 
-#: crates/opencrt/src/app.rs:1512 crates/opencrt/src/app.rs:3824
+#: crates/opencrt/src/app.rs:1512 crates/opencrt/src/app.rs:3825
 msgid "Recording to {} stopped: {}"
 msgstr "Snemanje v {} je ustavljeno: {}"
 
@@ -3139,791 +3147,795 @@ msgstr "Skript je preklican."
 msgid "Convert Private Key to OpenSSH"
 msgstr "Pretvori zasebni ključ v OpenSSH"
 
-#: crates/opencrt/src/app.rs:2645 crates/opencrt/src/app.rs:5581
+#: crates/opencrt/src/app.rs:2646 crates/opencrt/src/app.rs:5582
 msgid "Add Key to Agent"
 msgstr "Dodaj ključ agentu"
 
-#: crates/opencrt/src/app.rs:2698
+#: crates/opencrt/src/app.rs:2699
 msgid "Import known_hosts"
 msgstr "Uvozi known_hosts"
 
-#: crates/opencrt/src/app.rs:2703
+#: crates/opencrt/src/app.rs:2704
 msgid "Import SecureCRT Host Keys (pick its KnownHosts folder)"
 msgstr "Uvozi ključe gostiteljev SecureCRT (izberite njegovo mapo KnownHosts)"
 
-#: crates/opencrt/src/app.rs:2719
+#: crates/opencrt/src/app.rs:2720
 msgid "Imported {} host keys ({} found)."
 msgstr "Uvoženi ključi gostiteljev: {} (najdeni: {})."
 
-#: crates/opencrt/src/app.rs:2720
+#: crates/opencrt/src/app.rs:2721
 msgid "Cannot update known_hosts: {}"
 msgstr "Ni mogoče posodobiti known_hosts: {}"
 
-#: crates/opencrt/src/app.rs:2730
+#: crates/opencrt/src/app.rs:2731
 msgid "Exported the host keys to {}."
 msgstr "Ključi gostiteljev so izvoženi v {}."
 
-#: crates/opencrt/src/app.rs:2731 crates/opencrt/src/app.rs:6553
+#: crates/opencrt/src/app.rs:2732 crates/opencrt/src/app.rs:6578
 msgid "Cannot export to {}: {}"
 msgstr "Ni mogoče izvoziti v {}: {}"
 
-#: crates/opencrt/src/app.rs:2741
+#: crates/opencrt/src/app.rs:2742
 msgid "Cannot update {}: {}"
 msgstr "Ni mogoče posodobiti {}: {}"
 
-#: crates/opencrt/src/app.rs:2759
+#: crates/opencrt/src/app.rs:2760
 msgid "Updating restarts OpenCRT and disconnects the connected session. Update now?"
 msgstr "Posodobitev znova zažene OpenCRT in prekine povezano sejo. Želite posodobiti zdaj?"
 
-#: crates/opencrt/src/app.rs:2760
+#: crates/opencrt/src/app.rs:2761
 msgid "Updating restarts OpenCRT and disconnects {} connected sessions. Update now?"
 msgstr "Posodobitev znova zažene OpenCRT in prekine povezane seje ({}). Želite posodobiti zdaj?"
 
-#: crates/opencrt/src/app.rs:2767 crates/opencrt/src/app.rs:2823 crates/opencrt/src/app.rs:2945 crates/opencrt/src/app.rs:3317 crates/opencrt/src/app.rs:3617 crates/opencrt/src/app.rs:6461 crates/opencrt/src/app.rs:6518 crates/opencrt/src/app.rs:6941
+#: crates/opencrt/src/app.rs:2768 crates/opencrt/src/app.rs:2824 crates/opencrt/src/app.rs:2946 crates/opencrt/src/app.rs:3318 crates/opencrt/src/app.rs:3618 crates/opencrt/src/app.rs:6486 crates/opencrt/src/app.rs:6543 crates/opencrt/src/app.rs:6966
 msgid "Cannot open {}: {}"
 msgstr "Ni mogoče odpreti {}: {}"
 
-#: crates/opencrt/src/app.rs:2774 crates/opencrt/src/app.rs:2870
+#: crates/opencrt/src/app.rs:2775 crates/opencrt/src/app.rs:2871
 msgid "Disconnected."
 msgstr "Povezava je prekinjena."
 
-#: crates/opencrt/src/app.rs:2814
+#: crates/opencrt/src/app.rs:2815
 msgid "Auto Print: output is collected and printed when you turn it off."
 msgstr "Samodejno tiskanje: izpis se zbira in natisne, ko ga izklopite."
 
-#: crates/opencrt/src/app.rs:2941
+#: crates/opencrt/src/app.rs:2942
 msgid "No local port forward to open: SOCKS and remote forwards have no page."
 msgstr "Ni lokalnega posredovanja za odpiranje: posredovanja SOCKS in oddaljena posredovanja nimajo strani."
 
-#: crates/opencrt/src/app.rs:3064
+#: crates/opencrt/src/app.rs:3065
 msgid "Stopped sending the pasted text."
 msgstr "Pošiljanje prilepljenega besedila je ustavljeno."
 
-#: crates/opencrt/src/app.rs:3379
+#: crates/opencrt/src/app.rs:3380
 msgid "Font size {}"
 msgstr "Velikost pisave {}"
 
-#: crates/opencrt/src/app.rs:3502
+#: crates/opencrt/src/app.rs:3503
 msgid "Do the same for the rest of the queue"
 msgstr "Enako naredi za preostanek čakalne vrste"
 
-#: crates/opencrt/src/app.rs:3509
+#: crates/opencrt/src/app.rs:3510
 msgid "These {} lines will be pasted into every connected tab. Change them first if needed."
 msgstr "Te vrstice ({}) bodo prilepljene v vsak povezan zavihek. Po potrebi jih najprej spremenite."
 
-#: crates/opencrt/src/app.rs:3510
+#: crates/opencrt/src/app.rs:3511
 msgid "These {} lines will be pasted. Change them first if needed."
 msgstr "Te vrstice ({}) bodo prilepljene. Po potrebi jih najprej spremenite."
 
-#: crates/opencrt/src/app.rs:3565
+#: crates/opencrt/src/app.rs:3566
 msgid "Public key added to authorized_keys on {}."
 msgstr "Javni ključ je dodan v authorized_keys na {}."
 
-#: crates/opencrt/src/app.rs:3567
+#: crates/opencrt/src/app.rs:3568
 msgid "Could not add the public key on {}: {}"
 msgstr "Javnega ključa ni bilo mogoče dodati na {}: {}"
 
-#: crates/opencrt/src/app.rs:4071
+#: crates/opencrt/src/app.rs:4072
 msgid "Log in to {}"
 msgstr "Prijava v {}"
 
-#: crates/opencrt/src/app.rs:4080
+#: crates/opencrt/src/app.rs:4081
 msgid "Type the password"
 msgstr "Vnesite geslo"
 
-#: crates/opencrt/src/app.rs:4146
+#: crates/opencrt/src/app.rs:4147
 msgid "Cannot save the passphrase of {}: {}"
 msgstr "Gesla ključa za {} ni mogoče shraniti: {}"
 
-#: crates/opencrt/src/app.rs:4192
+#: crates/opencrt/src/app.rs:4193
 msgid "The SecureCRT sessions were imported without their passwords."
 msgstr "Seje SecureCRT so bile uvožene brez gesel."
 
-#: crates/opencrt/src/app.rs:4198
+#: crates/opencrt/src/app.rs:4199
 msgid "The password was not saved."
 msgstr "Geslo ni bilo shranjeno."
 
-#: crates/opencrt/src/app.rs:4204
+#: crates/opencrt/src/app.rs:4205
 msgid "Type the new master password."
 msgstr "Vnesite novo glavno geslo."
 
-#: crates/opencrt/src/app.rs:4205
+#: crates/opencrt/src/app.rs:4206
 msgid "The new password and its confirmation differ."
 msgstr "Novo geslo in njegova potrditev se razlikujeta."
 
-#: crates/opencrt/src/app.rs:4208
+#: crates/opencrt/src/app.rs:4209
 msgid "Saved passwords and key passphrases are now kept under the master password."
 msgstr "Shranjena gesla in gesla ključev so zdaj zaščitena z glavnim geslom."
 
-#: crates/opencrt/src/app.rs:4212
+#: crates/opencrt/src/app.rs:4213
 msgid "Settings Sync shares these passwords: removing the master password moves them into this computer's keychain only, and the other computers that sync these settings will need their saved passwords entered again. Click Remove again to go ahead."
 msgstr "Sinhronizacija nastavitev deli ta gesla: odstranitev glavnega gesla jih premakne samo v verigo ključev tega računalnika, na drugih računalnikih, ki sinhronizirajo te nastavitve, pa bo treba shranjena gesla vnesti znova. Za nadaljevanje znova kliknite Odstrani."
 
-#: crates/opencrt/src/app.rs:4217
+#: crates/opencrt/src/app.rs:4218
 msgid "Changed the master password."
 msgstr "Glavno geslo je spremenjeno."
 
-#: crates/opencrt/src/app.rs:4220
+#: crates/opencrt/src/app.rs:4221
 msgid "Removed the master password: saved passwords are back in this computer's keychain."
 msgstr "Glavno geslo je odstranjeno: shranjena gesla so spet v verigi ključev tega računalnika."
 
-#: crates/opencrt/src/app.rs:4246
+#: crates/opencrt/src/app.rs:4247
 msgid "Type SecureCRT's Config Passphrase."
 msgstr "Vnesite Config Passphrase programa SecureCRT."
 
-#: crates/opencrt/src/app.rs:4254
+#: crates/opencrt/src/app.rs:4255
 msgid "That passphrase opens none of the saved passwords. Check it in SecureCRT (it asks for it when it starts)."
 msgstr "To geslo ne odpre nobenega od shranjenih gesel. Preverite ga v programu SecureCRT (zahteva ga ob zagonu)."
 
-#: crates/opencrt/src/app.rs:4261
+#: crates/opencrt/src/app.rs:4262
 msgid "Cannot save the password of {}: {}"
 msgstr "Gesla za {} ni mogoče shraniti: {}"
 
-#: crates/opencrt/src/app.rs:4272
+#: crates/opencrt/src/app.rs:4273
 msgid " Not read: {} (saved before the passphrase was set, or in an older form)."
 msgstr " Ni prebrano: {} (shranjeno, preden je bilo geslo nastavljeno, ali v starejši obliki)."
 
-#: crates/opencrt/src/app.rs:4273
+#: crates/opencrt/src/app.rs:4274
 msgid "Imported {} saved SecureCRT passwords as credentials of their sessions.{}"
 msgstr "Uvožena shranjena gesla SecureCRT kot poverilnice njihovih sej: {}.{}"
 
-#: crates/opencrt/src/app.rs:4401
+#: crates/opencrt/src/app.rs:4402
 msgid "Connect to {}"
 msgstr "Poveži z {}"
 
-#: crates/opencrt/src/app.rs:4621
+#: crates/opencrt/src/app.rs:4622
 msgid "Connect {} sessions in \"{}\"?"
 msgstr "Želite povezati seje ({}) v mapi »{}«?"
 
-#: crates/opencrt/src/app.rs:4646 crates/opencrt/src/app.rs:4698 crates/opencrt/src/app.rs:4837
+#: crates/opencrt/src/app.rs:4647 crates/opencrt/src/app.rs:4699 crates/opencrt/src/app.rs:4838
 msgid "Folder name:"
 msgstr "Ime mape:"
 
-#: crates/opencrt/src/app.rs:4705
+#: crates/opencrt/src/app.rs:4706
 msgid "Delete the session \"{}\"?"
 msgstr "Želite izbrisati sejo »{}«?"
 
-#: crates/opencrt/src/app.rs:4706
+#: crates/opencrt/src/app.rs:4707
 msgid "Delete {} sessions?"
 msgstr "Želite izbrisati seje ({})?"
 
-#: crates/opencrt/src/app.rs:4712
+#: crates/opencrt/src/app.rs:4713
 msgid "Delete the folder \"{}\"?"
 msgstr "Želite izbrisati mapo »{}«?"
 
-#: crates/opencrt/src/app.rs:4713
+#: crates/opencrt/src/app.rs:4714
 msgid "Delete the folder \"{}\" and the session in it?"
 msgstr "Želite izbrisati mapo »{}« in sejo v njej?"
 
-#: crates/opencrt/src/app.rs:4714
+#: crates/opencrt/src/app.rs:4715
 msgid "Delete the folder \"{}\" and the {} sessions in it?"
 msgstr "Želite izbrisati mapo »{}« in seje v njej ({})?"
 
-#: crates/opencrt/src/app.rs:4771
+#: crates/opencrt/src/app.rs:4772
 msgid "Deleted the button bar \"{}\"."
 msgstr "Vrstica gumbov »{}« je izbrisana."
 
-#: crates/opencrt/src/app.rs:4785
+#: crates/opencrt/src/app.rs:4786
 msgid "The new configuration folder is used from the next start."
 msgstr "Nova mapa konfiguracije se uporabi ob naslednjem zagonu."
 
-#: crates/opencrt/src/app.rs:4825
+#: crates/opencrt/src/app.rs:4826
 msgid "Pick the files or folders whose paths to copy."
 msgstr "Izberite datoteke ali mape, katerih poti želite kopirati."
 
-#: crates/opencrt/src/app.rs:4829
+#: crates/opencrt/src/app.rs:4830
 msgid "The clipboard is not available."
 msgstr "Odložišče ni na voljo."
 
-#: crates/opencrt/src/app.rs:4832
+#: crates/opencrt/src/app.rs:4833
 msgid "Pick one file or folder to rename."
 msgstr "Izberite eno datoteko ali mapo za preimenovanje."
 
-#: crates/opencrt/src/app.rs:4833
+#: crates/opencrt/src/app.rs:4834
 msgid "Pick the files or folders to delete."
 msgstr "Izberite datoteke ali mape za brisanje."
 
-#: crates/opencrt/src/app.rs:4836
+#: crates/opencrt/src/app.rs:4837
 msgid "Rename"
 msgstr "Preimenuj"
 
-#: crates/opencrt/src/app.rs:4837
+#: crates/opencrt/src/app.rs:4838
 msgid "New name:"
 msgstr "Novo ime:"
 
-#: crates/opencrt/src/app.rs:4844
+#: crates/opencrt/src/app.rs:4845
 msgid "Delete \"{}\" from this computer?"
 msgstr "Želite izbrisati »{}« s tega računalnika?"
 
-#: crates/opencrt/src/app.rs:4845
+#: crates/opencrt/src/app.rs:4846
 msgid "Delete \"{}\" from the server?"
 msgstr "Želite izbrisati »{}« s strežnika?"
 
-#: crates/opencrt/src/app.rs:4846
+#: crates/opencrt/src/app.rs:4847
 msgid "Delete the folder \"{}\" and everything in it from this computer?"
 msgstr "Želite izbrisati mapo »{}« in vso njeno vsebino s tega računalnika?"
 
-#: crates/opencrt/src/app.rs:4847
+#: crates/opencrt/src/app.rs:4848
 msgid "Delete the folder \"{}\" and everything in it from the server?"
 msgstr "Želite izbrisati mapo »{}« in vso njeno vsebino s strežnika?"
 
-#: crates/opencrt/src/app.rs:4848
+#: crates/opencrt/src/app.rs:4849
 msgid "Delete {} items (folders with everything in them) from this computer?"
 msgstr "Želite izbrisati izbrane elemente ({}; mape z vso vsebino) s tega računalnika?"
 
-#: crates/opencrt/src/app.rs:4849
+#: crates/opencrt/src/app.rs:4850
 msgid "Delete {} items (folders with everything in them) from the server?"
 msgstr "Želite izbrisati izbrane elemente ({}; mape z vso vsebino) s strežnika?"
 
-#: crates/opencrt/src/app.rs:4868
+#: crates/opencrt/src/app.rs:4869
 msgid "Tab name:"
 msgstr "Ime zavihka:"
 
-#: crates/opencrt/src/app.rs:5184
+#: crates/opencrt/src/app.rs:5185
 msgid "Anti-idle: the interval must be a whole number of seconds."
 msgstr "Proti nedejavnosti: interval mora biti celo število sekund."
 
-#: crates/opencrt/src/app.rs:5189
+#: crates/opencrt/src/app.rs:5190
 msgid "Remote Desktop: {} is not a folder on this computer."
 msgstr "Oddaljeno namizje: {} ni mapa na tem računalniku."
 
-#: crates/opencrt/src/app.rs:5202
+#: crates/opencrt/src/app.rs:5203
 msgid "Cannot change \"{}\": {}"
 msgstr "Ni mogoče spremeniti »{}«: {}"
 
-#: crates/opencrt/src/app.rs:5240
+#: crates/opencrt/src/app.rs:5241
 msgid "Enter a session name (without \"/\")."
 msgstr "Vnesite ime seje (brez »/«)."
 
-#: crates/opencrt/src/app.rs:5244
+#: crates/opencrt/src/app.rs:5245
 msgid "A session with that name already exists in this folder."
 msgstr "Seja s tem imenom v tej mapi že obstaja."
 
-#: crates/opencrt/src/app.rs:5334
+#: crates/opencrt/src/app.rs:5335
 msgid "Disconnected by the script."
 msgstr "Povezavo je prekinil skript."
 
-#: crates/opencrt/src/app.rs:5419
+#: crates/opencrt/src/app.rs:5420
 msgid "Running script..."
 msgstr "Izvajanje skripta..."
 
-#: crates/opencrt/src/app.rs:5428
+#: crates/opencrt/src/app.rs:5429
 msgid "Script {} finished."
 msgstr "Skript {} je končan."
 
-#: crates/opencrt/src/app.rs:5431
+#: crates/opencrt/src/app.rs:5432
 msgid "Script {} stopped: {}"
 msgstr "Skript {} je ustavljen: {}"
 
-#: crates/opencrt/src/app.rs:5537
+#: crates/opencrt/src/app.rs:5538
 msgid "Public Key Assistant: open an SSH2 session first."
 msgstr "Pomočnik za javne ključe: najprej odprite sejo SSH2."
 
-#: crates/opencrt/src/app.rs:5541
+#: crates/opencrt/src/app.rs:5542
 msgid "Public Key Assistant: the active tab must be a connected SSH2 session."
 msgstr "Pomočnik za javne ključe: aktivni zavihek mora biti povezana seja SSH2."
 
-#: crates/opencrt/src/app.rs:5545
+#: crates/opencrt/src/app.rs:5546
 msgid "Public Key to Add"
 msgstr "Javni ključ za dodajanje"
 
-#: crates/opencrt/src/app.rs:5545
+#: crates/opencrt/src/app.rs:5546
 msgid "Public keys"
 msgstr "Javni ključi"
 
-#: crates/opencrt/src/app.rs:5557
+#: crates/opencrt/src/app.rs:5558
 msgid "Adding the public key on {}..."
 msgstr "Dodajanje javnega ključa na {}..."
 
-#: crates/opencrt/src/app.rs:5581 crates/opencrt/src/app.rs:6343
+#: crates/opencrt/src/app.rs:5582 crates/opencrt/src/app.rs:6368
 msgid "Passphrase for {}:"
 msgstr "Geslo ključa za {}:"
 
-#: crates/opencrt/src/app.rs:5584 crates/opencrt/src/app.rs:5596 crates/opencrt/src/lang.rs:14
+#: crates/opencrt/src/app.rs:5585 crates/opencrt/src/app.rs:5597 crates/opencrt/src/lang.rs:14
 msgid "Cannot load {}: {}"
 msgstr "Ni mogoče naložiti {}: {}"
 
-#: crates/opencrt/src/app.rs:5631 crates/opencrt/src/app.rs:5825 crates/opencrt/src/app.rs:5916
+#: crates/opencrt/src/app.rs:5632 crates/opencrt/src/app.rs:5850 crates/opencrt/src/app.rs:5941
 msgid "Cannot save the password: {}"
 msgstr "Gesla ni mogoče shraniti: {}"
 
-#: crates/opencrt/src/app.rs:5643
+#: crates/opencrt/src/app.rs:5644
 msgid "under the master password"
 msgstr "pod glavnim geslom"
 
-#: crates/opencrt/src/app.rs:5643
+#: crates/opencrt/src/app.rs:5644
 msgid "in the system keychain"
 msgstr "v sistemski verigi ključev"
 
-#: crates/opencrt/src/app.rs:5644
+#: crates/opencrt/src/app.rs:5645
 msgid "Password for {} saved {}."
 msgstr "Geslo za {} je shranjeno {}."
 
-#: crates/opencrt/src/app.rs:5697
+#: crates/opencrt/src/app.rs:5698
 msgid "Fix the colours first (#rrggbb)."
 msgstr "Najprej popravite barve (#rrggbb)."
 
-#: crates/opencrt/src/app.rs:5712
+#: crates/opencrt/src/app.rs:5713
 msgid "Enter a name for the scheme."
 msgstr "Vnesite ime sheme."
 
-#: crates/opencrt/src/app.rs:5714
+#: crates/opencrt/src/app.rs:5715
 msgid "A scheme with that name already exists."
 msgstr "Shema s tem imenom že obstaja."
 
-#: crates/opencrt/src/app.rs:5716
+#: crates/opencrt/src/app.rs:5717
 msgid "Every colour must be #rrggbb (cursor and selection may be blank)."
 msgstr "Vsaka barva mora biti v obliki #rrggbb (kazalka in izbor sta lahko prazna)."
 
-#: crates/opencrt/src/app.rs:5727
+#: crates/opencrt/src/app.rs:5728
 msgid "Colour scheme saved."
 msgstr "Barvna shema je shranjena."
 
-#: crates/opencrt/src/app.rs:5810
+#: crates/opencrt/src/app.rs:5741
+msgid "Sessions without their own scheme now use \"{}\"."
+msgstr "Seje brez lastne sheme zdaj uporabljajo „{}“."
+
+#: crates/opencrt/src/app.rs:5835
 msgid "A firewall with that name already exists."
 msgstr "Požarni zid s tem imenom že obstaja."
 
-#: crates/opencrt/src/app.rs:5896
+#: crates/opencrt/src/app.rs:5921
 msgid "Enter a name for the credential."
 msgstr "Vnesite ime poverilnice."
 
-#: crates/opencrt/src/app.rs:5898
+#: crates/opencrt/src/app.rs:5923
 msgid "A credential with that name already exists."
 msgstr "Poverilnica s tem imenom že obstaja."
 
-#: crates/opencrt/src/app.rs:5900
+#: crates/opencrt/src/app.rs:5925
 msgid "The passwords do not match."
 msgstr "Gesli se ne ujemata."
 
-#: crates/opencrt/src/app.rs:5946
+#: crates/opencrt/src/app.rs:5971
 msgid "The password of \"{}\" could not be removed from the keychain: {}"
 msgstr "Gesla za »{}« ni bilo mogoče odstraniti iz verige ključev: {}"
 
-#: crates/opencrt/src/app.rs:6040
+#: crates/opencrt/src/app.rs:6065
 msgid "Import Key Map"
 msgstr "Uvozi preslikavo tipk"
 
-#: crates/opencrt/src/app.rs:6040
+#: crates/opencrt/src/app.rs:6065
 msgid "Key maps"
 msgstr "Preslikave tipk"
 
-#: crates/opencrt/src/app.rs:6043 crates/opencrt/src/app.rs:6345 crates/opencrt/src/app.rs:6622 crates/opencrt/src/app.rs:6839 crates/opencrt/src/sessions.rs:673
+#: crates/opencrt/src/app.rs:6068 crates/opencrt/src/app.rs:6370 crates/opencrt/src/app.rs:6647 crates/opencrt/src/app.rs:6864 crates/opencrt/src/sessions.rs:673
 msgid "Cannot read {}: {}"
 msgstr "Ni mogoče prebrati {}: {}"
 
-#: crates/opencrt/src/app.rs:6052 crates/opencrt/src/app.rs:6847
+#: crates/opencrt/src/app.rs:6077 crates/opencrt/src/app.rs:6872
 msgid "Cannot write {}: {}"
 msgstr "Ni mogoče pisati v {}: {}"
 
-#: crates/opencrt/src/app.rs:6058 crates/opencrt/src/app.rs:6505
+#: crates/opencrt/src/app.rs:6083 crates/opencrt/src/app.rs:6530
 msgid "Log files"
 msgstr "Dnevniške datoteke"
 
-#: crates/opencrt/src/app.rs:6060
+#: crates/opencrt/src/app.rs:6085
 msgid "OpenSSH Certificate"
 msgstr "Potrdilo OpenSSH"
 
-#: crates/opencrt/src/app.rs:6060
+#: crates/opencrt/src/app.rs:6085
 msgid "Certificates"
 msgstr "Potrdila"
 
-#: crates/opencrt/src/app.rs:6065
+#: crates/opencrt/src/app.rs:6090
 msgid "Folder to Share with the Remote Computer"
 msgstr "Mapa za skupno rabo z oddaljenim računalnikom"
 
-#: crates/opencrt/src/app.rs:6115
+#: crates/opencrt/src/app.rs:6140
 msgid "The passphrases do not match."
 msgstr "Gesli ključa se ne ujemata."
 
-#: crates/opencrt/src/app.rs:6117
+#: crates/opencrt/src/app.rs:6142
 msgid "Enter where to save the private key."
 msgstr "Vnesite, kam naj se shrani zasebni ključ."
 
-#: crates/opencrt/src/app.rs:6119
+#: crates/opencrt/src/app.rs:6144
 msgid "That file already exists; choose another name."
 msgstr "Ta datoteka že obstaja; izberite drugo ime."
 
-#: crates/opencrt/src/app.rs:6152
+#: crates/opencrt/src/app.rs:6177
 msgid "Checking for a new version…"
 msgstr "Preverjanje nove različice…"
 
-#: crates/opencrt/src/app.rs:6175
+#: crates/opencrt/src/app.rs:6200
 msgid "OpenCRT {} is available. {}"
 msgstr "Na voljo je OpenCRT {}. {}"
 
-#: crates/opencrt/src/app.rs:6180
+#: crates/opencrt/src/app.rs:6205
 msgid "OpenCRT {} is the latest version."
 msgstr "OpenCRT {} je najnovejša različica."
 
-#: crates/opencrt/src/app.rs:6183
+#: crates/opencrt/src/app.rs:6208
 msgid "Could not check for a new version: {}"
 msgstr "Nove različice ni bilo mogoče preveriti: {}"
 
-#: crates/opencrt/src/app.rs:6227
+#: crates/opencrt/src/app.rs:6252
 msgid "Could not update: {}. Download it from the release page instead."
 msgstr "Posodobitev ni uspela: {}. Namesto tega jo prenesite s strani izdaje."
 
-#: crates/opencrt/src/app.rs:6243
+#: crates/opencrt/src/app.rs:6268
 msgid "Downloading Python for Python scripts (once) from its official site..."
 msgstr "Prenašanje Pythona za skripte Python (enkrat) z njegove uradne strani..."
 
-#: crates/opencrt/src/app.rs:6288
+#: crates/opencrt/src/app.rs:6313
 msgid "Downloading Git for Windows from its official releases..."
 msgstr "Prenašanje Git for Windows iz uradnih izdaj..."
 
-#: crates/opencrt/src/app.rs:6302
+#: crates/opencrt/src/app.rs:6327
 msgid "Git's installer is running: finish it, then press OK."
 msgstr "Namestitveni program Git se izvaja: dokončajte ga, nato pritisnite V redu."
 
-#: crates/opencrt/src/app.rs:6303
+#: crates/opencrt/src/app.rs:6328
 msgid "Could not get Git for Windows: {}. It is also at git-scm.com."
 msgstr "Git for Windows ni bilo mogoče pridobiti: {}. Na voljo je tudi na git-scm.com."
 
-#: crates/opencrt/src/app.rs:6324
+#: crates/opencrt/src/app.rs:6349
 msgid "; public key copied to the clipboard"
 msgstr "; javni ključ je kopiran v odložišče"
 
-#: crates/opencrt/src/app.rs:6325
+#: crates/opencrt/src/app.rs:6350
 msgid "Created {} and .pub{}."
 msgstr "Ustvarjeno: {} in .pub{}."
 
-#: crates/opencrt/src/app.rs:6343
+#: crates/opencrt/src/app.rs:6368
 msgid "Convert Private Key"
 msgstr "Pretvori zasebni ključ"
 
-#: crates/opencrt/src/app.rs:6350
+#: crates/opencrt/src/app.rs:6375
 msgid "Cannot decrypt {}: {}"
 msgstr "Ni mogoče dešifrirati {}: {}"
 
-#: crates/opencrt/src/app.rs:6364
+#: crates/opencrt/src/app.rs:6389
 msgid "Saved {} and .pub in OpenSSH format."
 msgstr "Shranjeno v obliki OpenSSH: {} in .pub."
 
-#: crates/opencrt/src/app.rs:6365 crates/opencrt/src/app.rs:6958 crates/opencrt/src/app.rs:7006
+#: crates/opencrt/src/app.rs:6390 crates/opencrt/src/app.rs:6983 crates/opencrt/src/app.rs:7031
 msgid "Cannot save {}: {}"
 msgstr "Ni mogoče shraniti {}: {}"
 
-#: crates/opencrt/src/app.rs:6382
+#: crates/opencrt/src/app.rs:6407
 msgid "Sent {} ({} bytes)."
 msgstr "Poslano: {} ({} bajtov)."
 
-#: crates/opencrt/src/app.rs:6385
+#: crates/opencrt/src/app.rs:6410
 msgid "Send Binary File: no connected session."
 msgstr "Pošlji binarno datoteko: ni povezane seje."
 
-#: crates/opencrt/src/app.rs:6386 crates/opencrt/src/app.rs:6434
+#: crates/opencrt/src/app.rs:6411 crates/opencrt/src/app.rs:6459
 msgid "Cannot send {}: {}"
 msgstr "Ni mogoče poslati {}: {}"
 
-#: crates/opencrt/src/app.rs:6394
+#: crates/opencrt/src/app.rs:6419
 msgid "Stopped receiving into {}."
 msgstr "Prejemanje v {} je ustavljeno."
 
-#: crates/opencrt/src/app.rs:6402
+#: crates/opencrt/src/app.rs:6427
 msgid "Receiving into {}; choose Stop Receive ASCII to finish."
 msgstr "Prejemanje v {}; za konec izberite Ustavi prejemanje ASCII."
 
-#: crates/opencrt/src/app.rs:6404 crates/opencrt/src/app.rs:6489
+#: crates/opencrt/src/app.rs:6429 crates/opencrt/src/app.rs:6514
 msgid "Cannot create {}: {}"
 msgstr "Ni mogoče ustvariti {}: {}"
 
-#: crates/opencrt/src/app.rs:6433
+#: crates/opencrt/src/app.rs:6458
 msgid "Send ASCII File: no connected session."
 msgstr "Pošlji datoteko ASCII: ni povezane seje."
 
-#: crates/opencrt/src/app.rs:6473
+#: crates/opencrt/src/app.rs:6498
 msgid "Stopped recording to {}."
 msgstr "Snemanje v {} je ustavljeno."
 
-#: crates/opencrt/src/app.rs:6487
+#: crates/opencrt/src/app.rs:6512
 msgid "Recording to {}; play it with asciinema play."
 msgstr "Snemanje v {}; predvajate ga z asciinema play."
 
-#: crates/opencrt/src/app.rs:6501
+#: crates/opencrt/src/app.rs:6526
 msgid "Stopped logging to {}."
 msgstr "Beleženje v {} je ustavljeno."
 
-#: crates/opencrt/src/app.rs:6516
+#: crates/opencrt/src/app.rs:6541
 msgid "Logging to {}."
 msgstr "Beleženje v {}."
 
-#: crates/opencrt/src/app.rs:6528
+#: crates/opencrt/src/app.rs:6553
 msgid "Cannot read known_hosts: {}"
 msgstr "Ni mogoče prebrati known_hosts: {}"
 
-#: crates/opencrt/src/app.rs:6545
+#: crates/opencrt/src/app.rs:6570
 msgid "OpenCRT sessions"
 msgstr "Seje OpenCRT"
 
-#: crates/opencrt/src/app.rs:6552
+#: crates/opencrt/src/app.rs:6577
 msgid "Exported {} sessions to {}."
 msgstr "Izvožene seje ({}) v {}."
 
-#: crates/opencrt/src/app.rs:6562
+#: crates/opencrt/src/app.rs:6587
 msgid "Sessions"
 msgstr "Seje"
 
-#: crates/opencrt/src/app.rs:6596
+#: crates/opencrt/src/app.rs:6621
 msgid "Cannot import {}: {}"
 msgstr "Ni mogoče uvoziti {}: {}"
 
-#: crates/opencrt/src/app.rs:6601 crates/opencrt/src/app.rs:6644 crates/opencrt/src/app.rs:6667
+#: crates/opencrt/src/app.rs:6626 crates/opencrt/src/app.rs:6669 crates/opencrt/src/app.rs:6692
 msgid "; already there: {}"
 msgstr "; že obstajajo: {}"
 
-#: crates/opencrt/src/app.rs:6602
+#: crates/opencrt/src/app.rs:6627
 msgid "Imported {} sessions from {}{}.{}"
 msgstr "Uvožene seje ({}) iz {}{}.{}"
 
-#: crates/opencrt/src/app.rs:6645
+#: crates/opencrt/src/app.rs:6670
 msgid "Imported {} sessions from {}{}."
 msgstr "Uvožene seje ({}) iz {}{}."
 
-#: crates/opencrt/src/app.rs:6653
+#: crates/opencrt/src/app.rs:6678
 msgid "Import SecureCRT Sessions (pick the Config folder)"
 msgstr "Uvozi seje SecureCRT (izberite mapo Config)"
 
-#: crates/opencrt/src/app.rs:6668
+#: crates/opencrt/src/app.rs:6693
 msgid "; not imported (unreadable or unsupported protocol): {}"
 msgstr "; ni uvoženo (neberljivo ali nepodprt protokol): {}"
 
-#: crates/opencrt/src/app.rs:6681
+#: crates/opencrt/src/app.rs:6706
 msgid " Added button bars: {}, buttons: {}, keyword lists: {}."
 msgstr " Dodane vrstice gumbov: {}, gumbi: {}, seznami ključnih besed: {}."
 
-#: crates/opencrt/src/app.rs:6683
+#: crates/opencrt/src/app.rs:6708
 msgid " Buttons left out (SecureCRT menu functions): {}."
 msgstr " Izpuščeni gumbi (funkcije menija SecureCRT): {}."
 
-#: crates/opencrt/src/app.rs:6695
+#: crates/opencrt/src/app.rs:6720
 msgid "Imported {} sessions from {}{}{}.{}"
 msgstr "Uvožene seje ({}) iz {}{}{}.{}"
 
-#: crates/opencrt/src/app.rs:6709
+#: crates/opencrt/src/app.rs:6734
 msgid "Run Script: open a session first."
 msgstr "Zaženi skript: najprej odprite sejo."
 
-#: crates/opencrt/src/app.rs:6711
+#: crates/opencrt/src/app.rs:6736
 msgid "Run Script"
 msgstr "Zaženi skript"
 
-#: crates/opencrt/src/app.rs:6711
+#: crates/opencrt/src/app.rs:6736
 msgid "Scripts"
 msgstr "Skripti"
 
-#: crates/opencrt/src/app.rs:6711
+#: crates/opencrt/src/app.rs:6736
 msgid "All files"
 msgstr "Vse datoteke"
 
-#: crates/opencrt/src/app.rs:6722
+#: crates/opencrt/src/app.rs:6747
 msgid "Snapshots keep saved sessions; none are open."
 msgstr "Posnetki hranijo shranjene seje; nobena ni odprta."
 
-#: crates/opencrt/src/app.rs:6739
+#: crates/opencrt/src/app.rs:6764
 msgid "Saved the snapshot \"{}\" ({} sessions)."
 msgstr "Posnetek »{}« je shranjen (sej: {})."
 
-#: crates/opencrt/src/app.rs:6823 crates/opencrt/src/app.rs:6829 crates/opencrt/src/app.rs:6860
+#: crates/opencrt/src/app.rs:6848 crates/opencrt/src/app.rs:6854 crates/opencrt/src/app.rs:6885
 msgid "No connected session to send to."
 msgstr "Ni povezane seje za pošiljanje."
 
-#: crates/opencrt/src/app.rs:6868
+#: crates/opencrt/src/app.rs:6893
 msgid "Run: no program given."
 msgstr "Zaženi: program ni podan."
 
-#: crates/opencrt/src/app.rs:6874
+#: crates/opencrt/src/app.rs:6899
 msgid "Cannot run {}: {}"
 msgstr "Ni mogoče zagnati {}: {}"
 
-#: crates/opencrt/src/app.rs:6881
+#: crates/opencrt/src/app.rs:6906
 msgid "Telnet commands need a connected Telnet session."
 msgstr "Ukazi Telnet potrebujejo povezano sejo Telnet."
 
-#: crates/opencrt/src/app.rs:6882
+#: crates/opencrt/src/app.rs:6907
 msgid "Unknown Telnet command \"{}\"."
 msgstr "Neznan ukaz Telnet »{}«."
 
-#: crates/opencrt/src/app.rs:6892
+#: crates/opencrt/src/app.rs:6917
 msgid "Script {}: open a session first."
 msgstr "Skript {}: najprej odprite sejo."
 
-#: crates/opencrt/src/app.rs:6906 crates/opencrt/src/app.rs:6918 crates/opencrt/src/app.rs:6968
+#: crates/opencrt/src/app.rs:6931 crates/opencrt/src/app.rs:6943 crates/opencrt/src/app.rs:6993
 msgid "Running script {}..."
 msgstr "Izvajanje skripta {}..."
 
-#: crates/opencrt/src/app.rs:6912
+#: crates/opencrt/src/app.rs:6937
 msgid "Run Script: no connected session."
 msgstr "Zaženi skript: ni povezane seje."
 
-#: crates/opencrt/src/app.rs:6930 crates/opencrt/src/app.rs:6979
+#: crates/opencrt/src/app.rs:6955 crates/opencrt/src/app.rs:7004
 msgid "New script"
 msgstr "Nov skript"
 
-#: crates/opencrt/src/app.rs:6931 crates/opencrt/src/app.rs:6998
+#: crates/opencrt/src/app.rs:6956 crates/opencrt/src/app.rs:7023
 msgid "Rhai scripts"
 msgstr "Skripti Rhai"
 
-#: crates/opencrt/src/app.rs:6956
+#: crates/opencrt/src/app.rs:6981
 msgid "Saved {}."
 msgstr "Shranjeno: {}."
 
-#: crates/opencrt/src/app.rs:6963
+#: crates/opencrt/src/app.rs:6988
 msgid "No syntax errors."
 msgstr "Ni sintaktičnih napak."
 
-#: crates/opencrt/src/app.rs:6993
+#: crates/opencrt/src/app.rs:7018
 msgid "Recording: lines you type are added to a script until Script > Stop Recording."
 msgstr "Snemanje: vrstice, ki jih vnesete, se dodajajo v skript do Skript > Ustavi snemanje."
 
-#: crates/opencrt/src/app.rs:7002
+#: crates/opencrt/src/app.rs:7027
 msgid "Recording discarded."
 msgstr "Posnetek je zavržen."
 
-#: crates/opencrt/src/app.rs:7005
+#: crates/opencrt/src/app.rs:7030
 msgid "Script saved to {}."
 msgstr "Skript je shranjen v {}."
 
-#: crates/opencrt/src/app.rs:7015
+#: crates/opencrt/src/app.rs:7040
 msgid "Drop files on a connected session to upload them."
 msgstr "Spustite datoteke na povezano sejo, da jih naložite."
 
-#: crates/opencrt/src/app.rs:7039
+#: crates/opencrt/src/app.rs:7064
 msgid "Send {} with:"
 msgstr "Pošlji {} z:"
 
-#: crates/opencrt/src/app.rs:7054
+#: crates/opencrt/src/app.rs:7079
 msgid "Only {} is sent: this protocol takes one file at a time."
 msgstr "Poslano bo samo {}: ta protokol prenaša eno datoteko naenkrat."
 
-#: crates/opencrt/src/app.rs:7127
+#: crates/opencrt/src/app.rs:7152
 msgid "Cannot start the transfer: {}."
 msgstr "Prenosa ni mogoče začeti: {}."
 
-#: crates/opencrt/src/app.rs:7134
+#: crates/opencrt/src/app.rs:7159
 msgid "Zmodem Upload: no connected session."
 msgstr "Nalaganje Zmodem: ni povezane seje."
 
-#: crates/opencrt/src/app.rs:7239
+#: crates/opencrt/src/app.rs:7264
 msgid "Button Bar Button"
 msgstr "Gumb vrstice gumbov"
 
-#: crates/opencrt/src/app.rs:7239
+#: crates/opencrt/src/app.rs:7264
 msgid "Command"
 msgstr "Ukaz"
 
-#: crates/opencrt/src/app.rs:7270
+#: crates/opencrt/src/app.rs:7295
 msgid "Enter a label and what the button does."
 msgstr "Vnesite oznako in kaj naj gumb naredi."
 
-#: crates/opencrt/src/app.rs:7272
+#: crates/opencrt/src/app.rs:7297
 msgid "Telnet commands are brk, ip, ao, ayt, ec, el, ga and nop."
 msgstr "Ukazi Telnet so brk, ip, ao, ayt, ec, el, ga in nop."
 
-#: crates/opencrt/src/app.rs:7297
+#: crates/opencrt/src/app.rs:7322
 msgid "Delete the button \"{}\"?"
 msgstr "Želite izbrisati gumb »{}«?"
 
-#: crates/opencrt/src/app.rs:7298
+#: crates/opencrt/src/app.rs:7323
 msgid "Delete the command \"{}\"?"
 msgstr "Želite izbrisati ukaz »{}«?"
 
-#: crates/opencrt/src/app.rs:7346
+#: crates/opencrt/src/app.rs:7371
 msgid "Custom"
 msgstr "Po meri"
 
-#: crates/opencrt/src/app.rs:7441
+#: crates/opencrt/src/app.rs:7466
 msgid "New list"
 msgstr "Nov seznam"
 
-#: crates/opencrt/src/app.rs:7441
+#: crates/opencrt/src/app.rs:7466
 msgid "New list {}"
 msgstr "Nov seznam {}"
 
-#: crates/opencrt/src/app.rs:7566
+#: crates/opencrt/src/app.rs:7591
 msgid "Font size must be 6 to 48, scrollback 0 to 1000000 lines, and keepalive 0 to 86400 seconds."
 msgstr "Velikost pisave mora biti od 6 do 48, zgodovina izpisa od 0 do 1000000 vrstic in keepalive od 0 do 86400 sekund."
 
-#: crates/opencrt/src/app.rs:7575
+#: crates/opencrt/src/app.rs:7600
 msgid "General: recent sessions must be 0 to {}, the Connect All warning 0 to 1000, and the interface font size 9 to 20."
 msgstr "Splošno: nedavnih sej mora biti od 0 do {}, opozorilo za Poveži vse od 0 do 1000 in velikost pisave vmesnika od 9 do 20."
 
-#: crates/opencrt/src/app.rs:7580
+#: crates/opencrt/src/app.rs:7605
 msgid "Connection: the default SSH2 key file does not exist."
 msgstr "Povezava: privzeta datoteka ključa SSH2 ne obstaja."
 
-#: crates/opencrt/src/app.rs:7588
+#: crates/opencrt/src/app.rs:7613
 msgid "Printing: the font size (up to 72) and margins (up to 100 mm) must be whole numbers."
 msgstr "Tiskanje: velikost pisave (do 72) in robovi (do 100 mm) morajo biti cela števila."
 
-#: crates/opencrt/src/app.rs:7592
+#: crates/opencrt/src/app.rs:7617
 msgid "File Transfer: the download folder does not exist."
 msgstr "Prenos datotek: mapa za prenose ne obstaja."
 
-#: crates/opencrt/src/app.rs:7596
+#: crates/opencrt/src/app.rs:7621
 msgid "General: the configuration folder must be a full path."
 msgstr "Splošno: mapa konfiguracije mora biti podana s polno potjo."
 
-#: crates/opencrt/src/app.rs:7605
+#: crates/opencrt/src/app.rs:7630
 msgid "Settings Sync needs git, which is not installed: {}."
 msgstr "Sinhronizacija nastavitev potrebuje git, ki ni nameščen: {}."
 
-#: crates/opencrt/src/app.rs:7609
+#: crates/opencrt/src/app.rs:7634
 msgid "File Transfer: TFTP addresses must be IP addresses or networks such as 192.168.1.0/24."
 msgstr "Prenos datotek: naslovi TFTP morajo biti naslovi IP ali omrežja, kot je 192.168.1.0/24."
 
-#: crates/opencrt/src/app.rs:7714
+#: crates/opencrt/src/app.rs:7739
 msgid "Settings Sync: the repository was not set up: {}"
 msgstr "Sinhronizacija nastavitev: repozitorij ni bil nastavljen: {}"
 
-#: crates/opencrt/src/app.rs:7722
+#: crates/opencrt/src/app.rs:7747
 msgid " (your current settings were copied there)"
 msgstr " (vaše trenutne nastavitve so bile kopirane tja)"
 
-#: crates/opencrt/src/app.rs:7724
+#: crates/opencrt/src/app.rs:7749
 msgid " Connected sessions will be disconnected."
 msgstr " Povezane seje bodo prekinjene."
 
-#: crates/opencrt/src/app.rs:7725
+#: crates/opencrt/src/app.rs:7750
 msgid "Settings now live in {}{}. Restart OpenCRT to use them?{}"
 msgstr "Nastavitve so zdaj v {}{}. Želite znova zagnati OpenCRT, da jih uporabite?{}"
 
-#: crates/opencrt/src/app.rs:7728
+#: crates/opencrt/src/app.rs:7753
 msgid "Configuration folder not changed: {}"
 msgstr "Mapa konfiguracije ni spremenjena: {}"
 
-#: crates/opencrt/src/app.rs:7759
+#: crates/opencrt/src/app.rs:7777
 msgid "Cannot restart OpenCRT ({}); the new configuration folder is used from the next start."
 msgstr "OpenCRT ni mogoče znova zagnati ({}); nova mapa konfiguracije se uporabi ob naslednjem zagonu."
 
-#: crates/opencrt/src/app.rs:7828
+#: crates/opencrt/src/app.rs:7846
 msgid "Remote Desktop: enter both width and height (200 to 8192 pixels), or leave both blank to fit the window."
 msgstr "Oddaljeno namizje: vnesite širino in višino (od 200 do 8192 slikovnih pik) ali pustite obe prazni, da se prilagodi oknu."
 
-#: crates/opencrt/src/app.rs:8074
+#: crates/opencrt/src/app.rs:8092
 msgid "Local"
 msgstr "Lokalno"
 
-#: crates/opencrt/src/app.rs:8074
+#: crates/opencrt/src/app.rs:8092
 msgid "SSH server"
 msgstr "Strežnik SSH"
 
-#: crates/opencrt/src/app.rs:8075
+#: crates/opencrt/src/app.rs:8093
 msgid "Remote"
 msgstr "Oddaljeno"
 
-#: crates/opencrt/src/app.rs:8075
+#: crates/opencrt/src/app.rs:8093
 msgid "this machine"
 msgstr "ta računalnik"
 
-#: crates/opencrt/src/app.rs:8076
+#: crates/opencrt/src/app.rs:8094
 msgid "any (SOCKS)"
 msgstr "poljuben (SOCKS)"
 
-#: crates/opencrt/src/app.rs:8390
+#: crates/opencrt/src/app.rs:8408
 msgid "Not found"
 msgstr "Ni najdeno"
 
-#: crates/opencrt/src/app.rs:8415
+#: crates/opencrt/src/app.rs:8433
 msgid "No connected session to send the command to."
 msgstr "Ni povezane seje za pošiljanje ukaza."
 

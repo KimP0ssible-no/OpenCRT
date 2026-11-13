@@ -5738,7 +5738,7 @@ impl App {
         self.save_options();
         self.follow_default_scheme(scheme);
         ui.set_sc_default(scheme.name.into());
-        self.notify(format!("Sessions without their own scheme now use \"{}\".", scheme.name));
+        self.notify(tr!("Sessions without their own scheme now use \"{}\".", scheme.name));
     }
 
     /// Tabs without a session-specific scheme follow the default.

@@ -50,8 +50,32 @@ pub fn cli_main() -> i32 {
     cli::main()
 }
 
+/// Some Wayland desktops apply HiDPI through XSettings and leave the
+/// compositor's wl_output scale at 1, so winit reports 100% and Slint draws
+/// every logical pixel unscaled. SLINT_SCALE_FACTOR is Slint's override; the
+/// X11 backend reads Xft.dpi itself and must not be overridden.
+#[cfg(all(unix, not(target_os = "macos")))]
+fn apply_desktop_scale() {
+    if std::env::var_os("SLINT_SCALE_FACTOR").is_some() {
+        return;
+    }
+    let wayland = ["WAYLAND_DISPLAY", "WAYLAND_SOCKET"]
+        .iter()
+        .any(|name| std::env::var(name).is_ok_and(|value| !value.is_empty()));
+    if !wayland {
+        return;
+    }
+    let Some(scale) = config::desktop_scale().filter(|s| *s > 1.0) else {
+        return;
+    };
+    // SAFETY: gui_main calls this before gitsync or the UI spawn any threads.
+    unsafe { std::env::set_var("SLINT_SCALE_FACTOR", scale.to_string()) };
+}
+
 /// The GUI application: `opencrt [options]` (see `app::parse_args`).
 pub fn gui_main() -> anyhow::Result<()> {
+    #[cfg(all(unix, not(target_os = "macos")))]
+    apply_desktop_scale();
     // A settings repository is brought up to date before anything reads it.
     let args: Vec<String> = std::env::args().skip(1).collect();
     gitsync::start_up(&args);

@@ -20,9 +20,9 @@ struct Glyph {
 pub struct Renderer {
     regular: Font,
     bold: Option<Font>,
-    /// Searched in order for glyphs the main font lacks (CJK, symbols). Loaded on
-    /// the first missing glyph: CJK fonts are large and slow to parse.
-    fallbacks: Option<Vec<Font>>,
+    /// Searched in order for glyphs the main font lacks (CJK, symbols); taken
+    /// from `fallback_fonts` on the first missing glyph.
+    fallbacks: Option<&'static [Font]>,
     /// The bundled prompt icons, searched first; loaded with the fallbacks.
     symbols: Option<Font>,
     px: f32,
@@ -376,7 +376,7 @@ impl Renderer {
         let in_regular = self.regular.lookup_glyph_index(c) != 0;
         if !in_regular && self.fallbacks.is_none() && !self.cache.contains_key(&(c, bold)) {
             self.symbols = Font::from_bytes(NERD_SYMBOLS, FontSettings::default()).ok();
-            self.fallbacks = Some(FALLBACKS.iter().filter_map(|name| load_first(&[name])).collect());
+            self.fallbacks = Some(fallback_fonts());
         }
         let cell = self.cell_w as f32;
         let (font, px) = if in_regular {
@@ -389,7 +389,7 @@ impl Renderer {
             let advance = symbols.metrics(c, px).advance_width;
             (symbols, if advance > cell { px * cell / advance } else { px })
         } else {
-            let fallbacks = self.fallbacks.as_deref().unwrap_or_default();
+            let fallbacks = self.fallbacks.unwrap_or_default();
             (fallbacks.iter().find(|f| f.lookup_glyph_index(c) != 0).unwrap_or(&self.regular), px)
         };
         self.cache.entry((c, bold)).or_insert_with(|| {
@@ -603,7 +603,7 @@ pub fn vertical_label(text: &str, px: f32, color: Rgb) -> Option<(usize, usize, 
     let font = Font::from_bytes(include_bytes!("../ui/fonts/IBMPlexSans-Regular.ttf") as &[u8], FontSettings::default()).ok()?;
     // Characters the UI font lacks (Chinese, for one) come from the system's fallback fonts.
     let missing = |c: char| font.lookup_glyph_index(c) == 0;
-    let fallbacks: Vec<Font> = if text.chars().any(missing) { FALLBACKS.iter().filter_map(|n| load_first(&[n])).collect() } else { Vec::new() };
+    let fallbacks: &[Font] = if text.chars().any(missing) { fallback_fonts() } else { &[] };
     let pick = |c: char| fallbacks.iter().find(|f| missing(c) && f.lookup_glyph_index(c) != 0).unwrap_or(&font);
     if text.chars().any(upright) {
         return Some(stacked_label(text, px, color, pick));
@@ -733,6 +733,13 @@ fn load_mono(name: &str) -> Option<(Font, Option<Font>)> {
 }
 
 /// Load the first font in `names` that exists and parses (first face of a collection).
+/// The system fallback fonts, parsed once per run and shared: a CJK font is
+/// large and slow to parse (seconds in a debug build).
+fn fallback_fonts() -> &'static [Font] {
+    static FONTS: std::sync::OnceLock<Vec<Font>> = std::sync::OnceLock::new();
+    FONTS.get_or_init(|| FALLBACKS.iter().filter_map(|name| load_first(&[name])).collect())
+}
+
 fn load_first(names: &[&str]) -> Option<Font> {
     names.iter().find_map(|name| {
         let bytes = std::fs::read(font_path(name)).ok()?;

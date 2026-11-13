@@ -3017,10 +3017,13 @@ component SchemesDialog inherits DialogFrame {
     in property <[color]> swatches;
     in property <bool> editable;
     in property <string> error;
+    // The scheme sessions without their own one use.
+    in property <string> default-name;
     callback pick(int);
     callback edited();
     callback new-scheme();
     callback delete-scheme();
+    callback use-default();
     callback save();
     callback close();
     title: "Colour Schemes";
@@ -3063,7 +3066,7 @@ component SchemesDialog inherits DialogFrame {
                         x: 6px;
                         width: parent.width - 12px;
                         height: parent.height;
-                        text: name;
+                        text: name == root.default-name ? name + "  (default)" : name;
                         vertical-alignment: center;
                         overflow: elide;
                     }
@@ -3143,6 +3146,11 @@ component SchemesDialog inherits DialogFrame {
             text: "Save";
             enabled: root.editable;
             clicked => { root.save(); }
+        }
+        DialogButton {
+            text: "Use as Default";
+            enabled: root.selected >= 0 && root.selected < root.names.length && root.names[root.selected] != root.default-name;
+            clicked => { root.use-default(); }
         }
         DialogButton {
             text: "Close";
@@ -5048,6 +5056,7 @@ export component MainWindow inherits Window {
     // Colour scheme names, and the same with "(global default)" first.
     in property <[string]> scheme-names;
     in-out property <int> sc-selected;
+    in property <string> sc-default;
     in-out property <string> sc-name;
     in-out property <string> sc-fg;
     in-out property <string> sc-bg;
@@ -5061,6 +5070,7 @@ export component MainWindow inherits Window {
     callback scheme-edited();
     callback scheme-new();
     callback scheme-delete();
+    callback scheme-use-default();
     callback scheme-save();
     in property <[string]> scheme-choices;
     in property <[string]> so-keyword-set-choices;
@@ -7166,7 +7176,9 @@ export component MainWindow inherits Window {
         edited => { root.scheme-edited(); }
         new-scheme => { root.scheme-new(); }
         delete-scheme => { root.scheme-delete(); }
+        use-default => { root.scheme-use-default(); }
         save => { root.scheme-save(); }
+        default-name: root.sc-default;
         close => {
             root.dialog = 0;
             root.focus-terminal();

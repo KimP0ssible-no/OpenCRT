@@ -28,8 +28,8 @@ files are signed as the [Code signing policy](#code-signing-policy) describes):
 | RHEL / Rocky / Alma / Fedora / SUSE | `opencrt-<version>-1.x86_64.rpm` |
 | Arch Linux | `opencrt-<version>-1-x86_64.pkg.tar.zst` |
 
-The Linux packages need nothing beyond glibc 2.28 (RHEL 8, Debian 10, Ubuntu
-20.04 and newer). `SHA256SUMS` lists the checksum of every file.
+The Linux packages need glibc 2.28 (RHEL 8, Debian 10, Ubuntu 20.04 and
+newer), fontconfig and the C++ runtime, which every desktop system has. `SHA256SUMS` lists the checksum of every file.
 
 The portable zip carries a `portable.txt` beside `opencrt.exe`: while it is
 there, OpenCRT keeps its settings, sessions and host keys in a `settings`

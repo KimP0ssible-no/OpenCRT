@@ -26,11 +26,14 @@ The CI workflow (`.github/workflows/ci.yml`) runs the same steps on each platfor
 The packages need nothing beyond what every system already has:
 
 - **Linux**: the binaries are built against glibc 2.28 (AlmaLinux 8) and link
-  only glibc's own libraries and libgcc. fontconfig is loaded at run time
-  if present (the UI and terminal fonts are built in); the display libraries
-  (Wayland / X11, xkbcommon) are loaded by the windowing layer and are part
-  of any desktop. The .deb depends only on `libc6 (>= 2.28)` and `git`, the
-  .rpm only on `glibc >= 2.28` and `git` (both written out in
+  glibc's own libraries and libgcc. `opencrt` also links fontconfig and the
+  C++ runtime, because Skia draws the interface. Skia needs a newer FreeType
+  and GCC than AlmaLinux 8 has, so `packaging/linux/skia-deps.sh` builds a
+  static FreeType and installs gcc-toolset-12, whose output still runs on
+  the libstdc++ of GCC 8. The display libraries (Wayland / X11, xkbcommon)
+  are loaded by the windowing layer and are part of any desktop. The .deb
+  depends on `libc6 (>= 2.28)`, `libstdc++6`, `libfontconfig1`, `git` and
+  `python3`, the .rpm on the same under its own names (both written out in
   `crates/opencrt/Cargo.toml`: the tools' automatic scans ask for more than
   is needed, or for names no package provides). git is the one program
   OpenCRT runs rather than links: it keeps the settings repository
@@ -40,7 +43,7 @@ The packages need nothing beyond what every system already has:
   `CARGO_TARGET_DIR=target/portable cargo deb -p opencrt --no-build` and
   `cargo generate-rpm -p crates/opencrt --target-dir target/portable`.
   CI does the same in an `almalinux:8` container and fails if a binary needs
-  a newer glibc or another library.
+  a newer glibc or libstdc++, or another library.
 - **Windows**: the C runtime is linked into the executables
   (`.cargo/config.toml`, `+crt-static`), so no Visual C++ Redistributable is
   needed; CI fails if an executable imports the dynamic runtime. Git is not
@@ -54,8 +57,7 @@ Checked on 2026-10-16: the .deb installs with no other packages (apt lists
 only `opencrt`) on Debian 11, Ubuntu 20.04 and 24.04; the .rpm installs with
 plain `rpm -i` on Rocky Linux 8, Fedora, openSUSE Leap 15.6 and Tumbleweed
 (SUSE needs no package of its own); the Arch package installs with
-`pacman -U` and nothing else (it depends on `glibc` and `gcc-libs`, both in
-the base system); `ocrt` works and the GUI starts up to needing a display in
+`pacman -U` and nothing else (it depends on `glibc`, `gcc-libs` and `fontconfig`); `ocrt` works and the GUI starts up to needing a display in
 all of them.
 
 | Platform | Tool | Command | Output |

@@ -2619,6 +2619,7 @@ impl App {
             }
             "colour-schemes" => {
                 let current = schemes().iter().position(|s| s.name == self.options.scheme).unwrap_or(0);
+                ui.set_sc_default(self.options.scheme.as_str().into());
                 self.scheme_pick(current, ui);
                 ui.set_dialog(DIALOG_SCHEMES);
                 return;
@@ -5721,6 +5722,30 @@ impl App {
         self.notify("Colour scheme saved.");
     }
 
+    /// Colour Schemes > Use as Default: the selected scheme becomes the one
+    /// sessions without their own scheme use, open tabs included.
+    fn scheme_use_default(&mut self, ui: &MainWindow) {
+        let Some(scheme) = schemes().get(ui.get_sc_selected().max(0) as usize).copied() else {
+            return;
+        };
+        self.options.scheme = scheme.name.to_string();
+        self.save_options();
+        self.follow_default_scheme(scheme);
+        ui.set_sc_default(scheme.name.into());
+        self.notify(format!("Sessions without their own scheme now use \"{}\".", scheme.name));
+    }
+
+    /// Tabs without a session-specific scheme follow the default.
+    fn follow_default_scheme(&mut self, scheme: &'static crate::terminal::Scheme) {
+        for tab in &mut self.tabs {
+            let session = tab.session.as_ref().and_then(|p| self.store.sessions.iter().find(|s| s.path() == *p));
+            if session.is_none_or(|s| s.scheme.is_empty()) {
+                tab.terminal.scheme = scheme;
+            }
+            tab.dirty = true;
+        }
+    }
+
     fn scheme_delete(&mut self, ui: &MainWindow) {
         let Some(user) = (ui.get_sc_selected().max(0) as usize).checked_sub(SCHEMES.len()).filter(|u| *u < self.options.user_schemes.len()) else {
             return;
@@ -7698,14 +7723,7 @@ impl App {
             };
         }
         self.renderer.set_px((font_size * self.scale.max(0.5)).round());
-        // Tabs without a session-specific scheme follow the new default.
-        for tab in &mut self.tabs {
-            let session = tab.session.as_ref().and_then(|p| self.store.sessions.iter().find(|s| s.path() == *p));
-            if session.is_none_or(|s| s.scheme.is_empty()) {
-                tab.terminal.scheme = scheme;
-            }
-            tab.dirty = true;
-        }
+        self.follow_default_scheme(scheme);
         if let Some(error) = failed {
             // The dialog stays open so the address or key can be put right.
             return ui.set_go_error(error.into());
@@ -8502,6 +8520,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
     on!(on_scheme_new, |app, ui| app.scheme_new(&ui));
     on!(on_scheme_save, |app, ui| app.scheme_save(&ui));
     on!(on_scheme_delete, |app, ui| app.scheme_delete(&ui));
+    on!(on_scheme_use_default, |app, ui| app.scheme_use_default(&ui));
     on!(on_global_options_ok, |app, ui| app.global_options_ok(&ui));
     on!(on_go_get_git, |app, ui| app.get_git(&ui));
     on!(on_confirm_answer, |app, ui, yes| app.confirm_answer(yes, &ui));

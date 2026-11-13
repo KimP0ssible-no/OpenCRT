@@ -7352,6 +7352,11 @@ impl App {
         crate::lang::apply(code);
         self.save_options();
         self.show_languages(ui);
+        // Texts drawn or set from Rust only change when shown again.
+        self.draw_dock_labels(ui);
+        if self.tabs.is_empty() {
+            ui.set_status_text(tr!("Ready").into());
+        }
     }
 
     // --- Global Options > Keywords ---

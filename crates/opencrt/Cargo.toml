@@ -85,7 +85,7 @@ russh = "0.65.0"
 russh-sftp = "3.0.1"
 serde = { version = "1.0.229", features = ["derive"] }
 serialport = { version = "4.10.1", default-features = false }
-slint = { version = "1.18.1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-software", "software-renderer-systemfonts", "accessibility", "software-renderer-path", "unstable-winit-030"] }
+slint = { version = "1.18.1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-software", "renderer-skia", "software-renderer-systemfonts", "accessibility", "software-renderer-path", "unstable-winit-030"] }
 tokio = { version = "1.53.2", features = ["full"] }
 toml = "1.1.8"
 # Already built for Slint; opens Ctrl+clicked web addresses.

@@ -67,10 +67,12 @@ pub fn gui_main() -> anyhow::Result<()> {
         default_hook(info);
     }));
 
-    // CPU-rendered like a classic desktop app: no GPU swapchain.
+    // CPU-rendered like a classic desktop app: no GPU swapchain. Skia draws
+    // text with the system's text engine (DirectWrite, Core Text, FreeType),
+    // which is sharper than Slint's own software renderer.
     let result = slint::BackendSelector::new()
         .backend_name("winit".into())
-        .renderer_name("software".into())
+        .renderer_name("skia-software".into())
         .with_winit_window_attributes_hook(desktop_id)
         .select()
         .map_err(anyhow::Error::from)

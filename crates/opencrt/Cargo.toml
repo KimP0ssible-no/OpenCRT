@@ -11,10 +11,11 @@ license = "Apache-2.0"
 [package.metadata.deb]
 maintainer = "Kim Attree"
 section = "net"
-# Built against glibc 2.28 (packaging/linux/build-portable.sh); git runs the
+# Built against glibc 2.28 (packaging/linux/build-portable.sh); Skia, which
+# draws the interface, links fontconfig and the C++ runtime; git runs the
 # settings repository (Settings Sync), python3 runs .py scripts. Written out
 # because dpkg-shlibdeps on a newer build machine asks for more.
-depends = "libc6 (>= 2.28), git, python3"
+depends = "libc6 (>= 2.28), libstdc++6, libfontconfig1, git, python3"
 extended-description = "Tabbed terminal client with a session manager, SFTP, port forwarding and logging."
 assets = [
     ["target/release/opencrt", "usr/bin/", "755"],
@@ -33,10 +34,11 @@ assets = [
 [package.metadata.generate-rpm]
 # opencrt is GPL-3.0-only as built with Slint; opencrt-rdp is Apache-2.0.
 license = "Apache-2.0 AND GPL-3.0-only"
-# As for the .deb: glibc 2.28, git for Settings Sync, python3 for scripts. The automatic scan
-# writes requirements ("...[WEAK]") that no package provides, so it is off.
+# As for the .deb: glibc 2.28, fontconfig and the C++ runtime for Skia, git for
+# Settings Sync, python3 for scripts. The automatic scan writes requirements
+# ("...[WEAK]") that no package provides, so it is off.
 auto-req = "no"
-requires = { glibc = ">= 2.28", git = "*", python3 = "*" }
+requires = { glibc = ">= 2.28", "libstdc++" = "*", fontconfig = "*", git = "*", python3 = "*" }
 assets = [
     { source = "target/release/opencrt", dest = "/usr/bin/opencrt", mode = "755" },
     { source = "target/release/opencrt-rdp", dest = "/usr/bin/opencrt-rdp", mode = "755" },
@@ -85,7 +87,7 @@ russh = "0.65.0"
 russh-sftp = "3.0.1"
 serde = { version = "1.0.229", features = ["derive"] }
 serialport = { version = "4.10.1", default-features = false }
-slint = { version = "1.18.1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-software", "software-renderer-systemfonts", "accessibility", "software-renderer-path", "unstable-winit-030"] }
+slint = { version = "1.18.1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-software", "renderer-skia", "software-renderer-systemfonts", "accessibility", "software-renderer-path", "unstable-winit-030"] }
 tokio = { version = "1.53.2", features = ["full"] }
 toml = "1.1.8"
 # Already built for Slint; opens Ctrl+clicked web addresses.
@@ -125,9 +127,8 @@ serde_json = "1.0"
 embed-resource = "3.0.12"
 slint-build = "1.18.1"
 
-# Slint finds system fonts through fontconfig: load it at run time if it is
-# there rather than linking it, so the Linux binary needs only glibc (the UI
-# and terminal fonts are built in).
+# Slint's own font lookup loads fontconfig at run time rather than linking
+# it (the UI and terminal fonts are built in). Skia links fontconfig itself.
 [target.'cfg(target_os = "linux")'.dependencies]
 fontique = { version = "0.11", default-features = false, features = ["fontconfig-dlopen"] }
 # KWin's title bar colours on Plasma Wayland (already in the lockfile through winit).

@@ -206,16 +206,25 @@ jobs:
             . -> target
             crates/opencrt-rdp -> target
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo build --release
+      # Skia (the interface renderer) needs a newer FreeType and C++ runtime
+      # than AlmaLinux 8 has: a static FreeType and gcc-toolset-12.
+      - name: FreeType and GCC for Skia
+        run: sh packaging/linux/skia-deps.sh
+      - run: PATH=/opt/rh/gcc-toolset-12/root/usr/bin:$PATH LIBRARY_PATH=/opt/freetype/lib64 cargo build --release
       - run: cargo build --release --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target
-      - name: Only glibc 2.28 and its own libraries
+      # opencrt also links fontconfig and the C++ runtime (for Skia), both as
+      # AlmaLinux 8 has them; the other two programs need glibc alone.
+      - name: Only glibc 2.28, and for opencrt fontconfig and libstdc++ of GCC 8
         run: |
           for b in opencrt opencrt-rdp ocrt; do
             needs=$(objdump -T target/release/$b | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)
+            cxx=$(objdump -T target/release/$b | grep -o 'GLIBCXX_[0-9.]*' | sort -uV | tail -1)
             libs=$(objdump -p target/release/$b | awk '/NEEDED/{print $2}' | tr '\n' ' ')
-            echo "$b: $needs; $libs"
+            echo "$b: $needs $cxx; $libs"
             [ "$(printf '%s\n' "$needs" GLIBC_2.28 | sort -V | tail -1)" = GLIBC_2.28 ]
-            ! echo "$libs" | grep -qvE '^((libc|libm|libdl|libpthread|librt|libgcc_s)\.so\.[0-9.]+|ld-linux-x86-64\.so\.2| )+$'
+            [ "$(printf '%s\n' "$cxx" GLIBCXX_3.4.25 | sort -V | tail -1)" = GLIBCXX_3.4.25 ]
+            extra=; [ $b = opencrt ] && extra='|libstdc\+\+|libfontconfig'
+            ! echo "$libs" | grep -qvE "^((libc|libm|libdl|libpthread|librt|libgcc_s$extra)\.so\.[0-9.]+|ld-linux-x86-64\.so\.2| )+$"
           done
       - name: Third-party licence notices
         run: |

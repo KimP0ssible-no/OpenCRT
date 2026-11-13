@@ -1,7 +1,7 @@
 //! Render the main window off-screen to a PNG-convertible PPM, for checking the
 //! look without opening a window: `cargo run --example ui_snapshot -- out.ppm dark main [font size]`.
 //! Themes: light, dark, and breeze / breeze-dark (KDE's Breeze colour schemes).
-//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite, quick-open, shortcuts, bar.
+//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite, quick-open, shortcuts, bar, bar-full.
 
 use std::rc::Rc;
 
@@ -245,6 +245,12 @@ fn main() {
                 BarRow { label: "show ver".into(), color: Color::from_argb_u8(0, 0, 0, 0), has_color: false, index: 1 },
                 BarRow { label: "Run Script".into(), color: Color::from_rgb_u8(0xf7, 0x63, 0x0c), has_color: true, index: 2 },
             ]));
+        }
+        // More buttons than fit: the bar slides and shows its arrows.
+        "bar-full" => {
+            ui.set_show_button_bar(true);
+            let button = |i: i32| BarRow { label: format!("show interface {i}").into(), color: Color::from_rgb_u8(0x10, 0x89, 0x3e), has_color: i % 3 == 0, index: i };
+            ui.set_bar_buttons(model((0..24).map(button).collect()));
         }
         "editor" => {
             ui.set_se_title("Script Editor - backup.rhai".into());

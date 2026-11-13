@@ -951,6 +951,18 @@ pub struct BarButton {
     pub bar: String,
 }
 
+/// Move the Button Bar button `index` one place left or right among the
+/// buttons of its own bar (the list holds every bar's buttons). False when it
+/// is already at that end.
+pub fn move_button(buttons: &mut [BarButton], index: usize, right: bool) -> bool {
+    let Some(bar) = buttons.get(index).map(|b| b.bar.clone()) else {
+        return false;
+    };
+    let same = |b: &BarButton| b.bar.eq_ignore_ascii_case(&bar);
+    let other = if right { (index + 1..buttons.len()).find(|&i| same(&buttons[i])) } else { (0..index).rev().find(|&i| same(&buttons[i])) };
+    other.map(|other| buttons.swap(index, other)).is_some()
+}
+
 /// Rename the Button Bar `old` to `new`, or delete it when `new` is empty:
 /// its buttons go and the sessions that used it fall back to the default bar.
 pub fn move_bar(options: &mut Options, store: &mut SessionStore, old: &str, new: &str) {
@@ -1403,6 +1415,20 @@ mod tests {
         let old = toml::from_str::<Options>("show_toolbar = true\n").unwrap();
         assert_eq!(old.ui_font_size, Options::default().ui_font_size);
         assert_eq!(toml::from_str::<Options>("ui_font_size = 15.0\n").unwrap().ui_scale(), 1.25);
+    }
+
+    #[test]
+    fn bar_buttons_move_within_their_bar() {
+        let button = |label: &str, bar: &str| BarButton { label: label.into(), bar: bar.into(), ..Default::default() };
+        let mut buttons = vec![button("a", ""), button("x", "Lab"), button("b", ""), button("y", "lab"), button("c", "")];
+        let labels = |b: &[BarButton]| b.iter().map(|b| b.label.clone()).collect::<String>();
+        // "a" jumps over the Lab button between it and "b"; Lab's order stays.
+        assert!(move_button(&mut buttons, 0, true));
+        assert_eq!(labels(&buttons), "bxayc");
+        assert!(move_button(&mut buttons, 3, false));
+        assert_eq!(labels(&buttons), "byaxc");
+        assert!(!move_button(&mut buttons, 0, false) && !move_button(&mut buttons, 4, true) && !move_button(&mut buttons, 9, true));
+        assert_eq!(labels(&buttons), "byaxc");
     }
 
     #[test]

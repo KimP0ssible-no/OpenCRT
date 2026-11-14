@@ -3423,9 +3423,17 @@ component GlobalOptionsDialog inherits DialogFrame {
                     spacing-vertical: 8px;
                     Row {
                         FormLabel { text: @tr("Font:"); }
-                        ComboBox {
-                            model: root.font-names;
-                            current-index <=> root.font-index;
+                        HorizontalLayout {
+                            spacing: 6px;
+                            ComboBox {
+                                model: root.font-names;
+                                current-index <=> root.font-index;
+                            }
+                            // A font file (.ttf, .otf, .ttc) joins the list.
+                            Button {
+                                text: "...";
+                                clicked => { root.browse("go-font-file"); }
+                            }
                         }
                     }
                     Row {
@@ -5186,6 +5194,8 @@ export component MainWindow inherits Window {
     in-out property <string> go-key-map;
     in property <[string]> font-names;
     in-out property <int> go-font;
+    // The font file that is the font list's last entry; "" for none.
+    in-out property <string> go-font-file;
     in-out property <string> go-keepalive;
     in-out property <bool> go-copy-on-select;
     in-out property <string> go-word-delimiters;

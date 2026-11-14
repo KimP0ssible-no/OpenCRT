@@ -503,7 +503,8 @@ pub struct SessionStore {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Options {
-    /// Terminal font name (see `render::available_fonts`); empty for the first installed.
+    /// Terminal font: a name (see `render::available_fonts`) or the full path
+    /// of a font file; empty for the first installed.
     pub font: String,
     /// Terminal font size in logical pixels.
     pub font_size: f32,

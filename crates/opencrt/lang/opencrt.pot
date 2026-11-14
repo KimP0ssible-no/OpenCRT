@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OpenCRT VERSION\n"
-"POT-Creation-Date: 2026-11-13 15:02+0000\n"
+"POT-Creation-Date: 2026-11-14 21:27+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -12,8 +12,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5614
-#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5614
+#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5624
+#: crates/opencrt/ui/main.slint:352 crates/opencrt/ui/main.slint:5624
 msgid "Session Manager"
 msgstr ""
 
@@ -22,7 +22,7 @@ msgstr ""
 msgid "Connect"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:364 crates/opencrt/ui/main.slint:6791
+#: crates/opencrt/ui/main.slint:364 crates/opencrt/ui/main.slint:6801
 msgid "New Session"
 msgstr ""
 
@@ -36,7 +36,7 @@ msgstr ""
 
 #: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508
 #: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3145
-#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3145 crates/opencrt/ui/main.slint:5514
+#: crates/opencrt/ui/main.slint:380 crates/opencrt/ui/main.slint:508 crates/opencrt/ui/main.slint:3145 crates/opencrt/ui/main.slint:5524
 msgid "Delete"
 msgstr ""
 
@@ -84,15 +84,15 @@ msgstr ""
 msgid "Cut"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5535
-#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5535 crates/opencrt/ui/main.slint:6321
+#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5545
+#: crates/opencrt/ui/main.slint:494 crates/opencrt/ui/main.slint:5545 crates/opencrt/ui/main.slint:6331
 msgid "Copy"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4019
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4019 crates/opencrt/ui/main.slint:4166
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4019 crates/opencrt/ui/main.slint:4166 crates/opencrt/ui/main.slint:5545
-#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4019 crates/opencrt/ui/main.slint:4166 crates/opencrt/ui/main.slint:5545 crates/opencrt/ui/main.slint:6336
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4027
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4027 crates/opencrt/ui/main.slint:4174
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4027 crates/opencrt/ui/main.slint:4174 crates/opencrt/ui/main.slint:5555
+#: crates/opencrt/ui/main.slint:499 crates/opencrt/ui/main.slint:4027 crates/opencrt/ui/main.slint:4174 crates/opencrt/ui/main.slint:5555 crates/opencrt/ui/main.slint:6346
 msgid "Paste"
 msgstr ""
 
@@ -105,7 +105,7 @@ msgstr ""
 msgid "New Session..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:517 crates/opencrt/ui/main.slint:4389
+#: crates/opencrt/ui/main.slint:517 crates/opencrt/ui/main.slint:4397
 msgid "New Folder..."
 msgstr ""
 
@@ -118,12 +118,12 @@ msgid "Filter (Ctrl+click picks several)"
 msgstr ""
 
 #: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897
-#: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897 crates/opencrt/ui/main.slint:6002
+#: crates/opencrt/ui/main.slint:643 crates/opencrt/ui/main.slint:897 crates/opencrt/ui/main.slint:6012
 msgid "Reconnect"
 msgstr ""
 
 #: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902
-#: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902 crates/opencrt/ui/main.slint:6009
+#: crates/opencrt/ui/main.slint:647 crates/opencrt/ui/main.slint:902 crates/opencrt/ui/main.slint:6019
 msgid "Disconnect"
 msgstr ""
 
@@ -132,13 +132,13 @@ msgid "Lock"
 msgstr ""
 
 #: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4151
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4151 crates/opencrt/ui/main.slint:7128
-#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4151 crates/opencrt/ui/main.slint:7128 crates/opencrt/ui/main.slint:7307
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4159
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4159 crates/opencrt/ui/main.slint:7138
+#: crates/opencrt/ui/main.slint:656 crates/opencrt/ui/main.slint:975 crates/opencrt/ui/main.slint:4159 crates/opencrt/ui/main.slint:7138 crates/opencrt/ui/main.slint:7317
 msgid "Close"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:717 crates/opencrt/ui/main.slint:5619
+#: crates/opencrt/ui/main.slint:717 crates/opencrt/ui/main.slint:5629
 msgid "Command Manager"
 msgstr ""
 
@@ -173,7 +173,7 @@ msgid "Send"
 msgstr ""
 
 #: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414
-#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414 crates/opencrt/ui/main.slint:7189
+#: crates/opencrt/ui/main.slint:807 crates/opencrt/ui/main.slint:2414 crates/opencrt/ui/main.slint:7199
 msgid "Edit..."
 msgstr ""
 
@@ -185,7 +185,7 @@ msgstr ""
 msgid "New Command..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:907 crates/opencrt/ui/main.slint:5448
+#: crates/opencrt/ui/main.slint:907 crates/opencrt/ui/main.slint:5458
 msgid "Clone Session"
 msgstr ""
 
@@ -201,7 +201,7 @@ msgstr ""
 msgid "Send Windows Key"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:935 crates/opencrt/ui/main.slint:5669
+#: crates/opencrt/ui/main.slint:935 crates/opencrt/ui/main.slint:5679
 msgid "Session Options..."
 msgstr ""
 
@@ -245,19 +245,19 @@ msgstr ""
 msgid "Scratchpad"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:1115 crates/opencrt/ui/main.slint:6554
+#: crates/opencrt/ui/main.slint:1115 crates/opencrt/ui/main.slint:6564
 msgid "Send to"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6561
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6571
 msgid "the active tab"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6561
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6571
 msgid "all tabs"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6561
+#: crates/opencrt/ui/main.slint:1120 crates/opencrt/ui/main.slint:6571
 msgid "tabs on screen"
 msgstr ""
 
@@ -273,7 +273,7 @@ msgstr ""
 msgid "Send All"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:1148 crates/opencrt/ui/main.slint:4128
+#: crates/opencrt/ui/main.slint:1148 crates/opencrt/ui/main.slint:4136
 msgid "Open..."
 msgstr ""
 
@@ -318,11 +318,11 @@ msgstr ""
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440
 #: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3878
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3878 crates/opencrt/ui/main.slint:4008
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3878 crates/opencrt/ui/main.slint:4008 crates/opencrt/ui/main.slint:4099
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3878 crates/opencrt/ui/main.slint:4008 crates/opencrt/ui/main.slint:4099 crates/opencrt/ui/main.slint:7388
-#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3878 crates/opencrt/ui/main.slint:4008 crates/opencrt/ui/main.slint:4099 crates/opencrt/ui/main.slint:7388
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3886
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3886 crates/opencrt/ui/main.slint:4016
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3886 crates/opencrt/ui/main.slint:4016 crates/opencrt/ui/main.slint:4107
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3886 crates/opencrt/ui/main.slint:4016 crates/opencrt/ui/main.slint:4107 crates/opencrt/ui/main.slint:7398
+#: crates/opencrt/ui/main.slint:1421 crates/opencrt/ui/main.slint:1495 crates/opencrt/ui/main.slint:2440 crates/opencrt/ui/main.slint:2639 crates/opencrt/ui/main.slint:3886 crates/opencrt/ui/main.slint:4016 crates/opencrt/ui/main.slint:4107 crates/opencrt/ui/main.slint:7398
 msgid "Cancel"
 msgstr ""
 
@@ -346,9 +346,9 @@ msgstr ""
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634
 #: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3928
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3928 crates/opencrt/ui/main.slint:4293
-#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3928 crates/opencrt/ui/main.slint:4293 crates/opencrt/ui/main.slint:7456
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3936
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3936 crates/opencrt/ui/main.slint:4301
+#: crates/opencrt/ui/main.slint:1490 crates/opencrt/ui/main.slint:2435 crates/opencrt/ui/main.slint:2634 crates/opencrt/ui/main.slint:2748 crates/opencrt/ui/main.slint:3936 crates/opencrt/ui/main.slint:4301 crates/opencrt/ui/main.slint:7466
 msgid "OK"
 msgstr ""
 
@@ -445,7 +445,7 @@ msgid "Parity:"
 msgstr ""
 
 #: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644
-#: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644 crates/opencrt/ui/main.slint:7425
+#: crates/opencrt/ui/main.slint:1630 crates/opencrt/ui/main.slint:1644 crates/opencrt/ui/main.slint:7435
 msgid "None"
 msgstr ""
 
@@ -477,7 +477,7 @@ msgstr ""
 msgid "Opens your default shell (PowerShell on Windows, $SHELL elsewhere)."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:1674 crates/opencrt/ui/main.slint:5960
+#: crates/opencrt/ui/main.slint:1674 crates/opencrt/ui/main.slint:5970
 msgid "Quick Connect"
 msgstr ""
 
@@ -493,7 +493,7 @@ msgstr ""
 msgid "Session Options ({} sessions)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:1816 crates/opencrt/ui/main.slint:6060
+#: crates/opencrt/ui/main.slint:1816 crates/opencrt/ui/main.slint:6070
 msgid "Session Options"
 msgstr ""
 
@@ -537,7 +537,7 @@ msgstr ""
 msgid "Session name:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:1874 crates/opencrt/ui/main.slint:7438
+#: crates/opencrt/ui/main.slint:1874 crates/opencrt/ui/main.slint:7448
 msgid "Folder:"
 msgstr ""
 
@@ -791,27 +791,27 @@ msgstr ""
 msgid "Tab colour:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7425
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7435
 msgid "Red"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7425
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7435
 msgid "Orange"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7425
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7435
 msgid "Yellow"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7425
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7435
 msgid "Green"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7425
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7435
 msgid "Blue"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7425
+#: crates/opencrt/ui/main.slint:2145 crates/opencrt/ui/main.slint:7435
 msgid "Purple"
 msgstr ""
 
@@ -989,7 +989,7 @@ msgid ""
 "run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2320 crates/opencrt/ui/main.slint:7415
+#: crates/opencrt/ui/main.slint:2320 crates/opencrt/ui/main.slint:7425
 msgid "Script file:"
 msgstr ""
 
@@ -1023,8 +1023,8 @@ msgstr ""
 msgid "Port forwards (SSH2 only):"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7087
-#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7087
+#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7097
+#: crates/opencrt/ui/main.slint:2374 crates/opencrt/ui/main.slint:7097
 msgid "Name"
 msgstr ""
 
@@ -1044,15 +1044,15 @@ msgstr ""
 msgid "Application"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7114
-#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7114 crates/opencrt/ui/main.slint:7298
+#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7124
+#: crates/opencrt/ui/main.slint:2409 crates/opencrt/ui/main.slint:7124 crates/opencrt/ui/main.slint:7308
 msgid "Add..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3830
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3830 crates/opencrt/ui/main.slint:4621
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3830 crates/opencrt/ui/main.slint:4621 crates/opencrt/ui/main.slint:7123
-#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3830 crates/opencrt/ui/main.slint:4621 crates/opencrt/ui/main.slint:7123 crates/opencrt/ui/main.slint:7302
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3838
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3838 crates/opencrt/ui/main.slint:4629
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3838 crates/opencrt/ui/main.slint:4629 crates/opencrt/ui/main.slint:7133
+#: crates/opencrt/ui/main.slint:2419 crates/opencrt/ui/main.slint:3838 crates/opencrt/ui/main.slint:4629 crates/opencrt/ui/main.slint:7133 crates/opencrt/ui/main.slint:7312
 msgid "Remove"
 msgstr ""
 
@@ -1167,8 +1167,8 @@ msgstr ""
 msgid "blank to be asked each time"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2614 crates/opencrt/ui/main.slint:3985
-#: crates/opencrt/ui/main.slint:2614 crates/opencrt/ui/main.slint:3985
+#: crates/opencrt/ui/main.slint:2614 crates/opencrt/ui/main.slint:3993
+#: crates/opencrt/ui/main.slint:2614 crates/opencrt/ui/main.slint:3993
 msgid "Confirm:"
 msgstr ""
 
@@ -1216,11 +1216,11 @@ msgstr ""
 msgid "kept in the system keychain"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7415
+#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7425
 msgid "Send:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7415
+#: crates/opencrt/ui/main.slint:2729 crates/opencrt/ui/main.slint:7425
 msgid "Command:"
 msgstr ""
 
@@ -1258,7 +1258,7 @@ msgstr ""
 msgid "Background:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3100 crates/opencrt/ui/main.slint:3447
+#: crates/opencrt/ui/main.slint:3100 crates/opencrt/ui/main.slint:3455
 msgid "Cursor:"
 msgstr ""
 
@@ -1288,7 +1288,7 @@ msgstr ""
 msgid "New"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3150 crates/opencrt/ui/main.slint:4132
+#: crates/opencrt/ui/main.slint:3150 crates/opencrt/ui/main.slint:4140
 msgid "Save"
 msgstr ""
 
@@ -1328,7 +1328,7 @@ msgstr ""
 msgid "Theme:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3277 crates/opencrt/ui/main.slint:5251
+#: crates/opencrt/ui/main.slint:3277 crates/opencrt/ui/main.slint:5261
 msgid "Follow the system"
 msgstr ""
 
@@ -1465,331 +1465,331 @@ msgstr ""
 msgid "Font:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3432
+#: crates/opencrt/ui/main.slint:3440
 msgid "Font size:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3436
+#: crates/opencrt/ui/main.slint:3444
 msgid "Scrollback lines:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3440
+#: crates/opencrt/ui/main.slint:3448
 msgid "Default colour scheme:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3449
+#: crates/opencrt/ui/main.slint:3457
 msgid "Block"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3449
+#: crates/opencrt/ui/main.slint:3457
 msgid "Underline"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3449
+#: crates/opencrt/ui/main.slint:3457
 msgid "Vertical bar"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3454
+#: crates/opencrt/ui/main.slint:3462
 msgid "Bell:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3456
+#: crates/opencrt/ui/main.slint:3464
 msgid "Flash the window"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3456
+#: crates/opencrt/ui/main.slint:3464
 msgid "Play a sound"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3456
+#: crates/opencrt/ui/main.slint:3464
 msgid "Off"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3462
+#: crates/opencrt/ui/main.slint:3470
 msgid "Copy on select"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3466
+#: crates/opencrt/ui/main.slint:3474
 msgid "Paste on right-click (instead of the menu)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3470
+#: crates/opencrt/ui/main.slint:3478
 msgid "Paste on middle-click"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3474
+#: crates/opencrt/ui/main.slint:3482
 msgid "Let programs on the host copy to the clipboard (OSC 52, e.g. tmux, vim)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3478
+#: crates/opencrt/ui/main.slint:3486
 msgid "Ask before pasting more than one line"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3484
+#: crates/opencrt/ui/main.slint:3492
 msgid "Send delays (ms):"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3491
+#: crates/opencrt/ui/main.slint:3499
 msgid "per character"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3500
+#: crates/opencrt/ui/main.slint:3508
 msgid "per line"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3506
+#: crates/opencrt/ui/main.slint:3514
 msgid "Wait for prompt:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3509
+#: crates/opencrt/ui/main.slint:3517
 msgid "e.g. \"# \" before each next line (blank: do not wait)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3514
+#: crates/opencrt/ui/main.slint:3522
 msgid "Web search:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3517
+#: crates/opencrt/ui/main.slint:3525
 msgid "address with %s for the selected text"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3522
+#: crates/opencrt/ui/main.slint:3530
 msgid "Word delimiters:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3525
+#: crates/opencrt/ui/main.slint:3533
 msgid "e.g. ,:;\"'()[]{{}}<> (blank for default)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3531
+#: crates/opencrt/ui/main.slint:3539
 msgid "SSH keepalive (seconds):"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3534
+#: crates/opencrt/ui/main.slint:3542
 msgid "0 = off"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3538
+#: crates/opencrt/ui/main.slint:3546
 msgid "Default SSH2 key file:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3541
+#: crates/opencrt/ui/main.slint:3549
 msgid "blank = SSH agent"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3550
+#: crates/opencrt/ui/main.slint:3558
 msgid "Reconnect automatically when a connection drops"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3554
+#: crates/opencrt/ui/main.slint:3562
 msgid ""
 "Allow legacy SSH2 algorithms for every host (old network devices; modern "
 "ones still come first)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3558
+#: crates/opencrt/ui/main.slint:3566
 msgid "Save new SSH2 host keys without asking (a changed key is still refused)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3562
+#: crates/opencrt/ui/main.slint:3570
 msgid ""
 "Not recommended: the first connection to a host can no longer be checked "
 "against its real fingerprint. Use it for lab networks or many new devices."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3568
+#: crates/opencrt/ui/main.slint:3576
 msgid "Remember passwords and key passphrases until OpenCRT closes"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3572
+#: crates/opencrt/ui/main.slint:3580
 msgid "Reopen saved sessions that were open at exit"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3576
+#: crates/opencrt/ui/main.slint:3584
 msgid "Keepalive applies to sessions opened from now on."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3582
+#: crates/opencrt/ui/main.slint:3590
 msgid "Download folder:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3585
+#: crates/opencrt/ui/main.slint:3593
 msgid "blank for your Downloads folder"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3593
+#: crates/opencrt/ui/main.slint:3601
 msgid "Run a TFTP server on this folder (UDP port 69)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3598
+#: crates/opencrt/ui/main.slint:3606
 msgid "TFTP clients:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3602
+#: crates/opencrt/ui/main.slint:3610
 msgid "e.g. 192.168.1.0/24, 10.0.0.5 (blank for any)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3607
+#: crates/opencrt/ui/main.slint:3615
 msgid "Dropped files:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3609
+#: crates/opencrt/ui/main.slint:3617
 msgid "Ask each time"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3609 crates/opencrt/ui/main.slint:4060
+#: crates/opencrt/ui/main.slint:3617 crates/opencrt/ui/main.slint:4068
 msgid "Zmodem"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3609 crates/opencrt/ui/main.slint:4065
+#: crates/opencrt/ui/main.slint:3617 crates/opencrt/ui/main.slint:4073
 msgid "Xmodem"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3609 crates/opencrt/ui/main.slint:4069
+#: crates/opencrt/ui/main.slint:3617 crates/opencrt/ui/main.slint:4077
 msgid "Ymodem"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3609 crates/opencrt/ui/main.slint:4073
+#: crates/opencrt/ui/main.slint:3617 crates/opencrt/ui/main.slint:4081
 msgid "Kermit"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3609 crates/opencrt/ui/main.slint:4081
+#: crates/opencrt/ui/main.slint:3617 crates/opencrt/ui/main.slint:4089
 msgid "ASCII"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3609 crates/opencrt/ui/main.slint:4085
+#: crates/opencrt/ui/main.slint:3617 crates/opencrt/ui/main.slint:4093
 msgid "Binary"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3609
+#: crates/opencrt/ui/main.slint:3617
 msgid "SFTP (SSH sessions)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3614
+#: crates/opencrt/ui/main.slint:3622
 msgid ""
 "Zmodem and Ymodem downloads are saved here, and TFTP clients such as routers "
 "can fetch files from it or upload into it. Existing files are never "
 "overwritten."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3621
+#: crates/opencrt/ui/main.slint:3629
 msgid "Printer:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3624
+#: crates/opencrt/ui/main.slint:3632
 msgid "blank for the default printer"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3629
+#: crates/opencrt/ui/main.slint:3637
 msgid "Font size (points):"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3633 crates/opencrt/ui/main.slint:3642
+#: crates/opencrt/ui/main.slint:3641 crates/opencrt/ui/main.slint:3650
 msgid "default"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3636
+#: crates/opencrt/ui/main.slint:3644
 msgid "Margins (mm):"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3646
+#: crates/opencrt/ui/main.slint:3654
 msgid ""
 "File > Print Screen, Print Selection and Auto Print, and printing asked for "
 "by the host (CSI 5i / 4i), go to this printer. On Windows they print through "
 "Notepad, which uses its own font and margins."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3654
+#: crates/opencrt/ui/main.slint:3662
 msgid ""
 "Keywords are highlighted in any case. A session uses the Default list unless "
 "it chooses a named one (Session Options > Appearance)."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3661
+#: crates/opencrt/ui/main.slint:3669
 msgid "List:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3669
+#: crates/opencrt/ui/main.slint:3677
 msgid "New List"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3673
+#: crates/opencrt/ui/main.slint:3681
 msgid "Delete List"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3685
+#: crates/opencrt/ui/main.slint:3693
 msgid "the Default list has no name"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3707
+#: crates/opencrt/ui/main.slint:3715
 msgid "Keyword"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3708
+#: crates/opencrt/ui/main.slint:3716
 msgid "Colour"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3709
+#: crates/opencrt/ui/main.slint:3717
 msgid "Style"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3751
+#: crates/opencrt/ui/main.slint:3759
 msgid "Keyword:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3756
+#: crates/opencrt/ui/main.slint:3764
 msgid "regular expression"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3756
+#: crates/opencrt/ui/main.slint:3764
 msgid "word or phrase"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3763 crates/opencrt/ui/main.slint:7423
+#: crates/opencrt/ui/main.slint:3771 crates/opencrt/ui/main.slint:7433
 msgid "Colour:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3775
+#: crates/opencrt/ui/main.slint:3783
 msgid "#rrggbb"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3788
+#: crates/opencrt/ui/main.slint:3796
 msgid "Regular expression"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3794
+#: crates/opencrt/ui/main.slint:3802
 msgid "Whole words"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3800
+#: crates/opencrt/ui/main.slint:3808
 msgid "Whole line"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3810
+#: crates/opencrt/ui/main.slint:3818
 msgid "Colour the text only"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3816
+#: crates/opencrt/ui/main.slint:3824
 msgid "Bold"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3826
+#: crates/opencrt/ui/main.slint:3834
 msgid "Add"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3839
+#: crates/opencrt/ui/main.slint:3847
 msgid "Mapped keys (one per line):"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3844 crates/opencrt/ui/main.slint:7039
+#: crates/opencrt/ui/main.slint:3852 crates/opencrt/ui/main.slint:7049
 msgid "Import..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3848 crates/opencrt/ui/main.slint:7047
+#: crates/opencrt/ui/main.slint:3856 crates/opencrt/ui/main.slint:7057
 msgid "Export..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3858
+#: crates/opencrt/ui/main.slint:3866
 msgid ""
 "Key = what it does, e.g. F5 = show running-config\\r, Ctrl+K = menu: clear-"
 "screen, Alt+F1 = run: wireshark. Keys: F1-F24, Up, Home, PageUp, Insert, "
@@ -1799,33 +1799,33 @@ msgid ""
 "their own (Session Options > Keyboard)."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3901
+#: crates/opencrt/ui/main.slint:3909
 msgid "Yes"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3906
+#: crates/opencrt/ui/main.slint:3914
 msgid "No"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3950
+#: crates/opencrt/ui/main.slint:3958
 msgid "Unlock Saved Passwords"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3950
+#: crates/opencrt/ui/main.slint:3958
 msgid "Import SecureCRT Passwords"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3950
+#: crates/opencrt/ui/main.slint:3958
 msgid "Master Password"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3954
+#: crates/opencrt/ui/main.slint:3962
 msgid ""
 "Saved passwords and key passphrases are protected by the master password. "
 "Enter it to use them until OpenCRT closes."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3956
+#: crates/opencrt/ui/main.slint:3964
 msgid ""
 "{} imported sessions have saved passwords. Enter SecureCRT's Config "
 "Passphrase (SecureCRT asks for it when it starts) to import them. If "
@@ -1833,7 +1833,7 @@ msgid ""
 "window, then import again."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3958
+#: crates/opencrt/ui/main.slint:3966
 msgid ""
 "Keep saved passwords and key passphrases in the settings folder, encrypted "
 "with a master password, instead of this computer's keychain. Settings Sync "
@@ -1841,1084 +1841,1084 @@ msgid ""
 "recovered: the saved passwords would have to be entered again."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3959
+#: crates/opencrt/ui/main.slint:3967
 msgid ""
 "Change the master password, or remove it to move the saved passwords back to "
 "this computer's keychain."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3963
+#: crates/opencrt/ui/main.slint:3971
 msgid "Master password:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3963
+#: crates/opencrt/ui/main.slint:3971
 msgid "Config passphrase:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3963
+#: crates/opencrt/ui/main.slint:3971
 msgid "Current password:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:3972
+#: crates/opencrt/ui/main.slint:3980
 msgid "New password:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4003
+#: crates/opencrt/ui/main.slint:4011
 msgid "Unlock"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4003
+#: crates/opencrt/ui/main.slint:4011
 msgid "Set"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4003
+#: crates/opencrt/ui/main.slint:4011
 msgid "Import"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4003
+#: crates/opencrt/ui/main.slint:4011
 msgid "Change"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4008
+#: crates/opencrt/ui/main.slint:4016
 msgid "Skip"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4050
+#: crates/opencrt/ui/main.slint:4058
 msgid "Send Files"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4089
+#: crates/opencrt/ui/main.slint:4097
 msgid "SFTP"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4094
+#: crates/opencrt/ui/main.slint:4102
 msgid "Always send dropped files this way (Global Options > File Transfer)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4118
+#: crates/opencrt/ui/main.slint:4126
 msgid "wait_for(\"login:\", 10);\nsend(\"admin\\r\");"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4136
+#: crates/opencrt/ui/main.slint:4144
 msgid "Save As..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4140
+#: crates/opencrt/ui/main.slint:4148
 msgid "Check"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4145
+#: crates/opencrt/ui/main.slint:4153
 msgid "Run"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4164
+#: crates/opencrt/ui/main.slint:4172
 msgid "Cmd+O"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4164
+#: crates/opencrt/ui/main.slint:4172
 msgid "Ctrl+Shift+T"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4164
+#: crates/opencrt/ui/main.slint:4172
 msgid "Quick Open: find a saved session or type a host"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4165
+#: crates/opencrt/ui/main.slint:4173
 msgid "Cmd+C"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4165
+#: crates/opencrt/ui/main.slint:4173
 msgid "Ctrl+C, Ctrl+Insert"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4165
+#: crates/opencrt/ui/main.slint:4173
 msgid "Copy the selection"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4165
+#: crates/opencrt/ui/main.slint:4173
 msgid "Copy the selection (with none, Ctrl+C goes to the host)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4166
+#: crates/opencrt/ui/main.slint:4174
 msgid "Cmd+V"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4166
+#: crates/opencrt/ui/main.slint:4174
 msgid "Ctrl+V, Shift+Insert"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4167
+#: crates/opencrt/ui/main.slint:4175
 msgid "Middle click"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4168
+#: crates/opencrt/ui/main.slint:4176
 msgid "Ctrl+Tab"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4168
+#: crates/opencrt/ui/main.slint:4176
 msgid "Next tab"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4169
+#: crates/opencrt/ui/main.slint:4177
 msgid "Ctrl+Shift+Tab"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4169
+#: crates/opencrt/ui/main.slint:4177
 msgid "Previous tab"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4170
+#: crates/opencrt/ui/main.slint:4178
 msgid "Cmd+1 ... Cmd+9"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4170
+#: crates/opencrt/ui/main.slint:4178
 msgid "Alt+1 ... Alt+9"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4170
+#: crates/opencrt/ui/main.slint:4178
 msgid "Go to tab 1 to 9"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4171
+#: crates/opencrt/ui/main.slint:4179
 msgid "Option+Return"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4171
+#: crates/opencrt/ui/main.slint:4179
 msgid "Alt+Enter"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4171
+#: crates/opencrt/ui/main.slint:4179
 msgid "Full screen"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4172
+#: crates/opencrt/ui/main.slint:4180
 msgid "Shift+PageUp, Shift+PageDown"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4172
+#: crates/opencrt/ui/main.slint:4180
 msgid "Scroll back or forward a page"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4173
+#: crates/opencrt/ui/main.slint:4181
 msgid "Cmd+wheel"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4173
+#: crates/opencrt/ui/main.slint:4181
 msgid "Ctrl+wheel"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4173
+#: crates/opencrt/ui/main.slint:4181
 msgid "Font size"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4174
+#: crates/opencrt/ui/main.slint:4182
 msgid "Cmd+click"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4174
+#: crates/opencrt/ui/main.slint:4182
 msgid "Ctrl+click"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4174
+#: crates/opencrt/ui/main.slint:4182
 msgid "Open a web address in the browser"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4175
+#: crates/opencrt/ui/main.slint:4183
 msgid "Enter"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4175
+#: crates/opencrt/ui/main.slint:4183
 msgid "Reconnect a disconnected tab"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4176
+#: crates/opencrt/ui/main.slint:4184
 msgid "Ctrl+C, Escape"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4176
+#: crates/opencrt/ui/main.slint:4184
 msgid "Cancel a file transfer"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4177
+#: crates/opencrt/ui/main.slint:4185
 msgid "Cmd+K, Cmd+T"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4177
+#: crates/opencrt/ui/main.slint:4185
 msgid "Quick Connect, Connect in Tab"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4178
+#: crates/opencrt/ui/main.slint:4186
 msgid "Cmd+E"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4178
+#: crates/opencrt/ui/main.slint:4186
 msgid "Open a saved session (the Session Manager's filter)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4179
+#: crates/opencrt/ui/main.slint:4187
 msgid "Cmd+L"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4179
+#: crates/opencrt/ui/main.slint:4187
 msgid "Connect a local shell"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4181 crates/opencrt/ui/main.slint:5912
+#: crates/opencrt/ui/main.slint:4189 crates/opencrt/ui/main.slint:5922
 msgid "Keyboard Shortcuts"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4201
+#: crates/opencrt/ui/main.slint:4209
 msgid ""
 "Add your own in Global Options > Keyboard, or per session in Session Options "
 "> Keyboard. For example, F1 = menu: shortcuts opens this list."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4225 crates/opencrt/ui/main.slint:5920
+#: crates/opencrt/ui/main.slint:4233 crates/opencrt/ui/main.slint:5930
 msgid "About OpenCRT"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4237
+#: crates/opencrt/ui/main.slint:4245
 msgid "Version {}"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4242
+#: crates/opencrt/ui/main.slint:4250
 msgid "Secure terminal client for Windows, macOS and Linux."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4246
+#: crates/opencrt/ui/main.slint:4254
 msgid "© 2026 Kim Attree"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4254
+#: crates/opencrt/ui/main.slint:4262
 msgid "Protocols"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4255
+#: crates/opencrt/ui/main.slint:4263
 msgid "SSH2, SFTP, Telnet, RDP, VNC, serial, raw TCP, local shell"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4258
+#: crates/opencrt/ui/main.slint:4266
 msgid "Config"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4262
+#: crates/opencrt/ui/main.slint:4270
 msgid "Licence"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4263
+#: crates/opencrt/ui/main.slint:4271
 msgid "GPL-3.0-only, as built with Slint; source code Apache-2.0"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4266
+#: crates/opencrt/ui/main.slint:4274
 msgid "Fonts"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4267
+#: crates/opencrt/ui/main.slint:4275
 msgid "IBM Plex Sans and Mono, SIL Open Font License 1.1"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4280 crates/opencrt/ui/main.slint:5916
+#: crates/opencrt/ui/main.slint:4288 crates/opencrt/ui/main.slint:5926
 msgid "Check for Updates"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4284
+#: crates/opencrt/ui/main.slint:4292
 msgid "Release Notes"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4288
+#: crates/opencrt/ui/main.slint:4296
 msgid "Update Now"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4380
+#: crates/opencrt/ui/main.slint:4388
 msgid "Download"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4380
+#: crates/opencrt/ui/main.slint:4388
 msgid "Upload"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4384
+#: crates/opencrt/ui/main.slint:4392
 msgid "Edit (opens here, uploads on save)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4401
+#: crates/opencrt/ui/main.slint:4409
 msgid "Copy Path"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4406
+#: crates/opencrt/ui/main.slint:4414
 msgid "Refresh"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4415
+#: crates/opencrt/ui/main.slint:4423
 msgid "Remote site:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4415
+#: crates/opencrt/ui/main.slint:4423
 msgid "Local site:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4423
+#: crates/opencrt/ui/main.slint:4431
 msgid "Up"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4433
+#: crates/opencrt/ui/main.slint:4441
 msgid "Filename"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4441
+#: crates/opencrt/ui/main.slint:4449
 msgid "Filesize"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4450
+#: crates/opencrt/ui/main.slint:4458
 msgid "Filetype"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4458
+#: crates/opencrt/ui/main.slint:4466
 msgid "Last modified"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4466
+#: crates/opencrt/ui/main.slint:4474
 msgid "Permissions"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4474
+#: crates/opencrt/ui/main.slint:4482
 msgid "Owner/Group"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4572
+#: crates/opencrt/ui/main.slint:4580
 msgid "Filter"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4577
+#: crates/opencrt/ui/main.slint:4585
 msgid "Hidden"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4582
+#: crates/opencrt/ui/main.slint:4590
 msgid "Follow shell"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4613
+#: crates/opencrt/ui/main.slint:4621
 msgid "Cancel Transfer"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4617
+#: crates/opencrt/ui/main.slint:4625
 msgid "Retry"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4625
+#: crates/opencrt/ui/main.slint:4633
 msgid "Clear List"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4636
+#: crates/opencrt/ui/main.slint:4644
 msgid "Local file"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4641
+#: crates/opencrt/ui/main.slint:4649
 msgid "Direction"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4646
+#: crates/opencrt/ui/main.slint:4654
 msgid "Remote file"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4651
+#: crates/opencrt/ui/main.slint:4659
 msgid "Size"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4657
+#: crates/opencrt/ui/main.slint:4665
 msgid "Reason"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4657
+#: crates/opencrt/ui/main.slint:4665
 msgid "Status"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4734
+#: crates/opencrt/ui/main.slint:4742
 msgid "Queued files ({})"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4734
+#: crates/opencrt/ui/main.slint:4742
 msgid "Failed transfers ({})"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4734
+#: crates/opencrt/ui/main.slint:4742
 msgid "Successful transfers ({})"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4836
+#: crates/opencrt/ui/main.slint:4844
 msgid "Quick Open"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4864
+#: crates/opencrt/ui/main.slint:4872
 msgid "Search saved sessions, or type user@host"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4903
+#: crates/opencrt/ui/main.slint:4911
 msgid "No saved session matches."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4903
+#: crates/opencrt/ui/main.slint:4911
 msgid "Enter connects  ·  Shift+Enter opens an SFTP GUI tab  ·  Esc closes"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:4973
+#: crates/opencrt/ui/main.slint:4981
 msgid "Ready"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5284 crates/opencrt/ui/main.slint:5755
+#: crates/opencrt/ui/main.slint:5294 crates/opencrt/ui/main.slint:5765
 msgid "Script"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5430
+#: crates/opencrt/ui/main.slint:5440
 msgid "File"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5432
+#: crates/opencrt/ui/main.slint:5442
 msgid "Quick Connect..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5436
+#: crates/opencrt/ui/main.slint:5446
 msgid "Quick Open... (Cmd+O)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5436
+#: crates/opencrt/ui/main.slint:5446
 msgid "Quick Open... (Ctrl+Shift+T)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5440
+#: crates/opencrt/ui/main.slint:5450
 msgid "Connect in Tab..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5444 crates/opencrt/ui/main.slint:5972
+#: crates/opencrt/ui/main.slint:5454 crates/opencrt/ui/main.slint:5982
 msgid "Connect Local Shell"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5464
+#: crates/opencrt/ui/main.slint:5474
 msgid "Disconnect All"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5469
+#: crates/opencrt/ui/main.slint:5479
 msgid "Close Tab"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5475
+#: crates/opencrt/ui/main.slint:5485
 msgid "Stop Logging"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5475
+#: crates/opencrt/ui/main.slint:5485
 msgid "Log Session..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5480
+#: crates/opencrt/ui/main.slint:5490
 msgid "Stop Recording"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5480
+#: crates/opencrt/ui/main.slint:5490
 msgid "Record Session (asciicast)..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5486 crates/opencrt/ui/main.slint:6053
+#: crates/opencrt/ui/main.slint:5496 crates/opencrt/ui/main.slint:6063
 msgid "Print Screen"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5491
+#: crates/opencrt/ui/main.slint:5501
 msgid "Print Selection"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5496
+#: crates/opencrt/ui/main.slint:5506
 msgid "Stop Auto Print"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5496
+#: crates/opencrt/ui/main.slint:5506
 msgid "Auto Print"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5502
+#: crates/opencrt/ui/main.slint:5512
 msgid "Snapshots"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5504
+#: crates/opencrt/ui/main.slint:5514
 msgid "Save Snapshot..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5528
+#: crates/opencrt/ui/main.slint:5538
 msgid "Exit"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5533
+#: crates/opencrt/ui/main.slint:5543
 msgid "Edit"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5540 crates/opencrt/ui/main.slint:6326
+#: crates/opencrt/ui/main.slint:5550 crates/opencrt/ui/main.slint:6336
 msgid "Copy with Colours"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5550
+#: crates/opencrt/ui/main.slint:5560
 msgid "Copy and Paste"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5555 crates/opencrt/ui/main.slint:6342
+#: crates/opencrt/ui/main.slint:5565 crates/opencrt/ui/main.slint:6352
 msgid "Select All"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5560
+#: crates/opencrt/ui/main.slint:5570
 msgid "Find..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5570
+#: crates/opencrt/ui/main.slint:5580
 msgid "Clear Screen"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5575 crates/opencrt/ui/main.slint:6346
+#: crates/opencrt/ui/main.slint:5585 crates/opencrt/ui/main.slint:6356
 msgid "Clear Scrollback"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5580
+#: crates/opencrt/ui/main.slint:5590
 msgid "Clear Screen and Scrollback"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5585
+#: crates/opencrt/ui/main.slint:5595
 msgid "Reset Terminal"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5590 crates/opencrt/ui/main.slint:6350
+#: crates/opencrt/ui/main.slint:5600 crates/opencrt/ui/main.slint:6360
 msgid "Send Break"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5596
+#: crates/opencrt/ui/main.slint:5606
 msgid "Send Input to All Tabs"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5602
+#: crates/opencrt/ui/main.slint:5612
 msgid "View"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5604
+#: crates/opencrt/ui/main.slint:5614
 msgid "Toolbar"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5609
+#: crates/opencrt/ui/main.slint:5619
 msgid "Status Bar"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5624
+#: crates/opencrt/ui/main.slint:5634
 msgid "Command Window"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5629
+#: crates/opencrt/ui/main.slint:5639
 msgid "Hex View"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5634
+#: crates/opencrt/ui/main.slint:5644
 msgid "Show Control Characters"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5640
+#: crates/opencrt/ui/main.slint:5650
 msgid "Button Bar"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5646
+#: crates/opencrt/ui/main.slint:5656
 msgid "Full Screen"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5651
+#: crates/opencrt/ui/main.slint:5661
 msgid "Always on Top"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5658
+#: crates/opencrt/ui/main.slint:5668
 msgid "Larger Font"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5662
+#: crates/opencrt/ui/main.slint:5672
 msgid "Smaller Font"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5667
+#: crates/opencrt/ui/main.slint:5677
 msgid "Options"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5674
+#: crates/opencrt/ui/main.slint:5684
 msgid "Default Session..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5678
+#: crates/opencrt/ui/main.slint:5688
 msgid "Firewalls..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5682
+#: crates/opencrt/ui/main.slint:5692
 msgid "Colour Schemes..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5686
+#: crates/opencrt/ui/main.slint:5696
 msgid "Global Options..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5691
+#: crates/opencrt/ui/main.slint:5701
 msgid "Transfer"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5703
+#: crates/opencrt/ui/main.slint:5713
 msgid "Send ASCII File..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5708
+#: crates/opencrt/ui/main.slint:5718
 msgid "Send Binary File..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5713
+#: crates/opencrt/ui/main.slint:5723
 msgid "Stop Receive ASCII"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5713
+#: crates/opencrt/ui/main.slint:5723
 msgid "Receive ASCII..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5718
+#: crates/opencrt/ui/main.slint:5728
 msgid "Zmodem Upload..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5724
+#: crates/opencrt/ui/main.slint:5734
 msgid "Send Xmodem..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5729
+#: crates/opencrt/ui/main.slint:5739
 msgid "Receive Xmodem..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5734
+#: crates/opencrt/ui/main.slint:5744
 msgid "Send Ymodem..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5739
+#: crates/opencrt/ui/main.slint:5749
 msgid "Receive Ymodem"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5744
+#: crates/opencrt/ui/main.slint:5754
 msgid "Send Kermit..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5749
+#: crates/opencrt/ui/main.slint:5759
 msgid "Receive Kermit"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5757
+#: crates/opencrt/ui/main.slint:5767
 msgid "Run..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5767
+#: crates/opencrt/ui/main.slint:5777
 msgid "Script Editor..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5772
+#: crates/opencrt/ui/main.slint:5782
 msgid "Stop Recording..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5772
+#: crates/opencrt/ui/main.slint:5782
 msgid "Start Recording"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5778
+#: crates/opencrt/ui/main.slint:5788
 msgid "Tools"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5780
+#: crates/opencrt/ui/main.slint:5790
 msgid "Create Public Key..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5784
+#: crates/opencrt/ui/main.slint:5794
 msgid "Host Keys..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5788
+#: crates/opencrt/ui/main.slint:5798
 msgid "Credentials Manager..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5792
+#: crates/opencrt/ui/main.slint:5802
 msgid "Master Password..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5796
+#: crates/opencrt/ui/main.slint:5806
 msgid "Agent Keys..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5800
+#: crates/opencrt/ui/main.slint:5810
 msgid "Public Key Assistant..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5804
+#: crates/opencrt/ui/main.slint:5814
 msgid "Convert Private Key to OpenSSH..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5809
+#: crates/opencrt/ui/main.slint:5819
 msgid "Import OpenSSH Config"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5813
+#: crates/opencrt/ui/main.slint:5823
 msgid "Import SecureCRT Sessions..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5817
+#: crates/opencrt/ui/main.slint:5827
 msgid "Import Sessions..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5821
+#: crates/opencrt/ui/main.slint:5831
 msgid "Export Sessions..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5826
+#: crates/opencrt/ui/main.slint:5836
 msgid "Window"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5828
+#: crates/opencrt/ui/main.slint:5838
 msgid "Next Tab"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5833
+#: crates/opencrt/ui/main.slint:5843
 msgid "Previous Tab"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5839
+#: crates/opencrt/ui/main.slint:5849
 msgid "Tile Vertically"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5844
+#: crates/opencrt/ui/main.slint:5854
 msgid "Tile Horizontally"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5849
+#: crates/opencrt/ui/main.slint:5859
 msgid "Untile"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5853
+#: crates/opencrt/ui/main.slint:5863
 msgid "Merge Tab Groups"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5870
+#: crates/opencrt/ui/main.slint:5880
 msgid "Language"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5879
+#: crates/opencrt/ui/main.slint:5889
 msgid "Western and Southern Europe"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5889
+#: crates/opencrt/ui/main.slint:5899
 msgid "Northern Europe"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5899
+#: crates/opencrt/ui/main.slint:5909
 msgid "Central and Eastern Europe"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5910
+#: crates/opencrt/ui/main.slint:5920
 msgid "Help"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5966
+#: crates/opencrt/ui/main.slint:5976
 msgid "Connect in Tab"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5986
+#: crates/opencrt/ui/main.slint:5996
 msgid "PowerShell"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5990
+#: crates/opencrt/ui/main.slint:6000
 msgid "Command Prompt (classic)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:5995
+#: crates/opencrt/ui/main.slint:6005
 msgid "WSL: {}"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6020
+#: crates/opencrt/ui/main.slint:6030
 msgid "Quick connect: user@host"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6040
+#: crates/opencrt/ui/main.slint:6050
 msgid "Find"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6048
+#: crates/opencrt/ui/main.slint:6058
 msgid "Highlight words"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6300 crates/opencrt/ui/main.slint:6953
+#: crates/opencrt/ui/main.slint:6310 crates/opencrt/ui/main.slint:6963
 msgid "OpenCRT"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6306
+#: crates/opencrt/ui/main.slint:6316
 msgid "File > Quick Connect, or type user@host in the toolbar's connect bar."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6316
+#: crates/opencrt/ui/main.slint:6326
 msgid "Show Menu Bar"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6331
+#: crates/opencrt/ui/main.slint:6341
 msgid "Search the Web"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6443
+#: crates/opencrt/ui/main.slint:6453
 msgid "Default"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6458
+#: crates/opencrt/ui/main.slint:6468
 msgid "New Bar..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6462
+#: crates/opencrt/ui/main.slint:6472
 msgid "Rename Bar..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6467
+#: crates/opencrt/ui/main.slint:6477
 msgid "Delete Bar..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6498
+#: crates/opencrt/ui/main.slint:6508
 msgid "Add a button that sends a command, e.g. show version\\r"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6521
+#: crates/opencrt/ui/main.slint:6531
 msgid "Nothing received yet in this tab."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6569
+#: crates/opencrt/ui/main.slint:6579
 msgid "characters are sent as you type; Enter sends Enter"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6569
+#: crates/opencrt/ui/main.slint:6579
 msgid "type a command and press Enter"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6585
+#: crates/opencrt/ui/main.slint:6595
 msgid "History"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6596
+#: crates/opencrt/ui/main.slint:6606
 msgid "Send characters immediately"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6617
+#: crates/opencrt/ui/main.slint:6627
 msgid "Find:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6624
+#: crates/opencrt/ui/main.slint:6634
 msgid "text to find (Enter = next)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6630
+#: crates/opencrt/ui/main.slint:6640
 msgid "Next"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6634
+#: crates/opencrt/ui/main.slint:6644
 msgid "Previous"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6638
+#: crates/opencrt/ui/main.slint:6648
 msgid "Match case"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6687
+#: crates/opencrt/ui/main.slint:6697
 msgid "OpenCRT {} available"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6702
+#: crates/opencrt/ui/main.slint:6712
 msgid "{n} tunnel tab"
 msgid_plural "{n} tunnel tabs"
 msgstr[0] ""
 msgstr[1] ""
 
-#: crates/opencrt/ui/main.slint:6726
+#: crates/opencrt/ui/main.slint:6736
 msgid "ALL TABS"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6731
+#: crates/opencrt/ui/main.slint:6741
 msgid "LOG"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6735
+#: crates/opencrt/ui/main.slint:6745
 msgid "CAP"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6740
+#: crates/opencrt/ui/main.slint:6750
 msgid "NUM"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:6791
+#: crates/opencrt/ui/main.slint:6801
 msgid "Session Options - {}"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7000
+#: crates/opencrt/ui/main.slint:7010
 msgid "Host Keys"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7003
+#: crates/opencrt/ui/main.slint:7013
 msgid ""
 "Keys of the SSH servers you have accepted. Remove one when a server's key "
 "has changed for a known reason (for example after a reinstall); you are "
 "asked to accept the new key at the next connection."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7013
+#: crates/opencrt/ui/main.slint:7023
 msgid "No saved host keys."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7043
+#: crates/opencrt/ui/main.slint:7053
 msgid "Import SecureCRT..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7067
+#: crates/opencrt/ui/main.slint:7077
 msgid "Credentials Manager"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7070
+#: crates/opencrt/ui/main.slint:7080
 msgid ""
 "Saved logins for SSH2, Telnet, RDP and VNC sessions. Pick one in Session "
 "Options > Authentication; its password is kept in the system keychain."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7088
+#: crates/opencrt/ui/main.slint:7098
 msgid "Username"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7138
+#: crates/opencrt/ui/main.slint:7148
 msgid "Firewalls"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7141
+#: crates/opencrt/ui/main.slint:7151
 msgid ""
 "Proxies and gateways defined once and used by name: type a firewall's name "
 "into a session's Proxy field (Session Options > Connection)."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7159
+#: crates/opencrt/ui/main.slint:7169
 msgid "Proxy"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7255
+#: crates/opencrt/ui/main.slint:7265
 msgid "Agent Keys"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7258
+#: crates/opencrt/ui/main.slint:7268
 msgid ""
 "Keys held by OpenCRT's own SSH agent. While it holds keys, sessions without "
 "a key file log in with them and forwarded agents use them; otherwise the "
 "system's agent is used. Keys stay in memory until OpenCRT closes."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7268
+#: crates/opencrt/ui/main.slint:7278
 msgid "No keys loaded."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7293
+#: crates/opencrt/ui/main.slint:7303
 msgid ""
 "Load these keys when OpenCRT starts (their file names are saved; passphrases "
 "are asked for)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7324
+#: crates/opencrt/ui/main.slint:7334
 msgid "Create Public Key"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7327
+#: crates/opencrt/ui/main.slint:7337
 msgid ""
 "Creates a key pair in OpenSSH format. Add the public key (copied to the "
 "clipboard when done) to ~/.ssh/authorized_keys on the server, or use Tools > "
 "Public Key Assistant."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7340
+#: crates/opencrt/ui/main.slint:7350
 msgid "Passphrase:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7344
+#: crates/opencrt/ui/main.slint:7354
 msgid "recommended"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7358
+#: crates/opencrt/ui/main.slint:7368
 msgid "Comment:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7365
+#: crates/opencrt/ui/main.slint:7375
 msgid "Save as:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7382
+#: crates/opencrt/ui/main.slint:7392
 msgid "Creating..."
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7382
+#: crates/opencrt/ui/main.slint:7392
 msgid "Create"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7400
+#: crates/opencrt/ui/main.slint:7410
 msgid "Label:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7408
+#: crates/opencrt/ui/main.slint:7418
 msgid "Action:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7410
+#: crates/opencrt/ui/main.slint:7420
 msgid "Send text"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7410
+#: crates/opencrt/ui/main.slint:7420
 msgid "Run a script"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7410
+#: crates/opencrt/ui/main.slint:7420
 msgid "Menu command"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7410
+#: crates/opencrt/ui/main.slint:7420
 msgid "Run a program"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7410
+#: crates/opencrt/ui/main.slint:7420
 msgid "Telnet command"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7415
+#: crates/opencrt/ui/main.slint:7425
 msgid "Menu command:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7415
+#: crates/opencrt/ui/main.slint:7425
 msgid "Program:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7418
+#: crates/opencrt/ui/main.slint:7428
 msgid "e.g. show version\\r"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7418
+#: crates/opencrt/ui/main.slint:7428
 msgid "e.g. /home/me/scripts/login.rhai"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7418
+#: crates/opencrt/ui/main.slint:7428
 msgid "e.g. clear-screen, reconnect, sftp-tab"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7418
+#: crates/opencrt/ui/main.slint:7428
 msgid "e.g. wireshark -k"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7418
+#: crates/opencrt/ui/main.slint:7428
 msgid "brk, ip, ao, ayt, ec, el, ga or nop"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7430
+#: crates/opencrt/ui/main.slint:7440
 msgid "Bar:"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7433
+#: crates/opencrt/ui/main.slint:7443
 msgid "blank: the default bar (sessions choose theirs)"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7441
+#: crates/opencrt/ui/main.slint:7451
 msgid "optional, e.g. Cisco"
 msgstr ""
 
-#: crates/opencrt/ui/main.slint:7446
+#: crates/opencrt/ui/main.slint:7456
 msgid "\\r is Enter, \\n a line feed, \\t Tab, \\e Escape and \\\\ a backslash."
 msgstr ""
 
@@ -2986,7 +2986,7 @@ msgstr ""
 msgid "Zmodem: sending {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:1101 crates/opencrt/src/app.rs:7087 crates/opencrt/src/app.rs:7165
+#: crates/opencrt/src/app.rs:1101 crates/opencrt/src/app.rs:7100 crates/opencrt/src/app.rs:7178
 msgid "Run rz on the host to receive {}."
 msgstr ""
 
@@ -3174,7 +3174,7 @@ msgstr ""
 msgid "Exported the host keys to {}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:2732 crates/opencrt/src/app.rs:6578
+#: crates/opencrt/src/app.rs:2732 crates/opencrt/src/app.rs:6591
 msgid "Cannot export to {}: {}"
 msgstr ""
 
@@ -3190,7 +3190,7 @@ msgstr ""
 msgid "Updating restarts OpenCRT and disconnects {} connected sessions. Update now?"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:2768 crates/opencrt/src/app.rs:2824 crates/opencrt/src/app.rs:2946 crates/opencrt/src/app.rs:3318 crates/opencrt/src/app.rs:3618 crates/opencrt/src/app.rs:6486 crates/opencrt/src/app.rs:6543 crates/opencrt/src/app.rs:6966
+#: crates/opencrt/src/app.rs:2768 crates/opencrt/src/app.rs:2824 crates/opencrt/src/app.rs:2946 crates/opencrt/src/app.rs:3318 crates/opencrt/src/app.rs:3618 crates/opencrt/src/app.rs:6499 crates/opencrt/src/app.rs:6556 crates/opencrt/src/app.rs:6979
 msgid "Cannot open {}: {}"
 msgstr ""
 
@@ -3446,7 +3446,7 @@ msgstr ""
 msgid "Adding the public key on {}..."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:5582 crates/opencrt/src/app.rs:6368
+#: crates/opencrt/src/app.rs:5582 crates/opencrt/src/app.rs:6381
 msgid "Passphrase for {}:"
 msgstr ""
 
@@ -3522,427 +3522,431 @@ msgstr ""
 msgid "Key maps"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6068 crates/opencrt/src/app.rs:6370 crates/opencrt/src/app.rs:6647 crates/opencrt/src/app.rs:6864 crates/opencrt/src/sessions.rs:673
+#: crates/opencrt/src/app.rs:6068 crates/opencrt/src/app.rs:6383 crates/opencrt/src/app.rs:6660 crates/opencrt/src/app.rs:6877 crates/opencrt/src/render.rs:732 crates/opencrt/src/sessions.rs:673
 msgid "Cannot read {}: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6077 crates/opencrt/src/app.rs:6872
+#: crates/opencrt/src/app.rs:6075
+msgid "Terminal Font File"
+msgstr ""
+
+#: crates/opencrt/src/app.rs:6090 crates/opencrt/src/app.rs:6885
 msgid "Cannot write {}: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6083 crates/opencrt/src/app.rs:6530
+#: crates/opencrt/src/app.rs:6096 crates/opencrt/src/app.rs:6543
 msgid "Log files"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6085
+#: crates/opencrt/src/app.rs:6098
 msgid "OpenSSH Certificate"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6085
+#: crates/opencrt/src/app.rs:6098
 msgid "Certificates"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6090
+#: crates/opencrt/src/app.rs:6103
 msgid "Folder to Share with the Remote Computer"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6140
+#: crates/opencrt/src/app.rs:6153
 msgid "The passphrases do not match."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6142
+#: crates/opencrt/src/app.rs:6155
 msgid "Enter where to save the private key."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6144
+#: crates/opencrt/src/app.rs:6157
 msgid "That file already exists; choose another name."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6177
+#: crates/opencrt/src/app.rs:6190
 msgid "Checking for a new version…"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6200
+#: crates/opencrt/src/app.rs:6213
 msgid "OpenCRT {} is available. {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6205
+#: crates/opencrt/src/app.rs:6218
 msgid "OpenCRT {} is the latest version."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6208
+#: crates/opencrt/src/app.rs:6221
 msgid "Could not check for a new version: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6252
+#: crates/opencrt/src/app.rs:6265
 msgid "Could not update: {}. Download it from the release page instead."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6268
+#: crates/opencrt/src/app.rs:6281
 msgid "Downloading Python for Python scripts (once) from its official site..."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6313
+#: crates/opencrt/src/app.rs:6326
 msgid "Downloading Git for Windows from its official releases..."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6327
+#: crates/opencrt/src/app.rs:6340
 msgid "Git's installer is running: finish it, then press OK."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6328
+#: crates/opencrt/src/app.rs:6341
 msgid "Could not get Git for Windows: {}. It is also at git-scm.com."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6349
+#: crates/opencrt/src/app.rs:6362
 msgid "; public key copied to the clipboard"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6350
+#: crates/opencrt/src/app.rs:6363
 msgid "Created {} and .pub{}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6368
+#: crates/opencrt/src/app.rs:6381
 msgid "Convert Private Key"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6375
+#: crates/opencrt/src/app.rs:6388
 msgid "Cannot decrypt {}: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6389
+#: crates/opencrt/src/app.rs:6402
 msgid "Saved {} and .pub in OpenSSH format."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6390 crates/opencrt/src/app.rs:6983 crates/opencrt/src/app.rs:7031
+#: crates/opencrt/src/app.rs:6403 crates/opencrt/src/app.rs:6996 crates/opencrt/src/app.rs:7044
 msgid "Cannot save {}: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6407
+#: crates/opencrt/src/app.rs:6420
 msgid "Sent {} ({} bytes)."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6410
+#: crates/opencrt/src/app.rs:6423
 msgid "Send Binary File: no connected session."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6411 crates/opencrt/src/app.rs:6459
+#: crates/opencrt/src/app.rs:6424 crates/opencrt/src/app.rs:6472
 msgid "Cannot send {}: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6419
+#: crates/opencrt/src/app.rs:6432
 msgid "Stopped receiving into {}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6427
+#: crates/opencrt/src/app.rs:6440
 msgid "Receiving into {}; choose Stop Receive ASCII to finish."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6429 crates/opencrt/src/app.rs:6514
+#: crates/opencrt/src/app.rs:6442 crates/opencrt/src/app.rs:6527
 msgid "Cannot create {}: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6458
+#: crates/opencrt/src/app.rs:6471
 msgid "Send ASCII File: no connected session."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6498
+#: crates/opencrt/src/app.rs:6511
 msgid "Stopped recording to {}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6512
+#: crates/opencrt/src/app.rs:6525
 msgid "Recording to {}; play it with asciinema play."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6526
+#: crates/opencrt/src/app.rs:6539
 msgid "Stopped logging to {}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6541
+#: crates/opencrt/src/app.rs:6554
 msgid "Logging to {}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6553
+#: crates/opencrt/src/app.rs:6566
 msgid "Cannot read known_hosts: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6570
+#: crates/opencrt/src/app.rs:6583
 msgid "OpenCRT sessions"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6577
+#: crates/opencrt/src/app.rs:6590
 msgid "Exported {} sessions to {}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6587
+#: crates/opencrt/src/app.rs:6600
 msgid "Sessions"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6621
+#: crates/opencrt/src/app.rs:6634
 msgid "Cannot import {}: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6626 crates/opencrt/src/app.rs:6669 crates/opencrt/src/app.rs:6692
+#: crates/opencrt/src/app.rs:6639 crates/opencrt/src/app.rs:6682 crates/opencrt/src/app.rs:6705
 msgid "; already there: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6627
+#: crates/opencrt/src/app.rs:6640
 msgid "Imported {} sessions from {}{}.{}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6670
+#: crates/opencrt/src/app.rs:6683
 msgid "Imported {} sessions from {}{}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6678
+#: crates/opencrt/src/app.rs:6691
 msgid "Import SecureCRT Sessions (pick the Config folder)"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6693
+#: crates/opencrt/src/app.rs:6706
 msgid "; not imported (unreadable or unsupported protocol): {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6706
+#: crates/opencrt/src/app.rs:6719
 msgid " Added button bars: {}, buttons: {}, keyword lists: {}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6708
+#: crates/opencrt/src/app.rs:6721
 msgid " Buttons left out (SecureCRT menu functions): {}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6720
+#: crates/opencrt/src/app.rs:6733
 msgid "Imported {} sessions from {}{}{}.{}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6734
+#: crates/opencrt/src/app.rs:6747
 msgid "Run Script: open a session first."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6736
+#: crates/opencrt/src/app.rs:6749
 msgid "Run Script"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6736
+#: crates/opencrt/src/app.rs:6749
 msgid "Scripts"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6736
+#: crates/opencrt/src/app.rs:6749
 msgid "All files"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6747
+#: crates/opencrt/src/app.rs:6760
 msgid "Snapshots keep saved sessions; none are open."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6764
+#: crates/opencrt/src/app.rs:6777
 msgid "Saved the snapshot \"{}\" ({} sessions)."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6848 crates/opencrt/src/app.rs:6854 crates/opencrt/src/app.rs:6885
+#: crates/opencrt/src/app.rs:6861 crates/opencrt/src/app.rs:6867 crates/opencrt/src/app.rs:6898
 msgid "No connected session to send to."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6893
+#: crates/opencrt/src/app.rs:6906
 msgid "Run: no program given."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6899
+#: crates/opencrt/src/app.rs:6912
 msgid "Cannot run {}: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6906
+#: crates/opencrt/src/app.rs:6919
 msgid "Telnet commands need a connected Telnet session."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6907
+#: crates/opencrt/src/app.rs:6920
 msgid "Unknown Telnet command \"{}\"."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6917
+#: crates/opencrt/src/app.rs:6930
 msgid "Script {}: open a session first."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6931 crates/opencrt/src/app.rs:6943 crates/opencrt/src/app.rs:6993
+#: crates/opencrt/src/app.rs:6944 crates/opencrt/src/app.rs:6956 crates/opencrt/src/app.rs:7006
 msgid "Running script {}..."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6937
+#: crates/opencrt/src/app.rs:6950
 msgid "Run Script: no connected session."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6955 crates/opencrt/src/app.rs:7004
+#: crates/opencrt/src/app.rs:6968 crates/opencrt/src/app.rs:7017
 msgid "New script"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6956 crates/opencrt/src/app.rs:7023
+#: crates/opencrt/src/app.rs:6969 crates/opencrt/src/app.rs:7036
 msgid "Rhai scripts"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6981
+#: crates/opencrt/src/app.rs:6994
 msgid "Saved {}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:6988
+#: crates/opencrt/src/app.rs:7001
 msgid "No syntax errors."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7018
+#: crates/opencrt/src/app.rs:7031
 msgid "Recording: lines you type are added to a script until Script > Stop Recording."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7027
+#: crates/opencrt/src/app.rs:7040
 msgid "Recording discarded."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7030
+#: crates/opencrt/src/app.rs:7043
 msgid "Script saved to {}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7040
+#: crates/opencrt/src/app.rs:7053
 msgid "Drop files on a connected session to upload them."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7064
+#: crates/opencrt/src/app.rs:7077
 msgid "Send {} with:"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7079
+#: crates/opencrt/src/app.rs:7092
 msgid "Only {} is sent: this protocol takes one file at a time."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7152
+#: crates/opencrt/src/app.rs:7165
 msgid "Cannot start the transfer: {}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7159
+#: crates/opencrt/src/app.rs:7172
 msgid "Zmodem Upload: no connected session."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7264
+#: crates/opencrt/src/app.rs:7277
 msgid "Button Bar Button"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7264
+#: crates/opencrt/src/app.rs:7277
 msgid "Command"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7295
+#: crates/opencrt/src/app.rs:7308
 msgid "Enter a label and what the button does."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7297
+#: crates/opencrt/src/app.rs:7310
 msgid "Telnet commands are brk, ip, ao, ayt, ec, el, ga and nop."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7322
+#: crates/opencrt/src/app.rs:7335
 msgid "Delete the button \"{}\"?"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7323
+#: crates/opencrt/src/app.rs:7336
 msgid "Delete the command \"{}\"?"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7371
+#: crates/opencrt/src/app.rs:7384
 msgid "Custom"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7466
+#: crates/opencrt/src/app.rs:7479
 msgid "New list"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7466
+#: crates/opencrt/src/app.rs:7479
 msgid "New list {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7591
+#: crates/opencrt/src/app.rs:7619
 msgid "Font size must be 6 to 48, scrollback 0 to 1000000 lines, and keepalive 0 to 86400 seconds."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7600
+#: crates/opencrt/src/app.rs:7628
 msgid "General: recent sessions must be 0 to {}, the Connect All warning 0 to 1000, and the interface font size 9 to 20."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7605
+#: crates/opencrt/src/app.rs:7633
 msgid "Connection: the default SSH2 key file does not exist."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7613
+#: crates/opencrt/src/app.rs:7641
 msgid "Printing: the font size (up to 72) and margins (up to 100 mm) must be whole numbers."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7617
+#: crates/opencrt/src/app.rs:7645
 msgid "File Transfer: the download folder does not exist."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7621
+#: crates/opencrt/src/app.rs:7649
 msgid "General: the configuration folder must be a full path."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7630
+#: crates/opencrt/src/app.rs:7658
 msgid "Settings Sync needs git, which is not installed: {}."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7634
+#: crates/opencrt/src/app.rs:7662
 msgid "File Transfer: TFTP addresses must be IP addresses or networks such as 192.168.1.0/24."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7739
+#: crates/opencrt/src/app.rs:7767
 msgid "Settings Sync: the repository was not set up: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7747
+#: crates/opencrt/src/app.rs:7775
 msgid " (your current settings were copied there)"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7749
+#: crates/opencrt/src/app.rs:7777
 msgid " Connected sessions will be disconnected."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7750
+#: crates/opencrt/src/app.rs:7778
 msgid "Settings now live in {}{}. Restart OpenCRT to use them?{}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7753
+#: crates/opencrt/src/app.rs:7781
 msgid "Configuration folder not changed: {}"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7777
+#: crates/opencrt/src/app.rs:7805
 msgid "Cannot restart OpenCRT ({}); the new configuration folder is used from the next start."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:7846
+#: crates/opencrt/src/app.rs:7874
 msgid "Remote Desktop: enter both width and height (200 to 8192 pixels), or leave both blank to fit the window."
 msgstr ""
 
-#: crates/opencrt/src/app.rs:8092
+#: crates/opencrt/src/app.rs:8120
 msgid "Local"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:8092
+#: crates/opencrt/src/app.rs:8120
 msgid "SSH server"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:8093
+#: crates/opencrt/src/app.rs:8121
 msgid "Remote"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:8093
+#: crates/opencrt/src/app.rs:8121
 msgid "this machine"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:8094
+#: crates/opencrt/src/app.rs:8122
 msgid "any (SOCKS)"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:8408
+#: crates/opencrt/src/app.rs:8436
 msgid "Not found"
 msgstr ""
 
-#: crates/opencrt/src/app.rs:8433
+#: crates/opencrt/src/app.rs:8461
 msgid "No connected session to send the command to."
 msgstr ""
 
-#: crates/opencrt/src/config.rs:808
+#: crates/opencrt/src/config.rs:809
 msgid "The portable version keeps saved passwords only under its master password; change it instead."
 msgstr ""
 
@@ -4140,6 +4144,10 @@ msgstr ""
 
 #: crates/opencrt/src/rdp.rs:291 crates/opencrt/src/vnc.rs:73
 msgid "The saved password was not accepted ({}); enter it again."
+msgstr ""
+
+#: crates/opencrt/src/render.rs:738
+msgid "{} is not a fixed-width font."
 msgstr ""
 
 #: crates/opencrt/src/sessions.rs:269

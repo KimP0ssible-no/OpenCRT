@@ -951,16 +951,17 @@ pub struct BarButton {
     pub bar: String,
 }
 
-/// Move the Button Bar button `index` one place left or right among the
-/// buttons of its own bar (the list holds every bar's buttons). False when it
-/// is already at that end.
-pub fn move_button(buttons: &mut [BarButton], index: usize, right: bool) -> bool {
-    let Some(bar) = buttons.get(index).map(|b| b.bar.clone()) else {
+/// Move the Button Bar button `from` to the place of `to`, a button of the
+/// same bar (the list holds every bar's buttons): the ones between them move
+/// one place towards where `from` was. False when that is not a move.
+pub fn move_button(buttons: &mut Vec<BarButton>, from: usize, to: usize) -> bool {
+    let same_bar = matches!((buttons.get(from), buttons.get(to)), (Some(a), Some(b)) if a.bar.eq_ignore_ascii_case(&b.bar));
+    if from == to || !same_bar {
         return false;
-    };
-    let same = |b: &BarButton| b.bar.eq_ignore_ascii_case(&bar);
-    let other = if right { (index + 1..buttons.len()).find(|&i| same(&buttons[i])) } else { (0..index).rev().find(|&i| same(&buttons[i])) };
-    other.map(|other| buttons.swap(index, other)).is_some()
+    }
+    let button = buttons.remove(from);
+    buttons.insert(to, button);
+    true
 }
 
 /// Rename the Button Bar `old` to `new`, or delete it when `new` is empty:
@@ -1422,13 +1423,20 @@ mod tests {
         let button = |label: &str, bar: &str| BarButton { label: label.into(), bar: bar.into(), ..Default::default() };
         let mut buttons = vec![button("a", ""), button("x", "Lab"), button("b", ""), button("y", "lab"), button("c", "")];
         let labels = |b: &[BarButton]| b.iter().map(|b| b.label.clone()).collect::<String>();
-        // "a" jumps over the Lab button between it and "b"; Lab's order stays.
-        assert!(move_button(&mut buttons, 0, true));
-        assert_eq!(labels(&buttons), "bxayc");
-        assert!(move_button(&mut buttons, 3, false));
-        assert_eq!(labels(&buttons), "byaxc");
-        assert!(!move_button(&mut buttons, 0, false) && !move_button(&mut buttons, 4, true) && !move_button(&mut buttons, 9, true));
-        assert_eq!(labels(&buttons), "byaxc");
+        let on_bar = |b: &[BarButton], bar: &str| b.iter().filter(|b| b.bar.eq_ignore_ascii_case(bar)).map(|b| b.label.clone()).collect::<String>();
+        // "a" to the place of "c", at the far end: "b" and "c" move up; Lab's order stays.
+        assert!(move_button(&mut buttons, 0, 4));
+        assert_eq!((on_bar(&buttons, ""), on_bar(&buttons, "Lab")), ("bca".into(), "xy".into()));
+        // And back to the front, then one place only.
+        let (a, b) = (labels(&buttons).find('a').unwrap(), labels(&buttons).find('b').unwrap());
+        assert!(move_button(&mut buttons, a, b));
+        assert_eq!(on_bar(&buttons, ""), "abc");
+        let (a, b) = (labels(&buttons).find('a').unwrap(), labels(&buttons).find('b').unwrap());
+        assert!(move_button(&mut buttons, a, b));
+        assert_eq!((on_bar(&buttons, ""), on_bar(&buttons, "Lab")), ("bac".into(), "xy".into()));
+        // Not onto itself, another bar's button, or a button that is not there.
+        let x = labels(&buttons).find('x').unwrap();
+        assert!(!move_button(&mut buttons, 0, 0) && !move_button(&mut buttons, 0, x) && !move_button(&mut buttons, 0, 9));
     }
 
     #[test]

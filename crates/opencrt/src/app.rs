@@ -7221,7 +7221,16 @@ impl App {
             .filter(|(_, b)| b.bar.eq_ignore_ascii_case(&bar))
             .map(|(i, b)| BarRow { label: b.label.as_str().into(), color: tab_color(&b.color), has_color: !b.color.is_empty(), index: i as i32 })
             .collect();
-        ui.set_bar_buttons(ModelRc::new(VecModel::from(buttons)));
+        // The same number of buttons keeps the model: a button that is being
+        // dragged holds the mouse only while its element lives.
+        let shown = ui.get_bar_buttons();
+        if shown.row_count() == buttons.len() {
+            for (i, row) in buttons.into_iter().enumerate() {
+                shown.set_row_data(i, row);
+            }
+        } else {
+            ui.set_bar_buttons(ModelRc::new(VecModel::from(buttons)));
+        }
         let names = self.bar_names();
         ui.set_bar_choices(ModelRc::new(VecModel::from(std::iter::once("Default".to_string()).chain(names).map(SharedString::from).collect::<Vec<_>>())));
         ui.set_bar_name(bar.into());
@@ -7316,9 +7325,9 @@ impl App {
         ui.invoke_focus_terminal();
     }
 
-    fn bar_button_move(&mut self, index: usize, right: bool, ui: &MainWindow) {
-        if config::move_button(&mut self.options.buttons, index, right) {
-            self.save_options();
+    /// A dragged Button Bar button takes the place of another; saved when it is dropped.
+    fn bar_button_move(&mut self, from: usize, to: usize, ui: &MainWindow) {
+        if config::move_button(&mut self.options.buttons, from, to) {
             self.show_buttons(ui);
         }
     }
@@ -8429,7 +8438,8 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         app.pick_bar(bar);
     });
     on!(on_bar_button_delete, |app, ui, index| app.bar_button_delete(Commands::Bar, index as usize, &ui));
-    on!(on_bar_button_move, |app, ui, index, right| app.bar_button_move(index.max(0) as usize, right, &ui));
+    on!(on_bar_button_move, |app, ui, from, to| app.bar_button_move(from.max(0) as usize, to.max(0) as usize, &ui));
+    on!(on_bar_button_drop, |app, _ui| app.save_options());
     on!(on_bar_button_ok, |app, ui| app.bar_button_ok(&ui));
     on!(on_keygen_ok, |app, ui| app.keygen_ok(&ui));
     on!(on_keygen_type, |_app, ui| {

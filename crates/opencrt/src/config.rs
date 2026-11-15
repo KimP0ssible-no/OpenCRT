@@ -612,6 +612,8 @@ pub struct Options {
     pub recent_sessions: Vec<String>,
     /// How many recent sessions the File menu lists; 0 for none.
     pub recent_count: usize,
+    /// Targets typed into the toolbar's connect bar, newest first.
+    pub connect_history: Vec<String>,
     /// Session Manager folders the user collapsed (all others start expanded).
     pub collapsed_folders: Vec<String>,
     /// Button Bar buttons, left to right.
@@ -1156,6 +1158,7 @@ impl Default for Options {
             global_key: String::new(),
             recent_sessions: Vec::new(),
             recent_count: 4,
+            connect_history: Vec::new(),
             collapsed_folders: Vec::new(),
         }
     }

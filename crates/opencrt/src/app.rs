@@ -1693,6 +1693,9 @@ struct App {
     shown_tabs: Vec<TabData>,
     /// Recent sessions last put in the File menu.
     shown_recent: Vec<String>,
+    /// The connect bar's text while Quick Connect asks for its user: it joins
+    /// the history when that connects.
+    connect_bar_typed: Option<String>,
     window_title: String,
 
     store: SessionStore,
@@ -1929,6 +1932,22 @@ const NOTICE: Duration = Duration::from_secs(8);
 /// Most recent sessions remembered (Global Options picks how many are listed).
 const RECENT_MAX: usize = 16;
 
+const HISTORY_MAX: usize = 20;
+
+/// Put the target `typed` into the connect bar first in its history: no
+/// duplicates (ignoring case), at most HISTORY_MAX, and never a password
+/// typed as `user:password@host`.
+fn push_history(history: &mut Vec<String>, typed: &str) {
+    let typed = typed.trim();
+    let target = match typed.rsplit_once('@') {
+        Some((user, host)) => format!("{}@{host}", user.split(':').next().unwrap_or(user)),
+        None => typed.to_string(),
+    };
+    history.retain(|t| !t.eq_ignore_ascii_case(&target));
+    history.insert(0, target);
+    history.truncate(HISTORY_MAX);
+}
+
 /// Put `path` first in the recent-sessions list, without duplicates.
 fn push_recent(recent: &mut Vec<String>, path: String) {
     recent.retain(|p| *p != path);
@@ -1986,6 +2005,7 @@ impl App {
             python_waiting: Vec::new(),
             shown_tabs: Vec::new(),
             shown_recent: Vec::new(),
+            connect_bar_typed: None,
             window_title: String::new(),
             // Folders start expanded so every saved session is one double-click
             // away, except those the user collapsed.
@@ -2493,6 +2513,11 @@ impl App {
         if let Some(i) = name.strip_prefix("language-").and_then(|i| i.parse::<usize>().ok()) {
             return self.pick_language(i, ui);
         }
+        if name == "connect-history-clear" {
+            self.options.connect_history.clear();
+            self.save_options();
+            return self.show_connect_history(ui);
+        }
         if name == "button-bar-new" {
             self.naming_bar = true;
             ui.set_name_title("New Button Bar".into());
@@ -2558,6 +2583,7 @@ impl App {
             // For a key map (SecureCRT has Alt+R): the toolbar's box, else the dialog.
             "focus-connect-bar" if ui.get_show_connect_bar() => return ui.set_connect_bar_focus(ui.get_connect_bar_focus() + 1),
             "quick-connect" | "focus-connect-bar" => {
+                self.connect_bar_typed = None;
                 let target = (self.tabs.get(active).map(|t| t.target.clone()))
                     .unwrap_or_else(|| Target::from_session(&self.store.default_session, &self.options.credentials));
                 show_quick_connect(ui, &target);
@@ -4349,6 +4375,9 @@ impl App {
         } else {
             self.open_tab(target, None);
         }
+        if let Some(typed) = self.connect_bar_typed.take() {
+            self.remember_typed(&typed, ui);
+        }
         ui.set_dialog(DIALOG_NONE);
         ui.invoke_focus_terminal();
     }
@@ -4366,11 +4395,24 @@ impl App {
             return;
         };
         if target.user.is_empty() {
+            self.connect_bar_typed = Some(text.to_string());
             show_quick_connect(ui, &target);
         } else {
             self.open_tab(target, None);
+            self.remember_typed(text, ui);
             ui.invoke_focus_terminal();
         }
+    }
+
+    /// A target typed into the connect bar started a connection: it leads the bar's history.
+    fn remember_typed(&mut self, typed: &str, ui: &MainWindow) {
+        push_history(&mut self.options.connect_history, typed);
+        self.save_options();
+        self.show_connect_history(ui);
+    }
+
+    fn show_connect_history(&self, ui: &MainWindow) {
+        ui.set_connect_history(ModelRc::new(VecModel::from(self.options.connect_history.iter().map(SharedString::from).collect::<Vec<_>>())));
     }
 
     // --- Quick Open ---
@@ -8695,6 +8737,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_show_statusbar(app.options.show_statusbar);
         ui.set_show_menubar(app.options.show_menubar);
         ui.set_show_connect_bar(app.options.show_connect_bar);
+        app.show_connect_history(&ui);
         ui.set_theme_mode(app.options.theme.index());
         // The chosen language, or the system's; also loads the Rust texts' translations.
         crate::lang::apply(&app.options.language);
@@ -9278,6 +9321,20 @@ mod tests {
     fn status_bar_text_is_one_line() {
         assert_eq!(one_line("Options not saved: TOML parse error at line 273\n    |\n273 | [[button]]\n"), "Options not saved: TOML parse error at line 273 | 273 | [[button]]");
         assert_eq!(one_line("Ready"), "Ready");
+    }
+
+    #[test]
+    fn connect_bar_history() {
+        let mut history = Vec::new();
+        for typed in ["root@10.0.0.1", " me@host:2222 ", "host", "ROOT@10.0.0.1", "me:secret@db:22"] {
+            push_history(&mut history, typed);
+        }
+        // Newest first, the repeat moved up (case ignored), the password left out.
+        assert_eq!(history, ["me@db:22", "ROOT@10.0.0.1", "host", "me@host:2222"]);
+        for n in 0..30 {
+            push_history(&mut history, &format!("h{n}"));
+        }
+        assert_eq!((history.len(), history[0].as_str(), history[19].as_str()), (HISTORY_MAX, "h29", "h10"));
     }
 
     #[test]

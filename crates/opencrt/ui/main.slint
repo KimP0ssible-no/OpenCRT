@@ -5022,6 +5022,8 @@ export component MainWindow inherits Window {
     in-out property <bool> show-connect-bar: true;
     // Raised to put the keyboard in the toolbar's quick connect box.
     in-out property <int> connect-bar-focus;
+    // Targets typed into the connect bar, newest first.
+    in property <[string]> connect-history;
     // Saved-session paths for the File menu, newest first.
     in property <[string]> recent-sessions;
     in property <[string]> snapshots;
@@ -6053,6 +6055,38 @@ export component MainWindow inherits Window {
                     placeholder: @tr("Quick connect: user@host");
                     clear-on-submit: true;
                     submitted(text) => { root.connect-bar(text); }
+                }
+                // The targets typed before: one connects as if typed again.
+                if root.show-connect-bar: Rectangle {
+                    width: 14px * Theme.ui-scale;
+                    height: 20px * Theme.ui-scale;
+                    border-radius: 3px;
+                    background: history-touch.has-hover && history-touch.enabled ? Theme.hover-bg : transparent;
+                    Text {
+                        text: "▾";
+                        font-size: 11px * Theme.ui-scale;
+                        color: history-touch.enabled ? Theme.text-secondary : Theme.text-disabled;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                    history-touch := TouchArea {
+                        enabled: root.connect-history.length > 0;
+                        clicked => { history-menu.show({ x: 0, y: self.height }); }
+                    }
+                    history-menu := ContextMenuArea {
+                        enabled: history-touch.enabled;
+                        Menu {
+                            for target in root.connect-history: MenuItem {
+                                title: target;
+                                activated => { root.connect-bar(target); }
+                            }
+                            MenuSeparator { }
+                            MenuItem {
+                                title: @tr("Clear History");
+                                activated => { root.action("connect-history-clear"); }
+                            }
+                        }
+                    }
                 }
                 ToolSeparator { }
                 ToolButton {

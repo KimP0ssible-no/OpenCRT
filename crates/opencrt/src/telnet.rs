@@ -728,16 +728,19 @@ mod tests {
     fn raw_udp_answers_the_last_sender() {
         let mut handle = ssh::spawn(|io| ssh::runtime()?.block_on(datagrams(([127, 0, 0, 1], 0).into(), None, io)));
         let port = listening_port(&mut handle);
-        let peer = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
-        peer.set_read_timeout(Some(std::time::Duration::from_secs(5))).unwrap();
-        // Nobody to send to yet: typed input goes nowhere.
-        handle.send_input(b"lost".to_vec());
-        peer.send_to(b"ping", ("127.0.0.1", port)).unwrap();
-        read_until(&mut handle, &mut Vec::new(), "ping");
+        let first = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
+        let last = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
+        first.set_read_timeout(Some(std::time::Duration::from_millis(200))).unwrap();
+        last.set_read_timeout(Some(std::time::Duration::from_secs(5))).unwrap();
+        first.send_to(b"one", ("127.0.0.1", port)).unwrap();
+        read_until(&mut handle, &mut Vec::new(), "one");
+        last.send_to(b"two", ("127.0.0.1", port)).unwrap();
+        read_until(&mut handle, &mut Vec::new(), "two");
         handle.send_input(b"pong".to_vec());
         let mut answer = [0u8; 16];
-        let (n, from) = peer.recv_from(&mut answer).unwrap();
+        let (n, from) = last.recv_from(&mut answer).unwrap();
         assert_eq!((&answer[..n], from.port()), (&b"pong"[..], port));
+        assert!(first.recv_from(&mut answer).is_err(), "the first sender gets no answer");
     }
 
     #[test]

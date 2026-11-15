@@ -98,6 +98,27 @@ Inno Setup 6.7.3 is downloaded from its GitHub releases into the
 unsigned, so Windows SmartScreen warns before running it ("More info", then
 "Run anyway").
 
+## winget
+`winget install OpenCRT.OpenCRT` needs a manifest for each version in
+[microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs). The
+manifest names the signed setup program of the GitHub release and its SHA-256.
+
+After a release is published, write its manifest:
+
+```
+packaging/winget/manifest.sh X.Y.Z YYYY-MM-DD
+```
+
+The script reads the checksum from the release's `SHA256SUMS` and writes three
+files to `dist/winget/manifests/o/OpenCRT/OpenCRT/X.Y.Z/`. Copy that folder
+into a fork of winget-pkgs under `manifests/o/OpenCRT/OpenCRT/` and open a pull
+request there. On Windows, `winget validate <folder>` and
+`winget install --manifest <folder>` test the manifest first.
+
+The setup program asks "for me" or "for all users". The manifest has one
+entry for each: winget passes `/CURRENTUSER` for the user scope and
+`/ALLUSERS` for the machine scope.
+
 ## Releases
 CI (`.github/workflows/ci.yml`) builds and tests every push. Pushing a tag
 `vX.Y.Z` also publishes a GitHub Release with the Windows installer and MSI,

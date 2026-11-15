@@ -15,6 +15,7 @@ static DIR_OVERRIDE: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 /// folder chosen in Global Options. Call once, first.
 pub fn use_dir_from_args(args: Vec<String>) -> Vec<String> {
     let (folder, rest) = split_dir_arg(args);
+    FROM_ARGS.store(folder.is_some(), std::sync::atomic::Ordering::Relaxed);
     let synced = crate::gitsync::local_copy();
     let chosen = Some(chosen_dir()).filter(|d| !d.is_empty()).map(PathBuf::from);
     if folder.is_none() && synced.is_some() {
@@ -41,6 +42,15 @@ fn split_dir_arg(args: Vec<String>) -> (Option<PathBuf>, Vec<String>) {
         }
     }
     (folder, rest)
+}
+
+/// Whether the command line named the configuration folder (`/F folder`).
+static FROM_ARGS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// The configuration folder when `/F` named it: another start of OpenCRT
+/// needs the same `/F` to reach this one.
+pub fn dir_from_args() -> Option<PathBuf> {
+    FROM_ARGS.load(std::sync::atomic::Ordering::Relaxed).then(dir).flatten()
 }
 
 /// Whether this run keeps its settings in the settings repository.

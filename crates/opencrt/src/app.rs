@@ -1691,8 +1691,9 @@ struct App {
     /// The script message or prompt on screen, and where its answer goes.
     script_dialog: Option<ScriptAnswer>,
     shown_tabs: Vec<TabData>,
-    /// Recent sessions last put in the File menu.
-    shown_recent: Vec<String>,
+    /// Recent sessions last put in the File menu and the taskbar jump list;
+    /// None before the first time.
+    shown_recent: Option<Vec<String>>,
     /// The connect bar's text while Quick Connect asks for its user: it joins
     /// the history when that connects.
     connect_bar_typed: Option<String>,
@@ -2004,7 +2005,7 @@ impl App {
             python_download: None,
             python_waiting: Vec::new(),
             shown_tabs: Vec::new(),
-            shown_recent: Vec::new(),
+            shown_recent: None,
             connect_bar_typed: None,
             window_title: String::new(),
             // Folders start expanded so every saved session is one double-click
@@ -3982,10 +3983,11 @@ impl App {
 
         // Recent sessions in the File menu.
         let recent = &self.options.recent_sessions[..self.options.recent_sessions.len().min(self.options.recent_count)];
-        if recent != self.shown_recent.as_slice() {
+        if self.shown_recent.as_deref() != Some(recent) {
             let titles: Vec<SharedString> = recent.iter().map(SharedString::from).collect();
             ui.set_recent_sessions(ModelRc::new(VecModel::from(titles)));
-            self.shown_recent = recent.to_vec();
+            crate::jumplist::update(recent, config::dir_from_args());
+            self.shown_recent = Some(recent.to_vec());
         }
 
         // Remember View toggles across runs.

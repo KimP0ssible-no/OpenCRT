@@ -21,9 +21,8 @@ macro_rules! tr {
 
 /// A language's name in that language, for the Language list.
 pub fn native_name(code: &str) -> &str {
-    let traditional = ["TW", "HK", "MO", "Hant"].iter().any(|r| code.contains(r));
     match code.split(['_', '-']).next().unwrap_or(code) {
-        "zh" if traditional => "繁體中文",
+        "zh" if traditional(code) => "繁體中文",
         "zh" => "简体中文",
         "bg" => "Български",
         "cs" => "Čeština",
@@ -171,11 +170,19 @@ fn unescape(s: &str) -> String {
     out
 }
 
+/// Whether a Chinese locale or language code is written in Traditional
+/// Chinese: Taiwan, Hong Kong, Macau, or the Hant script tag.
+fn traditional(code: &str) -> bool {
+    ["TW", "HK", "MO", "Hant"].iter().any(|r| code.contains(r))
+}
+
 /// The built-in language for a system locale such as "zh-CN", else "" (English).
+/// Chinese goes by its script, so "zh-HK" gets Traditional and "zh-SG" Simplified.
 fn system(locale: &str) -> &'static str {
     let base = |l: &str| l.split(['_', '-', '@']).next().unwrap_or("").to_string();
     let exact = LANGUAGES.iter().find(|l| l.replace('_', "-").eq_ignore_ascii_case(&locale.replace('_', "-")));
-    exact.or_else(|| LANGUAGES.iter().find(|l| base(l) == base(locale) && !base(locale).is_empty())).copied().unwrap_or("")
+    let script = LANGUAGES.iter().find(|l| base(locale) == "zh" && base(l) == "zh" && traditional(l) == traditional(locale));
+    exact.or(script).or_else(|| LANGUAGES.iter().find(|l| base(l) == base(locale) && !base(locale).is_empty())).copied().unwrap_or("")
 }
 
 #[cfg(test)]
@@ -189,6 +196,11 @@ mod tests {
         assert_eq!(native_name("xx"), "xx");
         if LANGUAGES.is_empty() {
             assert_eq!(system("zh-CN"), "", "without built-in languages every locale means English");
+        }
+        if LANGUAGES.contains(&"zh_TW") && LANGUAGES.contains(&"zh_CN") {
+            assert_eq!((system("zh-TW"), system("zh-HK"), system("zh-Hant-MO")), ("zh_TW", "zh_TW", "zh_TW"));
+            assert_eq!((system("zh-CN"), system("zh-SG"), system("zh-Hans")), ("zh_CN", "zh_CN", "zh_CN"));
+            assert_eq!((system("ja-JP"), system("ko_KR.UTF-8"), system("xx")), ("ja", "ko", ""));
         }
     }
 

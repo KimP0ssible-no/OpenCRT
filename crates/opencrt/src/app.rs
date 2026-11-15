@@ -14,7 +14,7 @@ use slint::winit_030::winit::keyboard::{KeyCode, PhysicalKey};
 use slint::{ComponentHandle, Image, Model, ModelRc, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer, SharedString, Timer, TimerMode, VecModel};
 
 use crate::tr;
-use crate::config::{self, Credential, FlowControl, Options, Parity, Protocol, SerialLine, Session, SessionStore};
+use crate::config::{self, Credential, FlowControl, Options, Parity, Protocol, RawMode, SerialLine, Session, SessionStore};
 use crate::forward::{Forward, ForwardKind};
 use crate::rdp::ToHelper;
 use crate::{kermit, local, python, rdp, rhaiscript, script, serial, sftp, telnet, tftp, update, vnc, xymodem, zmodem};
@@ -30,6 +30,11 @@ const POLL: Duration = Duration::from_millis(15);
 /// RDP: how long the tab's size must stay put before the desktop is resized
 /// (each resize makes the server redraw the whole desktop).
 const RESIZE_SETTLE: Duration = Duration::from_millis(500);
+/// Tab hover preview: how long the pointer rests on a tab before the picture
+/// shows, how often it is drawn again, and its width in logical pixels.
+const PREVIEW_REST: Duration = Duration::from_millis(500);
+const PREVIEW_REFRESH: Duration = Duration::from_millis(500);
+const PREVIEW_WIDTH: f32 = 320.0;
 /// The standard TFTP port the built-in server listens on.
 const TFTP_PORT: u16 = 69;
 
@@ -135,6 +140,8 @@ pub struct Target {
     pub dial: Option<serial::Dial>,
     /// Telnet inside TLS.
     pub tls: bool,
+    /// Raw: TCP client, TCP server or UDP.
+    pub raw_mode: RawMode,
     /// An SSH2 target opened as an SFTP tab instead of a shell.
     pub sftp: bool,
     /// The SFTP tab shows file lists and a queue instead of an `sftp>` prompt.
@@ -228,6 +235,7 @@ impl Target {
             files: false,
             tunnels: false,
             tls: s.tls && s.protocol == Protocol::Telnet,
+            raw_mode: s.raw_mode,
             // Rules are validated when the session is saved.
             forwards: s.forwards.iter().filter(|f| f.enabled).cloned().collect(),
             jump: (!s.jump_host.is_empty()).then(|| s.jump_host.clone()),
@@ -261,6 +269,8 @@ impl Target {
             Protocol::Ssh2 if self.sftp => format!("sftp: {}@{host}", self.user),
             Protocol::Ssh2 if self.tunnels => format!("tunnels: {}@{host}", self.user),
             Protocol::Ssh2 => format!("{}@{host}", self.user),
+            Protocol::Raw if self.raw_mode == RawMode::Server => format!("listen: {}", self.raw_address()),
+            Protocol::Raw if self.raw_mode == RawMode::Udp => format!("udp: {}", self.raw_address()),
             Protocol::Telnet | Protocol::Raw => host,
             Protocol::Rlogin => format!("rlogin: {}@{host}", self.user),
             Protocol::Rdp if self.user.is_empty() => format!("rdp: {host}"),
@@ -273,9 +283,21 @@ impl Target {
         }
     }
 
+    /// A Raw server's or UDP session's address: `*` for a host left empty.
+    fn raw_address(&self) -> String {
+        format!("{}:{}", if self.host.is_empty() { "*" } else { &self.host }, self.port)
+    }
+
+    /// Whether this Raw target works without a host: a server listens on
+    /// every interface, and UDP answers whoever sends first.
+    fn raw_hostless(&self) -> bool {
+        self.protocol == Protocol::Raw && self.raw_mode != RawMode::Client
+    }
+
     /// Default name when saving this target as a session.
     fn name_base(&self) -> String {
         match self.protocol {
+            Protocol::Raw if self.raw_hostless() && self.host.is_empty() => format!("port {}", self.port),
             // Session names cannot hold "/": `/dev/ttyUSB0` becomes `ttyUSB0`.
             Protocol::Serial => self.serial_port.rsplit(['/', '\\']).next().unwrap_or_default().to_string(),
             Protocol::Local => "Local Shell".into(),
@@ -320,6 +342,8 @@ impl Target {
                     ssh::connect(self.host.clone(), self.port, creds, config::known_hosts(), pty, forwards)
                 }
             }
+            Protocol::Raw if self.raw_mode == RawMode::Server => telnet::listen(self.host.clone(), self.port),
+            Protocol::Raw if self.raw_mode == RawMode::Udp => telnet::udp(self.host.clone(), self.port),
             Protocol::Telnet | Protocol::Raw => {
                 let pty = ssh::Pty::new(&self.term, cols, rows);
                 let telnet = self.protocol == Protocol::Telnet;
@@ -381,7 +405,7 @@ impl Target {
                 Some(tr!("Enter jump hosts as [user@]host[:port] or saved session names, separated by commas."))
             }
             Protocol::Rdp if self.user.is_empty() => Some(tr!("Enter a username (user, DOMAIN\\user or user@domain).")),
-            Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin | Protocol::Vnc if self.host.is_empty() => {
+            Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin | Protocol::Vnc if self.host.is_empty() && !self.raw_hostless() => {
                 Some(tr!("Enter a hostname."))
             }
             Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin | Protocol::Vnc if self.port == 0 => {
@@ -1335,7 +1359,10 @@ impl Tab {
             None => self.target.connect(cols as u32, rows as u32),
         });
         self.state = State::Connecting;
-        self.status = tr!("Connecting to {}...", self.target.label());
+        self.status = match self.target.raw_hostless() {
+            true => tr!("Listening on {}...", self.target.raw_address()),
+            false => tr!("Connecting to {}...", self.target.label()),
+        };
         self.dirty = true;
         self.open_log(chrono::Local::now().naive_local());
         self.log_note(0);
@@ -1691,8 +1718,12 @@ struct App {
     /// The script message or prompt on screen, and where its answer goes.
     script_dialog: Option<ScriptAnswer>,
     shown_tabs: Vec<TabData>,
-    /// Recent sessions last put in the File menu.
-    shown_recent: Vec<String>,
+    /// Recent sessions last put in the File menu and the taskbar jump list;
+    /// None before the first time.
+    shown_recent: Option<Vec<String>>,
+    /// The connect bar's text while Quick Connect asks for its user: it joins
+    /// the history when that connects.
+    connect_bar_typed: Option<String>,
     window_title: String,
 
     store: SessionStore,
@@ -1797,6 +1828,11 @@ struct App {
     shown_bar: Option<String>,
     /// The Button Bar picked while no tab is open.
     idle_bar: String,
+    /// Tab hover preview: the tab (by id) the pointer rests on, since when, and
+    /// the tab's left edge and bottom in the window.
+    hover_tab: Option<(u64, Instant, f32, f32)>,
+    /// The preview on show: its tab, when it was last drawn, and its pixels.
+    preview: Option<(u64, Instant, Vec<u8>)>,
     /// Global Options > Keywords: the lists being edited, the one on show, the picked row.
     kw_lists: Vec<render::KeywordList>,
     kw_list: usize,
@@ -1929,6 +1965,22 @@ const NOTICE: Duration = Duration::from_secs(8);
 /// Most recent sessions remembered (Global Options picks how many are listed).
 const RECENT_MAX: usize = 16;
 
+const HISTORY_MAX: usize = 20;
+
+/// Put the target `typed` into the connect bar first in its history: no
+/// duplicates (ignoring case), at most HISTORY_MAX, and never a password
+/// typed as `user:password@host`.
+fn push_history(history: &mut Vec<String>, typed: &str) {
+    let typed = typed.trim();
+    let target = match typed.rsplit_once('@') {
+        Some((user, host)) => format!("{}@{host}", user.split(':').next().unwrap_or(user)),
+        None => typed.to_string(),
+    };
+    history.retain(|t| !t.eq_ignore_ascii_case(&target));
+    history.insert(0, target);
+    history.truncate(HISTORY_MAX);
+}
+
 /// Put `path` first in the recent-sessions list, without duplicates.
 fn push_recent(recent: &mut Vec<String>, path: String) {
     recent.retain(|p| *p != path);
@@ -1954,6 +2006,7 @@ impl App {
         renderer.set_keywords(&options.keywords);
         ssh::KEEPALIVE_SECS.store(options.keepalive_secs, std::sync::atomic::Ordering::Relaxed);
         ssh::LEGACY_EVERYWHERE.store(options.legacy_algorithms, std::sync::atomic::Ordering::Relaxed);
+        ssh::TRACE.store(options.trace, std::sync::atomic::Ordering::Relaxed);
         ssh::ACCEPT_NEW_HOST_KEYS.store(options.accept_new_host_keys, std::sync::atomic::Ordering::Relaxed);
         // A hand-edited options.toml with a bad line just maps nothing.
         let key_map = input::parse_key_map(&options.key_map).unwrap_or_default();
@@ -1985,7 +2038,8 @@ impl App {
             python_download: None,
             python_waiting: Vec::new(),
             shown_tabs: Vec::new(),
-            shown_recent: Vec::new(),
+            shown_recent: None,
+            connect_bar_typed: None,
             window_title: String::new(),
             // Folders start expanded so every saved session is one double-click
             // away, except those the user collapsed.
@@ -2044,6 +2098,8 @@ impl App {
             session_clip: None,
             shown_bar: None,
             idle_bar: String::new(),
+            hover_tab: None,
+            preview: None,
             kw_lists: Vec::new(),
             kw_list: 0,
             kw_row: None,
@@ -2493,6 +2549,11 @@ impl App {
         if let Some(i) = name.strip_prefix("language-").and_then(|i| i.parse::<usize>().ok()) {
             return self.pick_language(i, ui);
         }
+        if name == "connect-history-clear" {
+            self.options.connect_history.clear();
+            self.save_options();
+            return self.show_connect_history(ui);
+        }
         if name == "button-bar-new" {
             self.naming_bar = true;
             ui.set_name_title("New Button Bar".into());
@@ -2558,6 +2619,7 @@ impl App {
             // For a key map (SecureCRT has Alt+R): the toolbar's box, else the dialog.
             "focus-connect-bar" if ui.get_show_connect_bar() => return ui.set_connect_bar_focus(ui.get_connect_bar_focus() + 1),
             "quick-connect" | "focus-connect-bar" => {
+                self.connect_bar_typed = None;
                 let target = (self.tabs.get(active).map(|t| t.target.clone()))
                     .unwrap_or_else(|| Target::from_session(&self.store.default_session, &self.options.credentials));
                 show_quick_connect(ui, &target);
@@ -3452,6 +3514,84 @@ impl App {
     }
 
     /// Periodic work: drain sessions, raise prompts, fit the grid, repaint, refresh chrome.
+    /// The pointer came to rest on a tab, or left it.
+    fn tab_hover(&mut self, index: usize, hovered: bool, x: f32, y: f32) {
+        let Some(id) = self.tabs.get(index).map(|t| t.id) else {
+            return;
+        };
+        if hovered {
+            self.hover_tab = Some((id, Instant::now(), x, y));
+        } else if self.hover_tab.is_some_and(|h| h.0 == id) {
+            self.hover_tab = None;
+        }
+    }
+
+    /// Tab hover preview: a small picture of the tab the pointer rests on,
+    /// under that tab, while the tab itself is not on screen.
+    fn show_tab_preview(&mut self, ui: &MainWindow, now: Instant) {
+        let rested = self.hover_tab.filter(|h| now.duration_since(h.1) >= PREVIEW_REST && ui.get_dialog() == DIALOG_NONE);
+        let hidden = rested.and_then(|h| Some((self.tabs.iter().position(|t| t.id == h.0)?, h))).filter(|(i, _)| !self.panes.iter().any(|p| p.tab == *i));
+        let Some((index, (id, _, x, y))) = hidden else {
+            if self.preview.take().is_some() {
+                ui.set_tab_preview_visible(false);
+            }
+            return;
+        };
+        if self.preview.as_ref().is_some_and(|p| p.0 == id && now.duration_since(p.1) < PREVIEW_REFRESH) {
+            return;
+        }
+        let width = PREVIEW_WIDTH * self.options.ui_scale();
+        let Some((w, h, rgb)) = self.tab_picture(index, (width * self.scale).round() as usize) else {
+            if self.preview.take().is_some() {
+                ui.set_tab_preview_visible(false);
+            }
+            return;
+        };
+        // Only a changed picture is handed to the window.
+        if self.preview.as_ref().is_none_or(|p| p.0 != id || p.2 != rgb) {
+            ui.set_tab_preview_image(Image::from_rgb8(SharedPixelBuffer::clone_from_slice(&rgb, w as u32, h as u32)));
+            ui.set_tab_preview_title(self.tabs[index].title().into());
+            ui.set_tab_preview_width(w as f32 / self.scale.max(0.5));
+            ui.set_tab_preview_x(x);
+            ui.set_tab_preview_y(y);
+            ui.set_tab_preview_visible(true);
+        }
+        self.preview = Some((id, now, rgb));
+    }
+
+    /// A tab's screen scaled down to at most `width` pixels wide, as (width,
+    /// height, RGB). None for a tab with no picture to show.
+    fn tab_picture(&mut self, index: usize, width: usize) -> Option<(usize, usize, Vec<u8>)> {
+        let tab = &self.tabs[index];
+        // A file browser draws its own lists, and hidden output stays hidden.
+        if tab.files.is_some() || tab.lock.as_ref().is_some_and(|(_, hide)| *hide) {
+            return None;
+        }
+        let (w, h, channels, full) = match &tab.screen {
+            // Remote Desktop and VNC: the last frame.
+            Some(desktop) => {
+                let (w, h) = (desktop.width as usize, desktop.height as usize);
+                let mut full = vec![0; w * h * 3];
+                desktop.draw(&mut full, w, h, [0, 0, 0]);
+                (w, h, 3, full)
+            }
+            // The terminal as it would be drawn, at its own size.
+            None => {
+                let (cols, lines) = tab.terminal.size();
+                let (w, h) = (cols * self.renderer.cell_w, lines * self.renderer.cell_h);
+                let mut full = vec![0; w * h * 4];
+                self.renderer.render(&tab.terminal, &tab.keyword_set, false, &mut full, w, h);
+                (w, h, 4, full)
+            }
+        };
+        if w == 0 || h == 0 {
+            return None;
+        }
+        let out_w = width.clamp(1, w);
+        let out_h = (h * out_w / w).max(1);
+        Some((out_w, out_h, render::scale_down(&full, w, h, channels, out_w, out_h)))
+    }
+
     fn tick(&mut self, ui: &MainWindow) {
         let now = Instant::now();
         if let Some(names) = self.wsl_list.as_ref().and_then(|rx| rx.try_recv().ok()) {
@@ -3899,6 +4039,7 @@ impl App {
                 }
             }
         }
+        self.show_tab_preview(ui, now);
         let mut bell = false;
         if let Some(tab) = self.tabs.get(self.active) {
             bell = tab.bell_until.is_some_and(|until| now < until);
@@ -3956,10 +4097,18 @@ impl App {
 
         // Recent sessions in the File menu.
         let recent = &self.options.recent_sessions[..self.options.recent_sessions.len().min(self.options.recent_count)];
-        if recent != self.shown_recent.as_slice() {
+        if self.shown_recent.as_deref() != Some(recent) {
             let titles: Vec<SharedString> = recent.iter().map(SharedString::from).collect();
             ui.set_recent_sessions(ModelRc::new(VecModel::from(titles)));
-            self.shown_recent = recent.to_vec();
+            crate::jumplist::update(recent, config::dir_from_args());
+            self.shown_recent = Some(recent.to_vec());
+        }
+
+        // File > Trace Options: remembered, and used by SSH connections from now on.
+        if ui.get_trace() != self.options.trace {
+            self.options.trace = ui.get_trace();
+            ssh::TRACE.store(self.options.trace, std::sync::atomic::Ordering::Relaxed);
+            self.save_options();
         }
 
         // Remember View toggles across runs.
@@ -4331,6 +4480,7 @@ impl App {
                 ui.get_qc_line_stop(),
                 ui.get_qc_line_flow(),
             ]),
+            raw_mode: RawMode::ALL.get(ui.get_qc_raw_mode().max(0) as usize).copied().unwrap_or_default(),
             sftp: false,
             forwards: Vec::new(),
             // Settings the dialog does not show come from the default session.
@@ -4349,6 +4499,9 @@ impl App {
         } else {
             self.open_tab(target, None);
         }
+        if let Some(typed) = self.connect_bar_typed.take() {
+            self.remember_typed(&typed, ui);
+        }
         ui.set_dialog(DIALOG_NONE);
         ui.invoke_focus_terminal();
     }
@@ -4366,11 +4519,24 @@ impl App {
             return;
         };
         if target.user.is_empty() {
+            self.connect_bar_typed = Some(text.to_string());
             show_quick_connect(ui, &target);
         } else {
             self.open_tab(target, None);
+            self.remember_typed(text, ui);
             ui.invoke_focus_terminal();
         }
+    }
+
+    /// A target typed into the connect bar started a connection: it leads the bar's history.
+    fn remember_typed(&mut self, typed: &str, ui: &MainWindow) {
+        push_history(&mut self.options.connect_history, typed);
+        self.save_options();
+        self.show_connect_history(ui);
+    }
+
+    fn show_connect_history(&self, ui: &MainWindow) {
+        ui.set_connect_history(ModelRc::new(VecModel::from(self.options.connect_history.iter().map(SharedString::from).collect::<Vec<_>>())));
     }
 
     // --- Quick Open ---
@@ -5005,6 +5171,7 @@ impl App {
         ui.set_so_line_parity(parity);
         ui.set_so_line_stop(stop);
         ui.set_so_line_flow(flow);
+        ui.set_so_raw_mode(RawMode::ALL.iter().position(|m| *m == session.raw_mode).unwrap_or(0) as i32);
         ui.set_serial_ports(ModelRc::new(VecModel::from(
             serial::available_ports().into_iter().map(SharedString::from).collect::<Vec<_>>(),
         )));
@@ -5100,6 +5267,7 @@ impl App {
                 ui.get_so_line_stop(),
                 ui.get_so_line_flow(),
             ]),
+            raw_mode: RawMode::ALL.get(ui.get_so_raw_mode().max(0) as usize).copied().unwrap_or_default(),
             host: ui.get_so_host().trim().to_string(),
             port: ui.get_so_port().trim().parse().unwrap_or(0),
             user: ui.get_so_user().trim().to_string(),
@@ -8166,6 +8334,7 @@ fn session_from_target(target: &Target, name: String, template: &Session) -> Ses
         forward_x11: target.forward_x11,
         sftp: target.sftp,
         tls: target.tls,
+        raw_mode: target.raw_mode,
         proxy: target.proxy.clone().unwrap_or_default(),
         credential: target.credential.clone().unwrap_or_default(),
         cert_path: target.cert_path.clone().unwrap_or_default(),
@@ -8268,6 +8437,7 @@ fn show_quick_connect(ui: &MainWindow, target: &Target) {
     ui.set_qc_line_parity(parity);
     ui.set_qc_line_stop(stop);
     ui.set_qc_line_flow(flow);
+    ui.set_qc_raw_mode(RawMode::ALL.iter().position(|m| *m == target.raw_mode).unwrap_or(0) as i32);
     ui.set_qc_error(SharedString::new());
     ui.set_serial_ports(ModelRc::new(VecModel::from(ports.into_iter().map(SharedString::from).collect::<Vec<_>>())));
     ui.set_dialog(DIALOG_QUICK_CONNECT);
@@ -8424,6 +8594,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.invoke_focus_terminal();
     });
     on!(on_close_tab, |app, ui, index| app.close_tab(index as usize, &ui));
+    on!(on_tab_hover, |app, _ui, index, hovered, x, y| app.tab_hover(index.max(0) as usize, hovered, x, y));
     on!(on_tab_action, |app, ui, index, name| {
         if name == "rename" {
             app.rename_tab(index as usize, &ui);
@@ -8686,6 +8857,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_panes(ModelRc::from(app.pane_model.clone()));
         ui.set_files_views(ModelRc::from(app.files_model.clone()));
         ui.set_show_toolbar(app.options.show_toolbar);
+        ui.set_trace(app.options.trace);
         ui.set_windows(cfg!(windows));
         if cfg!(windows) {
             let (tx, rx) = std::sync::mpsc::channel();
@@ -8695,6 +8867,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_show_statusbar(app.options.show_statusbar);
         ui.set_show_menubar(app.options.show_menubar);
         ui.set_show_connect_bar(app.options.show_connect_bar);
+        app.show_connect_history(&ui);
         ui.set_theme_mode(app.options.theme.index());
         // The chosen language, or the system's; also loads the Rust texts' translations.
         crate::lang::apply(&app.options.language);
@@ -9222,6 +9395,17 @@ mod tests {
     }
 
     #[test]
+    fn raw_servers_and_udp_need_no_host() {
+        let raw = |host: &str, raw_mode| Target { protocol: Protocol::Raw, host: host.into(), port: 5000, raw_mode, ..Default::default() };
+        assert_eq!(raw("", RawMode::Client).problem().as_deref(), Some("Enter a hostname."));
+        let server = raw("", RawMode::Server);
+        assert_eq!((server.problem(), server.label(), server.name_base()), (None, "listen: *:5000".into(), "port 5000".into()));
+        let udp = raw("10.0.0.7", RawMode::Udp);
+        assert_eq!((udp.problem(), udp.label(), udp.name_base()), (None, "udp: 10.0.0.7:5000".into(), "10.0.0.7".into()));
+        assert_eq!(raw("sw1", RawMode::Client).label(), "sw1:5000");
+    }
+
+    #[test]
     fn command_line_is_parsed_like_securecrt() {
         let t = parse_args(&args(&["/ssh2", "/P", "2222", "example.com"])).unwrap();
         assert_eq!((t.protocol, t.host.as_str(), t.port), (Protocol::Ssh2, "example.com", 2222));
@@ -9278,6 +9462,20 @@ mod tests {
     fn status_bar_text_is_one_line() {
         assert_eq!(one_line("Options not saved: TOML parse error at line 273\n    |\n273 | [[button]]\n"), "Options not saved: TOML parse error at line 273 | 273 | [[button]]");
         assert_eq!(one_line("Ready"), "Ready");
+    }
+
+    #[test]
+    fn connect_bar_history() {
+        let mut history = Vec::new();
+        for typed in ["root@10.0.0.1", " me@host:2222 ", "host", "ROOT@10.0.0.1", "me:secret@db:22"] {
+            push_history(&mut history, typed);
+        }
+        // Newest first, the repeat moved up (case ignored), the password left out.
+        assert_eq!(history, ["me@db:22", "ROOT@10.0.0.1", "host", "me@host:2222"]);
+        for n in 0..30 {
+            push_history(&mut history, &format!("h{n}"));
+        }
+        assert_eq!((history.len(), history[0].as_str(), history[19].as_str()), (HISTORY_MAX, "h29", "h10"));
     }
 
     #[test]

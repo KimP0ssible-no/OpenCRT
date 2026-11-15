@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Način:"
+
+msgid "TCP client"
+msgstr "TCP klijent"
+
+msgid "TCP server"
+msgstr "TCP poslužitelj"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Osluškuj na:"
+
 msgid "Hostname:"
 msgstr "Naziv hosta:"
+
+msgid "blank: every interface"
+msgstr "prazno: sva sučelja"
+
+msgid "blank: answer the last sender"
+msgstr "prazno: odgovori zadnjem pošiljatelju"
 
 msgid "Port:"
 msgstr "Port:"
@@ -1732,6 +1753,9 @@ msgstr "Zaustavi snimanje"
 msgid "Record Session (asciicast)..."
 msgstr "Snimi sesiju (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Mogućnosti praćenja"
+
 msgid "Print Screen"
 msgstr "Ispiši zaslon"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Brzo povezivanje: user@host"
+
+msgid "Clear History"
+msgstr "Očisti povijest"
 
 msgid "Find"
 msgstr "Traži"
@@ -2259,6 +2286,9 @@ msgstr "Povezuje se kad se prikaže"
 
 msgid "Running the pre-connect command..."
 msgstr "Pokretanje naredbe prije povezivanja..."
+
+msgid "Listening on {}..."
+msgstr "Osluškivanje na {}..."
 
 msgid "Connecting to {}..."
 msgstr "Povezivanje s {}..."
@@ -3034,6 +3064,9 @@ msgstr "Postavke su promijenjene na drugom računalu: ponovno pokrenite OpenCRT 
 msgid "Settings not sent to the repository: {}"
 msgstr "Postavke nisu poslane u repozitorij: {}"
 
+msgid "Recent Sessions"
+msgstr "Nedavne sesije"
+
 msgid "Enter a name for the firewall."
 msgstr "Unesite naziv vatrozida."
 
@@ -3130,8 +3163,59 @@ msgstr "Unesite naziv mape (bez \"/\")."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "Nema SecureCRT sesija u {}. Odaberite mapu Config koja sadrži mapu Sessions."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Povezivanje s {}:{} preko posredničkog hosta"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Povezivanje s {}:{} preko vatrozida {}"
+
+msgid "Connecting to {}:{}"
+msgstr "Povezivanje s {}:{}"
+
+msgid "Server: {}"
+msgstr "Poslužitelj: {}"
+
+msgid "Key exchange: {}"
+msgstr "Razmjena ključeva: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Algoritam ključa hosta: {}"
+
+msgid "Cipher: {}"
+msgstr "Šifra: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: nema, šifra sama štiti podatke"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Kompresija: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Ključ hosta: {} {} (odgovara spremljenom ključu)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Ključ hosta: {} {} (još nije spremljen)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Ključ hosta: {} {} (razlikuje se od spremljenog ključa)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Provjera autentičnosti metodom {}: prihvaćena"
+
+msgid "Authentication with {}: refused"
+msgstr "Provjera autentičnosti metodom {}: odbijena"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Provjera autentičnosti metodom {}: odbijena; poslužitelj nudi: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Vjerodajnica \"{}\": {}; umjesto toga traži se lozinka."
+
+msgid "{} connected."
+msgstr "{} povezan."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "Ažuriraj sada instalira ga i ponovno pokreće OpenCRT."

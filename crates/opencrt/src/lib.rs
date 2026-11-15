@@ -15,6 +15,7 @@ mod gitsync;
 pub mod fuzz;
 mod input;
 mod instance;
+mod jumplist;
 mod kermit;
 mod lang;
 mod load;

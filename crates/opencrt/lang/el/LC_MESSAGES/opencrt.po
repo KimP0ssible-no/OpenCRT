@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Λειτουργία:"
+
+msgid "TCP client"
+msgstr "Πελάτης TCP"
+
+msgid "TCP server"
+msgstr "Διακομιστής TCP"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Ακρόαση σε:"
+
 msgid "Hostname:"
 msgstr "Όνομα κεντρικού υπολογιστή:"
+
+msgid "blank: every interface"
+msgstr "κενό: κάθε διασύνδεση"
+
+msgid "blank: answer the last sender"
+msgstr "κενό: απάντηση στον τελευταίο αποστολέα"
 
 msgid "Port:"
 msgstr "Θύρα:"
@@ -1732,6 +1753,9 @@ msgstr "Διακοπή εγγραφής"
 msgid "Record Session (asciicast)..."
 msgstr "Εγγραφή συνεδρίας (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Επιλογές ιχνηλάτησης"
+
 msgid "Print Screen"
 msgstr "Εκτύπωση οθόνης"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Γρήγορη σύνδεση: user@host"
+
+msgid "Clear History"
+msgstr "Εκκαθάριση ιστορικού"
 
 msgid "Find"
 msgstr "Εύρεση"
@@ -2258,6 +2285,9 @@ msgstr "Συνδέεται όταν εμφανιστεί"
 
 msgid "Running the pre-connect command..."
 msgstr "Εκτέλεση της εντολής πριν από τη σύνδεση..."
+
+msgid "Listening on {}..."
+msgstr "Ακρόαση στο {}..."
 
 msgid "Connecting to {}..."
 msgstr "Σύνδεση στο {}..."
@@ -3033,6 +3063,9 @@ msgstr "Οι ρυθμίσεις άλλαξαν σε άλλον υπολογισ�
 msgid "Settings not sent to the repository: {}"
 msgstr "Οι ρυθμίσεις δεν στάλθηκαν στο αποθετήριο: {}"
 
+msgid "Recent Sessions"
+msgstr "Πρόσφατες συνεδρίες"
+
 msgid "Enter a name for the firewall."
 msgstr "Πληκτρολογήστε όνομα για το τείχος προστασίας."
 
@@ -3129,8 +3162,59 @@ msgstr "Πληκτρολογήστε όνομα φακέλου (χωρίς «/»
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "Δεν υπάρχουν συνεδρίες SecureCRT στο {}. Επιλέξτε τον φάκελο Config που περιέχει τον φάκελο Sessions."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Σύνδεση στο {}:{} μέσω του κόμβου μεταπήδησης"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Σύνδεση στο {}:{} μέσω του τείχους προστασίας {}"
+
+msgid "Connecting to {}:{}"
+msgstr "Σύνδεση στο {}:{}"
+
+msgid "Server: {}"
+msgstr "Διακομιστής: {}"
+
+msgid "Key exchange: {}"
+msgstr "Ανταλλαγή κλειδιών: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Αλγόριθμος κλειδιού κεντρικού υπολογιστή: {}"
+
+msgid "Cipher: {}"
+msgstr "Κρυπταλγόριθμος: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: κανένας, ο κρυπταλγόριθμος προστατεύει ο ίδιος τα δεδομένα"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Συμπίεση: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Κλειδί κεντρικού υπολογιστή: {} {} (ταιριάζει με το αποθηκευμένο κλειδί)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Κλειδί κεντρικού υπολογιστή: {} {} (δεν έχει αποθηκευτεί ακόμη)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Κλειδί κεντρικού υπολογιστή: {} {} (διαφέρει από το αποθηκευμένο κλειδί)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Έλεγχος ταυτότητας με {}: έγινε δεκτός"
+
+msgid "Authentication with {}: refused"
+msgstr "Έλεγχος ταυτότητας με {}: απορρίφθηκε"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Έλεγχος ταυτότητας με {}: απορρίφθηκε· ο διακομιστής προσφέρει: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Διαπιστευτήριο «{}»: {}· ζητείται ο κωδικός πρόσβασης."
+
+msgid "{} connected."
+msgstr "{} συνδέθηκε."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "Το Ενημέρωση τώρα την εγκαθιστά και επανεκκινεί το OpenCRT."

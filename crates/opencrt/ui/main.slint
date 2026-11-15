@@ -878,6 +878,8 @@ component SessionTab inherits Rectangle {
     callback dropped(length);
     // Where the pointer is (in the window) while this tab is dragged; -1px when let go.
     callback drag-moved(length);
+    // The pointer is on this tab, with no drag under way and no menu just opened.
+    out property <bool> hovered: touch.has-hover && !touch.dragged && !touch.menu-opened && root.drag-x < 0px;
     // The pointer of a tab being dragged, if any. Over this one (or the gap after
     // it), the dragged tab would land on this side of it: -1 before, 1 after, 0 neither.
     in property <length> drag-x: -1px;
@@ -983,6 +985,13 @@ component SessionTab inherits Rectangle {
         touch := TouchArea {
             // Kept by hand: `pressed` is already false when the release arrives.
             property <bool> dragged;
+            // The tab's menu was opened from here; until the pointer leaves the tab.
+            property <bool> menu-opened;
+            changed has-hover => {
+                if !self.has-hover {
+                    self.menu-opened = false;
+                }
+            }
             mouse-cursor: self.dragged ? MouseCursor.grabbing : MouseCursor.default;
             clicked => { root.select(); }
             moved => {
@@ -993,6 +1002,7 @@ component SessionTab inherits Rectangle {
             }
             pointer-event(event) => {
                 if (event.kind == PointerEventKind.down && event.button == PointerEventButton.right) {
+                    self.menu-opened = true;
                     tab-menu.show({ x: self.mouse-x, y: self.mouse-y });
                 } else if (event.kind == PointerEventKind.down && event.button == PointerEventButton.middle) {
                     root.close();
@@ -1556,6 +1566,7 @@ component ConnectionFields inherits VerticalLayout {
     in-out property <int> line-parity;
     in-out property <int> line-stop;
     in-out property <int> line-flow;
+    in-out property <int> raw-mode;
     in property <[string]> serial-ports;
     in property <bool> show-key: true;
     in property <bool> focus-host: false;
@@ -1575,10 +1586,20 @@ component ConnectionFields inherits VerticalLayout {
             }
         }
     }
+    if root.protocol == 2: FieldRow {
+        label: @tr("Mode:");
+        ComboBox {
+            model: [@tr("TCP client"), @tr("TCP server"), @tr("UDP")];
+            current-index <=> root.raw-mode;
+        }
+    }
     if root.protocol <= 2 || root.protocol >= 5: FieldRow {
-        label: @tr("Hostname:");
+        // A Raw server listens on this address; Raw UDP sends to it.
+        property <int> raw: root.protocol == 2 ? root.raw-mode : 0;
+        label: self.raw == 1 ? @tr("Listen on:") : @tr("Hostname:");
         LineEdit {
             text <=> root.host;
+            placeholder-text: parent.raw == 1 ? @tr("blank: every interface") : parent.raw == 2 ? @tr("blank: answer the last sender") : "";
             accepted => { root.submit(); }
             init => {
                 if (root.focus-host) {
@@ -1678,6 +1699,7 @@ component QuickConnectDialog inherits DialogFrame {
     in-out property <int> line-parity;
     in-out property <int> line-stop;
     in-out property <int> line-flow;
+    in-out property <int> raw-mode;
     in-out property <string> host;
     in-out property <string> port;
     in-out property <string> user;
@@ -1705,6 +1727,7 @@ component QuickConnectDialog inherits DialogFrame {
         line-parity <=> root.line-parity;
         line-stop <=> root.line-stop;
         line-flow <=> root.line-flow;
+        raw-mode <=> root.raw-mode;
         serial-ports: root.serial-ports;
         focus-host: true;
         submit => { root.connect(); }
@@ -1743,6 +1766,7 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <int> line-parity;
     in-out property <int> line-stop;
     in-out property <int> line-flow;
+    in-out property <int> raw-mode;
     in-out property <string> name;
     in-out property <string> folder;
     in-out property <int> protocol;
@@ -1910,6 +1934,7 @@ component SessionOptionsDialog inherits DialogFrame {
                         line-parity <=> root.line-parity;
                         line-stop <=> root.line-stop;
                         line-flow <=> root.line-flow;
+                        raw-mode <=> root.raw-mode;
                         serial-ports: root.serial-ports;
                         show-key: false;
                         submit => { root.ok(); }
@@ -2949,10 +2974,13 @@ component ColourDropdown inherits Rectangle {
             vertical-alignment: center;
             color: root.enabled ? Theme.text : Theme.text-disabled;
         }
-        Text {
-            text: "▾";
-            vertical-alignment: center;
-            color: root.enabled ? Theme.text-secondary : Theme.text-disabled;
+        Rectangle {
+            width: 12px * Theme.ui-scale;
+            Icon {
+                kind: IconKind.chevron-down;
+                size: parent.width;
+                ink: root.enabled ? Theme.text-secondary : Theme.text-disabled;
+            }
         }
     }
     touch := TouchArea {
@@ -5014,6 +5042,8 @@ export component MainWindow inherits Window {
     in property <bool> caps-on;
     in property <bool> num-on;
     in-out property <bool> show-toolbar: true;
+    // File > Trace Options: SSH connections write their set-up into the tab.
+    in-out property <bool> trace;
     // The local-shell button offers PowerShell, Command Prompt and the WSL distributions.
     in property <bool> windows;
     in property <[string]> wsl-distros;
@@ -5022,6 +5052,8 @@ export component MainWindow inherits Window {
     in-out property <bool> show-connect-bar: true;
     // Raised to put the keyboard in the toolbar's quick connect box.
     in-out property <int> connect-bar-focus;
+    // Targets typed into the connect bar, newest first.
+    in property <[string]> connect-history;
     // Saved-session paths for the File menu, newest first.
     in property <[string]> recent-sessions;
     in property <[string]> snapshots;
@@ -5338,10 +5370,12 @@ export component MainWindow inherits Window {
     in-out property <int> so-line-parity;
     in-out property <int> so-line-stop;
     in-out property <int> so-line-flow;
+    in-out property <int> so-raw-mode;
     in-out property <int> qc-line-data;
     in-out property <int> qc-line-parity;
     in-out property <int> qc-line-stop;
     in-out property <int> qc-line-flow;
+    in-out property <int> qc-raw-mode;
 
     // --- state read by Rust ---
     out property <length> term-width: term-area.width;
@@ -5358,6 +5392,16 @@ export component MainWindow inherits Window {
     callback select-tab(int);
     callback close-tab(int);
     callback tab-action(int, string);
+    // The pointer came to rest on a tab or left it: (tab, on it, the tab's left
+    // edge and bottom in the window).
+    callback tab-hover(int, bool, length, length);
+    // Tab hover preview: a small picture of a tab that is not on screen, under its tab.
+    in property <bool> tab-preview-visible;
+    in property <image> tab-preview-image;
+    in property <string> tab-preview-title;
+    in property <length> tab-preview-width;
+    in property <length> tab-preview-x;
+    in property <length> tab-preview-y;
     callback action(string);
     // The menu bar stays clickable over the modal dialogs; its actions wait until they close.
     callback menu(string);
@@ -5513,6 +5557,11 @@ export component MainWindow inherits Window {
                 title: root.casting ? @tr("Stop Recording") : @tr("Record Session (asciicast)...");
                 enabled: root.tabs.length > 0;
                 activated => { root.menu("record-cast"); }
+            }
+            MenuItem {
+                title: @tr("Trace Options");
+                checkable: true;
+                checked <=> root.trace;
             }
             MenuSeparator { }
             MenuItem {
@@ -5962,7 +6011,7 @@ export component MainWindow inherits Window {
     }
 
     // Behind everything; both backgrounds look the same.
-    Rectangle {
+    backdrop := Rectangle {
         width: 100%;
         height: 100%;
         background: root.repaint-all ? Theme.window-bg : transparent;
@@ -6053,6 +6102,36 @@ export component MainWindow inherits Window {
                     placeholder: @tr("Quick connect: user@host");
                     clear-on-submit: true;
                     submitted(text) => { root.connect-bar(text); }
+                }
+                // The targets typed before: one connects as if typed again.
+                if root.show-connect-bar: Rectangle {
+                    width: 14px * Theme.ui-scale;
+                    height: 20px * Theme.ui-scale;
+                    border-radius: 3px;
+                    background: history-touch.has-hover && history-touch.enabled ? Theme.hover-bg : transparent;
+                    Icon {
+                        kind: IconKind.chevron-down;
+                        size: 12px * Theme.ui-scale;
+                        ink: history-touch.enabled ? Theme.text-secondary : Theme.text-disabled;
+                    }
+                    history-touch := TouchArea {
+                        enabled: root.connect-history.length > 0;
+                        clicked => { history-menu.show({ x: 0, y: self.height }); }
+                    }
+                    history-menu := ContextMenuArea {
+                        enabled: history-touch.enabled;
+                        Menu {
+                            for target in root.connect-history: MenuItem {
+                                title: target;
+                                activated => { root.connect-bar(target); }
+                            }
+                            MenuSeparator { }
+                            MenuItem {
+                                title: @tr("Clear History");
+                                activated => { root.action("connect-history-clear"); }
+                            }
+                        }
+                    }
                 }
                 ToolSeparator { }
                 ToolButton {
@@ -6256,6 +6335,9 @@ export component MainWindow inherits Window {
                             action(name) => { root.tab-action(i, name); }
                             drag-x: tab-strip.drag-x;
                             drag-moved(x) => { tab-strip.drag-x = x; }
+                            changed hovered => {
+                                root.tab-hover(i, self.hovered, self.absolute-position.x - backdrop.absolute-position.x, self.absolute-position.y + self.height - backdrop.absolute-position.y);
+                            }
                             changed drop-side => {
                                 if self.drop-side != 0 {
                                     tab-strip.drop = i;
@@ -6465,7 +6547,7 @@ export component MainWindow inherits Window {
                 spacing: 4px;
                 // Which bar this is; switch to another or make a new one.
                 Rectangle {
-                    width: bar-label.preferred-width + 16px;
+                    width: bar-label.preferred-width + 18px + bar-arrow.width;
                     border-radius: 3px;
                     border-width: 1px;
                     border-color: Theme.border;
@@ -6473,9 +6555,14 @@ export component MainWindow inherits Window {
                     bar-label := Text {
                         x: 8px;
                         height: parent.height;
-                        text: (root.bar-name == "" ? @tr("Default") : root.bar-name) + "  ▾";
+                        text: root.bar-name == "" ? @tr("Default") : root.bar-name;
                         font-size: 11px * Theme.ui-scale;
                         vertical-alignment: center;
+                    }
+                    bar-arrow := Icon {
+                        x: parent.width - self.width - 5px;
+                        kind: IconKind.chevron-down;
+                        size: 12px * Theme.ui-scale;
                     }
                     bar-touch := TouchArea {
                         clicked => { bar-menu.show({ x: 0, y: self.height }); }
@@ -6871,6 +6958,38 @@ export component MainWindow inherits Window {
         }
     }
 
+    // --- tab hover preview: over the terminal, under the modal dialogs ---
+    if root.tab-preview-visible: Rectangle {
+        property <length> title-height: 18px * Theme.ui-scale;
+        property <length> picture-height: root.tab-preview-image.width > 0 ? root.tab-preview-width * root.tab-preview-image.height / root.tab-preview-image.width : 0px;
+        x: max(4px, min(root.tab-preview-x, backdrop.width - self.width - 4px));
+        y: root.tab-preview-y + 2px;
+        width: root.tab-preview-width + 10px;
+        height: self.title-height + self.picture-height + 9px;
+        background: Theme.panel-bg;
+        border-width: 1px;
+        border-color: Theme.border-strong;
+        border-radius: 4px;
+        Text {
+            x: 6px;
+            y: 2px;
+            width: parent.width - 12px;
+            height: parent.title-height;
+            text: root.tab-preview-title;
+            font-size: 11px * Theme.ui-scale;
+            vertical-alignment: center;
+            overflow: elide;
+            color: Theme.text;
+        }
+        Image {
+            x: 5px;
+            y: parent.title-height + 4px;
+            width: root.tab-preview-width;
+            height: parent.picture-height;
+            source: root.tab-preview-image;
+        }
+    }
+
     // --- modal dialogs ---
     if root.dialog == 1: HostKeyDialog {
         host: root.hostkey-host;
@@ -6897,6 +7016,7 @@ export component MainWindow inherits Window {
         line-parity <=> root.qc-line-parity;
         line-stop <=> root.qc-line-stop;
         line-flow <=> root.qc-line-flow;
+        raw-mode <=> root.qc-raw-mode;
         serial-port <=> root.qc-serial-port;
         baud <=> root.qc-baud;
         serial-ports: root.serial-ports;
@@ -6921,6 +7041,7 @@ export component MainWindow inherits Window {
         line-parity <=> root.so-line-parity;
         line-stop <=> root.so-line-stop;
         line-flow <=> root.so-line-flow;
+        raw-mode <=> root.so-raw-mode;
         serial-port <=> root.so-serial-port;
         baud <=> root.so-baud;
         serial-ports: root.serial-ports;

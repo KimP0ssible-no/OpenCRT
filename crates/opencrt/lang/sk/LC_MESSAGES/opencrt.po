@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Režim:"
+
+msgid "TCP client"
+msgstr "Klient TCP"
+
+msgid "TCP server"
+msgstr "Server TCP"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Načúvať na:"
+
 msgid "Hostname:"
 msgstr "Názov hostiteľa:"
+
+msgid "blank: every interface"
+msgstr "prázdne: všetky rozhrania"
+
+msgid "blank: answer the last sender"
+msgstr "prázdne: odpovedať poslednému odosielateľovi"
 
 msgid "Port:"
 msgstr "Port:"
@@ -1732,6 +1753,9 @@ msgstr "Zastaviť nahrávanie"
 msgid "Record Session (asciicast)..."
 msgstr "Nahrávať reláciu (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Možnosti trasovania"
+
 msgid "Print Screen"
 msgstr "Tlačiť obrazovku"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Rýchle pripojenie: user@host"
+
+msgid "Clear History"
+msgstr "Vymazať históriu"
 
 msgid "Find"
 msgstr "Hľadať"
@@ -2259,6 +2286,9 @@ msgstr "Pripojí sa pri zobrazení"
 
 msgid "Running the pre-connect command..."
 msgstr "Spúšťa sa príkaz pred pripojením..."
+
+msgid "Listening on {}..."
+msgstr "Načúva sa na {}..."
 
 msgid "Connecting to {}..."
 msgstr "Pripája sa k {}..."
@@ -3034,6 +3064,9 @@ msgstr "Nastavenia sa zmenili na inom počítači: reštartujte OpenCRT, aby sa 
 msgid "Settings not sent to the repository: {}"
 msgstr "Nastavenia neboli odoslané do repozitára: {}"
 
+msgid "Recent Sessions"
+msgstr "Nedávne relácie"
+
 msgid "Enter a name for the firewall."
 msgstr "Zadajte názov firewallu."
 
@@ -3130,8 +3163,59 @@ msgstr "Zadajte názov priečinka (bez \"/\")."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "V {} nie sú žiadne relácie SecureCRT. Vyberte priečinok Config, ktorý obsahuje priečinok Sessions."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Pripája sa k {}:{} cez skokového hostiteľa"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Pripája sa k {}:{} cez firewall {}"
+
+msgid "Connecting to {}:{}"
+msgstr "Pripája sa k {}:{}"
+
+msgid "Server: {}"
+msgstr "Server: {}"
+
+msgid "Key exchange: {}"
+msgstr "Výmena kľúčov: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Algoritmus kľúča hostiteľa: {}"
+
+msgid "Cipher: {}"
+msgstr "Šifra: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: žiadny, šifra chráni údaje sama"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Kompresia: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Kľúč hostiteľa: {} {} (zhoduje sa s uloženým kľúčom)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Kľúč hostiteľa: {} {} (zatiaľ neuložený)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Kľúč hostiteľa: {} {} (líši sa od uloženého kľúča)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Overenie pomocou {}: prijaté"
+
+msgid "Authentication with {}: refused"
+msgstr "Overenie pomocou {}: odmietnuté"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Overenie pomocou {}: odmietnuté; server ponúka: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Prihlasovacie údaje \"{}\": {}; namiesto toho sa vyžiada heslo."
+
+msgid "{} connected."
+msgstr "{}: pripojené."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "Aktualizovať teraz ju nainštaluje a reštartuje OpenCRT."

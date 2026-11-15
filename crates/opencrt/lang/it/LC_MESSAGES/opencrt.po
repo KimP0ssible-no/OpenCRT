@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Modalità:"
+
+msgid "TCP client"
+msgstr "Client TCP"
+
+msgid "TCP server"
+msgstr "Server TCP"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "In ascolto su:"
+
 msgid "Hostname:"
 msgstr "Nome host:"
+
+msgid "blank: every interface"
+msgstr "vuoto: tutte le interfacce"
+
+msgid "blank: answer the last sender"
+msgstr "vuoto: rispondi all'ultimo mittente"
 
 msgid "Port:"
 msgstr "Porta:"
@@ -1732,6 +1753,9 @@ msgstr "Interrompi registrazione"
 msgid "Record Session (asciicast)..."
 msgstr "Registra sessione (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Opzioni di traccia"
+
 msgid "Print Screen"
 msgstr "Stampa schermo"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Connessione rapida: utente@host"
+
+msgid "Clear History"
+msgstr "Svuota cronologia"
 
 msgid "Find"
 msgstr "Trova"
@@ -2258,6 +2285,9 @@ msgstr "Si connette quando viene mostrata"
 
 msgid "Running the pre-connect command..."
 msgstr "Esecuzione del comando pre-connessione..."
+
+msgid "Listening on {}..."
+msgstr "In ascolto su {}..."
 
 msgid "Connecting to {}..."
 msgstr "Connessione a {}..."
@@ -3033,6 +3063,9 @@ msgstr "Le impostazioni sono state modificate su un altro computer: riavviare Op
 msgid "Settings not sent to the repository: {}"
 msgstr "Impostazioni non inviate al repository: {}"
 
+msgid "Recent Sessions"
+msgstr "Sessioni recenti"
+
 msgid "Enter a name for the firewall."
 msgstr "Immettere un nome per il firewall."
 
@@ -3129,8 +3162,59 @@ msgstr "Immettere un nome di cartella (senza \"/\")."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "Nessuna sessione SecureCRT in {}. Scegliere la cartella Config che contiene la cartella Sessions."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Connessione a {}:{} tramite l'host di salto"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Connessione a {}:{} tramite il firewall {}"
+
+msgid "Connecting to {}:{}"
+msgstr "Connessione a {}:{}"
+
+msgid "Server: {}"
+msgstr "Server: {}"
+
+msgid "Key exchange: {}"
+msgstr "Scambio chiavi: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Algoritmo della chiave host: {}"
+
+msgid "Cipher: {}"
+msgstr "Cifrario: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: nessuno, il cifrario protegge direttamente i dati"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Compressione: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Chiave host: {} {} (corrisponde alla chiave salvata)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Chiave host: {} {} (non ancora salvata)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Chiave host: {} {} (diversa dalla chiave salvata)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Autenticazione con {}: accettata"
+
+msgid "Authentication with {}: refused"
+msgstr "Autenticazione con {}: rifiutata"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Autenticazione con {}: rifiutata; il server offre: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Credenziale \"{}\": {}; viene chiesta la password."
+
+msgid "{} connected."
+msgstr "{} connesso."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "Aggiorna ora la installa e riavvia OpenCRT."

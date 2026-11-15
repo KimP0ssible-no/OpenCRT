@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Režimas:"
+
+msgid "TCP client"
+msgstr "TCP klientas"
+
+msgid "TCP server"
+msgstr "TCP serveris"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Klausytis adresu:"
+
 msgid "Hostname:"
 msgstr "Serveris:"
+
+msgid "blank: every interface"
+msgstr "tuščia: visos sąsajos"
+
+msgid "blank: answer the last sender"
+msgstr "tuščia: atsakyti paskutiniam siuntėjui"
 
 msgid "Port:"
 msgstr "Prievadas:"
@@ -1732,6 +1753,9 @@ msgstr "Stabdyti įrašymą"
 msgid "Record Session (asciicast)..."
 msgstr "Įrašyti seansą (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Sekimo parinktys"
+
 msgid "Print Screen"
 msgstr "Spausdinti ekraną"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Greitasis prisijungimas: user@host"
+
+msgid "Clear History"
+msgstr "Išvalyti istoriją"
 
 msgid "Find"
 msgstr "Ieškoti"
@@ -2259,6 +2286,9 @@ msgstr "Prisijungia, kai parodoma"
 
 msgid "Running the pre-connect command..."
 msgstr "Vykdoma prieš prisijungimą skirta komanda..."
+
+msgid "Listening on {}..."
+msgstr "Klausomasi adresu {}..."
 
 msgid "Connecting to {}..."
 msgstr "Jungiamasi prie {}..."
@@ -3034,6 +3064,9 @@ msgstr "Nustatymai pakeisti kitame kompiuteryje: paleiskite OpenCRT iš naujo, k
 msgid "Settings not sent to the repository: {}"
 msgstr "Nustatymai neišsiųsti į saugyklą: {}"
 
+msgid "Recent Sessions"
+msgstr "Paskutiniai seansai"
+
 msgid "Enter a name for the firewall."
 msgstr "Įveskite užkardos pavadinimą."
 
@@ -3130,8 +3163,59 @@ msgstr "Įveskite aplanko pavadinimą (be „/“)."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "Aplanke {} nėra SecureCRT seansų. Pasirinkite Config aplanką, kuriame yra Sessions aplankas."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Jungiamasi prie {}:{} per tarpinį serverį"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Jungiamasi prie {}:{} per užkardą {}"
+
+msgid "Connecting to {}:{}"
+msgstr "Jungiamasi prie {}:{}"
+
+msgid "Server: {}"
+msgstr "Serveris: {}"
+
+msgid "Key exchange: {}"
+msgstr "Raktų mainai: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Serverio rakto algoritmas: {}"
+
+msgid "Cipher: {}"
+msgstr "Šifras: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: nėra, duomenis apsaugo pats šifras"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Glaudinimas: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Serverio raktas: {} {} (sutampa su įrašytu raktu)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Serverio raktas: {} {} (dar neįrašytas)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Serverio raktas: {} {} (skiriasi nuo įrašyto rakto)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Autentifikavimas naudojant {}: priimtas"
+
+msgid "Authentication with {}: refused"
+msgstr "Autentifikavimas naudojant {}: atmestas"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Autentifikavimas naudojant {}: atmestas; serveris siūlo: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Prisijungimo duomenys „{}“: {}; vietoj to klausiama slaptažodžio."
+
+msgid "{} connected."
+msgstr "{} prisijungė."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "„Naujinti dabar“ jį įdiegia ir iš naujo paleidžia OpenCRT."

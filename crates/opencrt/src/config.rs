@@ -15,6 +15,7 @@ static DIR_OVERRIDE: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 /// folder chosen in Global Options. Call once, first.
 pub fn use_dir_from_args(args: Vec<String>) -> Vec<String> {
     let (folder, rest) = split_dir_arg(args);
+    FROM_ARGS.store(folder.is_some(), std::sync::atomic::Ordering::Relaxed);
     let synced = crate::gitsync::local_copy();
     let chosen = Some(chosen_dir()).filter(|d| !d.is_empty()).map(PathBuf::from);
     if folder.is_none() && synced.is_some() {
@@ -41,6 +42,15 @@ fn split_dir_arg(args: Vec<String>) -> (Option<PathBuf>, Vec<String>) {
         }
     }
     (folder, rest)
+}
+
+/// Whether the command line named the configuration folder (`/F folder`).
+static FROM_ARGS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// The configuration folder when `/F` named it: another start of OpenCRT
+/// needs the same `/F` to reach this one.
+pub fn dir_from_args() -> Option<PathBuf> {
+    FROM_ARGS.load(std::sync::atomic::Ordering::Relaxed).then(dir).flatten()
 }
 
 /// Whether this run keeps its settings in the settings repository.
@@ -292,6 +302,26 @@ pub enum FlowControl {
     Hardware,
 }
 
+/// What a Raw session does with its host and port.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RawMode {
+    /// Connect to the host over TCP.
+    #[default]
+    Client,
+    /// Listen on the port (the host is the address to listen on; empty for
+    /// every interface) and serve the first TCP client.
+    Server,
+    /// Show the datagrams that arrive on the port, and send what is typed to
+    /// the host's port; with no host, to whoever sent the last datagram.
+    Udp,
+}
+
+impl RawMode {
+    /// In the order of the Mode list.
+    pub const ALL: [RawMode; 3] = [RawMode::Client, RawMode::Server, RawMode::Udp];
+}
+
 /// A saved session. Passwords are never stored; they are asked for on connect.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -395,6 +425,8 @@ pub struct Session {
     pub sftp: bool,
     /// Telnet: inside TLS (Telnet/TLS, e.g. port 992).
     pub tls: bool,
+    /// Raw: TCP client, TCP server or UDP.
+    pub raw_mode: RawMode,
     /// SSH2: forward X11 to the local X server ($DISPLAY, else localhost:0).
     pub forward_x11: bool,
     /// Anti-idle: text (Button Bar escapes) sent after this many seconds
@@ -463,6 +495,7 @@ impl Default for Session {
             forward_agent: false,
             sftp: false,
             tls: false,
+            raw_mode: RawMode::Client,
             forward_x11: false,
             anti_idle: String::new(),
             anti_idle_secs: 0,
@@ -570,6 +603,8 @@ pub struct Options {
     pub auto_reconnect: bool,
     /// SSH2: offer the old algorithms to every host, not only sessions set to.
     pub legacy_algorithms: bool,
+    /// File > Trace Options: SSH2 connections write their set-up into the tab.
+    pub trace: bool,
     /// SSH2: save a host key seen for the first time without asking (as
     /// OpenSSH's StrictHostKeyChecking=accept-new); changed keys are still refused.
     pub accept_new_host_keys: bool,
@@ -612,6 +647,8 @@ pub struct Options {
     pub recent_sessions: Vec<String>,
     /// How many recent sessions the File menu lists; 0 for none.
     pub recent_count: usize,
+    /// Targets typed into the toolbar's connect bar, newest first.
+    pub connect_history: Vec<String>,
     /// Session Manager folders the user collapsed (all others start expanded).
     pub collapsed_folders: Vec<String>,
     /// Button Bar buttons, left to right.
@@ -1121,6 +1158,7 @@ impl Default for Options {
             web_search: "https://duckduckgo.com/?q=%s".into(),
             auto_reconnect: false,
             legacy_algorithms: false,
+            trace: false,
             accept_new_host_keys: false,
             remember_secrets: false,
             reopen_sessions: false,
@@ -1156,6 +1194,7 @@ impl Default for Options {
             global_key: String::new(),
             recent_sessions: Vec::new(),
             recent_count: 4,
+            connect_history: Vec::new(),
             collapsed_folders: Vec::new(),
         }
     }
@@ -1382,6 +1421,17 @@ mod tests {
         std::fs::write(&path, "not toml [").unwrap();
         assert!(load::<SessionStore>(&path).is_err(), "a corrupt file must not load as empty");
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn raw_mode_round_trips_and_old_files_are_clients() {
+        let mut store = SessionStore::default();
+        store.sessions.push(Session { name: "sink".into(), protocol: Protocol::Raw, port: 5000, raw_mode: RawMode::Udp, ..Default::default() });
+        let text = toml::to_string(&store).unwrap();
+        assert!(text.contains("raw_mode = \"udp\""), "{text}");
+        assert_eq!(toml::from_str::<SessionStore>(&text).unwrap(), store);
+        let old = toml::from_str::<SessionStore>("[[session]]\nname = \"old\"\nprotocol = \"raw\"\nhost = \"sw1\"\n").unwrap();
+        assert_eq!(old.sessions[0].raw_mode, RawMode::Client);
     }
 
     #[test]

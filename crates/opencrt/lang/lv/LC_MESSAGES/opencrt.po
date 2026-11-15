@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Režīms:"
+
+msgid "TCP client"
+msgstr "TCP klients"
+
+msgid "TCP server"
+msgstr "TCP serveris"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Klausīties adresē:"
+
 msgid "Hostname:"
 msgstr "Resursdatora nosaukums:"
+
+msgid "blank: every interface"
+msgstr "tukšs: visas saskarnes"
+
+msgid "blank: answer the last sender"
+msgstr "tukšs: atbildēt pēdējam sūtītājam"
 
 msgid "Port:"
 msgstr "Ports:"
@@ -1732,6 +1753,9 @@ msgstr "Apturēt ierakstīšanu"
 msgid "Record Session (asciicast)..."
 msgstr "Ierakstīt sesiju (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Trasēšanas opcijas"
+
 msgid "Print Screen"
 msgstr "Drukāt ekrānu"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Ātrā savienošana: user@host"
+
+msgid "Clear History"
+msgstr "Notīrīt vēsturi"
 
 msgid "Find"
 msgstr "Meklēt"
@@ -2259,6 +2286,9 @@ msgstr "Savienojas, kad tiek parādīts"
 
 msgid "Running the pre-connect command..."
 msgstr "Izpilda pirmssavienojuma komandu..."
+
+msgid "Listening on {}..."
+msgstr "Klausās adresē {}..."
 
 msgid "Connecting to {}..."
 msgstr "Savienojas ar {}..."
@@ -3034,6 +3064,9 @@ msgstr "Iestatījumi tika mainīti citā datorā: restartējiet OpenCRT, lai tos
 msgid "Settings not sent to the repository: {}"
 msgstr "Iestatījumi nav nosūtīti uz repozitoriju: {}"
 
+msgid "Recent Sessions"
+msgstr "Nesenās sesijas"
+
 msgid "Enter a name for the firewall."
 msgstr "Ievadiet ugunsmūra nosaukumu."
 
@@ -3130,8 +3163,59 @@ msgstr "Ievadiet mapes nosaukumu (bez „/”)."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "Mapē {} nav SecureCRT sesiju. Izvēlieties mapi Config, kurā ir mape Sessions."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Savienojas ar {}:{} caur starpposma resursdatoru"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Savienojas ar {}:{} caur ugunsmūri {}"
+
+msgid "Connecting to {}:{}"
+msgstr "Savienojas ar {}:{}"
+
+msgid "Server: {}"
+msgstr "Serveris: {}"
+
+msgid "Key exchange: {}"
+msgstr "Atslēgu apmaiņa: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Resursdatora atslēgas algoritms: {}"
+
+msgid "Cipher: {}"
+msgstr "Šifrs: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: nav, datus aizsargā pats šifrs"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Saspiešana: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Resursdatora atslēga: {} {} (atbilst saglabātajai atslēgai)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Resursdatora atslēga: {} {} (vēl nav saglabāta)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Resursdatora atslēga: {} {} (atšķiras no saglabātās atslēgas)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Autentifikācija ar {}: pieņemta"
+
+msgid "Authentication with {}: refused"
+msgstr "Autentifikācija ar {}: noraidīta"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Autentifikācija ar {}: noraidīta; serveris piedāvā: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Akreditācijas dati „{}”: {}; tā vietā tiek prasīta parole."
+
+msgid "{} connected."
+msgstr "{} savienots."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "„Atjaunināt tūlīt” to instalē un restartē OpenCRT."

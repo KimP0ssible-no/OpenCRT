@@ -30,6 +30,11 @@ const POLL: Duration = Duration::from_millis(15);
 /// RDP: how long the tab's size must stay put before the desktop is resized
 /// (each resize makes the server redraw the whole desktop).
 const RESIZE_SETTLE: Duration = Duration::from_millis(500);
+/// Tab hover preview: how long the pointer rests on a tab before the picture
+/// shows, how often it is drawn again, and its width in logical pixels.
+const PREVIEW_REST: Duration = Duration::from_millis(500);
+const PREVIEW_REFRESH: Duration = Duration::from_millis(500);
+const PREVIEW_WIDTH: f32 = 320.0;
 /// The standard TFTP port the built-in server listens on.
 const TFTP_PORT: u16 = 69;
 
@@ -1801,6 +1806,11 @@ struct App {
     shown_bar: Option<String>,
     /// The Button Bar picked while no tab is open.
     idle_bar: String,
+    /// Tab hover preview: the tab (by id) the pointer rests on, since when, and
+    /// the tab's left edge and bottom in the window.
+    hover_tab: Option<(u64, Instant, f32, f32)>,
+    /// The preview on show: its tab, when it was last drawn, and its pixels.
+    preview: Option<(u64, Instant, Vec<u8>)>,
     /// Global Options > Keywords: the lists being edited, the one on show, the picked row.
     kw_lists: Vec<render::KeywordList>,
     kw_list: usize,
@@ -2065,6 +2075,8 @@ impl App {
             session_clip: None,
             shown_bar: None,
             idle_bar: String::new(),
+            hover_tab: None,
+            preview: None,
             kw_lists: Vec::new(),
             kw_list: 0,
             kw_row: None,
@@ -3479,6 +3491,84 @@ impl App {
     }
 
     /// Periodic work: drain sessions, raise prompts, fit the grid, repaint, refresh chrome.
+    /// The pointer came to rest on a tab, or left it.
+    fn tab_hover(&mut self, index: usize, hovered: bool, x: f32, y: f32) {
+        let Some(id) = self.tabs.get(index).map(|t| t.id) else {
+            return;
+        };
+        if hovered {
+            self.hover_tab = Some((id, Instant::now(), x, y));
+        } else if self.hover_tab.is_some_and(|h| h.0 == id) {
+            self.hover_tab = None;
+        }
+    }
+
+    /// Tab hover preview: a small picture of the tab the pointer rests on,
+    /// under that tab, while the tab itself is not on screen.
+    fn show_tab_preview(&mut self, ui: &MainWindow, now: Instant) {
+        let rested = self.hover_tab.filter(|h| now.duration_since(h.1) >= PREVIEW_REST && ui.get_dialog() == DIALOG_NONE);
+        let hidden = rested.and_then(|h| Some((self.tabs.iter().position(|t| t.id == h.0)?, h))).filter(|(i, _)| !self.panes.iter().any(|p| p.tab == *i));
+        let Some((index, (id, _, x, y))) = hidden else {
+            if self.preview.take().is_some() {
+                ui.set_tab_preview_visible(false);
+            }
+            return;
+        };
+        if self.preview.as_ref().is_some_and(|p| p.0 == id && now.duration_since(p.1) < PREVIEW_REFRESH) {
+            return;
+        }
+        let width = PREVIEW_WIDTH * self.options.ui_scale();
+        let Some((w, h, rgb)) = self.tab_picture(index, (width * self.scale).round() as usize) else {
+            if self.preview.take().is_some() {
+                ui.set_tab_preview_visible(false);
+            }
+            return;
+        };
+        // Only a changed picture is handed to the window.
+        if self.preview.as_ref().is_none_or(|p| p.0 != id || p.2 != rgb) {
+            ui.set_tab_preview_image(Image::from_rgb8(SharedPixelBuffer::clone_from_slice(&rgb, w as u32, h as u32)));
+            ui.set_tab_preview_title(self.tabs[index].title().into());
+            ui.set_tab_preview_width(w as f32 / self.scale.max(0.5));
+            ui.set_tab_preview_x(x);
+            ui.set_tab_preview_y(y);
+            ui.set_tab_preview_visible(true);
+        }
+        self.preview = Some((id, now, rgb));
+    }
+
+    /// A tab's screen scaled down to at most `width` pixels wide, as (width,
+    /// height, RGB). None for a tab with no picture to show.
+    fn tab_picture(&mut self, index: usize, width: usize) -> Option<(usize, usize, Vec<u8>)> {
+        let tab = &self.tabs[index];
+        // A file browser draws its own lists, and hidden output stays hidden.
+        if tab.files.is_some() || tab.lock.as_ref().is_some_and(|(_, hide)| *hide) {
+            return None;
+        }
+        let (w, h, channels, full) = match &tab.screen {
+            // Remote Desktop and VNC: the last frame.
+            Some(desktop) => {
+                let (w, h) = (desktop.width as usize, desktop.height as usize);
+                let mut full = vec![0; w * h * 3];
+                desktop.draw(&mut full, w, h, [0, 0, 0]);
+                (w, h, 3, full)
+            }
+            // The terminal as it would be drawn, at its own size.
+            None => {
+                let (cols, lines) = tab.terminal.size();
+                let (w, h) = (cols * self.renderer.cell_w, lines * self.renderer.cell_h);
+                let mut full = vec![0; w * h * 4];
+                self.renderer.render(&tab.terminal, &tab.keyword_set, false, &mut full, w, h);
+                (w, h, 4, full)
+            }
+        };
+        if w == 0 || h == 0 {
+            return None;
+        }
+        let out_w = width.clamp(1, w);
+        let out_h = (h * out_w / w).max(1);
+        Some((out_w, out_h, render::scale_down(&full, w, h, channels, out_w, out_h)))
+    }
+
     fn tick(&mut self, ui: &MainWindow) {
         let now = Instant::now();
         if let Some(names) = self.wsl_list.as_ref().and_then(|rx| rx.try_recv().ok()) {
@@ -3926,6 +4016,7 @@ impl App {
                 }
             }
         }
+        self.show_tab_preview(ui, now);
         let mut bell = false;
         if let Some(tab) = self.tabs.get(self.active) {
             bell = tab.bell_until.is_some_and(|until| now < until);
@@ -8468,6 +8559,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.invoke_focus_terminal();
     });
     on!(on_close_tab, |app, ui, index| app.close_tab(index as usize, &ui));
+    on!(on_tab_hover, |app, _ui, index, hovered, x, y| app.tab_hover(index.max(0) as usize, hovered, x, y));
     on!(on_tab_action, |app, ui, index, name| {
         if name == "rename" {
             app.rename_tab(index as usize, &ui);

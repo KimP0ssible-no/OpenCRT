@@ -878,6 +878,8 @@ component SessionTab inherits Rectangle {
     callback dropped(length);
     // Where the pointer is (in the window) while this tab is dragged; -1px when let go.
     callback drag-moved(length);
+    // The pointer is on this tab, with no drag under way and no menu just opened.
+    out property <bool> hovered: touch.has-hover && !touch.dragged && !touch.menu-opened && root.drag-x < 0px;
     // The pointer of a tab being dragged, if any. Over this one (or the gap after
     // it), the dragged tab would land on this side of it: -1 before, 1 after, 0 neither.
     in property <length> drag-x: -1px;
@@ -983,6 +985,13 @@ component SessionTab inherits Rectangle {
         touch := TouchArea {
             // Kept by hand: `pressed` is already false when the release arrives.
             property <bool> dragged;
+            // The tab's menu was opened from here; until the pointer leaves the tab.
+            property <bool> menu-opened;
+            changed has-hover => {
+                if !self.has-hover {
+                    self.menu-opened = false;
+                }
+            }
             mouse-cursor: self.dragged ? MouseCursor.grabbing : MouseCursor.default;
             clicked => { root.select(); }
             moved => {
@@ -993,6 +1002,7 @@ component SessionTab inherits Rectangle {
             }
             pointer-event(event) => {
                 if (event.kind == PointerEventKind.down && event.button == PointerEventButton.right) {
+                    self.menu-opened = true;
                     tab-menu.show({ x: self.mouse-x, y: self.mouse-y });
                 } else if (event.kind == PointerEventKind.down && event.button == PointerEventButton.middle) {
                     root.close();
@@ -5360,6 +5370,16 @@ export component MainWindow inherits Window {
     callback select-tab(int);
     callback close-tab(int);
     callback tab-action(int, string);
+    // The pointer came to rest on a tab or left it: (tab, on it, the tab's left
+    // edge and bottom in the window).
+    callback tab-hover(int, bool, length, length);
+    // Tab hover preview: a small picture of a tab that is not on screen, under its tab.
+    in property <bool> tab-preview-visible;
+    in property <image> tab-preview-image;
+    in property <string> tab-preview-title;
+    in property <length> tab-preview-width;
+    in property <length> tab-preview-x;
+    in property <length> tab-preview-y;
     callback action(string);
     // The menu bar stays clickable over the modal dialogs; its actions wait until they close.
     callback menu(string);
@@ -5964,7 +5984,7 @@ export component MainWindow inherits Window {
     }
 
     // Behind everything; both backgrounds look the same.
-    Rectangle {
+    backdrop := Rectangle {
         width: 100%;
         height: 100%;
         background: root.repaint-all ? Theme.window-bg : transparent;
@@ -6290,6 +6310,9 @@ export component MainWindow inherits Window {
                             action(name) => { root.tab-action(i, name); }
                             drag-x: tab-strip.drag-x;
                             drag-moved(x) => { tab-strip.drag-x = x; }
+                            changed hovered => {
+                                root.tab-hover(i, self.hovered, self.absolute-position.x - backdrop.absolute-position.x, self.absolute-position.y + self.height - backdrop.absolute-position.y);
+                            }
                             changed drop-side => {
                                 if self.drop-side != 0 {
                                     tab-strip.drop = i;
@@ -6902,6 +6925,38 @@ export component MainWindow inherits Window {
                     min-cell-width: 38px;
                 }
             }
+        }
+    }
+
+    // --- tab hover preview: over the terminal, under the modal dialogs ---
+    if root.tab-preview-visible: Rectangle {
+        property <length> title-height: 18px * Theme.ui-scale;
+        property <length> picture-height: root.tab-preview-image.width > 0 ? root.tab-preview-width * root.tab-preview-image.height / root.tab-preview-image.width : 0px;
+        x: max(4px, min(root.tab-preview-x, backdrop.width - self.width - 4px));
+        y: root.tab-preview-y + 2px;
+        width: root.tab-preview-width + 10px;
+        height: self.title-height + self.picture-height + 9px;
+        background: Theme.panel-bg;
+        border-width: 1px;
+        border-color: Theme.border-strong;
+        border-radius: 4px;
+        Text {
+            x: 6px;
+            y: 2px;
+            width: parent.width - 12px;
+            height: parent.title-height;
+            text: root.tab-preview-title;
+            font-size: 11px * Theme.ui-scale;
+            vertical-alignment: center;
+            overflow: elide;
+            color: Theme.text;
+        }
+        Image {
+            x: 5px;
+            y: parent.title-height + 4px;
+            width: root.tab-preview-width;
+            height: parent.picture-height;
+            source: root.tab-preview-image;
         }
     }
 

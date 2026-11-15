@@ -596,6 +596,29 @@ const FALLBACKS: &[&str] = &[
 ];
 
 
+/// Scale an image of `w` x `h` pixels (`channels` bytes each, starting with
+/// red, green and blue) down to `out_w` x `out_h` as RGB: each pixel is the
+/// average of the block it covers.
+pub fn scale_down(src: &[u8], w: usize, h: usize, channels: usize, out_w: usize, out_h: usize) -> Vec<u8> {
+    let span = |o: usize, full: usize, out: usize| (o * full / out, ((o + 1) * full / out).max(o * full / out + 1).min(full));
+    let mut scaled = Vec::with_capacity(out_w * out_h * 3);
+    for oy in 0..out_h {
+        let (y0, y1) = span(oy, h, out_h);
+        for ox in 0..out_w {
+            let (x0, x1) = span(ox, w, out_w);
+            let mut sum = [0u32; 3];
+            for y in y0..y1 {
+                for pixel in src[(y * w + x0) * channels..(y * w + x1) * channels].chunks_exact(channels) {
+                    sum = [sum[0] + u32::from(pixel[0]), sum[1] + u32::from(pixel[1]), sum[2] + u32::from(pixel[2])];
+                }
+            }
+            let count = ((y1 - y0) * (x1 - x0)) as u32;
+            scaled.extend(sum.map(|s| (s / count) as u8));
+        }
+    }
+    scaled
+}
+
 /// Render `text` in the UI font (the bundled IBM Plex Sans, so it never depends
 /// on what is installed) rotated 90° clockwise (reading top to bottom), as
 /// (width, height, RGBA) with a transparent background. The software renderer
@@ -904,6 +927,17 @@ mod tests {
         let sets = keyword_sets(&lines);
         assert_eq!((sets[""].len(), sets["Network"].len(), sets["Empty"].len()), (1, 2, 0));
         assert_eq!(keyword_set_names(&lines), ["Network", "Empty"]);
+    }
+
+    #[test]
+    fn scales_down_by_averaging_blocks() {
+        // 4x4 RGBA: the left half black, the right half white, the bottom two rows red.
+        let pixel = |x: usize, y: usize| if y >= 2 { [200, 0, 0, 255] } else if x < 2 { [0, 0, 0, 255] } else { [255, 255, 255, 255] };
+        let src: Vec<u8> = (0..16).flat_map(|i| pixel(i % 4, i / 4)).collect();
+        assert_eq!(scale_down(&src, 4, 4, 4, 2, 2), [0, 0, 0, 255, 255, 255, 200, 0, 0, 200, 0, 0]);
+        // One pixel for all of it, and an uneven ratio that still covers every source pixel once.
+        assert_eq!(scale_down(&src, 4, 4, 4, 1, 1), [163, 63, 63]);
+        assert_eq!(scale_down(&src, 4, 4, 4, 3, 1).len(), 9);
     }
 
     #[test]

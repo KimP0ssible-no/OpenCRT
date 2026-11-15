@@ -1,7 +1,7 @@
 //! Render the main window off-screen to a PNG-convertible PPM, for checking the
 //! look without opening a window: `cargo run --example ui_snapshot -- out.ppm dark main [font size]`.
 //! Themes: light, dark, and breeze / breeze-dark (KDE's Breeze colour schemes).
-//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite, quick-open, shortcuts, bar, bar-full.
+//! Scenes: main, groups, session-options, connection, terminal, forwards, global-options, credentials, about, login, script, agent, keygen, firewall, schemes, hex, button, active, files, files-narrow, overwrite, quick-open, shortcuts, bar, bar-full, tab-preview.
 
 use std::rc::Rc;
 
@@ -236,6 +236,22 @@ fn main() {
             ui.set_show_button_bar(true);
             ui.set_bar_buttons(model(vec![BarRow { label: "show ver".into(), color: Color::from_rgb_u8(70, 130, 220), has_color: true, index: 0 }]));
             ui.set_dialog(9);
+        }
+        // The preview of a tab that is not on screen, under its tab.
+        "tab-preview" => {
+            let (w, h) = (320u32, 180u32);
+            let mut picture = slint::SharedPixelBuffer::<slint::Rgb8Pixel>::new(w, h);
+            for (i, px) in picture.make_mut_slice().iter_mut().enumerate() {
+                let (x, y) = (i as u32 % w, i as u32 / w);
+                let text_line = y % 14 < 8 && x > 8 && x < 40 + (y / 14 * 37) % 240;
+                *px = if text_line { slint::Rgb8Pixel { r: 0xc8, g: 0xd0, b: 0xd8 } } else { slint::Rgb8Pixel { r: 0x0b, g: 0x10, b: 0x20 } };
+            }
+            ui.set_tab_preview_image(slint::Image::from_rgb8(picture));
+            ui.set_tab_preview_title("web1.example.com".into());
+            ui.set_tab_preview_width(320.0);
+            ui.set_tab_preview_x(410.0);
+            ui.set_tab_preview_y(97.0);
+            ui.set_tab_preview_visible(true);
         }
         "bar" => {
             ui.set_show_button_bar(true);

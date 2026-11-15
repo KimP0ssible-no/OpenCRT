@@ -1,11 +1,14 @@
 //! CPU rasteriser for the terminal grid: a system monospace font through
-//! fontdue, a glyph cache, and an RGBA pixel buffer as output.
+//! fontdue (metrics, and the glyphs of the fallback fonts) and swash (the main
+//! font's glyphs, hinted), a glyph cache, and an RGBA pixel buffer as output.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::anyhow;
 use fontdue::{Font, FontSettings, Metrics};
+use swash::scale::{Render, ScaleContext, Source};
+use swash::zeno::Format;
 
 use crate::terminal::{CursorMark, Rgb, Terminal};
 use crate::tr;
@@ -18,9 +21,44 @@ struct Glyph {
     coverage: Vec<u8>,
 }
 
+/// A face of the terminal's main font: fontdue's view of it, and the file's
+/// bytes for swash, which draws its glyphs with the font's hinting.
+struct Face {
+    font: Font,
+    data: Vec<u8>,
+}
+
+impl std::ops::Deref for Face {
+    type Target = Font;
+
+    fn deref(&self) -> &Font {
+        &self.font
+    }
+}
+
+impl Face {
+    fn new(data: Vec<u8>) -> Option<Self> {
+        Some(Self { font: Font::from_bytes(&data[..], FontSettings::default()).ok()?, data })
+    }
+
+    /// `c` at `px`, hinted, as fontdue describes a glyph; None when swash
+    /// cannot read the font or draw the glyph.
+    fn hinted(&self, c: char, px: f32, scale: &mut ScaleContext) -> Option<(Metrics, Vec<u8>)> {
+        let font = swash::FontRef::from_index(&self.data, 0)?;
+        let mut scaler = scale.builder(font).size(px).hint(true).build();
+        let image = Render::new(&[Source::Outline]).format(Format::Alpha).render(&mut scaler, font.charmap().map(c))?;
+        let at = image.placement;
+        // fontdue's ymin is the bitmap's bottom edge above the baseline; swash gives its top edge.
+        let metrics = Metrics { xmin: at.left, ymin: at.top - at.height as i32, width: at.width as usize, height: at.height as usize, ..self.font.metrics(c, px) };
+        Some((metrics, image.data))
+    }
+}
+
 pub struct Renderer {
-    regular: Font,
-    bold: Option<Font>,
+    regular: Face,
+    bold: Option<Face>,
+    /// swash's scaling state, kept between glyphs.
+    scale: ScaleContext,
     /// Searched in order for glyphs the main font lacks (CJK, symbols); taken
     /// from `fallback_fonts` on the first missing glyph.
     fallbacks: Option<&'static [Font]>,
@@ -312,6 +350,7 @@ impl Renderer {
         let mut renderer = Self {
             regular,
             bold,
+            scale: ScaleContext::new(),
             fallbacks: None,
             symbols: None,
             keywords: HashMap::new(),
@@ -380,21 +419,25 @@ impl Renderer {
             self.fallbacks = Some(fallback_fonts());
         }
         let cell = self.cell_w as f32;
-        let (font, px) = if in_regular {
-            match &self.bold {
-                Some(b) if bold => (b, px),
-                _ => (&self.regular, px),
-            }
+        // The main font's face for `c`, else the font that has it.
+        let (face, font, px): (Option<&Face>, &Font, f32) = if in_regular {
+            let face = match &self.bold {
+                Some(b) if bold => b,
+                _ => &self.regular,
+            };
+            (Some(face), face, px)
         } else if let Some(symbols) = self.symbols.as_ref().filter(|f| f.lookup_glyph_index(c) != 0) {
             // Its icons are an em wide: shrink them into one cell.
             let advance = symbols.metrics(c, px).advance_width;
-            (symbols, if advance > cell { px * cell / advance } else { px })
+            (None, symbols, if advance > cell { px * cell / advance } else { px })
         } else {
             let fallbacks = self.fallbacks.unwrap_or_default();
-            (fallbacks.iter().find(|f| f.lookup_glyph_index(c) != 0).unwrap_or(&self.regular), px)
+            (None, fallbacks.iter().find(|f| f.lookup_glyph_index(c) != 0).unwrap_or(&self.regular), px)
         };
+        let scale = &mut self.scale;
         self.cache.entry((c, bold)).or_insert_with(|| {
-            let (metrics, coverage) = font.rasterize(c, px);
+            // The main font with its hinting; what swash cannot draw, as fontdue draws it.
+            let (metrics, coverage) = face.and_then(|f| f.hinted(c, px, scale)).unwrap_or_else(|| font.rasterize(c, px));
             Glyph { metrics, coverage }
         })
     }
@@ -715,8 +758,8 @@ const NERD_SYMBOLS: &[u8] = include_bytes!("../ui/fonts/SymbolsNerdFontMono-Regu
 /// The default terminal font, built into OpenCRT (SIL OFL 1.1, see ui/fonts/OFL.txt).
 const BUILT_IN_FONT: &str = "IBM Plex Mono";
 
-fn built_in_font() -> Option<(Font, Option<Font>)> {
-    let face = |bytes: &[u8]| Font::from_bytes(bytes, FontSettings::default()).ok();
+fn built_in_font() -> Option<(Face, Option<Face>)> {
+    let face = |bytes: &[u8]| Face::new(bytes.to_vec());
     let regular = face(include_bytes!("../ui/fonts/IBMPlexMono-Regular.ttf"))?;
     Some((regular, face(include_bytes!("../ui/fonts/IBMPlexMono-Bold.ttf"))))
 }
@@ -743,7 +786,7 @@ pub fn font_file_name(path: &Path) -> Result<String, String> {
 /// The terminal font `name` (regular, bold): a font file by its full path,
 /// with the bold face beside it when the two are named ...Regular and
 /// ...Bold; else an installed font by name; else the built-in one.
-fn load_mono(name: &str) -> Option<(Font, Option<Font>)> {
+fn load_mono(name: &str) -> Option<(Face, Option<Face>)> {
     let file = Path::new(name);
     if file.is_absolute() && let Some(regular) = load_first(&[name]) {
         let bold = file.file_name().and_then(|f| f.to_str()).filter(|f| f.contains("Regular")).map(|f| file.with_file_name(f.replace("Regular", "Bold")));
@@ -758,14 +801,11 @@ fn load_mono(name: &str) -> Option<(Font, Option<Font>)> {
 /// large and slow to parse (seconds in a debug build).
 fn fallback_fonts() -> &'static [Font] {
     static FONTS: std::sync::OnceLock<Vec<Font>> = std::sync::OnceLock::new();
-    FONTS.get_or_init(|| FALLBACKS.iter().filter_map(|name| load_first(&[name])).collect())
+    FONTS.get_or_init(|| FALLBACKS.iter().filter_map(|name| load_first(&[name])).map(|face| face.font).collect())
 }
 
-fn load_first(names: &[&str]) -> Option<Font> {
-    names.iter().find_map(|name| {
-        let bytes = std::fs::read(font_path(name)).ok()?;
-        Font::from_bytes(bytes, FontSettings::default()).ok()
-    })
+fn load_first(names: &[&str]) -> Option<Face> {
+    names.iter().find_map(|name| Face::new(std::fs::read(font_path(name)).ok()?))
 }
 
 #[cfg(test)]
@@ -789,6 +829,33 @@ mod tests {
             r.set_font(font);
             assert!(r.cell_w > 1 && r.cell_h > 1, "{font}");
             assert!(r.glyph('M', false).metrics.width > 0, "{font}");
+        }
+    }
+
+    #[test]
+    fn main_font_glyphs_are_hinted() {
+        let mut hinted = Renderer::new(BUILT_IN_FONT, 13.0).unwrap();
+        // Without the file's bytes swash cannot draw: fontdue's unhinted glyphs, as before.
+        let mut plain = Renderer::new(BUILT_IN_FONT, 13.0).unwrap();
+        plain.regular.data.clear();
+        let solid = |r: &mut Renderer| {
+            let (mut inked, mut full) = (0, 0);
+            for c in "showinterfacestatus0123".chars() {
+                let glyph = r.glyph(c, false);
+                inked += glyph.coverage.iter().filter(|a| **a > 20).count();
+                full += glyph.coverage.iter().filter(|a| **a >= 230).count();
+            }
+            full as f32 / inked as f32
+        };
+        let (sharp, soft) = (solid(&mut hinted), solid(&mut plain));
+        assert!(sharp > soft * 1.5, "fully solid pixels: {sharp} hinted, {soft} unhinted");
+        // The boxes agree within a pixel: text keeps its baseline and its place in the cell.
+        for c in "HxgM0|_j".chars() {
+            let (a, b) = (hinted.glyph(c, false).metrics, plain.glyph(c, false).metrics);
+            let top = |m: Metrics| m.ymin + m.height as i32;
+            let apart = [(a.xmin - b.xmin).abs(), (a.ymin - b.ymin).abs(), (top(a) - top(b)).abs(), (a.width as i32 - b.width as i32).abs()];
+            assert!(apart.iter().all(|d| *d <= 1), "{c:?}: {a:?} hinted, {b:?} unhinted");
+            assert_eq!(a.advance_width, b.advance_width);
         }
     }
 

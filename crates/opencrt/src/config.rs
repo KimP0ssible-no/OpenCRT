@@ -951,6 +951,19 @@ pub struct BarButton {
     pub bar: String,
 }
 
+/// Move the Button Bar button `from` to the place of `to`, a button of the
+/// same bar (the list holds every bar's buttons): the ones between them move
+/// one place towards where `from` was. False when that is not a move.
+pub fn move_button(buttons: &mut Vec<BarButton>, from: usize, to: usize) -> bool {
+    let same_bar = matches!((buttons.get(from), buttons.get(to)), (Some(a), Some(b)) if a.bar.eq_ignore_ascii_case(&b.bar));
+    if from == to || !same_bar {
+        return false;
+    }
+    let button = buttons.remove(from);
+    buttons.insert(to, button);
+    true
+}
+
 /// Rename the Button Bar `old` to `new`, or delete it when `new` is empty:
 /// its buttons go and the sessions that used it fall back to the default bar.
 pub fn move_bar(options: &mut Options, store: &mut SessionStore, old: &str, new: &str) {
@@ -1403,6 +1416,27 @@ mod tests {
         let old = toml::from_str::<Options>("show_toolbar = true\n").unwrap();
         assert_eq!(old.ui_font_size, Options::default().ui_font_size);
         assert_eq!(toml::from_str::<Options>("ui_font_size = 15.0\n").unwrap().ui_scale(), 1.25);
+    }
+
+    #[test]
+    fn bar_buttons_move_within_their_bar() {
+        let button = |label: &str, bar: &str| BarButton { label: label.into(), bar: bar.into(), ..Default::default() };
+        let mut buttons = vec![button("a", ""), button("x", "Lab"), button("b", ""), button("y", "lab"), button("c", "")];
+        let labels = |b: &[BarButton]| b.iter().map(|b| b.label.clone()).collect::<String>();
+        let on_bar = |b: &[BarButton], bar: &str| b.iter().filter(|b| b.bar.eq_ignore_ascii_case(bar)).map(|b| b.label.clone()).collect::<String>();
+        // "a" to the place of "c", at the far end: "b" and "c" move up; Lab's order stays.
+        assert!(move_button(&mut buttons, 0, 4));
+        assert_eq!((on_bar(&buttons, ""), on_bar(&buttons, "Lab")), ("bca".into(), "xy".into()));
+        // And back to the front, then one place only.
+        let (a, b) = (labels(&buttons).find('a').unwrap(), labels(&buttons).find('b').unwrap());
+        assert!(move_button(&mut buttons, a, b));
+        assert_eq!(on_bar(&buttons, ""), "abc");
+        let (a, b) = (labels(&buttons).find('a').unwrap(), labels(&buttons).find('b').unwrap());
+        assert!(move_button(&mut buttons, a, b));
+        assert_eq!((on_bar(&buttons, ""), on_bar(&buttons, "Lab")), ("bac".into(), "xy".into()));
+        // Not onto itself, another bar's button, or a button that is not there.
+        let x = labels(&buttons).find('x').unwrap();
+        assert!(!move_button(&mut buttons, 0, 0) && !move_button(&mut buttons, 0, x) && !move_button(&mut buttons, 0, 9));
     }
 
     #[test]

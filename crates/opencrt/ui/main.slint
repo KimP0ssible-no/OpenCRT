@@ -1220,15 +1220,23 @@ component BarButtonView inherits Rectangle {
     in property <bool> has-color;
     // Room for the colour dot before the label.
     property <length> dot: root.has-color ? 10px * Theme.ui-scale + 5px : 0px;
+    // A drag of some button is under way; this is the button being dragged.
+    in property <bool> drag-active;
+    in property <bool> dragged;
     callback clicked();
     callback edit();
     callback remove();
+    // The right button, held to drag the button along its bar: pressed and
+    // moved (with the pointer's x in the button), and let go.
+    callback right-down(length);
+    callback right-move(length);
+    callback right-up();
     height: 22px * Theme.ui-scale;
     width: max(44px, caption.preferred-width + 18px + root.dot);
     border-radius: 3px;
     border-width: 1px;
-    border-color: Theme.border;
-    background: touch.pressed ? Theme.active-row-bg : touch.has-hover ? Theme.hover-bg : Theme.panel-bg;
+    border-color: root.dragged ? Theme.accent : Theme.border;
+    background: root.dragged || touch.pressed ? Theme.active-row-bg : touch.has-hover && !root.drag-active ? Theme.hover-bg : Theme.panel-bg;
     menu := ContextMenuArea {
         Menu {
             MenuItem {
@@ -1241,10 +1249,22 @@ component BarButtonView inherits Rectangle {
             }
         }
         touch := TouchArea {
+            mouse-cursor: root.drag-active ? MouseCursor.move : MouseCursor.default;
             clicked => { root.clicked(); }
+            // A right-click opens the menu when the button is let go without a
+            // drag: until then it may be the start of one.
             pointer-event(event) => {
                 if (event.kind == PointerEventKind.down && event.button == PointerEventButton.right) {
-                    menu.show({ x: self.mouse-x, y: self.mouse-y });
+                    root.right-down(self.mouse-x);
+                } else if (event.kind == PointerEventKind.move) {
+                    root.right-move(self.mouse-x);
+                } else if (event.kind == PointerEventKind.up && event.button == PointerEventButton.right) {
+                    if (!root.drag-active) {
+                        menu.show({ x: self.mouse-x, y: self.mouse-y });
+                    }
+                    root.right-up();
+                } else if (event.kind == PointerEventKind.cancel) {
+                    root.right-up();
                 }
             }
         }
@@ -5359,6 +5379,9 @@ export component MainWindow inherits Window {
     // -1 adds a new button.
     callback bar-button-edit(int);
     callback bar-button-delete(int);
+    // A dragged Button Bar button takes another's place (both by index), and is dropped.
+    callback bar-button-move(int, int);
+    callback bar-button-drop();
     callback bar-button-ok();
     callback keygen-ok();
     callback keygen-type();
@@ -6426,10 +6449,10 @@ export component MainWindow inherits Window {
             }
             HorizontalLayout {
                 padding-left: 6px;
+                padding-right: 6px;
                 padding-top: 3px;
                 padding-bottom: 3px;
                 spacing: 4px;
-                alignment: start;
                 // Which bar this is; switch to another or make a new one.
                 Rectangle {
                     width: bar-label.preferred-width + 16px;
@@ -6471,34 +6494,127 @@ export component MainWindow inherits Window {
                         }
                     }
                 }
-                for b in root.bar-buttons: BarButtonView {
-                    label: b.label;
-                    tint: b.color;
-                    has-color: b.has-color;
-                    clicked => { root.bar-button(b.index); }
-                    edit => { root.bar-button-edit(b.index); }
-                    remove => { root.bar-button-delete(b.index); }
-                }
-                Rectangle {
-                    width: 22px;
-                    border-radius: 3px;
-                    background: add-touch.has-hover ? Theme.hover-bg : transparent;
-                    Text {
-                        text: "+";
-                        font-size: 14px * Theme.ui-scale;
-                        color: Theme.text-secondary;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
+                // The buttons: when they do not fit, the wheel (or a sideways
+                // swipe) and the arrows slide them.
+                bar-slide := TouchArea {
+                    horizontal-stretch: 1;
+                    min-width: 20px;
+                    // How far the buttons are slid to the left, and how far they can be.
+                    property <length> offset;
+                    // A button under a held right button (its place in the bar),
+                    // whether it has moved far enough to be a drag, and where the
+                    // pointer was pressed and is now, in the row's coordinates.
+                    property <int> drag-place: -1;
+                    property <bool> dragging;
+                    property <length> drag-from;
+                    property <length> drag-x;
+                    property <length> arrows: 36px * Theme.ui-scale;
+                    // With the arrows on show, the last button must clear them.
+                    property <length> overflow: bar-row.preferred-width > self.width ? bar-row.preferred-width - self.width + self.arrows : 0px;
+                    function slide(by: length) {
+                        self.offset = max(0px, min(self.overflow, self.offset + by));
                     }
-                    add-touch := TouchArea {
-                        clicked => { root.bar-button-edit(-1); }
+                    changed overflow => { self.slide(0px); }
+                    scroll-event(event) => {
+                        if (self.overflow <= 0px) {
+                            return reject;
+                        }
+                        self.slide(-(event.delta-x != 0px ? event.delta-x : event.delta-y));
+                        accept
                     }
-                }
-                if root.bar-buttons.length == 0: Text {
-                    text: @tr("Add a button that sends a command, e.g. show version\\r");
-                    color: Theme.text-secondary;
-                    font-size: 11px * Theme.ui-scale;
-                    vertical-alignment: center;
+                    Rectangle {
+                        clip: true;
+                        bar-row := HorizontalLayout {
+                            x: -bar-slide.offset;
+                            width: self.preferred-width;
+                            spacing: 4px;
+                            for b[i] in root.bar-buttons: BarButtonView {
+                                label: b.label;
+                                tint: b.color;
+                                has-color: b.has-color;
+                                drag-active: bar-slide.dragging;
+                                dragged: bar-slide.dragging && i == bar-slide.drag-place;
+                                // The dragged button has passed this one's middle: it takes this place.
+                                property <bool> passed: bar-slide.dragging && bar-slide.drag-place >= 0 && i != bar-slide.drag-place
+                                    && (i < bar-slide.drag-place ? bar-slide.drag-x < self.x + self.width / 2 : bar-slide.drag-x > self.x + self.width / 2);
+                                changed passed => {
+                                    if (self.passed) {
+                                        root.bar-button-move(root.bar-buttons[bar-slide.drag-place].index, b.index);
+                                        bar-slide.drag-place = i;
+                                    }
+                                }
+                                clicked => { root.bar-button(b.index); }
+                                edit => { root.bar-button-edit(b.index); }
+                                remove => { root.bar-button-delete(b.index); }
+                                right-down(x) => {
+                                    bar-slide.drag-place = i;
+                                    bar-slide.dragging = false;
+                                    bar-slide.drag-from = self.x + x;
+                                    bar-slide.drag-x = self.x + x;
+                                }
+                                right-move(x) => {
+                                    if (bar-slide.drag-place >= 0) {
+                                        bar-slide.drag-x = self.x + x;
+                                        if (abs((bar-slide.drag-x - bar-slide.drag-from) / 1px) > 6) {
+                                            bar-slide.dragging = true;
+                                        }
+                                    }
+                                }
+                                right-up => {
+                                    if (bar-slide.dragging) {
+                                        root.bar-button-drop();
+                                    }
+                                    bar-slide.drag-place = -1;
+                                    bar-slide.dragging = false;
+                                }
+                            }
+                            Rectangle {
+                                width: 22px;
+                                border-radius: 3px;
+                                background: add-touch.has-hover ? Theme.hover-bg : transparent;
+                                Text {
+                                    text: "+";
+                                    font-size: 14px * Theme.ui-scale;
+                                    color: Theme.text-secondary;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                                add-touch := TouchArea {
+                                    clicked => { root.bar-button-edit(-1); }
+                                }
+                            }
+                            if root.bar-buttons.length == 0: Text {
+                                text: @tr("Add a button that sends a command, e.g. show version\\r");
+                                color: Theme.text-secondary;
+                                font-size: 11px * Theme.ui-scale;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+                    // The arrows cover the right end; they take no part in the layout.
+                    Rectangle {
+                        visible: bar-slide.overflow > 0px;
+                        x: parent.width - self.width;
+                        width: bar-slide.arrows;
+                        background: Theme.toolbar-bg;
+                        for arrow[k] in ["‹", "›"]: Rectangle {
+                            property <bool> usable: k == 0 ? bar-slide.offset > 0px : bar-slide.offset < bar-slide.overflow;
+                            x: k * parent.width / 2;
+                            width: parent.width / 2;
+                            border-radius: 3px;
+                            background: arrow-touch.has-hover && self.usable ? Theme.hover-bg : transparent;
+                            Text {
+                                text: arrow;
+                                font-size: 14px * Theme.ui-scale;
+                                color: parent.usable ? Theme.text : Theme.text-disabled;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                            arrow-touch := TouchArea {
+                                clicked => { bar-slide.slide(k == 0 ? -bar-slide.width * 0.6 : bar-slide.width * 0.6); }
+                            }
+                        }
+                    }
                 }
             }
         }

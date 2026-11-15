@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Mod:"
+
+msgid "TCP client"
+msgstr "Klijent TCP"
+
+msgid "TCP server"
+msgstr "Server TCP"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Isma' fuq:"
+
 msgid "Hostname:"
 msgstr "Isem tal-host:"
+
+msgid "blank: every interface"
+msgstr "vojt: kull interfaċċa"
+
+msgid "blank: answer the last sender"
+msgstr "vojt: wieġeb lill-aħħar mittent"
 
 msgid "Port:"
 msgstr "Port:"
@@ -1732,6 +1753,9 @@ msgstr "Waqqaf ir-Reġistrazzjoni"
 msgid "Record Session (asciicast)..."
 msgstr "Irreġistra s-Sessjoni (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Għażliet tat-Traċċar"
+
 msgid "Print Screen"
 msgstr "Stampa l-Iskrin"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Konnessjoni rapida: user@host"
+
+msgid "Clear History"
+msgstr "Battal l-Istorja"
 
 msgid "Find"
 msgstr "Sib"
@@ -2260,6 +2287,9 @@ msgstr "Jikkonnettja meta jidher"
 
 msgid "Running the pre-connect command..."
 msgstr "Qed jitħaddem il-kmand ta' qabel il-konnessjoni..."
+
+msgid "Listening on {}..."
+msgstr "Qed jisma' fuq {}..."
 
 msgid "Connecting to {}..."
 msgstr "Qed jikkonnettja ma' {}..."
@@ -3035,6 +3065,9 @@ msgstr "L-issettjar inbidel fuq kompjuter ieħor: erġa' ibda OpenCRT biex tgħa
 msgid "Settings not sent to the repository: {}"
 msgstr "L-issettjar ma ntbagħatx lir-repożitorju: {}"
 
+msgid "Recent Sessions"
+msgstr "Sessjonijiet Riċenti"
+
 msgid "Enter a name for the firewall."
 msgstr "Daħħal isem għall-firewall."
 
@@ -3131,8 +3164,59 @@ msgstr "Daħħal isem tal-folder (mingħajr \"/\")."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "L-ebda sessjoni SecureCRT f'{}. Agħżel il-folder Config li fih il-folder Sessions."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Qed jikkonnettja ma' {}:{} permezz tal-host intermedju"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Qed jikkonnettja ma' {}:{} permezz tal-firewall {}"
+
+msgid "Connecting to {}:{}"
+msgstr "Qed jikkonnettja ma' {}:{}"
+
+msgid "Server: {}"
+msgstr "Server: {}"
+
+msgid "Key exchange: {}"
+msgstr "Skambju taċ-ċwievet: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Algoritmu taċ-ċavetta tal-host: {}"
+
+msgid "Cipher: {}"
+msgstr "Ċifra: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: xejn, iċ-ċifra nnifisha tipproteġi d-data"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Kompressjoni: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Ċavetta tal-host: {} {} (taqbel maċ-ċavetta ssejvjata)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Ċavetta tal-host: {} {} (għadha mhux issejvjata)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Ċavetta tal-host: {} {} (differenti miċ-ċavetta ssejvjata)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Awtentikazzjoni b'{}: aċċettata"
+
+msgid "Authentication with {}: refused"
+msgstr "Awtentikazzjoni b'{}: irrifjutata"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Awtentikazzjoni b'{}: irrifjutata; is-server joffri: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Kredenzjali \"{}\": {}; minflok qed tintalab il-password."
+
+msgid "{} connected."
+msgstr "{} ikkonnettjat."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "Aġġorna Issa jinstallah u jerġa' jibda OpenCRT."

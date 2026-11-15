@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Režiim:"
+
+msgid "TCP client"
+msgstr "TCP-klient"
+
+msgid "TCP server"
+msgstr "TCP-server"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Kuula aadressil:"
+
 msgid "Hostname:"
 msgstr "Hostinimi:"
+
+msgid "blank: every interface"
+msgstr "tühi: kõik liidesed"
+
+msgid "blank: answer the last sender"
+msgstr "tühi: vasta viimasele saatjale"
 
 msgid "Port:"
 msgstr "Port:"
@@ -1732,6 +1753,9 @@ msgstr "Peata lindistamine"
 msgid "Record Session (asciicast)..."
 msgstr "Lindista seanss (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Jälitussuvandid"
+
 msgid "Print Screen"
 msgstr "Prindi ekraan"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Kiirühendus: user@host"
+
+msgid "Clear History"
+msgstr "Tühjenda ajalugu"
 
 msgid "Find"
 msgstr "Otsi"
@@ -2258,6 +2285,9 @@ msgstr "Ühendub kuvamisel"
 
 msgid "Running the pre-connect command..."
 msgstr "Käivitatakse ühendamiseelset käsku..."
+
+msgid "Listening on {}..."
+msgstr "Kuulamine aadressil {}..."
 
 msgid "Connecting to {}..."
 msgstr "Ühendamine: {}..."
@@ -3033,6 +3063,9 @@ msgstr "Sätteid muudeti teises arvutis: nende ühendamiseks teie omadega taask�
 msgid "Settings not sent to the repository: {}"
 msgstr "Sätteid ei saadetud hoidlasse: {}"
 
+msgid "Recent Sessions"
+msgstr "Hiljutised seansid"
+
 msgid "Enter a name for the firewall."
 msgstr "Sisestage tulemüüri nimi."
 
@@ -3129,8 +3162,59 @@ msgstr "Sisestage kausta nimi (ilma märgita \"/\")."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "Asukohas {} pole SecureCRT seansse. Valige Config kaust, mis sisaldab kausta Sessions."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Ühendamine: {}:{} vahehosti kaudu"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Ühendamine: {}:{} tulemüüri {} kaudu"
+
+msgid "Connecting to {}:{}"
+msgstr "Ühendamine: {}:{}"
+
+msgid "Server: {}"
+msgstr "Server: {}"
+
+msgid "Key exchange: {}"
+msgstr "Võtmevahetus: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Hostivõtme algoritm: {}"
+
+msgid "Cipher: {}"
+msgstr "Šiffer: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: puudub, šiffer kaitseb andmeid ise"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Tihendamine: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Hostivõti: {} {} (ühtib salvestatud võtmega)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Hostivõti: {} {} (pole veel salvestatud)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Hostivõti: {} {} (erineb salvestatud võtmest)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Autentimine meetodiga {}: vastu võetud"
+
+msgid "Authentication with {}: refused"
+msgstr "Autentimine meetodiga {}: tagasi lükatud"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Autentimine meetodiga {}: tagasi lükatud; server pakub: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Mandaat „{}”: {}; selle asemel küsitakse parooli."
+
+msgid "{} connected."
+msgstr "{} on ühendatud."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "Uuenda kohe installib selle ja taaskäivitab OpenCRT."

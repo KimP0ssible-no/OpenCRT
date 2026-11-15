@@ -1,0 +1,3240 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: OpenCRT\n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Session Manager"
+msgstr "세션 관리자"
+
+msgid "Connect"
+msgstr "연결"
+
+msgid "New Session"
+msgstr "새 세션"
+
+msgid "New Folder"
+msgstr "새 폴더"
+
+msgid "Properties"
+msgstr "속성"
+
+msgid "Delete"
+msgstr "삭제"
+
+msgid "Filter by name or host"
+msgstr "이름 또는 호스트로 필터링"
+
+msgid ""
+"No saved sessions. Use the New Session button, or tick \"Save session\" in "
+"Quick Connect."
+msgstr "저장된 세션이 없습니다. 새 세션 버튼을 사용하거나 빠른 연결에서 \"세션 저장\"을 선택하십시오."
+
+msgid "Expand / Collapse"
+msgstr "확장 / 축소"
+
+msgid "Connect All"
+msgstr "모두 연결"
+
+msgid "Connect SFTP Tab"
+msgstr "SFTP 탭 연결"
+
+msgid "Connect SFTP GUI Tab"
+msgstr "SFTP GUI 탭 연결"
+
+msgid "Start Port Forwarding (no shell)"
+msgstr "포트 전달 시작(셸 없음)"
+
+msgid "Properties..."
+msgstr "속성..."
+
+msgid "Duplicate..."
+msgstr "복제..."
+
+msgid "Cut"
+msgstr "잘라내기"
+
+msgid "Copy"
+msgstr "복사"
+
+msgid "Paste"
+msgstr "붙여넣기"
+
+msgid "Rename..."
+msgstr "이름 바꾸기..."
+
+msgid "New Session..."
+msgstr "새 세션..."
+
+msgid "New Folder..."
+msgstr "새 폴더..."
+
+msgid "Active Sessions"
+msgstr "활성 세션"
+
+msgid "Filter (Ctrl+click picks several)"
+msgstr "필터(Ctrl+클릭으로 여러 개 선택)"
+
+msgid "Reconnect"
+msgstr "다시 연결"
+
+msgid "Disconnect"
+msgstr "연결 끊기"
+
+msgid "Lock"
+msgstr "잠금"
+
+msgid "Close"
+msgstr "닫기"
+
+msgid "Command Manager"
+msgstr "명령 관리자"
+
+msgid "Send Command"
+msgstr "명령 보내기"
+
+msgid "New Command"
+msgstr "새 명령"
+
+msgid "Edit Command"
+msgstr "명령 편집"
+
+msgid "Delete Command"
+msgstr "명령 삭제"
+
+msgid "Filter by name or text"
+msgstr "이름 또는 텍스트로 필터링"
+
+msgid ""
+"No commands (or none match). Use the New button to save a command, then "
+"double-click it to send it."
+msgstr "명령이 없거나 일치하는 명령이 없습니다. 새로 만들기 버튼으로 명령을 저장한 다음 두 번 클릭하여 보내십시오."
+
+msgid "Send"
+msgstr "보내기"
+
+msgid "Edit..."
+msgstr "편집..."
+
+msgid "Copy to Button Bar"
+msgstr "버튼 표시줄에 복사"
+
+msgid "New Command..."
+msgstr "새 명령..."
+
+msgid "Clone Session"
+msgstr "세션 복제"
+
+msgid "Open Local Forwards in Browser"
+msgstr "브라우저에서 로컬 전달 열기"
+
+msgid "Send Ctrl+Alt+Del"
+msgstr "Ctrl+Alt+Del 보내기"
+
+msgid "Send Windows Key"
+msgstr "Windows 키 보내기"
+
+msgid "Session Options..."
+msgstr "세션 옵션..."
+
+msgid "Unlock Session..."
+msgstr "세션 잠금 해제..."
+
+msgid "Lock Session..."
+msgstr "세션 잠금..."
+
+msgid "Lock and Hide Output..."
+msgstr "잠그고 출력 숨기기..."
+
+msgid "Move Left"
+msgstr "왼쪽으로 이동"
+
+msgid "Move Right"
+msgstr "오른쪽으로 이동"
+
+msgid "Move to New Tab Group"
+msgstr "새 탭 그룹으로 이동"
+
+msgid "Move to Previous Tab Group"
+msgstr "이전 탭 그룹으로 이동"
+
+msgid "Move to Next Tab Group"
+msgstr "다음 탭 그룹으로 이동"
+
+msgid "Close Other Tabs"
+msgstr "다른 탭 닫기"
+
+msgid "Scratchpad"
+msgstr "스크래치패드"
+
+msgid "Send to"
+msgstr "보낼 대상"
+
+msgid "the active tab"
+msgstr "활성 탭"
+
+msgid "all tabs"
+msgstr "모든 탭"
+
+msgid "tabs on screen"
+msgstr "화면에 보이는 탭"
+
+msgid "Commands to send, one per line"
+msgstr "보낼 명령(한 줄에 하나씩)"
+
+msgid "Send Next Line"
+msgstr "다음 줄 보내기"
+
+msgid "Send All"
+msgstr "모두 보내기"
+
+msgid "Open..."
+msgstr "열기..."
+
+msgid "Save..."
+msgstr "저장..."
+
+msgid "Edit Button..."
+msgstr "버튼 편집..."
+
+msgid "Delete Button"
+msgstr "버튼 삭제"
+
+msgid "New Host Key"
+msgstr "새 호스트 키"
+
+msgid ""
+"OpenCRT has no stored host key for {}. Before accepting it, confirm the "
+"fingerprint below with the server's administrator."
+msgstr "OpenCRT에 {}의 호스트 키가 저장되어 있지 않습니다. 수락하기 전에 아래 지문을 서버 관리자에게 확인하십시오."
+
+msgid "Key type:"
+msgstr "키 유형:"
+
+msgid "Fingerprint:"
+msgstr "지문:"
+
+msgid "Accept & Save"
+msgstr "수락 및 저장"
+
+msgid "Accept Once"
+msgstr "한 번만 수락"
+
+msgid "Cancel"
+msgstr "취소"
+
+msgid "Use credential:"
+msgstr "사용할 자격 증명:"
+
+msgid "Use this credential for the session from now on"
+msgstr "앞으로 이 세션에 이 자격 증명 사용"
+
+msgid "Save the passphrase (once the key works)"
+msgstr "암호문 저장(키가 작동한 후)"
+
+msgid "Save the password (once the login works)"
+msgstr "암호 저장(로그인에 성공한 후)"
+
+#. The first is the default; answer gives the index of the one clicked.
+msgid "OK"
+msgstr "확인"
+
+msgid "Protocol:"
+msgstr "프로토콜:"
+
+msgid "SSH2"
+msgstr "SSH2"
+
+msgid "Telnet"
+msgstr "Telnet"
+
+msgid "Raw"
+msgstr "Raw"
+
+msgid "Serial"
+msgstr "직렬"
+
+msgid "Local Shell"
+msgstr "로컬 셸"
+
+msgid "RDP"
+msgstr "RDP"
+
+msgid "RLogin"
+msgstr "RLogin"
+
+msgid "VNC"
+msgstr "VNC"
+
+msgid "Mode:"
+msgstr "모드:"
+
+msgid "TCP client"
+msgstr "TCP 클라이언트"
+
+msgid "TCP server"
+msgstr "TCP 서버"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "수신 대기 주소:"
+
+msgid "Hostname:"
+msgstr "호스트 이름:"
+
+msgid "blank: every interface"
+msgstr "비워 두면 모든 인터페이스"
+
+msgid "blank: answer the last sender"
+msgstr "비워 두면 마지막 발신자에게 응답"
+
+msgid "Port:"
+msgstr "포트:"
+
+msgid "Username:"
+msgstr "사용자 이름:"
+
+#. RDP accepts a Windows domain this way; VNC mostly needs none.
+msgid "user, DOMAIN\\user or user@domain"
+msgstr "user, DOMAIN\\user 또는 user@domain"
+
+#. RDP accepts a Windows domain this way; VNC mostly needs none.
+msgid "only for a Mac (its account) or a VeNCrypt Plain login"
+msgstr "Mac(해당 계정) 또는 VeNCrypt Plain 로그인에만 필요"
+
+msgid "Private key:"
+msgstr "개인 키:"
+
+msgid "optional, path to key file"
+msgstr "선택 사항, 키 파일 경로"
+
+msgid "Port name:"
+msgstr "포트 이름:"
+
+msgid "e.g. COM3 or /dev/ttyUSB0"
+msgstr "예: COM3 또는 /dev/ttyUSB0"
+
+msgid "Detected:"
+msgstr "감지됨:"
+
+msgid "Baud rate:"
+msgstr "보드 속도:"
+
+msgid "Data bits:"
+msgstr "데이터 비트:"
+
+msgid "Parity:"
+msgstr "패리티:"
+
+msgid "None"
+msgstr "없음"
+
+msgid "Odd"
+msgstr "홀수"
+
+msgid "Even"
+msgstr "짝수"
+
+msgid "Stop bits:"
+msgstr "정지 비트:"
+
+msgid "Flow control:"
+msgstr "흐름 제어:"
+
+msgid "XON/XOFF"
+msgstr "XON/XOFF"
+
+msgid "RTS/CTS"
+msgstr "RTS/CTS"
+
+msgid "Opens your default shell (PowerShell on Windows, $SHELL elsewhere)."
+msgstr "기본 셸을 엽니다(Windows에서는 PowerShell, 그 외에는 $SHELL)."
+
+msgid "Quick Connect"
+msgstr "빠른 연결"
+
+msgid "Save session"
+msgstr "세션 저장"
+
+msgid "Passwords and passphrases are asked for when the server needs them."
+msgstr "암호와 암호문은 서버가 요구할 때 묻습니다."
+
+msgid "Session Options ({} sessions)"
+msgstr "세션 옵션(세션 {}개)"
+
+msgid "Session Options"
+msgstr "세션 옵션"
+
+msgid "Connection"
+msgstr "연결"
+
+msgid "Authentication"
+msgstr "인증"
+
+msgid "Terminal"
+msgstr "터미널"
+
+msgid "Appearance"
+msgstr "모양"
+
+msgid "Log File"
+msgstr "로그 파일"
+
+msgid "Port Forwarding"
+msgstr "포트 전달"
+
+msgid "Logon Script"
+msgstr "로그온 스크립트"
+
+msgid "Keyboard"
+msgstr "키보드"
+
+msgid "Remote Desktop"
+msgstr "원격 데스크톱"
+
+msgid "Session name:"
+msgstr "세션 이름:"
+
+msgid "Folder:"
+msgstr "폴더:"
+
+msgid "e.g. Production/Web (blank for top level)"
+msgstr "예: Production/Web(비워 두면 최상위)"
+
+msgid "Dial number:"
+msgstr "다이얼 번호:"
+
+msgid "blank for a direct line; a number, or a dial command such as ATDP123"
+msgstr "비워 두면 직통 회선, 번호 또는 ATDP123 같은 다이얼 명령"
+
+msgid "Modem init:"
+msgstr "모뎀 초기화:"
+
+msgid "ATZ"
+msgstr "ATZ"
+
+msgid "Jump host:"
+msgstr "점프 호스트:"
+
+msgid ""
+"optional SSH hosts to tunnel through: [user@]host[:port] or a saved session, "
+"comma-separated"
+msgstr "선택 사항, 터널로 거쳐 갈 SSH 호스트: [user@]host[:port] 또는 저장된 세션, 쉼표로 구분"
+
+msgid ""
+"optional hosts to go through: [user@]host[:port] or a saved session, comma-"
+"separated"
+msgstr "선택 사항, 거쳐 갈 호스트: [user@]host[:port] 또는 저장된 세션, 쉼표로 구분"
+
+msgid "Before connecting:"
+msgstr "연결 전:"
+
+msgid "optional local command, e.g. port knocking (must finish within 60 s)"
+msgstr "선택 사항, 로컬 명령(예: 포트 노킹), 60초 안에 끝나야 함"
+
+msgid "Remote command:"
+msgstr "원격 명령:"
+
+msgid "optional, run instead of the login shell"
+msgstr "선택 사항, 로그인 셸 대신 실행"
+
+msgid "Open as an SFTP tab (file transfer commands, no shell)"
+msgstr "SFTP 탭으로 열기(파일 전송 명령, 셸 없음)"
+
+msgid "Encrypt with TLS (Telnet/TLS, usually port 992)"
+msgstr "TLS로 암호화(Telnet/TLS, 보통 포트 992)"
+
+msgid "Proxy:"
+msgstr "프록시:"
+
+msgid ""
+"optional: a firewall name (Options > Firewalls) or socks5:// socks4:// "
+"http://host[:port]"
+msgstr "선택 사항: 방화벽 이름(옵션 > 방화벽) 또는 socks5:// socks4:// http://host[:port]"
+
+msgid "Notes:"
+msgstr "메모:"
+
+msgid "optional; the first line shows in the Session Manager"
+msgstr "선택 사항, 첫 줄이 세션 관리자에 표시됨"
+
+msgid "Credential:"
+msgstr "자격 증명:"
+
+msgid ""
+"No saved credentials yet. Tick \"Save password\" when you are asked for the "
+"password, or create one in Tools > Credentials Manager."
+msgstr "저장된 자격 증명이 아직 없습니다. 암호를 물을 때 \"암호 저장\"을 선택하거나 도구 > 자격 증명 관리자에서 만드십시오."
+
+msgid ""
+"OpenCRT answers the host's first login and password prompts with this "
+"credential, unless you start typing first. Manage credentials in Tools > "
+"Credentials Manager."
+msgstr "먼저 입력을 시작하지 않으면 OpenCRT가 호스트의 첫 로그인 및 암호 프롬프트에 이 자격 증명으로 응답합니다. 자격 증명은 도구 > 자격 증명 관리자에서 관리합니다."
+
+msgid ""
+"The username (if the credential has one) and the saved password come from "
+"this credential. Manage credentials in Tools > Credentials Manager."
+msgstr "사용자 이름(자격 증명에 있는 경우)과 저장된 암호를 이 자격 증명에서 가져옵니다. 자격 증명은 도구 > 자격 증명 관리자에서 관리합니다."
+
+msgid "Private key file:"
+msgstr "개인 키 파일:"
+
+msgid "blank to use password authentication"
+msgstr "비워 두면 암호 인증 사용"
+
+msgid "Certificate:"
+msgstr "인증서:"
+
+msgid "optional; <key file>-cert.pub is used if it exists"
+msgstr "선택 사항, <키 파일>-cert.pub 파일이 있으면 사용"
+
+msgid ""
+"Allow legacy algorithms (SHA-1 key exchange, CBC ciphers) for old devices"
+msgstr "오래된 장치를 위해 레거시 알고리즘(SHA-1 키 교환, CBC 암호) 허용"
+
+msgid "Enable compression (for slow links)"
+msgstr "압축 사용(느린 연결용)"
+
+msgid "Forward the SSH agent (only to hosts you trust)"
+msgstr "SSH 에이전트 전달(신뢰하는 호스트에만)"
+
+msgid ""
+"Order tried: public key (the key file if set, otherwise keys in a running "
+"SSH agent such as Pageant), then keyboard-interactive or password. Passwords "
+"are only saved in a credential, in the system keychain; otherwise you are "
+"asked for them when needed."
+msgstr "시도 순서: 공개 키(키 파일이 설정되어 있으면 그 파일, 아니면 Pageant 같은 실행 중인 SSH 에이전트의 키), 그다음 키보드 대화형 또는 암호. 암호는 자격 증명에만, 즉 시스템 키체인에만 저장됩니다. 그 외에는 필요할 때 묻습니다."
+
+msgid "Emulation:"
+msgstr "에뮬레이션:"
+
+msgid "Xterm"
+msgstr "Xterm"
+
+msgid "VT100"
+msgstr "VT100"
+
+msgid "VT102"
+msgstr "VT102"
+
+msgid "VT220"
+msgstr "VT220"
+
+msgid "VT320"
+msgstr "VT320"
+
+msgid "ANSI"
+msgstr "ANSI"
+
+msgid "Linux console"
+msgstr "Linux 콘솔"
+
+msgid "Terminal type:"
+msgstr "터미널 유형:"
+
+msgid "blank for the emulation's (xterm-256color, vt100...)"
+msgstr "비워 두면 에뮬레이션 기본값(xterm-256color, vt100...)"
+
+msgid "Size:"
+msgstr "크기:"
+
+msgid "cols"
+msgstr "열"
+
+msgid "rows"
+msgstr "행"
+
+msgid "blank fits the window"
+msgstr "비워 두면 창에 맞춤"
+
+msgid "Let the host switch between 80 and 132 columns"
+msgstr "호스트가 80열과 132열 사이를 전환하도록 허용"
+
+msgid "Scrollback:"
+msgstr "스크롤백:"
+
+msgid "Set in Options > Global Options."
+msgstr "옵션 > 전역 옵션에서 설정합니다."
+
+msgid "Character encoding:"
+msgstr "문자 인코딩:"
+
+msgid "Backspace:"
+msgstr "Backspace:"
+
+msgid "Sends Ctrl+H (^H) instead of DEL"
+msgstr "DEL 대신 Ctrl+H(^H) 전송"
+
+msgid "Anti-idle text:"
+msgstr "유휴 방지 텍스트:"
+
+msgid "e.g. \\r, sent when no key is pressed for a while"
+msgstr "예: \\r, 한동안 키 입력이 없을 때 전송"
+
+msgid "Send an SSH keepalive or Telnet NOP instead of text"
+msgstr "텍스트 대신 SSH keepalive 또는 Telnet NOP 전송"
+
+msgid "Anti-idle every:"
+msgstr "유휴 방지 간격:"
+
+msgid "seconds (blank for off)"
+msgstr "초(비워 두면 끔)"
+
+msgid "Colour scheme:"
+msgstr "색 구성표:"
+
+msgid "Keyword set:"
+msgstr "키워드 목록:"
+
+msgid "Tab colour:"
+msgstr "탭 색:"
+
+msgid "Red"
+msgstr "빨강"
+
+msgid "Orange"
+msgstr "주황"
+
+msgid "Yellow"
+msgstr "노랑"
+
+msgid "Green"
+msgstr "초록"
+
+msgid "Blue"
+msgstr "파랑"
+
+msgid "Purple"
+msgstr "보라"
+
+msgid "Button bar:"
+msgstr "버튼 표시줄:"
+
+msgid "Log file name:"
+msgstr "로그 파일 이름:"
+
+msgid "blank for no logging"
+msgstr "비워 두면 로깅 안 함"
+
+msgid "Start each line with the date and time"
+msgstr "각 줄 앞에 날짜와 시간 기록"
+
+msgid ""
+"Also keep a raw log (.raw beside it): the bytes as received, escape "
+"sequences included"
+msgstr "원시 로그도 보관(같은 위치의 .raw 파일): 이스케이프 시퀀스를 포함하여 수신한 바이트 그대로"
+
+msgid "On connect:"
+msgstr "연결 시:"
+
+msgid "e.g. === %S connected %Y-%M-%D %h:%m:%s ==="
+msgstr "예: === %S 연결됨 %Y-%M-%D %h:%m:%s ==="
+
+msgid "On disconnect:"
+msgstr "연결 끊김 시:"
+
+msgid "Each line:"
+msgstr "각 줄:"
+
+msgid "e.g. %H: "
+msgstr "예: %H: "
+
+msgid ""
+"Session output is appended as plain text while connected. %S expands to the "
+"session name, %H to the hostname, %Y %M %D to the date and %h %m %s to the "
+"time (of connecting, in the file name; of writing, in the texts above). A "
+"log named with the date starts a new file at midnight."
+msgstr "연결되어 있는 동안 세션 출력이 일반 텍스트로 추가됩니다. %S는 세션 이름, %H는 호스트 이름, %Y %M %D는 날짜, %h %m %s는 시간으로 바뀝니다(파일 이름에서는 연결 시점, 위의 텍스트에서는 기록 시점). 이름에 날짜가 들어간 로그는 자정에 새 파일을 시작합니다."
+
+msgid ""
+"A VNC desktop is the size the server sets: shown whole, scaled down when the "
+"tab is smaller, or with Scale to window stretched to fill the tab. "
+"Connection speed sets the picture quality; the other settings here are for "
+"RDP sessions. VNC is not encrypted: set a jump host (Connection page) to "
+"tunnel it through SSH."
+msgstr "VNC 데스크톱은 서버가 정한 크기입니다. 전체가 표시되고, 탭이 더 작으면 축소되며, 창에 맞춰 크기 조정을 켜면 탭을 채우도록 늘어납니다. 연결 속도가 화질을 결정하며, 여기의 다른 설정은 RDP 세션용입니다. VNC는 암호화되지 않으므로 점프 호스트(연결 페이지)를 설정하여 SSH로 터널링하십시오."
+
+msgid "These settings are for RDP sessions."
+msgstr "이 설정은 RDP 세션용입니다."
+
+msgid "Desktop size:"
+msgstr "데스크톱 크기:"
+
+msgid "width"
+msgstr "너비"
+
+msgid "x"
+msgstr "x"
+
+msgid "height"
+msgstr "높이"
+
+msgid "Scale to window"
+msgstr "창에 맞춰 크기 조정"
+
+msgid ""
+"Blank: the remote desktop follows the tab's size. A fixed size (in pixels) "
+"stays the same whatever the window does: shown whole, scaled down when the "
+"tab is smaller, or with Scale to window stretched to fill the tab."
+msgstr "비워 두면 원격 데스크톱이 탭 크기를 따릅니다. 고정 크기(픽셀)는 창이 어떻게 바뀌어도 그대로 유지됩니다. 전체가 표시되고, 탭이 더 작으면 축소되며, 창에 맞춰 크기 조정을 켜면 탭을 채우도록 늘어납니다."
+
+msgid "Connection speed:"
+msgstr "연결 속도:"
+
+msgid "Best quality: lossless (fast network)"
+msgstr "최고 품질: 무손실(빠른 네트워크)"
+
+msgid "Balanced: photos and video as JPEG"
+msgstr "균형: 사진과 동영상을 JPEG로"
+
+msgid "Fastest: lower JPEG quality (slow links)"
+msgstr "가장 빠름: 낮은 JPEG 품질(느린 연결)"
+
+msgid "Best appearance (fast network)"
+msgstr "최상의 모양(빠른 네트워크)"
+
+msgid "Balanced: no wallpaper or animations"
+msgstr "균형: 배경 화면과 애니메이션 없음"
+
+msgid "Fastest: no visual effects (slow links)"
+msgstr "가장 빠름: 시각 효과 없음(느린 연결)"
+
+msgid ""
+"VNC servers with the Tight encoding (TightVNC, TigerVNC, x11vnc) send "
+"pictures and video as JPEG when this is Balanced or Fastest; text and flat "
+"areas stay exact. Others always send the exact picture."
+msgstr "Tight 인코딩을 사용하는 VNC 서버(TightVNC, TigerVNC, x11vnc)는 이 값이 균형 또는 가장 빠름일 때 사진과 동영상을 JPEG로 보내며, 텍스트와 단색 영역은 원본 그대로 유지됩니다. 다른 서버는 항상 원본 그대로의 화면을 보냅니다."
+
+msgid ""
+"The less the server draws, the less it sends: leaving out the wallpaper and "
+"animations makes the desktop noticeably quicker over the internet or a VPN."
+msgstr "서버가 그리는 것이 적을수록 보내는 양도 줄어듭니다. 배경 화면과 애니메이션을 빼면 인터넷이나 VPN을 통한 데스크톱이 눈에 띄게 빨라집니다."
+
+msgid ""
+"Use H.264 when the server offers it (much faster; turn off if the desktop "
+"stays black)"
+msgstr "서버가 제공하면 H.264 사용(훨씬 빠름, 데스크톱이 계속 검게 보이면 끄십시오)"
+
+msgid "Connect to the console (administrative) session, like mstsc /admin"
+msgstr "mstsc /admin처럼 콘솔(관리) 세션에 연결"
+
+msgid "Play the remote computer's sound on this computer"
+msgstr "원격 컴퓨터의 소리를 이 컴퓨터에서 재생"
+
+msgid "Share a local folder:"
+msgstr "로컬 폴더 공유:"
+
+msgid "none"
+msgstr "없음"
+
+msgid ""
+"The folder appears on the remote computer as a drive (under This PC), named "
+"after the folder: copy files to and from it there. The remote computer can "
+"read, change and delete everything in it."
+msgstr "이 폴더는 원격 컴퓨터에서 폴더 이름을 딴 드라이브로 나타납니다(내 PC 아래). 그곳에서 파일을 복사해 넣거나 가져올 수 있습니다. 원격 컴퓨터는 폴더 안의 모든 것을 읽고, 변경하고, 삭제할 수 있습니다."
+
+msgid ""
+"Keys mapped for this session (tried before Global Options > Keyboard), one "
+"per line:"
+msgstr "이 세션에 매핑된 키(전역 옵션 > 키보드보다 먼저 적용), 한 줄에 하나씩:"
+
+msgid ""
+"Key = what it does. Keys: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, "
+"Enter, Escape, Space or a character, with Ctrl+ Alt+ Shift+ (characters need "
+"Ctrl or Alt). Text is sent (\\r is Enter); or script: file, menu: command, "
+"run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
+msgstr "키 = 동작. 키: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, Enter, Escape, Space 또는 문자, Ctrl+ Alt+ Shift+ 조합 가능(문자에는 Ctrl 또는 Alt 필요). 텍스트는 그대로 전송됩니다(\\r은 Enter). 또는 script: 파일, menu: 명령, run: 프로그램, telnet: brk|ayt|ip|ao|ec|el|ga|nop."
+
+msgid "Script file:"
+msgstr "스크립트 파일:"
+
+msgid "blank for none"
+msgstr "비워 두면 없음"
+
+msgid "Or write the script here (used when no file is set):"
+msgstr "또는 여기에 스크립트 작성(파일이 설정되지 않은 경우 사용):"
+
+msgid ""
+"Runs each time the session connects. A .rhai file runs as a Rhai script and "
+"a .py file as a SecureCRT Python script (see the README). Otherwise one "
+"command per line: wait <text> (for the host to print it), send <text> (\\r "
+"is Enter), sleep <ms>, timeout <s> (for later waits; default 30), # comment."
+msgstr "세션이 연결될 때마다 실행됩니다. .rhai 파일은 Rhai 스크립트로, .py 파일은 SecureCRT Python 스크립트로 실행됩니다(README 참조). 그 외에는 한 줄에 명령 하나: wait <텍스트>(호스트가 출력할 때까지 대기), send <텍스트>(\\r은 Enter), sleep <ms>, timeout <s>(이후 대기에 적용, 기본값 30), # 주석."
+
+msgid "Forward X11 to the local X server"
+msgstr "로컬 X 서버로 X11 전달"
+
+msgid ""
+"Uses $DISPLAY, else display 0 on this machine. The X server must accept "
+"clients without its own cookie (e.g. VcXsrv with access control disabled)."
+msgstr "$DISPLAY를 사용하며, 없으면 이 컴퓨터의 디스플레이 0을 사용합니다. X 서버는 자체 쿠키 없이 클라이언트를 허용해야 합니다(예: 액세스 제어를 끈 VcXsrv)."
+
+msgid "Port forwards (SSH2 only):"
+msgstr "포트 전달(SSH2 전용):"
+
+msgid "Name"
+msgstr "이름"
+
+msgid "Type"
+msgstr "유형"
+
+msgid "Listen"
+msgstr "수신 대기"
+
+msgid "Destination"
+msgstr "대상"
+
+msgid "Application"
+msgstr "응용 프로그램"
+
+msgid "Add..."
+msgstr "추가..."
+
+msgid "Remove"
+msgstr "제거"
+
+msgid "Port Forward Properties"
+msgstr "포트 전달 속성"
+
+msgid "Name:"
+msgstr "이름:"
+
+msgid "a descriptive name for this forward"
+msgstr "이 전달을 설명하는 이름"
+
+msgid "Type:"
+msgstr "유형:"
+
+msgid "Local - a port on this machine"
+msgstr "로컬 - 이 컴퓨터의 포트"
+
+msgid "Remote - a port on the server"
+msgstr "원격 - 서버의 포트"
+
+msgid "Dynamic - SOCKS 4/5 proxy on this machine"
+msgstr "동적 - 이 컴퓨터의 SOCKS 4/5 프록시"
+
+msgid "Manually select the address the server listens on"
+msgstr "서버가 수신 대기할 주소 직접 선택"
+
+msgid "Manually select the local IP address to listen on"
+msgstr "수신 대기할 로컬 IP 주소 직접 선택"
+
+msgid "IP address:"
+msgstr "IP 주소:"
+
+msgid "e.g. 0.0.0.0 (the server must allow it)"
+msgstr "예: 0.0.0.0(서버가 허용해야 함)"
+
+msgid "e.g. 0.0.0.0 for every interface"
+msgstr "예: 0.0.0.0(모든 인터페이스)"
+
+msgid "Allow from:"
+msgstr "허용 대상:"
+
+msgid "addresses or networks, e.g. 192.168.1.0/24 (blank: anyone)"
+msgstr "주소 또는 네트워크, 예: 192.168.1.0/24(비워 두면 누구나)"
+
+msgid "Destination host is different from the SSH server"
+msgstr "대상 호스트가 SSH 서버와 다름"
+
+msgid "Destination host is different from this machine"
+msgstr "대상 호스트가 이 컴퓨터와 다름"
+
+msgid "Optionally start a program on this machine once the port is listening."
+msgstr "원하면 포트가 수신 대기를 시작한 후 이 컴퓨터에서 프로그램을 시작합니다."
+
+msgid "Application:"
+msgstr "응용 프로그램:"
+
+msgid "Arguments:"
+msgstr "인수:"
+
+msgid "use \"quotes\" around arguments with spaces"
+msgstr "공백이 있는 인수는 \"따옴표\"로 묶음"
+
+msgid "Enabled"
+msgstr "사용"
+
+msgid "Credential"
+msgstr "자격 증명"
+
+msgid "e.g. Network admin"
+msgstr "예: 네트워크 관리자"
+
+msgid "blank to use each session's own username"
+msgstr "비워 두면 각 세션의 사용자 이름 사용"
+
+msgid "Password:"
+msgstr "암호:"
+
+msgid "blank to keep the saved password"
+msgstr "비워 두면 저장된 암호 유지"
+
+msgid "blank to be asked each time"
+msgstr "비워 두면 매번 물음"
+
+msgid "Confirm:"
+msgstr "확인:"
+
+msgid "The password is stored in the system keychain, never in OpenCRT's files."
+msgstr "암호는 시스템 키체인에 저장되며 OpenCRT의 파일에는 저장되지 않습니다."
+
+msgid "Firewall"
+msgstr "방화벽"
+
+msgid "e.g. Office proxy (sessions use this name)"
+msgstr "예: 사무실 프록시(세션에서 이 이름을 사용)"
+
+msgid "SOCKS5"
+msgstr "SOCKS5"
+
+msgid "SOCKS4 / 4a"
+msgstr "SOCKS4 / 4a"
+
+msgid "HTTP CONNECT"
+msgstr "HTTP CONNECT"
+
+msgid "Gateway (send text, e.g. Wingate/TIS)"
+msgstr "게이트웨이(텍스트 전송, 예: Wingate/TIS)"
+
+msgid "Local proxy command"
+msgstr "로컬 프록시 명령"
+
+msgid "Host:"
+msgstr "호스트:"
+
+msgid "User ID:"
+msgstr "사용자 ID:"
+
+msgid "kept in the system keychain"
+msgstr "시스템 키체인에 보관"
+
+msgid "Send:"
+msgstr "보낼 텍스트:"
+
+msgid "Command:"
+msgstr "명령:"
+
+msgid "e.g. %h %p\\r"
+msgstr "예: %h %p\\r"
+
+msgid "e.g. nc -X connect -x proxy:8080 %h %p"
+msgstr "예: nc -X connect -x proxy:8080 %h %p"
+
+msgid "%h and %p become the destination host and port. \\r is Enter."
+msgstr "%h와 %p는 대상 호스트와 포트로 바뀝니다. \\r은 Enter입니다."
+
+msgid ""
+"%h and %p become the destination host and port. The session talks over the "
+"command's input and output."
+msgstr "%h와 %p는 대상 호스트와 포트로 바뀝니다. 세션은 명령의 입력과 출력을 통해 통신합니다."
+
+msgid "Colour Schemes"
+msgstr "색 구성표"
+
+msgid "{}  (default)"
+msgstr "{}  (기본값)"
+
+msgid "Foreground:"
+msgstr "전경:"
+
+msgid "Background:"
+msgstr "배경:"
+
+msgid "Cursor:"
+msgstr "커서:"
+
+msgid "inverse"
+msgstr "반전"
+
+msgid "Selection:"
+msgstr "선택 영역:"
+
+msgid ""
+"ANSI colours (black, red, green, yellow, blue, magenta, cyan, white; then "
+"bright):"
+msgstr "ANSI 색(검정, 빨강, 초록, 노랑, 파랑, 자홍, 청록, 흰색, 그다음 밝은 색):"
+
+msgid "Colours are #rrggbb. Cursor and selection may be left blank."
+msgstr "색은 #rrggbb 형식입니다. 커서와 선택 영역은 비워 둘 수 있습니다."
+
+msgid "Built-in schemes cannot be changed: New makes an editable copy."
+msgstr "기본 제공 구성표는 변경할 수 없습니다. 새로 만들기로 편집 가능한 복사본을 만드십시오."
+
+msgid "New"
+msgstr "새로 만들기"
+
+msgid "Save"
+msgstr "저장"
+
+msgid "Use as Default"
+msgstr "기본값으로 사용"
+
+msgid "Global Options"
+msgstr "전역 옵션"
+
+msgid "General"
+msgstr "일반"
+
+msgid "Mouse"
+msgstr "마우스"
+
+msgid "Highlighting"
+msgstr "강조 표시"
+
+msgid "File Transfer"
+msgstr "파일 전송"
+
+msgid "Printing"
+msgstr "인쇄"
+
+msgid "Settings Sync"
+msgstr "설정 동기화"
+
+msgid "Theme:"
+msgstr "테마:"
+
+msgid "Follow the system"
+msgstr "시스템 설정 따르기"
+
+msgid "Light"
+msgstr "밝게"
+
+msgid "Dark"
+msgstr "어둡게"
+
+msgid "Show menu bar (right-click the terminal to bring it back)"
+msgstr "메뉴 모음 표시(터미널을 마우스 오른쪽 버튼으로 클릭하면 다시 표시)"
+
+msgid "Show connect bar"
+msgstr "연결 표시줄 표시"
+
+msgid "Show the server's load in the status bar (Linux hosts over SSH)"
+msgstr "상태 표시줄에 서버 부하 표시(SSH로 연결한 Linux 호스트)"
+
+msgid "Ask before closing a connected tab or exiting"
+msgstr "연결된 탭을 닫거나 끝내기 전에 확인"
+
+msgid "Check for a new version at start-up and once a day"
+msgstr "시작할 때와 하루에 한 번 새 버전 확인"
+
+msgid "Interface font size:"
+msgstr "인터페이스 글꼴 크기:"
+
+msgid "9 to 20"
+msgstr "9~20"
+
+msgid "Recent sessions in the File menu:"
+msgstr "파일 메뉴의 최근 세션 수:"
+
+msgid "0 to 16"
+msgstr "0~16"
+
+msgid "Ask before Connect All opens more than:"
+msgstr "모두 연결로 다음보다 많이 열 때 확인:"
+
+msgid "sessions; 0 = never ask"
+msgstr "개 세션, 0 = 묻지 않음"
+
+msgid "Configuration folder:"
+msgstr "설정 폴더:"
+
+msgid "blank for the default"
+msgstr "비워 두면 기본값"
+
+msgid ""
+"Used from the next start. Your settings are copied there if it has none yet. "
+"A settings repository (Settings Sync) takes its place."
+msgstr "다음 시작부터 사용됩니다. 그 폴더에 설정이 아직 없으면 현재 설정이 복사됩니다. 설정 리포지토리(설정 동기화)가 있으면 이 폴더 대신 사용됩니다."
+
+msgid "Python for .py scripts:"
+msgstr ".py 스크립트용 Python:"
+
+msgid "blank: python3 on Linux, else downloaded on first use"
+msgstr "비워 두면 Linux에서는 python3, 그 외에는 처음 사용할 때 다운로드"
+
+msgid ""
+"Keep your sessions, options and host keys in a private git repository, "
+"shared by every computer that uses it. Passwords and this computer's own "
+"settings (window, folders, key files) stay here. Needs git installed."
+msgstr "세션, 옵션, 호스트 키를 비공개 git 리포지토리에 보관하여 이를 사용하는 모든 컴퓨터에서 공유합니다. 암호와 이 컴퓨터 고유의 설정(창, 폴더, 키 파일)은 이 컴퓨터에 남습니다. git이 설치되어 있어야 합니다."
+
+msgid "Repository:"
+msgstr "리포지토리:"
+
+msgid "blank: not used; https://... or git@host:user/repo.git"
+msgstr "비워 두면 사용 안 함, https://... 또는 git@host:user/repo.git"
+
+msgid "HTTPS: your username on the server"
+msgstr "HTTPS: 서버의 사용자 이름"
+
+msgid "Password or token:"
+msgstr "암호 또는 토큰:"
+
+msgid "saved; type to replace it"
+msgstr "저장됨, 바꾸려면 입력"
+
+msgid "HTTPS: a personal access token"
+msgstr "HTTPS: 개인용 액세스 토큰"
+
+msgid "SSH key file:"
+msgstr "SSH 키 파일:"
+
+msgid "SSH: blank for your SSH agent and ~/.ssh/config"
+msgstr "SSH: 비워 두면 SSH 에이전트와 ~/.ssh/config 사용"
+
+msgid "Git is not installed on this computer."
+msgstr "이 컴퓨터에 Git이 설치되어 있지 않습니다."
+
+msgid "Download Git for Windows"
+msgstr "Git for Windows 다운로드"
+
+msgid ""
+"HTTPS: leave username and token blank to use git's own credential manager. "
+"The token is kept in the system keychain. Changes are sent as you make them; "
+"other computers' changes arrive when OpenCRT starts. Used from the next "
+"start: an empty repository gets your current settings."
+msgstr "HTTPS: git의 자체 자격 증명 관리자를 사용하려면 사용자 이름과 토큰을 비워 두십시오. 토큰은 시스템 키체인에 보관됩니다. 변경 내용은 변경하는 즉시 전송되며, 다른 컴퓨터의 변경 내용은 OpenCRT가 시작될 때 받습니다. 다음 시작부터 사용됩니다. 빈 리포지토리에는 현재 설정이 들어갑니다."
+
+msgid "Font:"
+msgstr "글꼴:"
+
+msgid "Font size:"
+msgstr "글꼴 크기:"
+
+msgid "Scrollback lines:"
+msgstr "스크롤백 줄 수:"
+
+msgid "Default colour scheme:"
+msgstr "기본 색 구성표:"
+
+msgid "Block"
+msgstr "블록"
+
+msgid "Underline"
+msgstr "밑줄"
+
+msgid "Vertical bar"
+msgstr "세로 막대"
+
+msgid "Bell:"
+msgstr "벨:"
+
+msgid "Flash the window"
+msgstr "창 깜박임"
+
+msgid "Play a sound"
+msgstr "소리 재생"
+
+msgid "Off"
+msgstr "끔"
+
+msgid "Copy on select"
+msgstr "선택 시 복사"
+
+msgid "Paste on right-click (instead of the menu)"
+msgstr "오른쪽 클릭으로 붙여넣기(메뉴 대신)"
+
+msgid "Paste on middle-click"
+msgstr "가운데 클릭으로 붙여넣기"
+
+msgid "Let programs on the host copy to the clipboard (OSC 52, e.g. tmux, vim)"
+msgstr "호스트의 프로그램이 클립보드에 복사하도록 허용(OSC 52, 예: tmux, vim)"
+
+msgid "Ask before pasting more than one line"
+msgstr "두 줄 이상 붙여넣기 전에 확인"
+
+msgid "Send delays (ms):"
+msgstr "전송 지연(ms):"
+
+msgid "per character"
+msgstr "문자당"
+
+msgid "per line"
+msgstr "줄당"
+
+msgid "Wait for prompt:"
+msgstr "프롬프트 대기:"
+
+msgid "e.g. \"# \" before each next line (blank: do not wait)"
+msgstr "예: 다음 줄을 보내기 전에 \"# \" 대기(비워 두면 대기 안 함)"
+
+msgid "Web search:"
+msgstr "웹 검색:"
+
+msgid "address with %s for the selected text"
+msgstr "선택한 텍스트 자리에 %s가 들어간 주소"
+
+msgid "Word delimiters:"
+msgstr "단어 구분 기호:"
+
+msgid "e.g. ,:;\"'()[]{{}}<> (blank for default)"
+msgstr "예: ,:;\"'()[]{{}}<>(비워 두면 기본값)"
+
+msgid "SSH keepalive (seconds):"
+msgstr "SSH keepalive(초):"
+
+msgid "0 = off"
+msgstr "0 = 끔"
+
+msgid "Default SSH2 key file:"
+msgstr "기본 SSH2 키 파일:"
+
+msgid "blank = SSH agent"
+msgstr "빈칸 = SSH 에이전트"
+
+msgid "Reconnect automatically when a connection drops"
+msgstr "연결이 끊기면 자동으로 다시 연결"
+
+msgid ""
+"Allow legacy SSH2 algorithms for every host (old network devices; modern "
+"ones still come first)"
+msgstr "모든 호스트에 레거시 SSH2 알고리즘 허용(오래된 네트워크 장치용, 최신 알고리즘을 여전히 먼저 시도)"
+
+msgid "Save new SSH2 host keys without asking (a changed key is still refused)"
+msgstr "새 SSH2 호스트 키를 묻지 않고 저장(변경된 키는 여전히 거부)"
+
+msgid ""
+"Not recommended: the first connection to a host can no longer be checked "
+"against its real fingerprint. Use it for lab networks or many new devices."
+msgstr "권장하지 않음: 호스트에 처음 연결할 때 실제 지문과 대조하여 확인할 수 없게 됩니다. 실험실 네트워크나 새 장치가 많은 경우에 사용하십시오."
+
+msgid "Remember passwords and key passphrases until OpenCRT closes"
+msgstr "OpenCRT를 닫을 때까지 암호와 키 암호문 기억"
+
+msgid "Reopen saved sessions that were open at exit"
+msgstr "끝낼 때 열려 있던 저장된 세션 다시 열기"
+
+msgid "Keepalive applies to sessions opened from now on."
+msgstr "Keepalive는 지금부터 여는 세션에 적용됩니다."
+
+msgid "Download folder:"
+msgstr "다운로드 폴더:"
+
+msgid "blank for your Downloads folder"
+msgstr "비워 두면 사용자의 다운로드 폴더"
+
+msgid "Run a TFTP server on this folder (UDP port 69)"
+msgstr "이 폴더에서 TFTP 서버 실행(UDP 포트 69)"
+
+msgid "TFTP clients:"
+msgstr "TFTP 클라이언트:"
+
+msgid "e.g. 192.168.1.0/24, 10.0.0.5 (blank for any)"
+msgstr "예: 192.168.1.0/24, 10.0.0.5(비워 두면 모두 허용)"
+
+msgid "Dropped files:"
+msgstr "끌어다 놓은 파일:"
+
+msgid "Ask each time"
+msgstr "매번 묻기"
+
+msgid "Zmodem"
+msgstr "Zmodem"
+
+msgid "Xmodem"
+msgstr "Xmodem"
+
+msgid "Ymodem"
+msgstr "Ymodem"
+
+msgid "Kermit"
+msgstr "Kermit"
+
+msgid "ASCII"
+msgstr "ASCII"
+
+msgid "Binary"
+msgstr "바이너리"
+
+msgid "SFTP (SSH sessions)"
+msgstr "SFTP(SSH 세션)"
+
+msgid ""
+"Zmodem and Ymodem downloads are saved here, and TFTP clients such as routers "
+"can fetch files from it or upload into it. Existing files are never "
+"overwritten."
+msgstr "Zmodem 및 Ymodem 다운로드가 여기에 저장되며, 라우터 같은 TFTP 클라이언트가 이 폴더에서 파일을 가져가거나 이 폴더로 업로드할 수 있습니다. 기존 파일은 덮어쓰지 않습니다."
+
+msgid "Printer:"
+msgstr "프린터:"
+
+msgid "blank for the default printer"
+msgstr "비워 두면 기본 프린터"
+
+msgid "Font size (points):"
+msgstr "글꼴 크기(포인트):"
+
+msgid "default"
+msgstr "기본값"
+
+msgid "Margins (mm):"
+msgstr "여백(mm):"
+
+msgid ""
+"File > Print Screen, Print Selection and Auto Print, and printing asked for "
+"by the host (CSI 5i / 4i), go to this printer. On Windows they print through "
+"Notepad, which uses its own font and margins."
+msgstr "파일 > 화면 인쇄, 선택 영역 인쇄, 자동 인쇄 및 호스트가 요청한 인쇄(CSI 5i / 4i)가 이 프린터로 전송됩니다. Windows에서는 메모장을 통해 인쇄하며, 메모장은 자체 글꼴과 여백을 사용합니다."
+
+msgid ""
+"Keywords are highlighted in any case. A session uses the Default list unless "
+"it chooses a named one (Session Options > Appearance)."
+msgstr "키워드는 대/소문자와 관계없이 강조 표시됩니다. 세션은 이름이 있는 목록을 선택하지 않으면 기본 목록을 사용합니다(세션 옵션 > 모양)."
+
+msgid "List:"
+msgstr "목록:"
+
+msgid "New List"
+msgstr "새 목록"
+
+msgid "Delete List"
+msgstr "목록 삭제"
+
+msgid "the Default list has no name"
+msgstr "기본 목록에는 이름이 없습니다"
+
+msgid "Keyword"
+msgstr "키워드"
+
+msgid "Colour"
+msgstr "색"
+
+msgid "Style"
+msgstr "스타일"
+
+msgid "Keyword:"
+msgstr "키워드:"
+
+msgid "regular expression"
+msgstr "정규식"
+
+msgid "word or phrase"
+msgstr "단어 또는 구"
+
+msgid "Colour:"
+msgstr "색:"
+
+msgid "#rrggbb"
+msgstr "#rrggbb"
+
+msgid "Regular expression"
+msgstr "정규식"
+
+msgid "Whole words"
+msgstr "단어 단위"
+
+msgid "Whole line"
+msgstr "줄 전체"
+
+msgid "Colour the text only"
+msgstr "텍스트에만 색 적용"
+
+msgid "Bold"
+msgstr "굵게"
+
+msgid "Add"
+msgstr "추가"
+
+msgid "Mapped keys (one per line):"
+msgstr "매핑된 키(한 줄에 하나씩):"
+
+msgid "Import..."
+msgstr "가져오기..."
+
+msgid "Export..."
+msgstr "내보내기..."
+
+msgid ""
+"Key = what it does, e.g. F5 = show running-config\\r, Ctrl+K = menu: clear-"
+"screen, Alt+F1 = run: wireshark. Keys: F1-F24, Up, Home, PageUp, Insert, "
+"Delete, Tab, Enter, Escape, Space or a character (with Ctrl or Alt), plus "
+"Ctrl+ Alt+ Shift+. Text is sent (\\r is Enter); or script: file, menu: "
+"command, run: program, telnet: brk|ayt|ip|ao|ec|el|ga|nop. Sessions can add "
+"their own (Session Options > Keyboard)."
+msgstr "키 = 동작, 예: F5 = show running-config\\r, Ctrl+K = menu: clear-screen, Alt+F1 = run: wireshark. 키: F1-F24, Up, Home, PageUp, Insert, Delete, Tab, Enter, Escape, Space 또는 문자(Ctrl 또는 Alt와 함께), 여기에 Ctrl+ Alt+ Shift+ 조합 가능. 텍스트는 그대로 전송됩니다(\\r은 Enter). 또는 script: 파일, menu: 명령, run: 프로그램, telnet: brk|ayt|ip|ao|ec|el|ga|nop. 세션마다 자체 키를 추가할 수 있습니다(세션 옵션 > 키보드)."
+
+msgid "Yes"
+msgstr "예"
+
+msgid "No"
+msgstr "아니요"
+
+msgid "Unlock Saved Passwords"
+msgstr "저장된 암호 잠금 해제"
+
+msgid "Import SecureCRT Passwords"
+msgstr "SecureCRT 암호 가져오기"
+
+msgid "Master Password"
+msgstr "마스터 암호"
+
+msgid ""
+"Saved passwords and key passphrases are protected by the master password. "
+"Enter it to use them until OpenCRT closes."
+msgstr "저장된 암호와 키 암호문은 마스터 암호로 보호됩니다. OpenCRT를 닫을 때까지 사용하려면 마스터 암호를 입력하십시오."
+
+msgid ""
+"{} imported sessions have saved passwords. Enter SecureCRT's Config "
+"Passphrase (SecureCRT asks for it when it starts) to import them. If "
+"SecureCRT has none, set one with Change Passphrase... in its start-up "
+"window, then import again."
+msgstr "가져온 세션 중 {}개에 저장된 암호가 있습니다. 가져오려면 SecureCRT의 Config Passphrase(구성 암호문, SecureCRT가 시작할 때 묻습니다)를 입력하십시오. SecureCRT에 설정되어 있지 않으면 시작 창의 Change Passphrase...로 설정한 다음 다시 가져오십시오."
+
+msgid ""
+"Keep saved passwords and key passphrases in the settings folder, encrypted "
+"with a master password, instead of this computer's keychain. Settings Sync "
+"carries them, still encrypted. A forgotten master password cannot be "
+"recovered: the saved passwords would have to be entered again."
+msgstr "저장된 암호와 키 암호문을 이 컴퓨터의 키체인 대신 설정 폴더에 마스터 암호로 암호화하여 보관합니다. 설정 동기화는 이를 암호화된 상태로 전달합니다. 잊어버린 마스터 암호는 복구할 수 없으며, 그 경우 저장된 암호를 다시 입력해야 합니다."
+
+msgid ""
+"Change the master password, or remove it to move the saved passwords back to "
+"this computer's keychain."
+msgstr "마스터 암호를 변경하거나, 제거하여 저장된 암호를 이 컴퓨터의 키체인으로 되돌립니다."
+
+msgid "Master password:"
+msgstr "마스터 암호:"
+
+msgid "Config passphrase:"
+msgstr "구성 암호문:"
+
+msgid "Current password:"
+msgstr "현재 암호:"
+
+msgid "New password:"
+msgstr "새 암호:"
+
+msgid "Unlock"
+msgstr "잠금 해제"
+
+msgid "Set"
+msgstr "설정"
+
+msgid "Import"
+msgstr "가져오기"
+
+msgid "Change"
+msgstr "변경"
+
+msgid "Skip"
+msgstr "건너뛰기"
+
+msgid "Send Files"
+msgstr "파일 보내기"
+
+msgid "SFTP"
+msgstr "SFTP"
+
+msgid "Always send dropped files this way (Global Options > File Transfer)"
+msgstr "끌어다 놓은 파일을 항상 이 방식으로 보내기(전역 옵션 > 파일 전송)"
+
+msgid "wait_for(\"login:\", 10);\nsend(\"admin\\r\");"
+msgstr "wait_for(\"login:\", 10);\nsend(\"admin\\r\");"
+
+msgid "Save As..."
+msgstr "다른 이름으로 저장..."
+
+msgid "Check"
+msgstr "검사"
+
+msgid "Run"
+msgstr "실행"
+
+msgid "Cmd+O"
+msgstr "Cmd+O"
+
+msgid "Ctrl+Shift+T"
+msgstr "Ctrl+Shift+T"
+
+msgid "Quick Open: find a saved session or type a host"
+msgstr "빠른 열기: 저장된 세션 찾기 또는 호스트 입력"
+
+msgid "Cmd+C"
+msgstr "Cmd+C"
+
+msgid "Ctrl+C, Ctrl+Insert"
+msgstr "Ctrl+C, Ctrl+Insert"
+
+msgid "Copy the selection"
+msgstr "선택 영역 복사"
+
+msgid "Copy the selection (with none, Ctrl+C goes to the host)"
+msgstr "선택 영역 복사(선택 영역이 없으면 Ctrl+C가 호스트로 전송됨)"
+
+msgid "Cmd+V"
+msgstr "Cmd+V"
+
+msgid "Ctrl+V, Shift+Insert"
+msgstr "Ctrl+V, Shift+Insert"
+
+msgid "Middle click"
+msgstr "가운데 클릭"
+
+msgid "Ctrl+Tab"
+msgstr "Ctrl+Tab"
+
+msgid "Next tab"
+msgstr "다음 탭"
+
+msgid "Ctrl+Shift+Tab"
+msgstr "Ctrl+Shift+Tab"
+
+msgid "Previous tab"
+msgstr "이전 탭"
+
+msgid "Cmd+1 ... Cmd+9"
+msgstr "Cmd+1 ... Cmd+9"
+
+msgid "Alt+1 ... Alt+9"
+msgstr "Alt+1 ... Alt+9"
+
+msgid "Go to tab 1 to 9"
+msgstr "탭 1~9로 이동"
+
+msgid "Option+Return"
+msgstr "Option+Return"
+
+msgid "Alt+Enter"
+msgstr "Alt+Enter"
+
+msgid "Full screen"
+msgstr "전체 화면"
+
+msgid "Shift+PageUp, Shift+PageDown"
+msgstr "Shift+PageUp, Shift+PageDown"
+
+msgid "Scroll back or forward a page"
+msgstr "한 페이지 뒤로 또는 앞으로 스크롤"
+
+msgid "Cmd+wheel"
+msgstr "Cmd+휠"
+
+msgid "Ctrl+wheel"
+msgstr "Ctrl+휠"
+
+msgid "Font size"
+msgstr "글꼴 크기"
+
+msgid "Cmd+click"
+msgstr "Cmd+클릭"
+
+msgid "Ctrl+click"
+msgstr "Ctrl+클릭"
+
+msgid "Open a web address in the browser"
+msgstr "브라우저에서 웹 주소 열기"
+
+msgid "Enter"
+msgstr "Enter"
+
+msgid "Reconnect a disconnected tab"
+msgstr "연결이 끊긴 탭 다시 연결"
+
+msgid "Ctrl+C, Escape"
+msgstr "Ctrl+C, Escape"
+
+msgid "Cancel a file transfer"
+msgstr "파일 전송 취소"
+
+msgid "Cmd+K, Cmd+T"
+msgstr "Cmd+K, Cmd+T"
+
+msgid "Quick Connect, Connect in Tab"
+msgstr "빠른 연결, 탭에서 연결"
+
+msgid "Cmd+E"
+msgstr "Cmd+E"
+
+msgid "Open a saved session (the Session Manager's filter)"
+msgstr "저장된 세션 열기(세션 관리자의 필터)"
+
+msgid "Cmd+L"
+msgstr "Cmd+L"
+
+msgid "Connect a local shell"
+msgstr "로컬 셸 연결"
+
+msgid "Keyboard Shortcuts"
+msgstr "키보드 바로 가기"
+
+msgid ""
+"Add your own in Global Options > Keyboard, or per session in Session Options "
+"> Keyboard. For example, F1 = menu: shortcuts opens this list."
+msgstr "전역 옵션 > 키보드에서 직접 추가하거나 세션 옵션 > 키보드에서 세션별로 추가할 수 있습니다. 예를 들어 F1 = menu: shortcuts는 이 목록을 엽니다."
+
+msgid "About OpenCRT"
+msgstr "OpenCRT 정보"
+
+msgid "Version {}"
+msgstr "버전 {}"
+
+msgid "Secure terminal client for Windows, macOS and Linux."
+msgstr "Windows, macOS 및 Linux용 보안 터미널 클라이언트."
+
+msgid "© 2026 Kim Attree"
+msgstr "© 2026 Kim Attree"
+
+msgid "Protocols"
+msgstr "프로토콜"
+
+msgid "SSH2, SFTP, Telnet, RDP, VNC, serial, raw TCP, local shell"
+msgstr "SSH2, SFTP, Telnet, RDP, VNC, 직렬, raw TCP, 로컬 셸"
+
+msgid "Config"
+msgstr "설정"
+
+msgid "Licence"
+msgstr "라이선스"
+
+msgid "GPL-3.0-only, as built with Slint; source code Apache-2.0"
+msgstr "GPL-3.0-only(Slint로 빌드한 상태), 소스 코드는 Apache-2.0"
+
+msgid "Fonts"
+msgstr "글꼴"
+
+msgid "IBM Plex Sans and Mono, SIL Open Font License 1.1"
+msgstr "IBM Plex Sans 및 Mono, SIL Open Font License 1.1"
+
+msgid "Check for Updates"
+msgstr "업데이트 확인"
+
+msgid "Release Notes"
+msgstr "릴리스 정보"
+
+msgid "Update Now"
+msgstr "지금 업데이트"
+
+msgid "Download"
+msgstr "다운로드"
+
+msgid "Upload"
+msgstr "업로드"
+
+msgid "Edit (opens here, uploads on save)"
+msgstr "편집(여기서 열고 저장 시 업로드)"
+
+msgid "Copy Path"
+msgstr "경로 복사"
+
+msgid "Refresh"
+msgstr "새로 고침"
+
+msgid "Remote site:"
+msgstr "원격 사이트:"
+
+msgid "Local site:"
+msgstr "로컬 사이트:"
+
+msgid "Up"
+msgstr "위로"
+
+msgid "Filename"
+msgstr "파일 이름"
+
+msgid "Filesize"
+msgstr "파일 크기"
+
+msgid "Filetype"
+msgstr "파일 유형"
+
+msgid "Last modified"
+msgstr "수정한 날짜"
+
+msgid "Permissions"
+msgstr "권한"
+
+msgid "Owner/Group"
+msgstr "소유자/그룹"
+
+msgid "Filter"
+msgstr "필터"
+
+msgid "Hidden"
+msgstr "숨김 파일"
+
+msgid "Follow shell"
+msgstr "셸 따라가기"
+
+msgid "Cancel Transfer"
+msgstr "전송 취소"
+
+msgid "Retry"
+msgstr "다시 시도"
+
+msgid "Clear List"
+msgstr "목록 지우기"
+
+msgid "Local file"
+msgstr "로컬 파일"
+
+msgid "Direction"
+msgstr "방향"
+
+msgid "Remote file"
+msgstr "원격 파일"
+
+msgid "Size"
+msgstr "크기"
+
+msgid "Reason"
+msgstr "이유"
+
+msgid "Status"
+msgstr "상태"
+
+msgid "Queued files ({})"
+msgstr "대기 중인 파일({})"
+
+msgid "Failed transfers ({})"
+msgstr "실패한 전송({})"
+
+msgid "Successful transfers ({})"
+msgstr "성공한 전송({})"
+
+msgid "Quick Open"
+msgstr "빠른 열기"
+
+msgid "Search saved sessions, or type user@host"
+msgstr "저장된 세션 검색 또는 user@host 입력"
+
+msgid "No saved session matches."
+msgstr "일치하는 저장된 세션이 없습니다."
+
+msgid "Enter connects  ·  Shift+Enter opens an SFTP GUI tab  ·  Esc closes"
+msgstr "Enter: 연결  ·  Shift+Enter: SFTP GUI 탭 열기  ·  Esc: 닫기"
+
+msgid "Ready"
+msgstr "준비"
+
+msgid "Script"
+msgstr "스크립트"
+
+msgid "File"
+msgstr "파일"
+
+msgid "Quick Connect..."
+msgstr "빠른 연결..."
+
+msgid "Quick Open... (Cmd+O)"
+msgstr "빠른 열기... (Cmd+O)"
+
+msgid "Quick Open... (Ctrl+Shift+T)"
+msgstr "빠른 열기... (Ctrl+Shift+T)"
+
+msgid "Connect in Tab..."
+msgstr "탭에서 연결..."
+
+msgid "Connect Local Shell"
+msgstr "로컬 셸 연결"
+
+msgid "Disconnect All"
+msgstr "모두 연결 끊기"
+
+msgid "Close Tab"
+msgstr "탭 닫기"
+
+msgid "Stop Logging"
+msgstr "로깅 중지"
+
+msgid "Log Session..."
+msgstr "세션 로깅..."
+
+msgid "Stop Recording"
+msgstr "녹화 중지"
+
+msgid "Record Session (asciicast)..."
+msgstr "세션 녹화(asciicast)..."
+
+msgid "Trace Options"
+msgstr "추적 옵션"
+
+msgid "Print Screen"
+msgstr "화면 인쇄"
+
+msgid "Print Selection"
+msgstr "선택 영역 인쇄"
+
+msgid "Stop Auto Print"
+msgstr "자동 인쇄 중지"
+
+msgid "Auto Print"
+msgstr "자동 인쇄"
+
+msgid "Snapshots"
+msgstr "스냅샷"
+
+msgid "Save Snapshot..."
+msgstr "스냅샷 저장..."
+
+msgid "Exit"
+msgstr "끝내기"
+
+msgid "Edit"
+msgstr "편집"
+
+msgid "Copy with Colours"
+msgstr "색 포함 복사"
+
+msgid "Copy and Paste"
+msgstr "복사하여 붙여넣기"
+
+msgid "Select All"
+msgstr "모두 선택"
+
+msgid "Find..."
+msgstr "찾기..."
+
+msgid "Clear Screen"
+msgstr "화면 지우기"
+
+msgid "Clear Scrollback"
+msgstr "스크롤백 지우기"
+
+msgid "Clear Screen and Scrollback"
+msgstr "화면 및 스크롤백 지우기"
+
+msgid "Reset Terminal"
+msgstr "터미널 재설정"
+
+msgid "Send Break"
+msgstr "Break 보내기"
+
+msgid "Send Input to All Tabs"
+msgstr "모든 탭에 입력 보내기"
+
+msgid "View"
+msgstr "보기"
+
+msgid "Toolbar"
+msgstr "도구 모음"
+
+msgid "Status Bar"
+msgstr "상태 표시줄"
+
+msgid "Command Window"
+msgstr "명령 창"
+
+msgid "Hex View"
+msgstr "16진수 보기"
+
+msgid "Show Control Characters"
+msgstr "제어 문자 표시"
+
+msgid "Button Bar"
+msgstr "버튼 표시줄"
+
+msgid "Full Screen"
+msgstr "전체 화면"
+
+msgid "Always on Top"
+msgstr "항상 위"
+
+msgid "Larger Font"
+msgstr "글꼴 크게"
+
+msgid "Smaller Font"
+msgstr "글꼴 작게"
+
+msgid "Options"
+msgstr "옵션"
+
+msgid "Default Session..."
+msgstr "기본 세션..."
+
+msgid "Firewalls..."
+msgstr "방화벽..."
+
+msgid "Colour Schemes..."
+msgstr "색 구성표..."
+
+msgid "Global Options..."
+msgstr "전역 옵션..."
+
+msgid "Transfer"
+msgstr "전송"
+
+msgid "Send ASCII File..."
+msgstr "ASCII 파일 보내기..."
+
+msgid "Send Binary File..."
+msgstr "바이너리 파일 보내기..."
+
+msgid "Stop Receive ASCII"
+msgstr "ASCII 받기 중지"
+
+msgid "Receive ASCII..."
+msgstr "ASCII 받기..."
+
+msgid "Zmodem Upload..."
+msgstr "Zmodem 업로드..."
+
+msgid "Send Xmodem..."
+msgstr "Xmodem 보내기..."
+
+msgid "Receive Xmodem..."
+msgstr "Xmodem 받기..."
+
+msgid "Send Ymodem..."
+msgstr "Ymodem 보내기..."
+
+msgid "Receive Ymodem"
+msgstr "Ymodem 받기"
+
+msgid "Send Kermit..."
+msgstr "Kermit 보내기..."
+
+msgid "Receive Kermit"
+msgstr "Kermit 받기"
+
+msgid "Run..."
+msgstr "실행..."
+
+msgid "Script Editor..."
+msgstr "스크립트 편집기..."
+
+msgid "Stop Recording..."
+msgstr "기록 중지..."
+
+msgid "Start Recording"
+msgstr "기록 시작"
+
+msgid "Tools"
+msgstr "도구"
+
+msgid "Create Public Key..."
+msgstr "공개 키 만들기..."
+
+msgid "Host Keys..."
+msgstr "호스트 키..."
+
+msgid "Credentials Manager..."
+msgstr "자격 증명 관리자..."
+
+msgid "Master Password..."
+msgstr "마스터 암호..."
+
+msgid "Agent Keys..."
+msgstr "에이전트 키..."
+
+msgid "Public Key Assistant..."
+msgstr "공개 키 도우미..."
+
+msgid "Convert Private Key to OpenSSH..."
+msgstr "개인 키를 OpenSSH로 변환..."
+
+msgid "Import OpenSSH Config"
+msgstr "OpenSSH 구성 가져오기"
+
+msgid "Import SecureCRT Sessions..."
+msgstr "SecureCRT 세션 가져오기..."
+
+msgid "Import Sessions..."
+msgstr "세션 가져오기..."
+
+msgid "Export Sessions..."
+msgstr "세션 내보내기..."
+
+msgid "Window"
+msgstr "창"
+
+msgid "Next Tab"
+msgstr "다음 탭"
+
+msgid "Previous Tab"
+msgstr "이전 탭"
+
+msgid "Tile Vertically"
+msgstr "세로로 나란히 놓기"
+
+msgid "Tile Horizontally"
+msgstr "가로로 나란히 놓기"
+
+msgid "Untile"
+msgstr "나란히 놓기 해제"
+
+msgid "Merge Tab Groups"
+msgstr "탭 그룹 병합"
+
+msgid "Language"
+msgstr "언어"
+
+msgid "Western and Southern Europe"
+msgstr "서유럽 및 남유럽"
+
+msgid "Northern Europe"
+msgstr "북유럽"
+
+msgid "Central and Eastern Europe"
+msgstr "중부 및 동유럽"
+
+msgid "Help"
+msgstr "도움말"
+
+msgid "Connect in Tab"
+msgstr "탭에서 연결"
+
+msgid "PowerShell"
+msgstr "PowerShell"
+
+msgid "Command Prompt (classic)"
+msgstr "명령 프롬프트(클래식)"
+
+msgid "WSL: {}"
+msgstr "WSL: {}"
+
+msgid "Quick connect: user@host"
+msgstr "빠른 연결: user@host"
+
+msgid "Clear History"
+msgstr "기록 지우기"
+
+msgid "Find"
+msgstr "찾기"
+
+msgid "Highlight words"
+msgstr "단어 강조 표시"
+
+msgid "OpenCRT"
+msgstr "OpenCRT"
+
+msgid "File > Quick Connect, or type user@host in the toolbar's connect bar."
+msgstr "파일 > 빠른 연결을 사용하거나 도구 모음의 연결 표시줄에 user@host를 입력하십시오."
+
+msgid "Show Menu Bar"
+msgstr "메뉴 모음 표시"
+
+msgid "Search the Web"
+msgstr "웹 검색"
+
+msgid "Default"
+msgstr "기본"
+
+msgid "New Bar..."
+msgstr "새 표시줄..."
+
+msgid "Rename Bar..."
+msgstr "표시줄 이름 바꾸기..."
+
+msgid "Delete Bar..."
+msgstr "표시줄 삭제..."
+
+msgid "Add a button that sends a command, e.g. show version\\r"
+msgstr "명령을 보내는 버튼 추가(예: show version\\r)"
+
+msgid "Nothing received yet in this tab."
+msgstr "이 탭에서 아직 받은 내용이 없습니다."
+
+msgid "characters are sent as you type; Enter sends Enter"
+msgstr "입력하는 즉시 문자 전송, Enter는 Enter 전송"
+
+msgid "type a command and press Enter"
+msgstr "명령을 입력하고 Enter를 누르십시오"
+
+msgid "History"
+msgstr "기록"
+
+msgid "Send characters immediately"
+msgstr "문자 즉시 보내기"
+
+msgid "Find:"
+msgstr "찾기:"
+
+msgid "text to find (Enter = next)"
+msgstr "찾을 텍스트(Enter = 다음)"
+
+msgid "Next"
+msgstr "다음"
+
+msgid "Previous"
+msgstr "이전"
+
+msgid "Match case"
+msgstr "대/소문자 구분"
+
+msgid "OpenCRT {} available"
+msgstr "OpenCRT {} 사용 가능"
+
+msgid "{n} tunnel tab"
+msgid_plural "{n} tunnel tabs"
+msgstr[0] "터널 탭 {n}개"
+
+msgid "ALL TABS"
+msgstr "모든 탭"
+
+msgid "LOG"
+msgstr "로그"
+
+msgid "CAP"
+msgstr "CAP"
+
+msgid "NUM"
+msgstr "NUM"
+
+msgid "Session Options - {}"
+msgstr "세션 옵션 - {}"
+
+msgid "Host Keys"
+msgstr "호스트 키"
+
+msgid ""
+"Keys of the SSH servers you have accepted. Remove one when a server's key "
+"has changed for a known reason (for example after a reinstall); you are "
+"asked to accept the new key at the next connection."
+msgstr "수락한 SSH 서버의 키입니다. 알려진 이유로(예: 다시 설치한 후) 서버의 키가 바뀌었으면 해당 키를 제거하십시오. 다음에 연결할 때 새 키를 수락할지 묻습니다."
+
+msgid "No saved host keys."
+msgstr "저장된 호스트 키가 없습니다."
+
+msgid "Import SecureCRT..."
+msgstr "SecureCRT에서 가져오기..."
+
+msgid "Credentials Manager"
+msgstr "자격 증명 관리자"
+
+msgid ""
+"Saved logins for SSH2, Telnet, RDP and VNC sessions. Pick one in Session "
+"Options > Authentication; its password is kept in the system keychain."
+msgstr "SSH2, Telnet, RDP 및 VNC 세션용으로 저장된 로그인 정보입니다. 세션 옵션 > 인증에서 선택하십시오. 암호는 시스템 키체인에 보관됩니다."
+
+msgid "Username"
+msgstr "사용자 이름"
+
+msgid "Firewalls"
+msgstr "방화벽"
+
+msgid ""
+"Proxies and gateways defined once and used by name: type a firewall's name "
+"into a session's Proxy field (Session Options > Connection)."
+msgstr "한 번 정의하여 이름으로 사용하는 프록시와 게이트웨이입니다. 세션의 프록시 필드에 방화벽 이름을 입력하십시오(세션 옵션 > 연결)."
+
+msgid "Proxy"
+msgstr "프록시"
+
+msgid "Agent Keys"
+msgstr "에이전트 키"
+
+msgid ""
+"Keys held by OpenCRT's own SSH agent. While it holds keys, sessions without "
+"a key file log in with them and forwarded agents use them; otherwise the "
+"system's agent is used. Keys stay in memory until OpenCRT closes."
+msgstr "OpenCRT 자체 SSH 에이전트가 보유한 키입니다. 키를 보유하는 동안 키 파일이 없는 세션은 이 키로 로그인하고 전달된 에이전트도 이 키를 사용합니다. 그렇지 않으면 시스템의 에이전트가 사용됩니다. 키는 OpenCRT를 닫을 때까지 메모리에 남습니다."
+
+msgid "No keys loaded."
+msgstr "로드된 키가 없습니다."
+
+msgid ""
+"Load these keys when OpenCRT starts (their file names are saved; passphrases "
+"are asked for)"
+msgstr "OpenCRT를 시작할 때 이 키 로드(파일 이름이 저장되며 암호문은 묻습니다)"
+
+msgid "Create Public Key"
+msgstr "공개 키 만들기"
+
+msgid ""
+"Creates a key pair in OpenSSH format. Add the public key (copied to the "
+"clipboard when done) to ~/.ssh/authorized_keys on the server, or use Tools > "
+"Public Key Assistant."
+msgstr "OpenSSH 형식의 키 쌍을 만듭니다. 공개 키(완료되면 클립보드에 복사됨)를 서버의 ~/.ssh/authorized_keys에 추가하거나 도구 > 공개 키 도우미를 사용하십시오."
+
+msgid "Passphrase:"
+msgstr "암호문:"
+
+msgid "recommended"
+msgstr "권장"
+
+msgid "Comment:"
+msgstr "주석:"
+
+msgid "Save as:"
+msgstr "저장할 파일:"
+
+msgid "Creating..."
+msgstr "만드는 중..."
+
+msgid "Create"
+msgstr "만들기"
+
+msgid "Label:"
+msgstr "레이블:"
+
+msgid "Action:"
+msgstr "동작:"
+
+msgid "Send text"
+msgstr "텍스트 보내기"
+
+msgid "Run a script"
+msgstr "스크립트 실행"
+
+msgid "Menu command"
+msgstr "메뉴 명령"
+
+msgid "Run a program"
+msgstr "프로그램 실행"
+
+msgid "Telnet command"
+msgstr "Telnet 명령"
+
+msgid "Menu command:"
+msgstr "메뉴 명령:"
+
+msgid "Program:"
+msgstr "프로그램:"
+
+msgid "e.g. show version\\r"
+msgstr "예: show version\\r"
+
+msgid "e.g. /home/me/scripts/login.rhai"
+msgstr "예: /home/me/scripts/login.rhai"
+
+msgid "e.g. clear-screen, reconnect, sftp-tab"
+msgstr "예: clear-screen, reconnect, sftp-tab"
+
+msgid "e.g. wireshark -k"
+msgstr "예: wireshark -k"
+
+msgid "brk, ip, ao, ayt, ec, el, ga or nop"
+msgstr "brk, ip, ao, ayt, ec, el, ga 또는 nop"
+
+msgid "Bar:"
+msgstr "표시줄:"
+
+msgid "blank: the default bar (sessions choose theirs)"
+msgstr "비워 두면 기본 표시줄(세션이 자체 표시줄 선택)"
+
+msgid "optional, e.g. Cisco"
+msgstr "선택 사항, 예: Cisco"
+
+msgid "\\r is Enter, \\n a line feed, \\t Tab, \\e Escape and \\\\ a backslash."
+msgstr "\\r은 Enter, \\n은 줄 바꿈, \\t는 Tab, \\e는 Escape, \\\\는 백슬래시입니다."
+
+msgid "Enter a username."
+msgstr "사용자 이름을 입력하십시오."
+
+msgid "Enter jump hosts as [user@]host[:port] or saved session names, separated by commas."
+msgstr "점프 호스트를 [user@]host[:port] 또는 저장된 세션 이름으로, 쉼표로 구분하여 입력하십시오."
+
+msgid "Enter a username (user, DOMAIN\\user or user@domain)."
+msgstr "사용자 이름을 입력하십시오(user, DOMAIN\\user 또는 user@domain)."
+
+msgid "Enter a hostname."
+msgstr "호스트 이름을 입력하십시오."
+
+msgid "Enter a port between 1 and 65535."
+msgstr "1에서 65535 사이의 포트를 입력하십시오."
+
+msgid "Enter a serial port name, e.g. COM3."
+msgstr "직렬 포트 이름을 입력하십시오(예: COM3)."
+
+msgid "Enter a baud rate."
+msgstr "보드 속도를 입력하십시오."
+
+msgid "No saved session named \"{}\"."
+msgstr "이름이 \"{}\"인 저장된 세션이 없습니다."
+
+msgid "Reconnecting in {} s (attempt {} of {})..."
+msgstr "{}초 후 다시 연결합니다(시도 {}/{})..."
+
+msgid "Script finished."
+msgstr "스크립트가 끝났습니다."
+
+msgid "Script stopped: {}"
+msgstr "스크립트 중지됨: {}"
+
+msgid "Zmodem: received {} bytes"
+msgstr "Zmodem: {}바이트 받음"
+
+msgid "Kermit: received {} bytes"
+msgstr "Kermit: {}바이트 받음"
+
+msgid "Kermit: sent {} of {} bytes"
+msgstr "Kermit: {}/{}바이트 보냄"
+
+msgid "Zmodem: receiving into {}"
+msgstr "Zmodem: {}에 받는 중"
+
+msgid "Zmodem: sending {}"
+msgstr "Zmodem: {} 보내는 중"
+
+msgid "Run rz on the host to receive {}."
+msgstr "{} 파일을 받으려면 호스트에서 rz를 실행하십시오."
+
+msgid "Kermit: sending {} (run kermit -r on the host)..."
+msgstr "Kermit: {} 보내는 중(호스트에서 kermit -r 실행)..."
+
+msgid "Kermit: receiving into {}..."
+msgstr "Kermit: {}에 받는 중..."
+
+msgid "Zmodem: sent {} of {} bytes"
+msgstr "Zmodem: {}/{}바이트 보냄"
+
+msgid "Logging stopped: {}"
+msgstr "로깅 중지됨: {}"
+
+msgid "Connects when shown"
+msgstr "표시되면 연결합니다"
+
+msgid "Running the pre-connect command..."
+msgstr "연결 전 명령 실행 중..."
+
+msgid "Listening on {}..."
+msgstr "{}에서 수신 대기 중..."
+
+msgid "Connecting to {}..."
+msgstr "{}에 연결하는 중..."
+
+msgid "Logon script {}: {}"
+msgstr "로그온 스크립트 {}: {}"
+
+msgid "Logon script: {}"
+msgstr "로그온 스크립트: {}"
+
+msgid "Pre-connect command: {}"
+msgstr "연결 전 명령: {}"
+
+msgid "Press Enter to reconnect."
+msgstr "다시 연결하려면 Enter를 누르십시오."
+
+msgid "Recording to {} stopped: {}"
+msgstr "{}에 대한 녹화가 중지됨: {}"
+
+msgid "Receive ASCII stopped: cannot write {}: {}"
+msgstr "ASCII 받기 중지됨: {}에 쓸 수 없음: {}"
+
+msgid "Connection closed. Press Enter to reconnect."
+msgstr "연결이 닫혔습니다. 다시 연결하려면 Enter를 누르십시오."
+
+msgid "Disconnected"
+msgstr "연결 끊김"
+
+msgid "Sessions not saved: {}"
+msgstr "세션이 저장되지 않음: {}"
+
+msgid "Options not saved: {}"
+msgstr "옵션이 저장되지 않음: {}"
+
+msgid "Session {} no longer exists."
+msgstr "{} 세션이 더 이상 없습니다."
+
+msgid "That tab is locked: unlock it first (its tab menu)."
+msgstr "이 탭은 잠겨 있습니다. 먼저 탭 메뉴에서 잠금을 해제하십시오."
+
+msgid "Port forwarding needs an SSH2 session."
+msgstr "포트 전달에는 SSH2 세션이 필요합니다."
+
+msgid "This session has no port forwards: add them in Session Options > Port Forwarding."
+msgstr "이 세션에는 포트 전달이 없습니다. 세션 옵션 > 포트 전달에서 추가하십시오."
+
+msgid "Close {} other tabs, {} of them connected?"
+msgstr "다른 탭 {}개(그중 {}개 연결됨)를 닫으시겠습니까?"
+
+msgid "Close {} tabs, {} of them connected?"
+msgstr "탭 {}개(그중 {}개 연결됨)를 닫으시겠습니까?"
+
+msgid "Password to unlock with:"
+msgstr "잠금 해제에 사용할 암호:"
+
+msgid "The same password again:"
+msgstr "같은 암호 다시 입력:"
+
+msgid "Unlock Session"
+msgstr "세션 잠금 해제"
+
+msgid "Lock Session"
+msgstr "세션 잠금"
+
+msgid "The passwords did not match; the tab is not locked."
+msgstr "암호가 일치하지 않아 탭을 잠그지 않았습니다."
+
+msgid "Wrong password; the tab stays locked."
+msgstr "암호가 틀렸습니다. 탭은 잠긴 상태로 유지됩니다."
+
+msgid "Locked tabs were left open."
+msgstr "잠긴 탭은 열어 두었습니다."
+
+msgid "Sent to the printer."
+msgstr "프린터로 보냈습니다."
+
+msgid "Cannot print: {}"
+msgstr "인쇄할 수 없습니다: {}"
+
+msgid "Deleted the snapshot \"{}\"."
+msgstr "스냅샷 \"{}\"을(를) 삭제했습니다."
+
+msgid "Bar name:"
+msgstr "표시줄 이름:"
+
+msgid "Delete the button bar \"{}\"? Sessions that use it go back to the Default bar."
+msgstr "버튼 표시줄 \"{}\"을(를) 삭제하시겠습니까? 이 표시줄을 사용하는 세션은 기본 표시줄로 돌아갑니다."
+
+msgid "Delete the button bar \"{}\" and its buttons ({})? Sessions that use it go back to the Default bar."
+msgstr "버튼 표시줄 \"{}\"과(와) 그 버튼({})을 삭제하시겠습니까? 이 표시줄을 사용하는 세션은 기본 표시줄로 돌아갑니다."
+
+msgid "Snapshot name:"
+msgstr "스냅샷 이름:"
+
+msgid "Send Break works in connected serial and Telnet sessions."
+msgstr "Break 보내기는 연결된 직렬 및 Telnet 세션에서 작동합니다."
+
+msgid "Script cancelled."
+msgstr "스크립트가 취소되었습니다."
+
+msgid "Convert Private Key to OpenSSH"
+msgstr "개인 키를 OpenSSH로 변환"
+
+msgid "Add Key to Agent"
+msgstr "에이전트에 키 추가"
+
+msgid "Import known_hosts"
+msgstr "known_hosts 가져오기"
+
+msgid "Import SecureCRT Host Keys (pick its KnownHosts folder)"
+msgstr "SecureCRT 호스트 키 가져오기(KnownHosts 폴더 선택)"
+
+msgid "Imported {} host keys ({} found)."
+msgstr "호스트 키 {}개를 가져왔습니다({}개 발견)."
+
+msgid "Cannot update known_hosts: {}"
+msgstr "known_hosts를 업데이트할 수 없습니다: {}"
+
+msgid "Exported the host keys to {}."
+msgstr "호스트 키를 {}에 내보냈습니다."
+
+msgid "Cannot export to {}: {}"
+msgstr "{}에 내보낼 수 없습니다: {}"
+
+msgid "Cannot update {}: {}"
+msgstr "{}을(를) 업데이트할 수 없습니다: {}"
+
+msgid "Updating restarts OpenCRT and disconnects the connected session. Update now?"
+msgstr "업데이트하면 OpenCRT가 다시 시작되고 연결된 세션의 연결이 끊깁니다. 지금 업데이트하시겠습니까?"
+
+msgid "Updating restarts OpenCRT and disconnects {} connected sessions. Update now?"
+msgstr "업데이트하면 OpenCRT가 다시 시작되고 연결된 세션 {}개의 연결이 끊깁니다. 지금 업데이트하시겠습니까?"
+
+msgid "Cannot open {}: {}"
+msgstr "{}을(를) 열 수 없습니다: {}"
+
+msgid "Disconnected."
+msgstr "연결이 끊겼습니다."
+
+msgid "Auto Print: output is collected and printed when you turn it off."
+msgstr "자동 인쇄: 출력을 모아 두었다가 자동 인쇄를 끌 때 인쇄합니다."
+
+msgid "No local port forward to open: SOCKS and remote forwards have no page."
+msgstr "열 수 있는 로컬 포트 전달이 없습니다. SOCKS 및 원격 전달에는 페이지가 없습니다."
+
+msgid "Stopped sending the pasted text."
+msgstr "붙여넣은 텍스트 전송을 중지했습니다."
+
+msgid "Font size {}"
+msgstr "글꼴 크기 {}"
+
+msgid "Do the same for the rest of the queue"
+msgstr "대기열의 나머지에도 똑같이 적용"
+
+msgid "These {} lines will be pasted into every connected tab. Change them first if needed."
+msgstr "이 {}줄이 연결된 모든 탭에 붙여넣어집니다. 필요하면 먼저 수정하십시오."
+
+msgid "These {} lines will be pasted. Change them first if needed."
+msgstr "이 {}줄이 붙여넣어집니다. 필요하면 먼저 수정하십시오."
+
+msgid "Public key added to authorized_keys on {}."
+msgstr "{}의 authorized_keys에 공개 키를 추가했습니다."
+
+msgid "Could not add the public key on {}: {}"
+msgstr "{}에 공개 키를 추가하지 못했습니다: {}"
+
+msgid "Log in to {}"
+msgstr "{}에 로그인"
+
+msgid "Type the password"
+msgstr "암호를 입력하십시오"
+
+msgid "Cannot save the passphrase of {}: {}"
+msgstr "{}의 암호문을 저장할 수 없습니다: {}"
+
+msgid "The SecureCRT sessions were imported without their passwords."
+msgstr "SecureCRT 세션을 암호 없이 가져왔습니다."
+
+msgid "The password was not saved."
+msgstr "암호를 저장하지 않았습니다."
+
+msgid "Type the new master password."
+msgstr "새 마스터 암호를 입력하십시오."
+
+msgid "The new password and its confirmation differ."
+msgstr "새 암호와 확인 암호가 다릅니다."
+
+msgid "Saved passwords and key passphrases are now kept under the master password."
+msgstr "이제 저장된 암호와 키 암호문이 마스터 암호로 보호됩니다."
+
+msgid "Settings Sync shares these passwords: removing the master password moves them into this computer's keychain only, and the other computers that sync these settings will need their saved passwords entered again. Click Remove again to go ahead."
+msgstr "설정 동기화가 이 암호를 공유합니다. 마스터 암호를 제거하면 암호가 이 컴퓨터의 키체인으로만 옮겨지며, 이 설정을 동기화하는 다른 컴퓨터에서는 저장된 암호를 다시 입력해야 합니다. 계속하려면 제거를 다시 클릭하십시오."
+
+msgid "Changed the master password."
+msgstr "마스터 암호를 변경했습니다."
+
+msgid "Removed the master password: saved passwords are back in this computer's keychain."
+msgstr "마스터 암호를 제거했습니다. 저장된 암호는 다시 이 컴퓨터의 키체인에 보관됩니다."
+
+msgid "Type SecureCRT's Config Passphrase."
+msgstr "SecureCRT의 Config Passphrase(구성 암호문)를 입력하십시오."
+
+msgid "That passphrase opens none of the saved passwords. Check it in SecureCRT (it asks for it when it starts)."
+msgstr "이 암호문으로는 저장된 암호를 하나도 열 수 없습니다. SecureCRT에서 확인하십시오(시작할 때 묻습니다)."
+
+msgid "Cannot save the password of {}: {}"
+msgstr "{}의 암호를 저장할 수 없습니다: {}"
+
+msgid " Not read: {} (saved before the passphrase was set, or in an older form)."
+msgstr " 읽지 못함: {}(암호문 설정 전에 저장되었거나 이전 형식)."
+
+msgid "Imported {} saved SecureCRT passwords as credentials of their sessions.{}"
+msgstr "저장된 SecureCRT 암호 {}개를 해당 세션의 자격 증명으로 가져왔습니다.{}"
+
+msgid "Connect to {}"
+msgstr "{}에 연결"
+
+msgid "Connect {} sessions in \"{}\"?"
+msgstr "세션 {}개(\"{}\" 폴더)를 연결하시겠습니까?"
+
+msgid "Folder name:"
+msgstr "폴더 이름:"
+
+msgid "Delete the session \"{}\"?"
+msgstr "세션 \"{}\"을(를) 삭제하시겠습니까?"
+
+msgid "Delete {} sessions?"
+msgstr "세션 {}개를 삭제하시겠습니까?"
+
+msgid "Delete the folder \"{}\"?"
+msgstr "폴더 \"{}\"을(를) 삭제하시겠습니까?"
+
+msgid "Delete the folder \"{}\" and the session in it?"
+msgstr "폴더 \"{}\"과(와) 그 안의 세션을 삭제하시겠습니까?"
+
+msgid "Delete the folder \"{}\" and the {} sessions in it?"
+msgstr "폴더 \"{}\"과(와) 그 안의 세션 {}개를 삭제하시겠습니까?"
+
+msgid "Deleted the button bar \"{}\"."
+msgstr "버튼 표시줄 \"{}\"을(를) 삭제했습니다."
+
+msgid "The new configuration folder is used from the next start."
+msgstr "새 설정 폴더는 다음 시작부터 사용됩니다."
+
+msgid "Pick the files or folders whose paths to copy."
+msgstr "경로를 복사할 파일 또는 폴더를 선택하십시오."
+
+msgid "The clipboard is not available."
+msgstr "클립보드를 사용할 수 없습니다."
+
+msgid "Pick one file or folder to rename."
+msgstr "이름을 바꿀 파일 또는 폴더를 하나 선택하십시오."
+
+msgid "Pick the files or folders to delete."
+msgstr "삭제할 파일 또는 폴더를 선택하십시오."
+
+msgid "Rename"
+msgstr "이름 바꾸기"
+
+msgid "New name:"
+msgstr "새 이름:"
+
+msgid "Delete \"{}\" from this computer?"
+msgstr "이 컴퓨터에서 \"{}\"을(를) 삭제하시겠습니까?"
+
+msgid "Delete \"{}\" from the server?"
+msgstr "서버에서 \"{}\"을(를) 삭제하시겠습니까?"
+
+msgid "Delete the folder \"{}\" and everything in it from this computer?"
+msgstr "이 컴퓨터에서 폴더 \"{}\"과(와) 그 안의 모든 항목을 삭제하시겠습니까?"
+
+msgid "Delete the folder \"{}\" and everything in it from the server?"
+msgstr "서버에서 폴더 \"{}\"과(와) 그 안의 모든 항목을 삭제하시겠습니까?"
+
+msgid "Delete {} items (folders with everything in them) from this computer?"
+msgstr "이 컴퓨터에서 항목 {}개(폴더는 그 안의 모든 항목 포함)를 삭제하시겠습니까?"
+
+msgid "Delete {} items (folders with everything in them) from the server?"
+msgstr "서버에서 항목 {}개(폴더는 그 안의 모든 항목 포함)를 삭제하시겠습니까?"
+
+msgid "Tab name:"
+msgstr "탭 이름:"
+
+msgid "Anti-idle: the interval must be a whole number of seconds."
+msgstr "유휴 방지: 간격은 초 단위의 정수여야 합니다."
+
+msgid "Remote Desktop: {} is not a folder on this computer."
+msgstr "원격 데스크톱: {}은(는) 이 컴퓨터의 폴더가 아닙니다."
+
+msgid "Cannot change \"{}\": {}"
+msgstr "\"{}\"을(를) 변경할 수 없습니다: {}"
+
+msgid "Enter a session name (without \"/\")."
+msgstr "세션 이름을 입력하십시오(\"/\" 제외)."
+
+msgid "A session with that name already exists in this folder."
+msgstr "이 폴더에 같은 이름의 세션이 이미 있습니다."
+
+msgid "Disconnected by the script."
+msgstr "스크립트가 연결을 끊었습니다."
+
+msgid "Running script..."
+msgstr "스크립트 실행 중..."
+
+msgid "Script {} finished."
+msgstr "{} 스크립트가 끝났습니다."
+
+msgid "Script {} stopped: {}"
+msgstr "{} 스크립트 중지됨: {}"
+
+msgid "Public Key Assistant: open an SSH2 session first."
+msgstr "공개 키 도우미: 먼저 SSH2 세션을 여십시오."
+
+msgid "Public Key Assistant: the active tab must be a connected SSH2 session."
+msgstr "공개 키 도우미: 활성 탭이 연결된 SSH2 세션이어야 합니다."
+
+msgid "Public Key to Add"
+msgstr "추가할 공개 키"
+
+msgid "Public keys"
+msgstr "공개 키"
+
+msgid "Adding the public key on {}..."
+msgstr "{}에 공개 키를 추가하는 중..."
+
+msgid "Passphrase for {}:"
+msgstr "{}의 암호문:"
+
+msgid "Cannot load {}: {}"
+msgstr "{}을(를) 로드할 수 없습니다: {}"
+
+msgid "Cannot save the password: {}"
+msgstr "암호를 저장할 수 없습니다: {}"
+
+msgid "under the master password"
+msgstr "마스터 암호로 보호하여"
+
+msgid "in the system keychain"
+msgstr "시스템 키체인에"
+
+msgid "Password for {} saved {}."
+msgstr "{}의 암호를 {} 저장했습니다."
+
+msgid "Fix the colours first (#rrggbb)."
+msgstr "먼저 색을 수정하십시오(#rrggbb)."
+
+msgid "Enter a name for the scheme."
+msgstr "구성표 이름을 입력하십시오."
+
+msgid "A scheme with that name already exists."
+msgstr "같은 이름의 구성표가 이미 있습니다."
+
+msgid "Every colour must be #rrggbb (cursor and selection may be blank)."
+msgstr "모든 색은 #rrggbb 형식이어야 합니다(커서와 선택 영역은 비워 둘 수 있음)."
+
+msgid "Colour scheme saved."
+msgstr "색 구성표를 저장했습니다."
+
+msgid "Sessions without their own scheme now use \"{}\"."
+msgstr "자체 구성표가 없는 세션은 이제 \"{}\" 구성표를 사용합니다."
+
+msgid "A firewall with that name already exists."
+msgstr "같은 이름의 방화벽이 이미 있습니다."
+
+msgid "Enter a name for the credential."
+msgstr "자격 증명 이름을 입력하십시오."
+
+msgid "A credential with that name already exists."
+msgstr "같은 이름의 자격 증명이 이미 있습니다."
+
+msgid "The passwords do not match."
+msgstr "암호가 일치하지 않습니다."
+
+msgid "The password of \"{}\" could not be removed from the keychain: {}"
+msgstr "\"{}\"의 암호를 키체인에서 제거하지 못했습니다: {}"
+
+msgid "Import Key Map"
+msgstr "키 맵 가져오기"
+
+msgid "Key maps"
+msgstr "키 맵"
+
+msgid "Cannot read {}: {}"
+msgstr "{}을(를) 읽을 수 없습니다: {}"
+
+msgid "Terminal Font File"
+msgstr "터미널 글꼴 파일"
+
+msgid "Cannot write {}: {}"
+msgstr "{}에 쓸 수 없습니다: {}"
+
+msgid "Log files"
+msgstr "로그 파일"
+
+msgid "OpenSSH Certificate"
+msgstr "OpenSSH 인증서"
+
+msgid "Certificates"
+msgstr "인증서"
+
+msgid "Folder to Share with the Remote Computer"
+msgstr "원격 컴퓨터와 공유할 폴더"
+
+msgid "The passphrases do not match."
+msgstr "암호문이 일치하지 않습니다."
+
+msgid "Enter where to save the private key."
+msgstr "개인 키를 저장할 위치를 입력하십시오."
+
+msgid "That file already exists; choose another name."
+msgstr "이 파일이 이미 있습니다. 다른 이름을 선택하십시오."
+
+msgid "Checking for a new version…"
+msgstr "새 버전 확인 중…"
+
+msgid "OpenCRT {} is available. {}"
+msgstr "OpenCRT {} 버전을 사용할 수 있습니다. {}"
+
+msgid "OpenCRT {} is the latest version."
+msgstr "OpenCRT {} 버전이 최신 버전입니다."
+
+msgid "Could not check for a new version: {}"
+msgstr "새 버전을 확인하지 못했습니다: {}"
+
+msgid "Could not update: {}. Download it from the release page instead."
+msgstr "업데이트하지 못했습니다: {}. 대신 릴리스 페이지에서 다운로드하십시오."
+
+msgid "Downloading Python for Python scripts (once) from its official site..."
+msgstr "Python 스크립트용 Python을 공식 사이트에서 다운로드하는 중(한 번만)..."
+
+msgid "Downloading Git for Windows from its official releases..."
+msgstr "공식 릴리스에서 Git for Windows를 다운로드하는 중..."
+
+msgid "Git's installer is running: finish it, then press OK."
+msgstr "Git 설치 프로그램이 실행 중입니다. 설치를 마친 다음 확인을 누르십시오."
+
+msgid "Could not get Git for Windows: {}. It is also at git-scm.com."
+msgstr "Git for Windows를 받지 못했습니다: {}. git-scm.com에서도 받을 수 있습니다."
+
+msgid "; public key copied to the clipboard"
+msgstr " (공개 키를 클립보드에 복사함)"
+
+msgid "Created {} and .pub{}."
+msgstr "{} 및 .pub 파일을 만들었습니다{}."
+
+msgid "Convert Private Key"
+msgstr "개인 키 변환"
+
+msgid "Cannot decrypt {}: {}"
+msgstr "{}을(를) 해독할 수 없습니다: {}"
+
+msgid "Saved {} and .pub in OpenSSH format."
+msgstr "{} 및 .pub 파일을 OpenSSH 형식으로 저장했습니다."
+
+msgid "Cannot save {}: {}"
+msgstr "{}을(를) 저장할 수 없습니다: {}"
+
+msgid "Sent {} ({} bytes)."
+msgstr "{}을(를) 보냈습니다({}바이트)."
+
+msgid "Send Binary File: no connected session."
+msgstr "바이너리 파일 보내기: 연결된 세션이 없습니다."
+
+msgid "Cannot send {}: {}"
+msgstr "{}을(를) 보낼 수 없습니다: {}"
+
+msgid "Stopped receiving into {}."
+msgstr "{}에 받기를 중지했습니다."
+
+msgid "Receiving into {}; choose Stop Receive ASCII to finish."
+msgstr "{}에 받는 중입니다. 끝내려면 ASCII 받기 중지를 선택하십시오."
+
+msgid "Cannot create {}: {}"
+msgstr "{}을(를) 만들 수 없습니다: {}"
+
+msgid "Send ASCII File: no connected session."
+msgstr "ASCII 파일 보내기: 연결된 세션이 없습니다."
+
+msgid "Stopped recording to {}."
+msgstr "{}에 대한 녹화를 중지했습니다."
+
+msgid "Recording to {}; play it with asciinema play."
+msgstr "{}에 녹화 중입니다. asciinema play로 재생하십시오."
+
+msgid "Stopped logging to {}."
+msgstr "{}에 대한 로깅을 중지했습니다."
+
+msgid "Logging to {}."
+msgstr "{}에 로깅 중입니다."
+
+msgid "Cannot read known_hosts: {}"
+msgstr "known_hosts를 읽을 수 없습니다: {}"
+
+msgid "OpenCRT sessions"
+msgstr "OpenCRT 세션"
+
+msgid "Exported {} sessions to {}."
+msgstr "세션 {}개를 {}에 내보냈습니다."
+
+msgid "Sessions"
+msgstr "세션"
+
+msgid "Cannot import {}: {}"
+msgstr "{}을(를) 가져올 수 없습니다: {}"
+
+msgid "; already there: {}"
+msgstr " (이미 있음: {})"
+
+msgid "Imported {} sessions from {}{}.{}"
+msgstr "세션 {}개를 {}에서 가져왔습니다{}.{}"
+
+msgid "Imported {} sessions from {}{}."
+msgstr "세션 {}개를 {}에서 가져왔습니다{}."
+
+msgid "Import SecureCRT Sessions (pick the Config folder)"
+msgstr "SecureCRT 세션 가져오기(Config 폴더 선택)"
+
+msgid "; not imported (unreadable or unsupported protocol): {}"
+msgstr " (가져오지 않음, 읽을 수 없거나 지원되지 않는 프로토콜: {})"
+
+msgid " Added button bars: {}, buttons: {}, keyword lists: {}."
+msgstr " 추가된 버튼 표시줄: {}, 버튼: {}, 키워드 목록: {}."
+
+msgid " Buttons left out (SecureCRT menu functions): {}."
+msgstr " 제외된 버튼(SecureCRT 메뉴 기능): {}."
+
+msgid "Imported {} sessions from {}{}{}.{}"
+msgstr "세션 {}개를 {}에서 가져왔습니다{}{}.{}"
+
+msgid "Run Script: open a session first."
+msgstr "스크립트 실행: 먼저 세션을 여십시오."
+
+msgid "Run Script"
+msgstr "스크립트 실행"
+
+msgid "Scripts"
+msgstr "스크립트"
+
+msgid "All files"
+msgstr "모든 파일"
+
+msgid "Snapshots keep saved sessions; none are open."
+msgstr "스냅샷은 저장된 세션을 보관하는데, 열려 있는 저장된 세션이 없습니다."
+
+msgid "Saved the snapshot \"{}\" ({} sessions)."
+msgstr "스냅샷 \"{}\"을(를) 저장했습니다(세션 {}개)."
+
+msgid "No connected session to send to."
+msgstr "보낼 연결된 세션이 없습니다."
+
+msgid "Run: no program given."
+msgstr "실행: 프로그램이 지정되지 않았습니다."
+
+msgid "Cannot run {}: {}"
+msgstr "{}을(를) 실행할 수 없습니다: {}"
+
+msgid "Telnet commands need a connected Telnet session."
+msgstr "Telnet 명령에는 연결된 Telnet 세션이 필요합니다."
+
+msgid "Unknown Telnet command \"{}\"."
+msgstr "알 수 없는 Telnet 명령 \"{}\"입니다."
+
+msgid "Script {}: open a session first."
+msgstr "스크립트 {}: 먼저 세션을 여십시오."
+
+msgid "Running script {}..."
+msgstr "스크립트 {} 실행 중..."
+
+msgid "Run Script: no connected session."
+msgstr "스크립트 실행: 연결된 세션이 없습니다."
+
+msgid "New script"
+msgstr "새 스크립트"
+
+msgid "Rhai scripts"
+msgstr "Rhai 스크립트"
+
+msgid "Saved {}."
+msgstr "{}을(를) 저장했습니다."
+
+msgid "No syntax errors."
+msgstr "구문 오류가 없습니다."
+
+msgid "Recording: lines you type are added to a script until Script > Stop Recording."
+msgstr "기록 중: 스크립트 > 기록 중지를 선택할 때까지 입력한 줄이 스크립트에 추가됩니다."
+
+msgid "Recording discarded."
+msgstr "기록한 내용을 버렸습니다."
+
+msgid "Script saved to {}."
+msgstr "스크립트를 {}에 저장했습니다."
+
+msgid "Drop files on a connected session to upload them."
+msgstr "파일을 업로드하려면 연결된 세션에 끌어다 놓으십시오."
+
+msgid "Send {} with:"
+msgstr "{} 보내기 방식:"
+
+msgid "Only {} is sent: this protocol takes one file at a time."
+msgstr "{}만 보냅니다. 이 프로토콜은 한 번에 파일 하나만 전송합니다."
+
+msgid "Cannot start the transfer: {}."
+msgstr "전송을 시작할 수 없습니다: {}."
+
+msgid "Zmodem Upload: no connected session."
+msgstr "Zmodem 업로드: 연결된 세션이 없습니다."
+
+msgid "Button Bar Button"
+msgstr "버튼 표시줄 버튼"
+
+msgid "Command"
+msgstr "명령"
+
+msgid "Enter a label and what the button does."
+msgstr "레이블과 버튼의 동작을 입력하십시오."
+
+msgid "Telnet commands are brk, ip, ao, ayt, ec, el, ga and nop."
+msgstr "Telnet 명령은 brk, ip, ao, ayt, ec, el, ga 및 nop입니다."
+
+msgid "Delete the button \"{}\"?"
+msgstr "버튼 \"{}\"을(를) 삭제하시겠습니까?"
+
+msgid "Delete the command \"{}\"?"
+msgstr "명령 \"{}\"을(를) 삭제하시겠습니까?"
+
+msgid "Custom"
+msgstr "사용자 지정"
+
+msgid "New list"
+msgstr "새 목록"
+
+msgid "New list {}"
+msgstr "새 목록 {}"
+
+msgid "Font size must be 6 to 48, scrollback 0 to 1000000 lines, and keepalive 0 to 86400 seconds."
+msgstr "글꼴 크기는 6~48, 스크롤백은 0~1000000줄, keepalive는 0~86400초여야 합니다."
+
+msgid "General: recent sessions must be 0 to {}, the Connect All warning 0 to 1000, and the interface font size 9 to 20."
+msgstr "일반: 최근 세션은 0~{}, 모두 연결 경고는 0~1000, 인터페이스 글꼴 크기는 9~20이어야 합니다."
+
+msgid "Connection: the default SSH2 key file does not exist."
+msgstr "연결: 기본 SSH2 키 파일이 없습니다."
+
+msgid "Printing: the font size (up to 72) and margins (up to 100 mm) must be whole numbers."
+msgstr "인쇄: 글꼴 크기(최대 72)와 여백(최대 100mm)은 정수여야 합니다."
+
+msgid "File Transfer: the download folder does not exist."
+msgstr "파일 전송: 다운로드 폴더가 없습니다."
+
+msgid "General: the configuration folder must be a full path."
+msgstr "일반: 설정 폴더는 전체 경로여야 합니다."
+
+msgid "Settings Sync needs git, which is not installed: {}."
+msgstr "설정 동기화에는 git이 필요한데 설치되어 있지 않습니다: {}."
+
+msgid "File Transfer: TFTP addresses must be IP addresses or networks such as 192.168.1.0/24."
+msgstr "파일 전송: TFTP 주소는 IP 주소 또는 192.168.1.0/24 같은 네트워크여야 합니다."
+
+msgid "Settings Sync: the repository was not set up: {}"
+msgstr "설정 동기화: 리포지토리를 설정하지 못했습니다: {}"
+
+msgid " (your current settings were copied there)"
+msgstr " (현재 설정을 그곳에 복사함)"
+
+msgid " Connected sessions will be disconnected."
+msgstr " 연결된 세션은 연결이 끊깁니다."
+
+msgid "Settings now live in {}{}. Restart OpenCRT to use them?{}"
+msgstr "이제 설정이 {}에 보관됩니다{}. 이 설정을 사용하도록 OpenCRT를 다시 시작하시겠습니까?{}"
+
+msgid "Configuration folder not changed: {}"
+msgstr "설정 폴더가 변경되지 않음: {}"
+
+msgid "Cannot restart OpenCRT ({}); the new configuration folder is used from the next start."
+msgstr "OpenCRT를 다시 시작할 수 없습니다({}). 새 설정 폴더는 다음 시작부터 사용됩니다."
+
+msgid "Remote Desktop: enter both width and height (200 to 8192 pixels), or leave both blank to fit the window."
+msgstr "원격 데스크톱: 너비와 높이를 모두 입력하거나(200~8192픽셀), 창에 맞추려면 둘 다 비워 두십시오."
+
+msgid "Local"
+msgstr "로컬"
+
+msgid "SSH server"
+msgstr "SSH 서버"
+
+msgid "Remote"
+msgstr "원격"
+
+msgid "this machine"
+msgstr "이 컴퓨터"
+
+msgid "any (SOCKS)"
+msgstr "임의(SOCKS)"
+
+msgid "Not found"
+msgstr "찾을 수 없음"
+
+msgid "No connected session to send the command to."
+msgstr "명령을 보낼 연결된 세션이 없습니다."
+
+msgid "The portable version keeps saved passwords only under its master password; change it instead."
+msgstr "포터블 버전은 저장된 암호를 마스터 암호로만 보관합니다. 제거하는 대신 변경하십시오."
+
+msgid "Empty folder."
+msgstr "빈 폴더입니다."
+
+msgid "Open a folder on both sides first."
+msgstr "먼저 양쪽에서 폴더를 여십시오."
+
+msgid "Not copied (unsafe local name): {}"
+msgstr "복사하지 않음(안전하지 않은 로컬 이름): {}"
+
+msgid "The remote folder is not open yet."
+msgstr "원격 폴더가 아직 열리지 않았습니다."
+
+msgid "Pick one remote file to edit."
+msgstr "편집할 원격 파일을 하나 선택하십시오."
+
+msgid "Cannot make {}: {}"
+msgstr "{}을(를) 만들 수 없습니다: {}"
+
+msgid "Not overwritten: the file exists"
+msgstr "덮어쓰지 않음: 파일이 이미 있음"
+
+msgid "Nothing to show: the filter or Show hidden files hides it all."
+msgstr "표시할 항목이 없습니다. 필터 또는 숨김 파일 설정 때문에 모두 숨겨졌습니다."
+
+msgid "The file exists: overwrite?"
+msgstr "파일이 이미 있습니다. 덮어쓰시겠습니까?"
+
+msgid "Enter the port to listen on (1-65535)."
+msgstr "수신 대기할 포트를 입력하십시오(1-65535)."
+
+msgid "Enter the destination port (1-65535)."
+msgstr "대상 포트를 입력하십시오(1-65535)."
+
+msgid "Addresses and host names cannot contain spaces."
+msgstr "주소와 호스트 이름에는 공백을 넣을 수 없습니다."
+
+msgid "Allowed addresses must be IP addresses or networks such as 192.168.1.0/24, separated by commas."
+msgstr "허용 주소는 쉼표로 구분한 IP 주소 또는 192.168.1.0/24 같은 네트워크여야 합니다."
+
+msgid "Port forward \"{}\" failed: {}"
+msgstr "포트 전달 \"{}\" 실패: {}"
+
+msgid "Port forward \"{}\": cannot start {}: {}"
+msgstr "포트 전달 \"{}\": {}을(를) 시작할 수 없습니다: {}"
+
+msgid "Port {}: refused a connection from {} (not in the allowed addresses)"
+msgstr "포트 {}: {}의 연결을 거부했습니다(허용 주소에 없음)"
+
+msgid "Forwarded connection on port {}: {}"
+msgstr "포트 {}의 전달된 연결: {}"
+
+msgid "Your settings are now in the repository; OpenCRT uses it from the next start."
+msgstr "이제 설정이 리포지토리에 있습니다. OpenCRT는 다음 시작부터 리포지토리를 사용합니다."
+
+msgid "The repository's settings are used from the next start (yours stay in {})."
+msgstr "다음 시작부터 리포지토리의 설정이 사용됩니다(기존 설정은 {}에 남습니다)."
+
+msgid "Settings are kept in {} again from the next start."
+msgstr "다음 시작부터 설정이 다시 {}에 보관됩니다."
+
+msgid "Settings repository: cannot read the token from the keychain ({})."
+msgstr "설정 리포지토리: 키체인에서 토큰을 읽을 수 없습니다({})."
+
+msgid "Settings repository not reached ({}); using {}."
+msgstr "설정 리포지토리에 연결하지 못했습니다({}). {}을(를) 사용합니다."
+
+msgid "Settings were changed on another computer: restart OpenCRT to merge them with yours."
+msgstr "다른 컴퓨터에서 설정이 변경되었습니다. 현재 설정과 병합하려면 OpenCRT를 다시 시작하십시오."
+
+msgid "Settings not sent to the repository: {}"
+msgstr "설정을 리포지토리로 보내지 못했습니다: {}"
+
+msgid "Recent Sessions"
+msgstr "최근 세션"
+
+msgid "Enter a name for the firewall."
+msgstr "방화벽 이름을 입력하십시오."
+
+msgid "A firewall name cannot look like a proxy address."
+msgstr "방화벽 이름은 프록시 주소처럼 보이면 안 됩니다."
+
+msgid "Enter the command to run, e.g. nc %h %p."
+msgstr "실행할 명령을 입력하십시오(예: nc %h %p)."
+
+msgid "Enter the firewall's host name and port."
+msgstr "방화벽의 호스트 이름과 포트를 입력하십시오."
+
+msgid "For a proxy that needs a login, add a firewall in Options > Firewalls."
+msgstr "로그인이 필요한 프록시는 옵션 > 방화벽에서 방화벽으로 추가하십시오."
+
+msgid "load native code (ctypes)"
+msgstr "네이티브 코드 로드(ctypes)"
+
+msgid "use the Windows registry"
+msgstr "Windows 레지스트리 사용"
+
+msgid "change its limits"
+msgstr "자체 제한 변경"
+
+msgid "look through Python's memory"
+msgstr "Python 메모리 조회"
+
+msgid "signal another program (process {})"
+msgstr "다른 프로그램에 신호 보내기(프로세스 {})"
+
+msgid "use the network ({})"
+msgstr "네트워크 사용({})"
+
+msgid "write to {}"
+msgstr "{}에 쓰기"
+
+msgid "list the folder {}"
+msgstr "{} 폴더의 목록 보기"
+
+msgid "run a program: {}"
+msgstr "프로그램 실행: {}"
+
+msgid "read {}"
+msgstr "{} 읽기"
+
+msgid "change {}"
+msgstr "{} 변경"
+
+msgid "{} wants to {}.\n\nUntil you trust a script, it may use files only in its own folder, the download folder and the log folder, and may not run programs or use the network.\n\nAllow once lets this run go on; Always trust lets the script do anything from now on, until it is changed."
+msgstr "{} 스크립트가 다음 작업을 하려고 합니다: {}.\n\n신뢰하기 전까지 스크립트는 자체 폴더, 다운로드 폴더, 로그 폴더의 파일만 사용할 수 있으며 프로그램을 실행하거나 네트워크를 사용할 수 없습니다.\n\n한 번 허용을 선택하면 이번 실행을 계속하고, 항상 신뢰를 선택하면 스크립트가 변경될 때까지 앞으로 모든 작업을 할 수 있습니다."
+
+msgid "Allow once"
+msgstr "한 번 허용"
+
+msgid "Always trust this script"
+msgstr "이 스크립트 항상 신뢰"
+
+msgid "Stop"
+msgstr "중지"
+
+msgid "Script Wants More Access"
+msgstr "스크립트가 추가 액세스를 요청함"
+
+msgid "Stopped: {} wanted to {}."
+msgstr "중지됨: {} 스크립트가 다음 작업을 하려고 했습니다: {}."
+
+msgid "Python stopped ({})"
+msgstr "Python 중지됨({})"
+
+msgid "Password for {}@{}:"
+msgstr "{}@{}의 암호:"
+
+msgid "The saved password was not accepted ({}); enter it again."
+msgstr "저장된 암호가 거부되었습니다({}). 다시 입력하십시오."
+
+msgid "{} is not a fixed-width font."
+msgstr "{}은(는) 고정 폭 글꼴이 아닙니다."
+
+msgid "The file is empty."
+msgstr "파일이 비어 있습니다."
+
+msgid "The first line must name the columns, including a host (or hostname) column."
+msgstr "첫 줄에 host(또는 hostname) 열을 포함한 열 이름이 있어야 합니다."
+
+msgid "Line {}: bad port \"{}\"."
+msgstr "줄 {}: 잘못된 포트 \"{}\"."
+
+msgid "Line {}: unknown protocol \"{}\"."
+msgstr "줄 {}: 알 수 없는 프로토콜 \"{}\"."
+
+msgid "Enter a folder name (without \"/\")."
+msgstr "폴더 이름을 입력하십시오(\"/\" 제외)."
+
+msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
+msgstr "{}에 SecureCRT 세션이 없습니다. Sessions 폴더가 들어 있는 Config 폴더를 선택하십시오."
+
+msgid "Connecting to {}:{} through the jump host"
+msgstr "{}:{}에 연결하는 중(점프 호스트 경유)"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "{}:{}에 연결하는 중(방화벽 {} 경유)"
+
+msgid "Connecting to {}:{}"
+msgstr "{}:{}에 연결하는 중"
+
+msgid "Server: {}"
+msgstr "서버: {}"
+
+msgid "Key exchange: {}"
+msgstr "키 교환: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "호스트 키 알고리즘: {}"
+
+msgid "Cipher: {}"
+msgstr "암호화 알고리즘: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: 없음(암호화 알고리즘이 데이터를 직접 보호함)"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "압축: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "호스트 키: {} {}(저장된 키와 일치)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "호스트 키: {} {}(아직 저장되지 않음)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "호스트 키: {} {}(저장된 키와 다름)"
+
+msgid "Authentication with {}: accepted"
+msgstr "{} 인증: 수락됨"
+
+msgid "Authentication with {}: refused"
+msgstr "{} 인증: 거부됨"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "{} 인증: 거부됨, 서버가 제공하는 방식: {}"
+
+msgid "Credential \"{}\": {}; asking for the password instead."
+msgstr "자격 증명 \"{}\": {}. 대신 암호를 묻습니다."
+
+msgid "{} connected."
+msgstr "{} 연결됨."
+
+msgid "Update Now installs it and restarts OpenCRT."
+msgstr "지금 업데이트를 선택하면 새 버전을 설치하고 OpenCRT를 다시 시작합니다."
+
+msgid "Update it with your system's package manager."
+msgstr "시스템의 패키지 관리자로 업데이트하십시오."
+
+msgid "To get it, and later versions, with your system's updates, set up the OpenCRT package repository once: kimp0ssible-no.github.io/OpenCRT"
+msgstr "이 버전과 이후 버전을 시스템 업데이트로 받으려면 OpenCRT 패키지 리포지토리를 한 번 설정하십시오: kimp0ssible-no.github.io/OpenCRT"
+
+msgid "Download the portable zip from the release page and replace the program files in this folder; the settings folder stays as it is."
+msgstr "릴리스 페이지에서 포터블 zip을 다운로드하여 이 폴더의 프로그램 파일을 교체하십시오. 설정 폴더는 그대로 유지됩니다."
+
+msgid "Download it from the release page."
+msgstr "릴리스 페이지에서 다운로드하십시오."
+
+msgid "That is not the master password."
+msgstr "마스터 암호가 아닙니다."
+
+msgid "Username for {}:"
+msgstr "{}의 사용자 이름:"
+
+msgid "Password for {} on {}:"
+msgstr "{}의 암호(호스트 {}):"

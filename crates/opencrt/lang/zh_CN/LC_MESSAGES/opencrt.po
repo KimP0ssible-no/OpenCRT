@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "模式："
+
+msgid "TCP client"
+msgstr "TCP 客户端"
+
+msgid "TCP server"
+msgstr "TCP 服务器"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "监听地址："
+
 msgid "Hostname:"
 msgstr "主机名："
+
+msgid "blank: every interface"
+msgstr "留空：所有接口"
+
+msgid "blank: answer the last sender"
+msgstr "留空：回复最后一个发送方"
 
 msgid "Port:"
 msgstr "端口："
@@ -1732,6 +1753,9 @@ msgstr "停止录制"
 msgid "Record Session (asciicast)..."
 msgstr "录制会话（asciicast）..."
 
+msgid "Trace Options"
+msgstr "跟踪选项"
+
 msgid "Print Screen"
 msgstr "打印屏幕"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "快速连接：user@host"
+
+msgid "Clear History"
+msgstr "清空历史记录"
 
 msgid "Find"
 msgstr "查找"
@@ -2257,6 +2284,9 @@ msgstr "显示时连接"
 
 msgid "Running the pre-connect command..."
 msgstr "正在运行连接前命令..."
+
+msgid "Listening on {}..."
+msgstr "正在监听 {}..."
 
 msgid "Connecting to {}..."
 msgstr "正在连接到 {}..."
@@ -3032,6 +3062,9 @@ msgstr "设置已在另一台计算机上更改：请重启 OpenCRT 以将其与
 msgid "Settings not sent to the repository: {}"
 msgstr "设置未发送到仓库：{}"
 
+msgid "Recent Sessions"
+msgstr "最近会话"
+
 msgid "Enter a name for the firewall."
 msgstr "请输入防火墙名称。"
 
@@ -3128,8 +3161,59 @@ msgstr "请输入文件夹名称（不含“/”）。"
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "{} 中没有 SecureCRT 会话。请选择包含 Sessions 文件夹的 Config 文件夹。"
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "正在连接到 {}:{}（通过跳板机）"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "正在连接到 {}:{}（通过防火墙 {}）"
+
+msgid "Connecting to {}:{}"
+msgstr "正在连接到 {}:{}"
+
+msgid "Server: {}"
+msgstr "服务器：{}"
+
+msgid "Key exchange: {}"
+msgstr "密钥交换：{}"
+
+msgid "Host key algorithm: {}"
+msgstr "主机密钥算法：{}"
+
+msgid "Cipher: {}"
+msgstr "加密算法：{}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC：无，加密算法自身即可保护数据"
+
+msgid "MAC: {}"
+msgstr "MAC：{}"
+
+msgid "Compression: {}"
+msgstr "压缩：{}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "主机密钥：{} {}（与已保存的密钥一致）"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "主机密钥：{} {}（尚未保存）"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "主机密钥：{} {}（与已保存的密钥不同）"
+
+msgid "Authentication with {}: accepted"
+msgstr "使用 {} 进行身份验证：已接受"
+
+msgid "Authentication with {}: refused"
+msgstr "使用 {} 进行身份验证：已拒绝"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "使用 {} 进行身份验证：已拒绝；服务器提供：{}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "凭据“{}”：{}；改为询问密码。"
+
+msgid "{} connected."
+msgstr "{} 已连接。"
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "“立即更新”会安装新版本并重启 OpenCRT。"

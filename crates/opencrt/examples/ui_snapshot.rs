@@ -32,6 +32,10 @@ fn main() {
     slint::platform::set_platform(Box::new(Offscreen(window.clone()))).unwrap();
     window.set_size(PhysicalSize::new(width, height));
     let ui = MainWindow::new().unwrap();
+    // A language by its folder name under lang/, e.g. OPENCRT_LANG=zh_TW; else Slint follows the locale.
+    if let Ok(language) = std::env::var("OPENCRT_LANG") {
+        slint::select_bundled_translation(&language).expect("a built-in language");
+    }
     ui.set_theme_mode(if theme.ends_with("dark") { 2 } else { 1 });
     if theme.starts_with("breeze") {
         let rgb = |[r, g, b]: [u8; 3]| Color::from_rgb_u8(r, g, b);

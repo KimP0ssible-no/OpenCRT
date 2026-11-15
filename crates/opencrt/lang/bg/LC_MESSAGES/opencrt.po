@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Режим:"
+
+msgid "TCP client"
+msgstr "TCP клиент"
+
+msgid "TCP server"
+msgstr "TCP сървър"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Слушане на:"
+
 msgid "Hostname:"
 msgstr "Име на хоста:"
+
+msgid "blank: every interface"
+msgstr "празно: всички интерфейси"
+
+msgid "blank: answer the last sender"
+msgstr "празно: отговор на последния подател"
 
 msgid "Port:"
 msgstr "Порт:"
@@ -1732,6 +1753,9 @@ msgstr "Спиране на записа"
 msgid "Record Session (asciicast)..."
 msgstr "Запис на сесията (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Опции за проследяване"
+
 msgid "Print Screen"
 msgstr "Печат на екрана"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Бърза връзка: user@host"
+
+msgid "Clear History"
+msgstr "Изчистване на историята"
 
 msgid "Find"
 msgstr "Търсене"
@@ -2258,6 +2285,9 @@ msgstr "Свързва се при показване"
 
 msgid "Running the pre-connect command..."
 msgstr "Изпълнение на командата преди свързване..."
+
+msgid "Listening on {}..."
+msgstr "Слушане на {}..."
 
 msgid "Connecting to {}..."
 msgstr "Свързване с {}..."
@@ -3033,6 +3063,9 @@ msgstr "Настройките са променени на друг компю�
 msgid "Settings not sent to the repository: {}"
 msgstr "Настройките не са изпратени в хранилището: {}"
 
+msgid "Recent Sessions"
+msgstr "Последни сесии"
+
 msgid "Enter a name for the firewall."
 msgstr "Въведете име на защитната стена."
 
@@ -3129,8 +3162,59 @@ msgstr "Въведете име на папката (без „/“)."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "Няма сесии на SecureCRT в {}. Изберете папката Config, която съдържа папката Sessions."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Свързване с {}:{} през междинния хост"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Свързване с {}:{} през защитната стена {}"
+
+msgid "Connecting to {}:{}"
+msgstr "Свързване с {}:{}"
+
+msgid "Server: {}"
+msgstr "Сървър: {}"
+
+msgid "Key exchange: {}"
+msgstr "Обмен на ключове: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Алгоритъм на ключа на хоста: {}"
+
+msgid "Cipher: {}"
+msgstr "Шифър: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: няма, шифърът сам защитава данните"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Компресия: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Ключ на хоста: {} {} (съвпада със запазения ключ)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Ключ на хоста: {} {} (още не е запазен)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Ключ на хоста: {} {} (различава се от запазения ключ)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Удостоверяване с {}: прието"
+
+msgid "Authentication with {}: refused"
+msgstr "Удостоверяване с {}: отказано"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Удостоверяване с {}: отказано; сървърът предлага: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Данни за вход „{}“: {}; вместо това се иска паролата."
+
+msgid "{} connected."
+msgstr "{} се свърза."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "„Актуализиране сега“ я инсталира и рестартира OpenCRT."

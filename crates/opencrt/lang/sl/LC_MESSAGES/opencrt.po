@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Način:"
+
+msgid "TCP client"
+msgstr "Odjemalec TCP"
+
+msgid "TCP server"
+msgstr "Strežnik TCP"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Poslušaj na:"
+
 msgid "Hostname:"
 msgstr "Ime gostitelja:"
+
+msgid "blank: every interface"
+msgstr "prazno: vsi vmesniki"
+
+msgid "blank: answer the last sender"
+msgstr "prazno: odgovori zadnjemu pošiljatelju"
 
 msgid "Port:"
 msgstr "Vrata:"
@@ -1732,6 +1753,9 @@ msgstr "Ustavi snemanje"
 msgid "Record Session (asciicast)..."
 msgstr "Snemaj sejo (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Možnosti sledenja"
+
 msgid "Print Screen"
 msgstr "Natisni zaslon"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Hitra povezava: user@host"
+
+msgid "Clear History"
+msgstr "Počisti zgodovino"
 
 msgid "Find"
 msgstr "Najdi"
@@ -2260,6 +2287,9 @@ msgstr "Poveže se ob prikazu"
 
 msgid "Running the pre-connect command..."
 msgstr "Izvajanje ukaza pred povezavo..."
+
+msgid "Listening on {}..."
+msgstr "Poslušanje na {}..."
 
 msgid "Connecting to {}..."
 msgstr "Povezovanje z {}..."
@@ -3035,6 +3065,9 @@ msgstr "Nastavitve so bile spremenjene na drugem računalniku: znova zaženite O
 msgid "Settings not sent to the repository: {}"
 msgstr "Nastavitve niso poslane v repozitorij: {}"
 
+msgid "Recent Sessions"
+msgstr "Nedavne seje"
+
 msgid "Enter a name for the firewall."
 msgstr "Vnesite ime požarnega zidu."
 
@@ -3131,8 +3164,59 @@ msgstr "Vnesite ime mape (brez »/«)."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "V {} ni sej SecureCRT. Izberite mapo Config, ki vsebuje mapo Sessions."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Povezovanje z {}:{} prek vmesnega gostitelja"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Povezovanje z {}:{} prek požarnega zidu {}"
+
+msgid "Connecting to {}:{}"
+msgstr "Povezovanje z {}:{}"
+
+msgid "Server: {}"
+msgstr "Strežnik: {}"
+
+msgid "Key exchange: {}"
+msgstr "Izmenjava ključev: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Algoritem ključa gostitelja: {}"
+
+msgid "Cipher: {}"
+msgstr "Šifra: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: brez, šifra sama ščiti podatke"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Stiskanje: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Ključ gostitelja: {} {} (ujema se s shranjenim ključem)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Ključ gostitelja: {} {} (še ni shranjen)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Ključ gostitelja: {} {} (razlikuje se od shranjenega ključa)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Overjanje z {}: sprejeto"
+
+msgid "Authentication with {}: refused"
+msgstr "Overjanje z {}: zavrnjeno"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Overjanje z {}: zavrnjeno; strežnik ponuja: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Poverilnica »{}«: {}; namesto tega se zahteva geslo."
+
+msgid "{} connected."
+msgstr "{}: povezava je vzpostavljena."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "Posodobi zdaj jo namesti in znova zažene OpenCRT."

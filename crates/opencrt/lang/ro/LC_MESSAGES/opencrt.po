@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Mod:"
+
+msgid "TCP client"
+msgstr "Client TCP"
+
+msgid "TCP server"
+msgstr "Server TCP"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Ascultare pe:"
+
 msgid "Hostname:"
 msgstr "Nume gazdă:"
+
+msgid "blank: every interface"
+msgstr "gol: toate interfețele"
+
+msgid "blank: answer the last sender"
+msgstr "gol: răspunde ultimului expeditor"
 
 msgid "Port:"
 msgstr "Port:"
@@ -1732,6 +1753,9 @@ msgstr "Oprire înregistrare"
 msgid "Record Session (asciicast)..."
 msgstr "Înregistrare sesiune (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Opțiuni de urmărire"
+
 msgid "Print Screen"
 msgstr "Imprimare ecran"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Conectare rapidă: user@host"
+
+msgid "Clear History"
+msgstr "Golire istoric"
 
 msgid "Find"
 msgstr "Căutare"
@@ -2259,6 +2286,9 @@ msgstr "Se conectează la afișare"
 
 msgid "Running the pre-connect command..."
 msgstr "Se rulează comanda dinainte de conectare..."
+
+msgid "Listening on {}..."
+msgstr "Se ascultă pe {}..."
 
 msgid "Connecting to {}..."
 msgstr "Conectare la {}..."
@@ -3034,6 +3064,9 @@ msgstr "Setările au fost modificate pe alt computer: reporniți OpenCRT pentru 
 msgid "Settings not sent to the repository: {}"
 msgstr "Setări netrimise în depozit: {}"
 
+msgid "Recent Sessions"
+msgstr "Sesiuni recente"
+
 msgid "Enter a name for the firewall."
 msgstr "Introduceți un nume pentru firewall."
 
@@ -3130,8 +3163,59 @@ msgstr "Introduceți un nume de folder (fără „/”)."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "Nicio sesiune SecureCRT în {}. Alegeți folderul Config care conține folderul Sessions."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Conectare la {}:{} prin gazda intermediară"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Conectare la {}:{} prin firewall-ul {}"
+
+msgid "Connecting to {}:{}"
+msgstr "Conectare la {}:{}"
+
+msgid "Server: {}"
+msgstr "Server: {}"
+
+msgid "Key exchange: {}"
+msgstr "Schimb de chei: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Algoritm cheie de gazdă: {}"
+
+msgid "Cipher: {}"
+msgstr "Cifru: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: niciunul, cifrul protejează singur datele"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Compresie: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Cheie de gazdă: {} {} (corespunde cheii salvate)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Cheie de gazdă: {} {} (încă nesalvată)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Cheie de gazdă: {} {} (diferă de cheia salvată)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Autentificare cu {}: acceptată"
+
+msgid "Authentication with {}: refused"
+msgstr "Autentificare cu {}: refuzată"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Autentificare cu {}: refuzată; serverul oferă: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Credențialul „{}”: {}; se cere parola în schimb."
+
+msgid "{} connected."
+msgstr "{} s-a conectat."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "Actualizare acum o instalează și repornește OpenCRT."

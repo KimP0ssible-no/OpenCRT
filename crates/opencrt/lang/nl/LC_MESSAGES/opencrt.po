@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Modus:"
+
+msgid "TCP client"
+msgstr "TCP-client"
+
+msgid "TCP server"
+msgstr "TCP-server"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Luisteren op:"
+
 msgid "Hostname:"
 msgstr "Hostnaam:"
+
+msgid "blank: every interface"
+msgstr "leeg: alle interfaces"
+
+msgid "blank: answer the last sender"
+msgstr "leeg: de laatste afzender antwoorden"
 
 msgid "Port:"
 msgstr "Poort:"
@@ -1732,6 +1753,9 @@ msgstr "Opname stoppen"
 msgid "Record Session (asciicast)..."
 msgstr "Sessie opnemen (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Traceeropties"
+
 msgid "Print Screen"
 msgstr "Scherm afdrukken"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Snel verbinden: gebruiker@host"
+
+msgid "Clear History"
+msgstr "Geschiedenis wissen"
 
 msgid "Find"
 msgstr "Zoeken"
@@ -2258,6 +2285,9 @@ msgstr "Verbindt wanneer getoond"
 
 msgid "Running the pre-connect command..."
 msgstr "Opdracht voor het verbinden wordt uitgevoerd..."
+
+msgid "Listening on {}..."
+msgstr "Luisteren op {}..."
 
 msgid "Connecting to {}..."
 msgstr "Verbinden met {}..."
@@ -3033,6 +3063,9 @@ msgstr "Instellingen zijn op een andere computer gewijzigd: start OpenCRT opnieu
 msgid "Settings not sent to the repository: {}"
 msgstr "Instellingen niet naar de repository verzonden: {}"
 
+msgid "Recent Sessions"
+msgstr "Recente sessies"
+
 msgid "Enter a name for the firewall."
 msgstr "Voer een naam in voor de firewall."
 
@@ -3129,8 +3162,59 @@ msgstr "Voer een mapnaam in (zonder \"/\")."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "Geen SecureCRT-sessies in {}. Kies de map Config die de map Sessions bevat."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Verbinden met {}:{} via de jumphost"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Verbinden met {}:{} via de firewall {}"
+
+msgid "Connecting to {}:{}"
+msgstr "Verbinden met {}:{}"
+
+msgid "Server: {}"
+msgstr "Server: {}"
+
+msgid "Key exchange: {}"
+msgstr "Sleuteluitwisseling: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Hostsleutelalgoritme: {}"
+
+msgid "Cipher: {}"
+msgstr "Versleuteling: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: geen, de versleuteling beschermt de gegevens zelf"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Compressie: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Hostsleutel: {} {} (komt overeen met de opgeslagen sleutel)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Hostsleutel: {} {} (nog niet opgeslagen)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Hostsleutel: {} {} (wijkt af van de opgeslagen sleutel)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Verificatie met {}: geaccepteerd"
+
+msgid "Authentication with {}: refused"
+msgstr "Verificatie met {}: geweigerd"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Verificatie met {}: geweigerd; de server biedt aan: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Referentie \"{}\": {}; in plaats daarvan wordt om het wachtwoord gevraagd."
+
+msgid "{} connected."
+msgstr "{} verbonden."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "Nu bijwerken installeert de versie en start OpenCRT opnieuw."

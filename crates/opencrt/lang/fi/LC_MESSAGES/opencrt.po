@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Tila:"
+
+msgid "TCP client"
+msgstr "TCP-asiakas"
+
+msgid "TCP server"
+msgstr "TCP-palvelin"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Kuunneltava osoite:"
+
 msgid "Hostname:"
 msgstr "Isäntänimi:"
+
+msgid "blank: every interface"
+msgstr "tyhjä: kaikki liitännät"
+
+msgid "blank: answer the last sender"
+msgstr "tyhjä: vastaa viimeisimmälle lähettäjälle"
 
 msgid "Port:"
 msgstr "Portti:"
@@ -1732,6 +1753,9 @@ msgstr "Lopeta tallennus"
 msgid "Record Session (asciicast)..."
 msgstr "Tallenna istunto (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Jäljitysasetukset"
+
 msgid "Print Screen"
 msgstr "Tulosta näyttö"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Pikayhteys: user@host"
+
+msgid "Clear History"
+msgstr "Tyhjennä historia"
 
 msgid "Find"
 msgstr "Etsi"
@@ -2258,6 +2285,9 @@ msgstr "Yhdistää, kun näytetään"
 
 msgid "Running the pre-connect command..."
 msgstr "Suoritetaan yhdistämistä edeltävää komentoa..."
+
+msgid "Listening on {}..."
+msgstr "Kuunnellaan: {}..."
 
 msgid "Connecting to {}..."
 msgstr "Yhdistetään: {}..."
@@ -3033,6 +3063,9 @@ msgstr "Asetuksia muutettiin toisella tietokoneella: yhdistä ne omiisi käynnis
 msgid "Settings not sent to the repository: {}"
 msgstr "Asetuksia ei lähetetty tietovarastoon: {}"
 
+msgid "Recent Sessions"
+msgstr "Viimeisimmät istunnot"
+
 msgid "Enter a name for the firewall."
 msgstr "Anna palomuurille nimi."
 
@@ -3129,8 +3162,59 @@ msgstr "Anna kansion nimi (ilman merkkiä \"/\")."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "Kohteessa {} ei ole SecureCRT-istuntoja. Valitse Config-kansio, joka sisältää Sessions-kansion."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Yhdistetään: {}:{} hyppyisännän kautta"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Yhdistetään: {}:{} palomuurin {} kautta"
+
+msgid "Connecting to {}:{}"
+msgstr "Yhdistetään: {}:{}"
+
+msgid "Server: {}"
+msgstr "Palvelin: {}"
+
+msgid "Key exchange: {}"
+msgstr "Avaintenvaihto: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Isäntäavaimen algoritmi: {}"
+
+msgid "Cipher: {}"
+msgstr "Salain: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: ei käytössä, salain suojaa tiedot itse"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Pakkaus: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Isäntäavain: {} {} (vastaa tallennettua avainta)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Isäntäavain: {} {} (ei vielä tallennettu)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Isäntäavain: {} {} (poikkeaa tallennetusta avaimesta)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Todennus menetelmällä {}: hyväksytty"
+
+msgid "Authentication with {}: refused"
+msgstr "Todennus menetelmällä {}: hylätty"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Todennus menetelmällä {}: hylätty; palvelin tarjoaa: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Tunnistetieto \"{}\": {}; kysytään salasanaa sen sijaan."
+
+msgid "{} connected."
+msgstr "{} yhdisti."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "Päivitä nyt asentaa sen ja käynnistää OpenCRT:n uudelleen."

@@ -202,8 +202,9 @@ automatic check off in Options > Global Options > General.
   Options > Connection).
 
 ## Languages
-OpenCRT's interface is available in English, Simplified Chinese and 25
-European languages: Bulgarian, Croatian, Czech, Danish, Dutch, Estonian,
+OpenCRT's interface is available in English, Simplified and Traditional
+Chinese, Japanese, Korean and 25 European languages: Bulgarian, Croatian, Czech,
+Danish, Dutch, Estonian,
 Finnish, French, German, Greek, Hungarian, Irish, Italian, Latvian,
 Lithuanian, Maltese, Norwegian Bokmål, Polish, Portuguese, Romanian, Slovak,
 Slovenian, Spanish, Swedish and Ukrainian. OpenCRT follows the system language;

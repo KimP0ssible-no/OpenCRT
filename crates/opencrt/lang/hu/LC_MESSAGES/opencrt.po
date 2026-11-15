@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Mód:"
+
+msgid "TCP client"
+msgstr "TCP-kliens"
+
+msgid "TCP server"
+msgstr "TCP-kiszolgáló"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Figyelési cím:"
+
 msgid "Hostname:"
 msgstr "Gazdagépnév:"
+
+msgid "blank: every interface"
+msgstr "üres: minden interfész"
+
+msgid "blank: answer the last sender"
+msgstr "üres: válasz a legutóbbi küldőnek"
 
 msgid "Port:"
 msgstr "Port:"
@@ -1732,6 +1753,9 @@ msgstr "Rögzítés leállítása"
 msgid "Record Session (asciicast)..."
 msgstr "Munkamenet rögzítése (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Nyomkövetési beállítások"
+
 msgid "Print Screen"
 msgstr "Képernyő nyomtatása"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Gyors csatlakozás: user@host"
+
+msgid "Clear History"
+msgstr "Előzmények törlése"
 
 msgid "Find"
 msgstr "Keresés"
@@ -2258,6 +2285,9 @@ msgstr "Megjelenítéskor csatlakozik"
 
 msgid "Running the pre-connect command..."
 msgstr "A csatlakozás előtti parancs fut..."
+
+msgid "Listening on {}..."
+msgstr "Figyelés: {}..."
 
 msgid "Connecting to {}..."
 msgstr "Csatlakozás: {}..."
@@ -3033,6 +3063,9 @@ msgstr "A beállítások egy másik számítógépen módosultak: indítsa újra
 msgid "Settings not sent to the repository: {}"
 msgstr "A beállítások nem lettek elküldve a tárolóba: {}"
 
+msgid "Recent Sessions"
+msgstr "Legutóbbi munkamenetek"
+
 msgid "Enter a name for the firewall."
 msgstr "Adjon nevet a tűzfalnak."
 
@@ -3129,8 +3162,59 @@ msgstr "Adja meg a mappa nevét („/” nélkül)."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "Nincsenek SecureCRT-munkamenetek itt: {}. Válassza ki azt a Config mappát, amely a Sessions mappát tartalmazza."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Csatlakozás: {}:{} a közvetítő gazdagépen keresztül"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Csatlakozás: {}:{} a(z) {} tűzfalon keresztül"
+
+msgid "Connecting to {}:{}"
+msgstr "Csatlakozás: {}:{}"
+
+msgid "Server: {}"
+msgstr "Kiszolgáló: {}"
+
+msgid "Key exchange: {}"
+msgstr "Kulcscsere: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Gazdagépkulcs-algoritmus: {}"
+
+msgid "Cipher: {}"
+msgstr "Titkosítás: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: nincs, a titkosítás maga védi az adatokat"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Tömörítés: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Gazdagépkulcs: {} {} (egyezik a mentett kulccsal)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Gazdagépkulcs: {} {} (még nincs mentve)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Gazdagépkulcs: {} {} (eltér a mentett kulcstól)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Hitelesítés ({}): elfogadva"
+
+msgid "Authentication with {}: refused"
+msgstr "Hitelesítés ({}): elutasítva"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Hitelesítés ({}): elutasítva; a kiszolgáló ajánlata: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "„{}” hitelesítő adat: {}; a program inkább jelszót kér."
+
+msgid "{} connected."
+msgstr "{} csatlakozott."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "A Frissítés most telepíti, és újraindítja az OpenCRT-t."

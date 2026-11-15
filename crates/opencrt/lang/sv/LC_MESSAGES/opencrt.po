@@ -269,8 +269,29 @@ msgstr "RLogin"
 msgid "VNC"
 msgstr "VNC"
 
+msgid "Mode:"
+msgstr "Läge:"
+
+msgid "TCP client"
+msgstr "TCP-klient"
+
+msgid "TCP server"
+msgstr "TCP-server"
+
+msgid "UDP"
+msgstr "UDP"
+
+msgid "Listen on:"
+msgstr "Lyssna på:"
+
 msgid "Hostname:"
 msgstr "Värdnamn:"
+
+msgid "blank: every interface"
+msgstr "tomt: alla gränssnitt"
+
+msgid "blank: answer the last sender"
+msgstr "tomt: svara den senaste avsändaren"
 
 msgid "Port:"
 msgstr "Port:"
@@ -1732,6 +1753,9 @@ msgstr "Stoppa inspelning"
 msgid "Record Session (asciicast)..."
 msgstr "Spela in session (asciicast)..."
 
+msgid "Trace Options"
+msgstr "Spårningsalternativ"
+
 msgid "Print Screen"
 msgstr "Skriv ut skärm"
 
@@ -1968,6 +1992,9 @@ msgstr "WSL: {}"
 
 msgid "Quick connect: user@host"
 msgstr "Snabbanslut: användare@värd"
+
+msgid "Clear History"
+msgstr "Rensa historiken"
 
 msgid "Find"
 msgstr "Sök"
@@ -2258,6 +2285,9 @@ msgstr "Ansluter när den visas"
 
 msgid "Running the pre-connect command..."
 msgstr "Kör kommandot före anslutning..."
+
+msgid "Listening on {}..."
+msgstr "Lyssnar på {}..."
 
 msgid "Connecting to {}..."
 msgstr "Ansluter till {}..."
@@ -3033,6 +3063,9 @@ msgstr "Inställningarna ändrades på en annan dator: starta om OpenCRT för at
 msgid "Settings not sent to the repository: {}"
 msgstr "Inställningarna skickades inte till arkivet: {}"
 
+msgid "Recent Sessions"
+msgstr "Senaste sessioner"
+
 msgid "Enter a name for the firewall."
 msgstr "Ange ett namn för brandväggen."
 
@@ -3129,8 +3162,59 @@ msgstr "Ange ett mappnamn (utan \"/\")."
 msgid "No SecureCRT sessions in {}. Pick the Config folder that contains the Sessions folder."
 msgstr "Inga SecureCRT-sessioner i {}. Välj den Config-mapp som innehåller mappen Sessions."
 
+msgid "Connecting to {}:{} through the jump host"
+msgstr "Ansluter till {}:{} via hoppvärden"
+
+msgid "Connecting to {}:{} through the firewall {}"
+msgstr "Ansluter till {}:{} via brandväggen {}"
+
+msgid "Connecting to {}:{}"
+msgstr "Ansluter till {}:{}"
+
+msgid "Server: {}"
+msgstr "Server: {}"
+
+msgid "Key exchange: {}"
+msgstr "Nyckelutbyte: {}"
+
+msgid "Host key algorithm: {}"
+msgstr "Värdnyckelalgoritm: {}"
+
+msgid "Cipher: {}"
+msgstr "Chiffer: {}"
+
+msgid "MAC: none, the cipher protects the data itself"
+msgstr "MAC: ingen, chiffret skyddar själva datan"
+
+msgid "MAC: {}"
+msgstr "MAC: {}"
+
+msgid "Compression: {}"
+msgstr "Komprimering: {}"
+
+msgid "Host key: {} {} (matches the saved key)"
+msgstr "Värdnyckel: {} {} (matchar den sparade nyckeln)"
+
+msgid "Host key: {} {} (not saved yet)"
+msgstr "Värdnyckel: {} {} (inte sparad ännu)"
+
+msgid "Host key: {} {} (differs from the saved key)"
+msgstr "Värdnyckel: {} {} (skiljer sig från den sparade nyckeln)"
+
+msgid "Authentication with {}: accepted"
+msgstr "Autentisering med {}: godtogs"
+
+msgid "Authentication with {}: refused"
+msgstr "Autentisering med {}: nekades"
+
+msgid "Authentication with {}: refused; the server offers: {}"
+msgstr "Autentisering med {}: nekades; servern erbjuder: {}"
+
 msgid "Credential \"{}\": {}; asking for the password instead."
 msgstr "Inloggningsuppgift \"{}\": {}; frågar efter lösenordet i stället."
+
+msgid "{} connected."
+msgstr "{} anslöt."
 
 msgid "Update Now installs it and restarts OpenCRT."
 msgstr "Uppdatera nu installerar den och startar om OpenCRT."

@@ -2974,10 +2974,13 @@ component ColourDropdown inherits Rectangle {
             vertical-alignment: center;
             color: root.enabled ? Theme.text : Theme.text-disabled;
         }
-        Text {
-            text: "▾";
-            vertical-alignment: center;
-            color: root.enabled ? Theme.text-secondary : Theme.text-disabled;
+        Rectangle {
+            width: 12px * Theme.ui-scale;
+            Icon {
+                kind: IconKind.chevron-down;
+                size: parent.width;
+                ink: root.enabled ? Theme.text-secondary : Theme.text-disabled;
+            }
         }
     }
     touch := TouchArea {
@@ -6106,12 +6109,10 @@ export component MainWindow inherits Window {
                     height: 20px * Theme.ui-scale;
                     border-radius: 3px;
                     background: history-touch.has-hover && history-touch.enabled ? Theme.hover-bg : transparent;
-                    Text {
-                        text: "▾";
-                        font-size: 11px * Theme.ui-scale;
-                        color: history-touch.enabled ? Theme.text-secondary : Theme.text-disabled;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
+                    Icon {
+                        kind: IconKind.chevron-down;
+                        size: 12px * Theme.ui-scale;
+                        ink: history-touch.enabled ? Theme.text-secondary : Theme.text-disabled;
                     }
                     history-touch := TouchArea {
                         enabled: root.connect-history.length > 0;
@@ -6546,7 +6547,7 @@ export component MainWindow inherits Window {
                 spacing: 4px;
                 // Which bar this is; switch to another or make a new one.
                 Rectangle {
-                    width: bar-label.preferred-width + 16px;
+                    width: bar-label.preferred-width + 18px + bar-arrow.width;
                     border-radius: 3px;
                     border-width: 1px;
                     border-color: Theme.border;
@@ -6554,9 +6555,14 @@ export component MainWindow inherits Window {
                     bar-label := Text {
                         x: 8px;
                         height: parent.height;
-                        text: (root.bar-name == "" ? @tr("Default") : root.bar-name) + "  ▾";
+                        text: root.bar-name == "" ? @tr("Default") : root.bar-name;
                         font-size: 11px * Theme.ui-scale;
                         vertical-alignment: center;
+                    }
+                    bar-arrow := Icon {
+                        x: parent.width - self.width - 5px;
+                        kind: IconKind.chevron-down;
+                        size: 12px * Theme.ui-scale;
                     }
                     bar-touch := TouchArea {
                         clicked => { bar-menu.show({ x: 0, y: self.height }); }

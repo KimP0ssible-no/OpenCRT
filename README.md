@@ -3,7 +3,9 @@
 A tabbed terminal client for Windows, macOS and Linux, modelled on the look and
 workflow of SecureCRT and written from scratch in Rust.
 
-![OpenCRT connected over SSH, running htop](docs/screenshot.png)
+![OpenCRT with the Session Manager, an SSH session in a tab and the Language menu open](docs/screenshot.png)
+
+![OpenCRT with a Windows desktop over Remote Desktop in a tab](docs/screenshot-rdp.png)
 
 ## A clean-room implementation
 OpenCRT is an independent project. It is not affiliated with, endorsed by or

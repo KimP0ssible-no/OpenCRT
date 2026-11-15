@@ -81,7 +81,7 @@ opencrt-rdp-proto = { path = "../rdp-proto" }
 # Already built (alacritty, rhai); keyword highlighting.
 regex = "1.13.1"
 rand = { version = "0.10.3", default-features = false, features = ["thread_rng"] }
-rfd = "0.17.2"
+rfd = "0.18.0"
 rhai = "1.26.1"
 russh = "0.65.0"
 russh-sftp = "3.0.1"

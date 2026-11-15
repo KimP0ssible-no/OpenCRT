@@ -2,12 +2,13 @@
 //! fontdue, a glyph cache, and an RGBA pixel buffer as output.
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::anyhow;
 use fontdue::{Font, FontSettings, Metrics};
 
 use crate::terminal::{CursorMark, Rgb, Terminal};
+use crate::tr;
 
 /// Font size in logical pixels before display scaling.
 pub const FONT_PX: f32 = 15.0;
@@ -726,8 +727,28 @@ pub fn available_fonts() -> Vec<&'static str> {
     std::iter::once(BUILT_IN_FONT).chain(installed).collect()
 }
 
-/// The named installed terminal font (regular, bold), else the built-in one.
+/// A font file (.ttf, .otf, .ttc) as a terminal font: its name, or why it cannot be one.
+pub fn font_file_name(path: &Path) -> Result<String, String> {
+    let unreadable = |e: String| tr!("Cannot read {}: {}", path.display(), e);
+    let bytes = std::fs::read(path).map_err(|e| unreadable(e.to_string()))?;
+    let font = Font::from_bytes(bytes, FontSettings::default()).map_err(|e| unreadable(e.to_string()))?;
+    let name = font.name().map_or_else(|| path.file_stem().unwrap_or_default().to_string_lossy().into_owned(), str::to_string);
+    // The terminal draws every character in a cell of one width.
+    if font.metrics('i', 16.0).advance_width != font.metrics('M', 16.0).advance_width {
+        return Err(tr!("{} is not a fixed-width font.", name));
+    }
+    Ok(name)
+}
+
+/// The terminal font `name` (regular, bold): a font file by its full path,
+/// with the bold face beside it when the two are named ...Regular and
+/// ...Bold; else an installed font by name; else the built-in one.
 fn load_mono(name: &str) -> Option<(Font, Option<Font>)> {
+    let file = Path::new(name);
+    if file.is_absolute() && let Some(regular) = load_first(&[name]) {
+        let bold = file.file_name().and_then(|f| f.to_str()).filter(|f| f.contains("Regular")).map(|f| file.with_file_name(f.replace("Regular", "Bold")));
+        return Some((regular, bold.and_then(|b| load_first(&[&b.to_string_lossy()]))));
+    }
     let named = MONO_FONTS.iter().filter(|f| f.name.eq_ignore_ascii_case(name));
     named.clone().find_map(|f| Some((load_first(f.regular)?, load_first(f.bold)))).or_else(built_in_font)
 }
@@ -894,6 +915,19 @@ mod tests {
         // Chinese stands upright, one square cell per character.
         let (w, h, rgba) = vertical_label("会话管理器", 12.0, [0, 0, 0]).unwrap();
         assert_eq!((h, rgba.len()), (5 * w, w * h * 4));
+    }
+
+    #[test]
+    fn font_files_as_terminal_fonts() {
+        let fonts = Path::new(env!("CARGO_MANIFEST_DIR")).join("ui/fonts");
+        let mono = fonts.join("IBMPlexMono-Regular.ttf");
+        assert_eq!(font_file_name(&mono).as_deref(), Ok("IBM Plex Mono"));
+        // By its path, with the bold face found beside it.
+        assert!(matches!(load_mono(&mono.to_string_lossy()), Some((_, Some(_)))));
+        // Not fixed-width, not a font, not there (settings from another computer: the built-in font).
+        assert!(font_file_name(&fonts.join("IBMPlexSans-Regular.ttf")).is_err_and(|e| e.contains("fixed-width")));
+        assert!(font_file_name(&fonts.join("OFL.txt")).is_err() && font_file_name(&fonts.join("none.ttf")).is_err());
+        assert!(load_mono(&fonts.join("none.ttf").to_string_lossy()).is_some());
     }
 
     #[test]

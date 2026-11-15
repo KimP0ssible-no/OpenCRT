@@ -6070,6 +6070,19 @@ impl App {
             }
             return;
         }
+        // Global Options > Terminal: a font file joins the font list.
+        if field == "go-font-file" {
+            if let Some(path) = rfd::FileDialog::new().set_title(tr!("Terminal Font File")).add_filter(tr!("Fonts"), &["ttf", "otf", "ttc"]).pick_file() {
+                match render::font_file_name(&path) {
+                    Ok(_) => {
+                        self.show_fonts(ui, Some(&path.display().to_string()));
+                        ui.set_go_error(SharedString::new());
+                    }
+                    Err(e) => ui.set_go_error(e.into()),
+                }
+            }
+            return;
+        }
         if field == "go-keymap-export" {
             if let Some(path) = rfd::FileDialog::new().set_title("Export Key Map").set_file_name("opencrt.keymap").save_file()
                 && let Err(e) = std::fs::write(&path, format!("{}\n", ui.get_go_key_map().trim_end()))
@@ -7535,13 +7548,28 @@ impl App {
 
     // --- Global Options ---
 
+    /// Global Options > Terminal: the font list, with the font file in use
+    /// (or just chosen) as its last entry, selected.
+    fn show_fonts(&self, ui: &MainWindow, file: Option<&str>) {
+        let mut fonts: Vec<SharedString> = render::available_fonts().into_iter().map(SharedString::from).collect();
+        let chosen = match file {
+            // A file that is gone (settings from another computer) shows as its path.
+            Some(path) => {
+                fonts.push(render::font_file_name(Path::new(path)).unwrap_or_else(|_| path.to_string()).into());
+                fonts.len() - 1
+            }
+            None => fonts.iter().position(|f| f.eq_ignore_ascii_case(&self.options.font)).unwrap_or(0),
+        };
+        ui.set_go_font_file(file.unwrap_or_default().into());
+        ui.set_font_names(ModelRc::new(VecModel::from(fonts)));
+        ui.set_go_font(chosen as i32);
+    }
+
     fn show_global_options(&mut self, ui: &MainWindow) {
         ui.set_go_font_size(self.options.font_size.to_string().into());
         ui.set_go_scrollback(self.options.scrollback.to_string().into());
         ui.set_go_keepalive(self.options.keepalive_secs.to_string().into());
-        let fonts = render::available_fonts();
-        ui.set_go_font(fonts.iter().position(|f| f.eq_ignore_ascii_case(&self.options.font)).unwrap_or(0) as i32);
-        ui.set_font_names(ModelRc::new(VecModel::from(fonts.into_iter().map(SharedString::from).collect::<Vec<_>>())));
+        self.show_fonts(ui, Some(self.options.font.as_str()).filter(|f| Path::new(f).is_absolute()));
         ui.set_go_copy_on_select(self.options.copy_on_select);
         ui.set_go_word_delimiters(self.options.word_delimiters.clone().into());
         ui.set_go_download(self.options.download_folder.clone().into());
@@ -7725,11 +7753,11 @@ impl App {
         }
         ui.set_paste_on_right(self.options.paste_on_right_click);
         let scheme = schemes().get(ui.get_go_scheme().max(0) as usize).copied().unwrap_or(&SCHEMES[0]);
-        if let Some(font) = render::available_fonts().get(ui.get_go_font().max(0) as usize)
-            && !font.eq_ignore_ascii_case(&self.options.font)
-        {
-            self.options.font = font.to_string();
-            self.renderer.set_font(font);
+        // A listed font by its name; the last entry is the font file, by its path.
+        let font = render::available_fonts().get(ui.get_go_font().max(0) as usize).map_or_else(|| ui.get_go_font_file().to_string(), |f| f.to_string());
+        if !font.is_empty() && !font.eq_ignore_ascii_case(&self.options.font) {
+            self.renderer.set_font(&font);
+            self.options.font = font;
         }
         self.options.font_size = font_size;
         self.options.scrollback = scrollback;

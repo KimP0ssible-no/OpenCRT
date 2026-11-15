@@ -5,7 +5,9 @@ where each visible string is marked with `@tr("...")`, and the Rust code, where
 each text the user sees is marked with `tr!("...")`. This folder holds the
 translations of both.
 
-- `opencrt.pot` is the template: every text to translate.
+- `opencrt.pot` is the template: every text to translate, with the source
+  line of each. The language files leave those lines out, because they change
+  with every edit of the interface.
 - `<locale>/LC_MESSAGES/opencrt.po` is one language, for example
   `zh_CN/LC_MESSAGES/opencrt.po` for Simplified Chinese.
 

@@ -1984,6 +1984,7 @@ impl App {
         renderer.set_keywords(&options.keywords);
         ssh::KEEPALIVE_SECS.store(options.keepalive_secs, std::sync::atomic::Ordering::Relaxed);
         ssh::LEGACY_EVERYWHERE.store(options.legacy_algorithms, std::sync::atomic::Ordering::Relaxed);
+        ssh::TRACE.store(options.trace, std::sync::atomic::Ordering::Relaxed);
         ssh::ACCEPT_NEW_HOST_KEYS.store(options.accept_new_host_keys, std::sync::atomic::Ordering::Relaxed);
         // A hand-edited options.toml with a bad line just maps nothing.
         let key_map = input::parse_key_map(&options.key_map).unwrap_or_default();
@@ -4079,6 +4080,13 @@ impl App {
             ui.set_recent_sessions(ModelRc::new(VecModel::from(titles)));
             crate::jumplist::update(recent, config::dir_from_args());
             self.shown_recent = Some(recent.to_vec());
+        }
+
+        // File > Trace Options: remembered, and used by SSH connections from now on.
+        if ui.get_trace() != self.options.trace {
+            self.options.trace = ui.get_trace();
+            ssh::TRACE.store(self.options.trace, std::sync::atomic::Ordering::Relaxed);
+            self.save_options();
         }
 
         // Remember View toggles across runs.
@@ -8822,6 +8830,7 @@ pub fn run(args: &[String]) -> anyhow::Result<()> {
         ui.set_panes(ModelRc::from(app.pane_model.clone()));
         ui.set_files_views(ModelRc::from(app.files_model.clone()));
         ui.set_show_toolbar(app.options.show_toolbar);
+        ui.set_trace(app.options.trace);
         ui.set_windows(cfg!(windows));
         if cfg!(windows) {
             let (tx, rx) = std::sync::mpsc::channel();

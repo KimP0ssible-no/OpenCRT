@@ -580,6 +580,8 @@ pub struct Options {
     pub auto_reconnect: bool,
     /// SSH2: offer the old algorithms to every host, not only sessions set to.
     pub legacy_algorithms: bool,
+    /// File > Trace Options: SSH2 connections write their set-up into the tab.
+    pub trace: bool,
     /// SSH2: save a host key seen for the first time without asking (as
     /// OpenSSH's StrictHostKeyChecking=accept-new); changed keys are still refused.
     pub accept_new_host_keys: bool,
@@ -1133,6 +1135,7 @@ impl Default for Options {
             web_search: "https://duckduckgo.com/?q=%s".into(),
             auto_reconnect: false,
             legacy_algorithms: false,
+            trace: false,
             accept_new_host_keys: false,
             remember_secrets: false,
             reopen_sessions: false,

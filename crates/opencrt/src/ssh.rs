@@ -24,6 +24,62 @@ pub static KEEPALIVE_SECS: AtomicU64 = AtomicU64::new(0);
 pub static ACCEPT_NEW_HOST_KEYS: AtomicBool = AtomicBool::new(false);
 /// Global Options: offer the old algorithms to every host (old network gear).
 pub static LEGACY_EVERYWHERE: AtomicBool = AtomicBool::new(false);
+/// File > Trace Options: connections started while it is on write how they
+/// are set up into their tab.
+pub static TRACE: AtomicBool = AtomicBool::new(false);
+
+/// A line of the connection trace: dim, so it stands apart from the session's own output.
+fn trace(events: &UnboundedSender<SshEvent>, text: &str) {
+    let _ = events.send(SshEvent::Data(format!("\x1b[2m{text}\x1b[0m\r\n").into_bytes()));
+}
+
+/// Trace: where the connection goes, and through what.
+fn trace_route(host: &str, port: u16, proxy: Option<&str>, jump: bool) -> String {
+    match (jump, proxy) {
+        (true, _) => tr!("Connecting to {}:{} through the jump host", host, port),
+        (false, Some(proxy)) => tr!("Connecting to {}:{} through the firewall {}", host, port, proxy),
+        (false, None) => tr!("Connecting to {}:{}", host, port),
+    }
+}
+
+/// Trace: the server's identification and what the two sides agreed on. The
+/// MACs and compressions are (to the server, from the server).
+fn trace_algorithms(server: &str, kex: &str, host_key: &str, cipher: &str, macs: (&str, &str), compressions: (&str, &str)) -> Vec<String> {
+    let both = |(to, from): (&str, &str)| if to == from { to.to_string() } else { format!("{to}, {from}") };
+    // An AEAD cipher authenticates the data itself: the negotiated MAC is not used.
+    let aead = cipher.contains("gcm") || cipher.contains("poly1305");
+    vec![
+        tr!("Server: {}", server),
+        tr!("Key exchange: {}", kex),
+        tr!("Host key algorithm: {}", host_key),
+        tr!("Cipher: {}", cipher),
+        if aead { tr!("MAC: none, the cipher protects the data itself") } else { tr!("MAC: {}", both(macs)) },
+        tr!("Compression: {}", both(compressions)),
+    ]
+}
+
+/// Trace: the server's host key and how it compares with known_hosts.
+fn trace_host_key(algorithm: &str, fingerprint: &str, status: &HostKeyStatus) -> String {
+    match status {
+        HostKeyStatus::Known => tr!("Host key: {} {} (matches the saved key)", algorithm, fingerprint),
+        HostKeyStatus::Unknown => tr!("Host key: {} {} (not saved yet)", algorithm, fingerprint),
+        HostKeyStatus::Changed { .. } => tr!("Host key: {} {} (differs from the saved key)", algorithm, fingerprint),
+    }
+}
+
+/// Trace: a login method tried and what the server said.
+fn trace_auth(method: &str, result: &AuthResult) -> String {
+    match result {
+        AuthResult::Success => tr!("Authentication with {}: accepted", method),
+        AuthResult::Failure { remaining_methods, .. } => {
+            let offered: Vec<&str> = remaining_methods.iter().map(<&str>::from).collect();
+            match offered.is_empty() {
+                true => tr!("Authentication with {}: refused", method),
+                false => tr!("Authentication with {}: refused; the server offers: {}", method, offered.join(", ")),
+            }
+        }
+    }
+}
 
 /// A logged-in SSH connection that other tabs can open channels on; it stays
 /// up while any clone is held.
@@ -612,6 +668,7 @@ async fn login(
     remote: RemoteTargets,
     io: &Io,
 ) -> anyhow::Result<client::Handle<SshHandler>> {
+    let tracing = TRACE.load(Ordering::Relaxed);
     let mut handler = SshHandler {
         host: host.to_string(),
         port,
@@ -622,7 +679,12 @@ async fn login(
         forward_agent: creds.forward_agent,
         x11: creds.x11_display.as_deref().and_then(x11_target).map(|(target, _)| target),
         accept_new_keys: creds.accept_new_keys,
+        trace: tracing,
+        trace_kex: tracing,
     };
+    if tracing {
+        trace(&io.output, &trace_route(host, port, creds.proxy.as_deref(), via.is_some()));
+    }
     let keepalive = KEEPALIVE_SECS.load(Ordering::Relaxed);
     let legacy = creds.legacy || LEGACY_EVERYWHERE.load(Ordering::Relaxed);
     let config = Arc::new(client::Config {
@@ -660,7 +722,7 @@ async fn login(
             client::connect_stream(config, channel.into_stream(), handler).await.map_err(hint)?
         }
     };
-    authenticate(&mut session, creds, &io.output).await?;
+    authenticate(&mut session, creds, &io.output, tracing).await?;
     Ok(session)
 }
 
@@ -815,9 +877,17 @@ async fn authenticate(
     session: &mut client::Handle<SshHandler>,
     creds: &Credentials,
     events: &UnboundedSender<SshEvent>,
+    tracing: bool,
 ) -> anyhow::Result<()> {
     let user = creds.user.as_str();
-    let mut methods = match session.authenticate_none(user).await? {
+    // Trace Options: each method tried and the server's answer.
+    let note = |method: &str, result: AuthResult| {
+        if tracing {
+            trace(events, &trace_auth(method, &result));
+        }
+        result
+    };
+    let mut methods = match note("none", session.authenticate_none(user).await?) {
         AuthResult::Success => return Ok(()),
         AuthResult::Failure { remaining_methods, .. } => remaining_methods,
     };
@@ -829,7 +899,7 @@ async fn authenticate(
         // An OpenSSH certificate for the key is offered first.
         let cert_file = creds.cert_path.clone().unwrap_or_else(|| format!("{path}-cert.pub"));
         if let Ok(cert) = keys::Certificate::read_file(Path::new(&cert_file)) {
-            match session.authenticate_openssh_cert(user, key.clone(), cert).await? {
+            match note(&format!("publickey {cert_file}"), session.authenticate_openssh_cert(user, key.clone(), cert).await?) {
                 AuthResult::Success => return Ok(()),
                 AuthResult::Failure { remaining_methods, .. } => methods = remaining_methods,
             }
@@ -839,7 +909,7 @@ async fn authenticate(
         if methods.contains(&MethodKind::PublicKey) {
             let hash_alg = session.best_supported_rsa_hash().await?.flatten();
             let key = PrivateKeyWithHashAlg::new(key, hash_alg);
-            match session.authenticate_publickey(user, key).await? {
+            match note(&format!("publickey {path}"), session.authenticate_publickey(user, key).await?) {
                 AuthResult::Success => return Ok(()),
                 AuthResult::Failure { remaining_methods, .. } => methods = remaining_methods,
             }
@@ -852,7 +922,7 @@ async fn authenticate(
         && let Some(mut agent) = connect_agent().await
         && let Some(result) = agent_auth(session, user, &mut agent).await
     {
-        match result {
+        match note("publickey (ssh-agent)", result) {
             AuthResult::Success => return Ok(()),
             AuthResult::Failure { remaining_methods, .. } => methods = remaining_methods,
         }
@@ -861,7 +931,7 @@ async fn authenticate(
     let mut password = creds.password.clone().filter(|p| !p.is_empty());
     for _ in 0..AUTH_ATTEMPTS {
         let result = if methods.contains(&MethodKind::KeyboardInteractive) {
-            keyboard_interactive(session, user, &mut password, events).await?
+            note("keyboard-interactive", keyboard_interactive(session, user, &mut password, events).await?)
         } else if methods.contains(&MethodKind::Password) {
             let pw = match password.take() {
                 Some(pw) => pw,
@@ -871,7 +941,7 @@ async fn authenticate(
                     .next()
                     .unwrap_or_default(),
             };
-            session.authenticate_password(user, pw).await?
+            note("password", session.authenticate_password(user, pw).await?)
         } else {
             break;
         };
@@ -1286,6 +1356,10 @@ pub(crate) struct SshHandler {
     x11: Option<X11Target>,
     /// Save an unknown host key without asking.
     accept_new_keys: bool,
+    /// Trace Options: write the set-up into the tab; `trace_kex` until the
+    /// first key exchange is reported (later ones are re-keys).
+    trace: bool,
+    trace_kex: bool,
 }
 
 /// The local agent's raw stream, for a forwarded agent channel.
@@ -1300,14 +1374,28 @@ async fn agent_stream() -> Option<Box<dyn AgentStream + Send + Unpin>> {
 impl client::Handler for SshHandler {
     type Error = anyhow::Error;
 
-    /// Report the negotiated cipher for the status bar.
+    /// Report the negotiated cipher for the status bar, and with Trace
+    /// Options everything that was negotiated.
     async fn kex_done(
         &mut self,
         _shared_secret: Option<&[u8]>,
         names: &russh::Names,
-        _session: &mut client::Session,
+        session: &mut client::Session,
     ) -> Result<(), Self::Error> {
         let _ = self.events.send(SshEvent::Cipher(names.cipher.as_ref().to_string()));
+        if std::mem::take(&mut self.trace_kex) {
+            let server = String::from_utf8_lossy(session.remote_sshid()).into_owned();
+            let compression = |c: &russh::compression::Compression| match format!("{c:?}").as_str() {
+                "Zlib" => "zlib",
+                "ZlibOpenSSH" => "zlib@openssh.com",
+                _ => "none",
+            };
+            let macs = (names.client_mac.as_ref(), names.server_mac.as_ref());
+            let compressions = (compression(&names.client_compression), compression(&names.server_compression));
+            for line in trace_algorithms(&server, names.kex.as_ref(), names.key.as_str(), names.cipher.as_ref(), macs, compressions) {
+                trace(&self.events, &line);
+            }
+        }
         Ok(())
     }
 
@@ -1391,7 +1479,11 @@ impl client::Handler for SshHandler {
     ) -> Result<bool, Self::Error> {
         let key = server_public_key.public_key();
         let fingerprint = key.fingerprint(HashAlg::Sha256).to_string();
-        match check_host_key(&self.known_hosts, &self.host, self.port, &key)? {
+        let status = check_host_key(&self.known_hosts, &self.host, self.port, &key)?;
+        if self.trace {
+            trace(&self.events, &trace_host_key(key.algorithm().as_str(), &fingerprint, &status));
+        }
+        match status {
             HostKeyStatus::Known => Ok(true),
             HostKeyStatus::Changed { line } => Err(anyhow!(
                 "HOST KEY MISMATCH for {}:{}. The server presented {} key {fingerprint}, which \
@@ -1853,6 +1945,26 @@ mod tests {
         let path = std::env::temp_dir().join(format!("opencrt-{name}-{}", std::process::id()));
         let _ = std::fs::remove_file(&path);
         path
+    }
+
+    #[test]
+    fn trace_lines_say_how_the_connection_was_set_up() {
+        assert_eq!(trace_route("core-sw1", 22, None, false), "Connecting to core-sw1:22");
+        assert_eq!(trace_route("core-sw1", 22, Some("Office SOCKS"), false), "Connecting to core-sw1:22 through the firewall Office SOCKS");
+        assert_eq!(trace_route("core-sw1", 2222, Some("Office SOCKS"), true), "Connecting to core-sw1:2222 through the jump host");
+        // An AEAD cipher's MAC is left out; differing directions are both shown.
+        let aead = trace_algorithms("SSH-2.0-OpenSSH_9.6", "curve25519-sha256", "ssh-ed25519", "chacha20-poly1305@openssh.com", ("hmac-sha2-256", "hmac-sha2-256"), ("none", "none"));
+        assert_eq!(aead[0], "Server: SSH-2.0-OpenSSH_9.6");
+        assert_eq!((aead[4].as_str(), aead[5].as_str()), ("MAC: none, the cipher protects the data itself", "Compression: none"));
+        let cbc = trace_algorithms("SSH-2.0-Cisco-1.25", "diffie-hellman-group14-sha1", "ssh-rsa", "aes128-cbc", ("hmac-sha1", "hmac-sha2-256"), ("zlib", "none"));
+        assert_eq!(cbc[1..].join("; "), "Key exchange: diffie-hellman-group14-sha1; Host key algorithm: ssh-rsa; Cipher: aes128-cbc; MAC: hmac-sha1, hmac-sha2-256; Compression: zlib, none");
+        assert_eq!(trace_host_key("ssh-ed25519", "SHA256:abc", &HostKeyStatus::Changed { line: 3 }), "Host key: ssh-ed25519 SHA256:abc (differs from the saved key)");
+        assert!(trace_host_key("ssh-ed25519", "SHA256:abc", &HostKeyStatus::Unknown).ends_with("(not saved yet)"));
+        assert_eq!(trace_auth("password", &AuthResult::Success), "Authentication with password: accepted");
+        let refused = AuthResult::Failure { remaining_methods: MethodSet::from(&[MethodKind::PublicKey, MethodKind::Password][..]), partial_success: false };
+        assert_eq!(trace_auth("none", &refused), "Authentication with none: refused; the server offers: publickey, password");
+        let last = AuthResult::Failure { remaining_methods: MethodSet::empty(), partial_success: false };
+        assert_eq!(trace_auth("password", &last), "Authentication with password: refused");
     }
 
     #[test]

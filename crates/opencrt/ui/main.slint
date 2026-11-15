@@ -5024,6 +5024,8 @@ export component MainWindow inherits Window {
     in property <bool> caps-on;
     in property <bool> num-on;
     in-out property <bool> show-toolbar: true;
+    // File > Trace Options: SSH connections write their set-up into the tab.
+    in-out property <bool> trace;
     // The local-shell button offers PowerShell, Command Prompt and the WSL distributions.
     in property <bool> windows;
     in property <[string]> wsl-distros;
@@ -5535,6 +5537,11 @@ export component MainWindow inherits Window {
                 title: root.casting ? @tr("Stop Recording") : @tr("Record Session (asciicast)...");
                 enabled: root.tabs.length > 0;
                 activated => { root.menu("record-cast"); }
+            }
+            MenuItem {
+                title: @tr("Trace Options");
+                checkable: true;
+                checked <=> root.trace;
             }
             MenuSeparator { }
             MenuItem {

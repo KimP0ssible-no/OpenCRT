@@ -73,6 +73,8 @@ arboard = "3.6.1"
 encoding_rs = "0.8"
 chrono = { version = "0.4.45", default-features = false, features = ["clock"] }
 fontdue = "0.9.4"
+# Hinted glyphs for the terminal's main font (already in the lockfile through Slint).
+swash = "0.2.10"
 futures = { version = "0.3.34", default-features = false }
 keyring = "4.2.0"
 # Messages to and from the RDP helper program (opencrt-rdp).

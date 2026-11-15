@@ -1,9 +1,12 @@
-//! Telnet (RFC 854) and raw TCP sessions.
+//! Telnet (RFC 854) and raw sessions: a TCP client, a TCP server or UDP.
+
+use std::net::SocketAddr;
 
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
+use tokio::net::{TcpListener, TcpStream, UdpSocket};
 
 use crate::ssh::{self, Io, SshEvent, SshHandle};
+use crate::tr;
 
 const IAC: u8 = 255;
 const DONT: u8 = 254;
@@ -271,6 +274,86 @@ async fn run(host: &str, port: u16, telnet: bool, tls: bool, pty: &ssh::Pty, pro
         stream = tls_wrap(stream, "telnet_known_certs", host, port, io).await?.0;
     }
     bridge(stream, telnet, false, pty, logon, io).await
+}
+
+/// A line from OpenCRT in the tab, among the bytes of the other side.
+fn note(io: &Io, text: String) {
+    let _ = io.output.send(SshEvent::Data(format!("\x1b[33m{text}\x1b[0m\r\n").into_bytes()));
+}
+
+/// Raw TCP server: listen on `host:port` (every interface when `host` is
+/// empty) and pass the first client's bytes through untouched. The tab says
+/// where it listens and who connected. It is one session: once a client is
+/// in, the port is closed to others.
+pub fn listen(host: String, port: u16) -> SshHandle {
+    ssh::spawn(move |io| ssh::runtime()?.block_on(serve(&host, port, io)))
+}
+
+async fn serve(host: &str, port: u16, io: &mut Io) -> anyhow::Result<()> {
+    let listener = TcpListener::bind((if host.is_empty() { "0.0.0.0" } else { host }, port)).await?;
+    note(io, tr!("Listening on {}...", listener.local_addr()?));
+    let (stream, peer) = loop {
+        tokio::select! {
+            client = listener.accept() => break client?,
+            // The tab was closed or disconnected while it waited.
+            typed = io.input.recv() => if typed.is_none() {
+                return Ok(());
+            },
+        }
+    };
+    drop(listener);
+    stream.set_nodelay(true)?;
+    note(io, tr!("{} connected.", peer));
+    bridge(Box::new(stream), false, false, &ssh::Pty::new("xterm", 80, 24), None, io).await
+}
+
+/// Raw UDP: show the datagrams that arrive on `port`, and send what is typed
+/// to `host:port`; with no host, to whoever sent the last datagram.
+pub fn udp(host: String, port: u16) -> SshHandle {
+    ssh::spawn(move |io| {
+        ssh::runtime()?.block_on(async {
+            let peer = match host.as_str() {
+                "" => None,
+                host => Some(tokio::net::lookup_host((host, port)).await?.next().ok_or_else(|| anyhow::anyhow!("cannot resolve {host}"))?),
+            };
+            let local: std::net::IpAddr = match peer {
+                Some(SocketAddr::V6(_)) => std::net::Ipv6Addr::UNSPECIFIED.into(),
+                _ => std::net::Ipv4Addr::UNSPECIFIED.into(),
+            };
+            datagrams((local, port).into(), peer, io).await
+        })
+    })
+}
+
+/// Bind `local` and exchange datagrams with `fixed`, or with the last sender.
+async fn datagrams(local: SocketAddr, fixed: Option<SocketAddr>, io: &mut Io) -> anyhow::Result<()> {
+    let socket = UdpSocket::bind(local).await?;
+    note(io, tr!("Listening on {}...", socket.local_addr()?));
+    let _ = io.output.send(SshEvent::Connected);
+    let mut peer = fixed;
+    let mut buf = vec![0u8; 64 * 1024];
+    loop {
+        tokio::select! {
+            received = socket.recv_from(&mut buf) => match received {
+                Ok((n, from)) => {
+                    peer = fixed.or(Some(from));
+                    let _ = io.output.send(SshEvent::Data(buf[..n].to_vec()));
+                }
+                // Windows reports here that nobody took a datagram just sent.
+                Err(e) if e.kind() == std::io::ErrorKind::ConnectionReset => {}
+                Err(e) => return Err(e.into()),
+            },
+            typed = io.input.recv() => match typed {
+                Some(bytes) => {
+                    if let Some(to) = peer {
+                        socket.send_to(&bytes, to).await?;
+                    }
+                }
+                None => break,
+            },
+        }
+    }
+    Ok(())
 }
 
 /// TLS over `stream`; also returns the TLS version, e.g. "TLS 1.3". The
@@ -599,6 +682,62 @@ mod tests {
         assert_eq!(got, b"login: ");
         assert_eq!(&server.join().unwrap(), b"root\r");
         let _ = std::fs::remove_file(&path);
+    }
+
+    /// Collect the tab's text into `got` until it holds `wanted` (five seconds at most).
+    fn read_until(handle: &mut SshHandle, got: &mut Vec<u8>, wanted: &str) {
+        let end = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        while !String::from_utf8_lossy(got).contains(wanted) && std::time::Instant::now() < end {
+            match handle.try_recv() {
+                Ok(SshEvent::Data(d)) => got.extend(d),
+                Ok(SshEvent::Error(e)) => panic!("{e}"),
+                _ => std::thread::sleep(std::time::Duration::from_millis(10)),
+            }
+        }
+        assert!(String::from_utf8_lossy(got).contains(wanted), "no {wanted:?} in {:?}", String::from_utf8_lossy(got));
+    }
+
+    /// The port in the tab's "Listening on 127.0.0.1:<port>..." line.
+    fn listening_port(handle: &mut SshHandle) -> u16 {
+        let mut got = Vec::new();
+        read_until(handle, &mut got, "...");
+        let text = String::from_utf8_lossy(&got).into_owned();
+        let port: String = text.split("127.0.0.1:").nth(1).unwrap_or_default().chars().take_while(char::is_ascii_digit).collect();
+        port.parse().unwrap_or_else(|_| panic!("no port in {text:?}"))
+    }
+
+    #[test]
+    fn raw_tcp_server_serves_the_first_client() {
+        use std::io::{Read, Write};
+        let mut handle = listen("127.0.0.1".into(), 0);
+        let port = listening_port(&mut handle);
+        let mut client = std::net::TcpStream::connect(("127.0.0.1", port)).unwrap();
+        client.write_all(b"ping").unwrap();
+        let mut got = Vec::new();
+        read_until(&mut handle, &mut got, "ping");
+        assert!(String::from_utf8_lossy(&got).contains(&format!("{} connected.", client.local_addr().unwrap())));
+        handle.send_input(b"pong".to_vec());
+        let mut answer = [0u8; 4];
+        client.read_exact(&mut answer).unwrap();
+        assert_eq!(&answer, b"pong");
+        // One client only: the port is closed to a second one.
+        assert!(std::net::TcpStream::connect(("127.0.0.1", port)).is_err());
+    }
+
+    #[test]
+    fn raw_udp_answers_the_last_sender() {
+        let mut handle = ssh::spawn(|io| ssh::runtime()?.block_on(datagrams(([127, 0, 0, 1], 0).into(), None, io)));
+        let port = listening_port(&mut handle);
+        let peer = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
+        peer.set_read_timeout(Some(std::time::Duration::from_secs(5))).unwrap();
+        // Nobody to send to yet: typed input goes nowhere.
+        handle.send_input(b"lost".to_vec());
+        peer.send_to(b"ping", ("127.0.0.1", port)).unwrap();
+        read_until(&mut handle, &mut Vec::new(), "ping");
+        handle.send_input(b"pong".to_vec());
+        let mut answer = [0u8; 16];
+        let (n, from) = peer.recv_from(&mut answer).unwrap();
+        assert_eq!((&answer[..n], from.port()), (&b"pong"[..], port));
     }
 
     #[test]

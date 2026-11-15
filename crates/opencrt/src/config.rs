@@ -302,6 +302,26 @@ pub enum FlowControl {
     Hardware,
 }
 
+/// What a Raw session does with its host and port.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RawMode {
+    /// Connect to the host over TCP.
+    #[default]
+    Client,
+    /// Listen on the port (the host is the address to listen on; empty for
+    /// every interface) and serve the first TCP client.
+    Server,
+    /// Show the datagrams that arrive on the port, and send what is typed to
+    /// the host's port; with no host, to whoever sent the last datagram.
+    Udp,
+}
+
+impl RawMode {
+    /// In the order of the Mode list.
+    pub const ALL: [RawMode; 3] = [RawMode::Client, RawMode::Server, RawMode::Udp];
+}
+
 /// A saved session. Passwords are never stored; they are asked for on connect.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -405,6 +425,8 @@ pub struct Session {
     pub sftp: bool,
     /// Telnet: inside TLS (Telnet/TLS, e.g. port 992).
     pub tls: bool,
+    /// Raw: TCP client, TCP server or UDP.
+    pub raw_mode: RawMode,
     /// SSH2: forward X11 to the local X server ($DISPLAY, else localhost:0).
     pub forward_x11: bool,
     /// Anti-idle: text (Button Bar escapes) sent after this many seconds
@@ -473,6 +495,7 @@ impl Default for Session {
             forward_agent: false,
             sftp: false,
             tls: false,
+            raw_mode: RawMode::Client,
             forward_x11: false,
             anti_idle: String::new(),
             anti_idle_secs: 0,
@@ -1398,6 +1421,17 @@ mod tests {
         std::fs::write(&path, "not toml [").unwrap();
         assert!(load::<SessionStore>(&path).is_err(), "a corrupt file must not load as empty");
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn raw_mode_round_trips_and_old_files_are_clients() {
+        let mut store = SessionStore::default();
+        store.sessions.push(Session { name: "sink".into(), protocol: Protocol::Raw, port: 5000, raw_mode: RawMode::Udp, ..Default::default() });
+        let text = toml::to_string(&store).unwrap();
+        assert!(text.contains("raw_mode = \"udp\""), "{text}");
+        assert_eq!(toml::from_str::<SessionStore>(&text).unwrap(), store);
+        let old = toml::from_str::<SessionStore>("[[session]]\nname = \"old\"\nprotocol = \"raw\"\nhost = \"sw1\"\n").unwrap();
+        assert_eq!(old.sessions[0].raw_mode, RawMode::Client);
     }
 
     #[test]

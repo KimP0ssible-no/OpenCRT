@@ -1566,6 +1566,7 @@ component ConnectionFields inherits VerticalLayout {
     in-out property <int> line-parity;
     in-out property <int> line-stop;
     in-out property <int> line-flow;
+    in-out property <int> raw-mode;
     in property <[string]> serial-ports;
     in property <bool> show-key: true;
     in property <bool> focus-host: false;
@@ -1585,10 +1586,20 @@ component ConnectionFields inherits VerticalLayout {
             }
         }
     }
+    if root.protocol == 2: FieldRow {
+        label: @tr("Mode:");
+        ComboBox {
+            model: [@tr("TCP client"), @tr("TCP server"), @tr("UDP")];
+            current-index <=> root.raw-mode;
+        }
+    }
     if root.protocol <= 2 || root.protocol >= 5: FieldRow {
-        label: @tr("Hostname:");
+        // A Raw server listens on this address; Raw UDP sends to it.
+        property <int> raw: root.protocol == 2 ? root.raw-mode : 0;
+        label: self.raw == 1 ? @tr("Listen on:") : @tr("Hostname:");
         LineEdit {
             text <=> root.host;
+            placeholder-text: parent.raw == 1 ? @tr("blank: every interface") : parent.raw == 2 ? @tr("blank: answer the last sender") : "";
             accepted => { root.submit(); }
             init => {
                 if (root.focus-host) {
@@ -1688,6 +1699,7 @@ component QuickConnectDialog inherits DialogFrame {
     in-out property <int> line-parity;
     in-out property <int> line-stop;
     in-out property <int> line-flow;
+    in-out property <int> raw-mode;
     in-out property <string> host;
     in-out property <string> port;
     in-out property <string> user;
@@ -1715,6 +1727,7 @@ component QuickConnectDialog inherits DialogFrame {
         line-parity <=> root.line-parity;
         line-stop <=> root.line-stop;
         line-flow <=> root.line-flow;
+        raw-mode <=> root.raw-mode;
         serial-ports: root.serial-ports;
         focus-host: true;
         submit => { root.connect(); }
@@ -1753,6 +1766,7 @@ component SessionOptionsDialog inherits DialogFrame {
     in-out property <int> line-parity;
     in-out property <int> line-stop;
     in-out property <int> line-flow;
+    in-out property <int> raw-mode;
     in-out property <string> name;
     in-out property <string> folder;
     in-out property <int> protocol;
@@ -1920,6 +1934,7 @@ component SessionOptionsDialog inherits DialogFrame {
                         line-parity <=> root.line-parity;
                         line-stop <=> root.line-stop;
                         line-flow <=> root.line-flow;
+                        raw-mode <=> root.raw-mode;
                         serial-ports: root.serial-ports;
                         show-key: false;
                         submit => { root.ok(); }
@@ -5352,10 +5367,12 @@ export component MainWindow inherits Window {
     in-out property <int> so-line-parity;
     in-out property <int> so-line-stop;
     in-out property <int> so-line-flow;
+    in-out property <int> so-raw-mode;
     in-out property <int> qc-line-data;
     in-out property <int> qc-line-parity;
     in-out property <int> qc-line-stop;
     in-out property <int> qc-line-flow;
+    in-out property <int> qc-raw-mode;
 
     // --- state read by Rust ---
     out property <length> term-width: term-area.width;
@@ -6993,6 +7010,7 @@ export component MainWindow inherits Window {
         line-parity <=> root.qc-line-parity;
         line-stop <=> root.qc-line-stop;
         line-flow <=> root.qc-line-flow;
+        raw-mode <=> root.qc-raw-mode;
         serial-port <=> root.qc-serial-port;
         baud <=> root.qc-baud;
         serial-ports: root.serial-ports;
@@ -7017,6 +7035,7 @@ export component MainWindow inherits Window {
         line-parity <=> root.so-line-parity;
         line-stop <=> root.so-line-stop;
         line-flow <=> root.so-line-flow;
+        raw-mode <=> root.so-raw-mode;
         serial-port <=> root.so-serial-port;
         baud <=> root.so-baud;
         serial-ports: root.serial-ports;

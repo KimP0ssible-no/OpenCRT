@@ -14,7 +14,7 @@ use slint::winit_030::winit::keyboard::{KeyCode, PhysicalKey};
 use slint::{ComponentHandle, Image, Model, ModelRc, Rgb8Pixel, Rgba8Pixel, SharedPixelBuffer, SharedString, Timer, TimerMode, VecModel};
 
 use crate::tr;
-use crate::config::{self, Credential, FlowControl, Options, Parity, Protocol, SerialLine, Session, SessionStore};
+use crate::config::{self, Credential, FlowControl, Options, Parity, Protocol, RawMode, SerialLine, Session, SessionStore};
 use crate::forward::{Forward, ForwardKind};
 use crate::rdp::ToHelper;
 use crate::{kermit, local, python, rdp, rhaiscript, script, serial, sftp, telnet, tftp, update, vnc, xymodem, zmodem};
@@ -140,6 +140,8 @@ pub struct Target {
     pub dial: Option<serial::Dial>,
     /// Telnet inside TLS.
     pub tls: bool,
+    /// Raw: TCP client, TCP server or UDP.
+    pub raw_mode: RawMode,
     /// An SSH2 target opened as an SFTP tab instead of a shell.
     pub sftp: bool,
     /// The SFTP tab shows file lists and a queue instead of an `sftp>` prompt.
@@ -233,6 +235,7 @@ impl Target {
             files: false,
             tunnels: false,
             tls: s.tls && s.protocol == Protocol::Telnet,
+            raw_mode: s.raw_mode,
             // Rules are validated when the session is saved.
             forwards: s.forwards.iter().filter(|f| f.enabled).cloned().collect(),
             jump: (!s.jump_host.is_empty()).then(|| s.jump_host.clone()),
@@ -266,6 +269,8 @@ impl Target {
             Protocol::Ssh2 if self.sftp => format!("sftp: {}@{host}", self.user),
             Protocol::Ssh2 if self.tunnels => format!("tunnels: {}@{host}", self.user),
             Protocol::Ssh2 => format!("{}@{host}", self.user),
+            Protocol::Raw if self.raw_mode == RawMode::Server => format!("listen: {}", self.raw_address()),
+            Protocol::Raw if self.raw_mode == RawMode::Udp => format!("udp: {}", self.raw_address()),
             Protocol::Telnet | Protocol::Raw => host,
             Protocol::Rlogin => format!("rlogin: {}@{host}", self.user),
             Protocol::Rdp if self.user.is_empty() => format!("rdp: {host}"),
@@ -278,9 +283,21 @@ impl Target {
         }
     }
 
+    /// A Raw server's or UDP session's address: `*` for a host left empty.
+    fn raw_address(&self) -> String {
+        format!("{}:{}", if self.host.is_empty() { "*" } else { &self.host }, self.port)
+    }
+
+    /// Whether this Raw target works without a host: a server listens on
+    /// every interface, and UDP answers whoever sends first.
+    fn raw_hostless(&self) -> bool {
+        self.protocol == Protocol::Raw && self.raw_mode != RawMode::Client
+    }
+
     /// Default name when saving this target as a session.
     fn name_base(&self) -> String {
         match self.protocol {
+            Protocol::Raw if self.raw_hostless() && self.host.is_empty() => format!("port {}", self.port),
             // Session names cannot hold "/": `/dev/ttyUSB0` becomes `ttyUSB0`.
             Protocol::Serial => self.serial_port.rsplit(['/', '\\']).next().unwrap_or_default().to_string(),
             Protocol::Local => "Local Shell".into(),
@@ -325,6 +342,8 @@ impl Target {
                     ssh::connect(self.host.clone(), self.port, creds, config::known_hosts(), pty, forwards)
                 }
             }
+            Protocol::Raw if self.raw_mode == RawMode::Server => telnet::listen(self.host.clone(), self.port),
+            Protocol::Raw if self.raw_mode == RawMode::Udp => telnet::udp(self.host.clone(), self.port),
             Protocol::Telnet | Protocol::Raw => {
                 let pty = ssh::Pty::new(&self.term, cols, rows);
                 let telnet = self.protocol == Protocol::Telnet;
@@ -386,7 +405,7 @@ impl Target {
                 Some(tr!("Enter jump hosts as [user@]host[:port] or saved session names, separated by commas."))
             }
             Protocol::Rdp if self.user.is_empty() => Some(tr!("Enter a username (user, DOMAIN\\user or user@domain).")),
-            Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin | Protocol::Vnc if self.host.is_empty() => {
+            Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin | Protocol::Vnc if self.host.is_empty() && !self.raw_hostless() => {
                 Some(tr!("Enter a hostname."))
             }
             Protocol::Ssh2 | Protocol::Telnet | Protocol::Raw | Protocol::Rdp | Protocol::Rlogin | Protocol::Vnc if self.port == 0 => {
@@ -1340,7 +1359,10 @@ impl Tab {
             None => self.target.connect(cols as u32, rows as u32),
         });
         self.state = State::Connecting;
-        self.status = tr!("Connecting to {}...", self.target.label());
+        self.status = match self.target.raw_hostless() {
+            true => tr!("Listening on {}...", self.target.raw_address()),
+            false => tr!("Connecting to {}...", self.target.label()),
+        };
         self.dirty = true;
         self.open_log(chrono::Local::now().naive_local());
         self.log_note(0);
@@ -4458,6 +4480,7 @@ impl App {
                 ui.get_qc_line_stop(),
                 ui.get_qc_line_flow(),
             ]),
+            raw_mode: RawMode::ALL.get(ui.get_qc_raw_mode().max(0) as usize).copied().unwrap_or_default(),
             sftp: false,
             forwards: Vec::new(),
             // Settings the dialog does not show come from the default session.
@@ -5148,6 +5171,7 @@ impl App {
         ui.set_so_line_parity(parity);
         ui.set_so_line_stop(stop);
         ui.set_so_line_flow(flow);
+        ui.set_so_raw_mode(RawMode::ALL.iter().position(|m| *m == session.raw_mode).unwrap_or(0) as i32);
         ui.set_serial_ports(ModelRc::new(VecModel::from(
             serial::available_ports().into_iter().map(SharedString::from).collect::<Vec<_>>(),
         )));
@@ -5243,6 +5267,7 @@ impl App {
                 ui.get_so_line_stop(),
                 ui.get_so_line_flow(),
             ]),
+            raw_mode: RawMode::ALL.get(ui.get_so_raw_mode().max(0) as usize).copied().unwrap_or_default(),
             host: ui.get_so_host().trim().to_string(),
             port: ui.get_so_port().trim().parse().unwrap_or(0),
             user: ui.get_so_user().trim().to_string(),
@@ -8309,6 +8334,7 @@ fn session_from_target(target: &Target, name: String, template: &Session) -> Ses
         forward_x11: target.forward_x11,
         sftp: target.sftp,
         tls: target.tls,
+        raw_mode: target.raw_mode,
         proxy: target.proxy.clone().unwrap_or_default(),
         credential: target.credential.clone().unwrap_or_default(),
         cert_path: target.cert_path.clone().unwrap_or_default(),
@@ -8411,6 +8437,7 @@ fn show_quick_connect(ui: &MainWindow, target: &Target) {
     ui.set_qc_line_parity(parity);
     ui.set_qc_line_stop(stop);
     ui.set_qc_line_flow(flow);
+    ui.set_qc_raw_mode(RawMode::ALL.iter().position(|m| *m == target.raw_mode).unwrap_or(0) as i32);
     ui.set_qc_error(SharedString::new());
     ui.set_serial_ports(ModelRc::new(VecModel::from(ports.into_iter().map(SharedString::from).collect::<Vec<_>>())));
     ui.set_dialog(DIALOG_QUICK_CONNECT);
@@ -9365,6 +9392,17 @@ mod tests {
         let lines: Vec<&str> = (0..5).map_while(|n| nth_line(text, n)).map(|(a, b)| &text[a..b]).collect();
         assert_eq!(lines, ["ls", "", "pwd", "exit"]);
         assert_eq!(nth_line("a\n", 1), None);
+    }
+
+    #[test]
+    fn raw_servers_and_udp_need_no_host() {
+        let raw = |host: &str, raw_mode| Target { protocol: Protocol::Raw, host: host.into(), port: 5000, raw_mode, ..Default::default() };
+        assert_eq!(raw("", RawMode::Client).problem().as_deref(), Some("Enter a hostname."));
+        let server = raw("", RawMode::Server);
+        assert_eq!((server.problem(), server.label(), server.name_base()), (None, "listen: *:5000".into(), "port 5000".into()));
+        let udp = raw("10.0.0.7", RawMode::Udp);
+        assert_eq!((udp.problem(), udp.label(), udp.name_base()), (None, "udp: 10.0.0.7:5000".into(), "10.0.0.7".into()));
+        assert_eq!(raw("sw1", RawMode::Client).label(), "sw1:5000");
     }
 
     #[test]

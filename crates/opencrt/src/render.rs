@@ -45,8 +45,10 @@ impl Face {
     /// cannot read the font or draw the glyph.
     fn hinted(&self, c: char, px: f32, scale: &mut ScaleContext) -> Option<(Metrics, Vec<u8>)> {
         let font = swash::FontRef::from_index(&self.data, 0)?;
+        // fontdue also reads a font's old-style character tables: what only those have is its to draw.
+        let id = Some(font.charmap().map(c)).filter(|id| *id != 0)?;
         let mut scaler = scale.builder(font).size(px).hint(true).build();
-        let image = Render::new(&[Source::Outline]).format(Format::Alpha).render(&mut scaler, font.charmap().map(c))?;
+        let image = Render::new(&[Source::Outline]).format(Format::Alpha).render(&mut scaler, id)?;
         let at = image.placement;
         // fontdue's ymin is the bitmap's bottom edge above the baseline; swash gives its top edge.
         let metrics = Metrics { xmin: at.left, ymin: at.top - at.height as i32, width: at.width as usize, height: at.height as usize, ..self.font.metrics(c, px) };
@@ -484,7 +486,8 @@ impl Renderer {
             if cell.bg != bg {
                 canvas.fill(x, y, w, ch, cell.bg);
             }
-            if cell.c != ' ' {
+            // The cell where a tab starts holds the tab character.
+            if cell.c != ' ' && cell.c != '\t' {
                 let baseline = y as i32 + self.ascent;
                 let glyph = self.glyph(cell.c, cell.bold);
                 canvas.blit(glyph, x as i32, baseline, cell.fg, cell.italic);
@@ -880,6 +883,21 @@ mod tests {
             assert!(apart.iter().all(|d| *d <= 1), "{c:?}: {a:?} hinted, {b:?} unhinted");
             assert_eq!(a.advance_width, b.advance_width);
         }
+    }
+
+    #[test]
+    fn a_tab_draws_nothing() {
+        let mut r = Renderer::new(BUILT_IN_FONT, 13.0).unwrap();
+        // The cell where a tab starts holds the tab character: it is not looked up in any font.
+        let mut t = Terminal::new(12, 1);
+        t.feed(b"\t|");
+        let (w, h) = (r.cell_w * 12, r.cell_h);
+        let mut buf = vec![0u8; w * h * 4];
+        r.render(&t, "", false, &mut buf, w, h);
+        assert!(r.cache.contains_key(&('|', false)) && !r.cache.contains_key(&('\t', false)));
+        // fontdue finds the built-in font's blank tab glyph, swash does not: no "missing glyph" box.
+        assert_ne!(r.regular.lookup_glyph_index('\t'), 0);
+        assert!(r.glyph('\t', false).coverage.iter().all(|a| *a == 0));
     }
 
     #[test]

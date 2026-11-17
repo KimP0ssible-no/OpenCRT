@@ -13,8 +13,10 @@ use swash::zeno::Format;
 use crate::terminal::{CursorMark, Rgb, Terminal};
 use crate::tr;
 
-/// Font size in logical pixels before display scaling.
-pub const FONT_PX: f32 = 15.0;
+/// Logical pixels per point of terminal font size: a point is 1/72 inch and a
+/// logical pixel 1/96 inch, except on macOS, where the system's point is the
+/// logical pixel.
+pub const PX_PER_POINT: f32 = if cfg!(target_os = "macos") { 1.0 } else { 96.0 / 72.0 };
 
 struct Glyph {
     metrics: Metrics,

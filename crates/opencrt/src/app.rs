@@ -20,7 +20,7 @@ use crate::rdp::ToHelper;
 use crate::{kermit, local, python, rdp, rhaiscript, script, serial, sftp, telnet, tftp, update, vnc, xymodem, zmodem};
 use crate::input::{self, KeyAction, Mods};
 use crate::log::SessionLog;
-use crate::render::{self, FONT_PX, Renderer};
+use crate::render::{self, PX_PER_POINT, Renderer};
 use crate::sessions::{self, Node};
 use crate::ssh::{self, AuthPrompt, Credentials, HostKeyDecision, HostKeyPrompt, SshEvent, SshHandle};
 use crate::terminal::{CursorShape, SCHEMES, Terminal, scheme_named, schemes};
@@ -2002,7 +2002,7 @@ impl App {
             Some(Err(e)) => (Options::default(), Some(format!("{e:#}"))),
             None => (Options::default(), Some("no configuration directory".into())),
         };
-        let mut renderer = Renderer::new(&options.font, FONT_PX)?;
+        let mut renderer = Renderer::new(&options.font, options.font_points * PX_PER_POINT)?;
         renderer.set_keywords(&options.keywords);
         ssh::KEEPALIVE_SECS.store(options.keepalive_secs, std::sync::atomic::Ordering::Relaxed);
         ssh::LEGACY_EVERYWHERE.store(options.legacy_algorithms, std::sync::atomic::Ordering::Relaxed);
@@ -3431,10 +3431,10 @@ impl App {
     /// Change the terminal font size by `steps` points (6 to 48), applied to
     /// every tab and saved like Global Options.
     fn zoom(&mut self, steps: f32) {
-        let size = (self.options.font_size + steps).clamp(6.0, 48.0);
-        if size != self.options.font_size {
-            self.options.font_size = size;
-            self.renderer.set_px((size * self.scale.max(0.5)).round());
+        let size = (self.options.font_points + steps).clamp(6.0, 48.0);
+        if size != self.options.font_points {
+            self.options.font_points = size;
+            self.renderer.set_px((size * PX_PER_POINT * self.scale.max(0.5)).round());
             self.save_options();
             for tab in &mut self.tabs {
                 tab.dirty = true;
@@ -3911,7 +3911,7 @@ impl App {
         let scale = ui.window().scale_factor();
         if scale != self.scale {
             self.scale = scale;
-            self.renderer.set_px((self.options.font_size * scale).round());
+            self.renderer.set_px((self.options.font_points * PX_PER_POINT * scale).round());
             self.draw_dock_labels(ui);
         }
         let area = (ui.get_term_width(), ui.get_term_height());
@@ -7734,7 +7734,7 @@ impl App {
     }
 
     fn show_global_options(&mut self, ui: &MainWindow) {
-        ui.set_go_font_size(self.options.font_size.to_string().into());
+        ui.set_go_font_size(self.options.font_points.to_string().into());
         ui.set_go_scrollback(self.options.scrollback.to_string().into());
         ui.set_go_keepalive(self.options.keepalive_secs.to_string().into());
         self.show_fonts(ui, Some(self.options.font.as_str()).filter(|f| Path::new(f).is_absolute()));
@@ -7927,7 +7927,7 @@ impl App {
             self.renderer.set_font(&font);
             self.options.font = font;
         }
-        self.options.font_size = font_size;
+        self.options.font_points = font_size;
         self.options.scrollback = scrollback;
         self.options.scheme = scheme.name.to_string();
         let before = render::keyword_set_names(&self.options.keywords);
@@ -7967,7 +7967,7 @@ impl App {
                 }
             };
         }
-        self.renderer.set_px((font_size * self.scale.max(0.5)).round());
+        self.renderer.set_px((font_size * PX_PER_POINT * self.scale.max(0.5)).round());
         self.follow_default_scheme(scheme);
         if let Some(error) = failed {
             // The dialog stays open so the address or key can be put right.

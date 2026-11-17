@@ -268,6 +268,13 @@ pub struct Config {
     /// OpenCRT: ask for the console (administrative) session, like
     /// `mstsc /admin`: the Client Cluster Data names session 0 as valid.
     pub admin_session: bool,
+
+    /// OpenCRT: ask for RDSTLS ([MS-RDPBCGR] 5.4.5.3) with TLS
+    /// (`PROTOCOL_RDSTLS | PROTOCOL_SSL`) and nothing else, as a client does
+    /// after a Server Redirection whose password is a one-time token
+    /// (`LB_PASSWORD_IS_PK_ENCRYPTED`). The RDSTLS exchange itself happens in
+    /// the caller, after the TLS upgrade; the connector then goes on as for TLS.
+    pub rdstls: bool,
 }
 
 ironrdp_core::assert_impl!(Config: Send, Sync);

@@ -11,7 +11,7 @@ use std::time::Duration;
 use anyhow::{Context as _, anyhow, bail};
 use ironrdp::cliprdr::CliprdrClient;
 use ironrdp::cliprdr::backend::ClipboardMessage;
-use ironrdp::connector::{self, ClientConnector, ClientConnectorState, ConnectionResult, Credentials, ServerName};
+use ironrdp::connector::{self, ClientConnector, ClientConnectorState, ConnectionResult, Credentials, Sequence as _, ServerName};
 use ironrdp::pdu::nego::SecurityProtocol;
 use ironrdp::displaycontrol::client::DisplayControlClient;
 use ironrdp::displaycontrol::pdu::MonitorLayoutEntry;
@@ -24,7 +24,7 @@ use ironrdp::pdu::rdp::client_info::{PerformanceFlags, TimezoneInfo};
 use ironrdp::session::image::DecodedImage;
 use ironrdp::session::{ActiveStage, ActiveStageBuilder, ActiveStageOutput, fast_path};
 use ironrdp::graphics::image_processing::PixelFormat;
-use ironrdp_tokio::{FramedWrite as _, TokioFramed, single_sequence_step_read, split_tokio_framed};
+use ironrdp_tokio::{FramedWrite as _, TokioFramed, split_tokio_framed};
 use opencrt_rdp_proto::{BUTTON_LEFT, BUTTON_MIDDLE, BUTTON_RIGHT, FromHelper, SPEED_BEST, SPEED_FASTEST, ToHelper};
 use sha2::{Digest as _, Sha256};
 use tokio::net::TcpStream;
@@ -588,7 +588,25 @@ async fn session(
                     let mut activation = activation_factory.create();
                     let mut buf = ironrdp::pdu::WriteBuf::new();
                     loop {
-                        let written = single_sequence_step_read(&mut reader, &mut activation, &mut buf).await?;
+                        buf.clear();
+                        let written = match activation.next_pdu_hint() {
+                            Some(hint) => {
+                                let pdu = reader.read_by_hint(hint).await.context("reading from the server")?;
+                                // Virtual channel data can come in the middle (xrdp's
+                                // clipboard answers right after its login): it goes to
+                                // its channel, not to the activation sequence.
+                                if for_other_channel(&pdu, activation.io_channel_id()) {
+                                    for output in stage.process(&mut image, ironrdp::pdu::Action::X224, &pdu)? {
+                                        if let ActiveStageOutput::ResponseFrame(frame) = output {
+                                            writer.write_all(&frame).await.context("writing to the server")?;
+                                        }
+                                    }
+                                    continue;
+                                }
+                                activation.step(&pdu, &mut buf)?
+                            }
+                            None => activation.step_no_input(&mut buf)?,
+                        };
                         if written.size().is_some() {
                             writer.write_all(buf.filled()).await?;
                         }
@@ -656,6 +674,11 @@ async fn session(
             }
         }
     }
+}
+
+/// A PDU sent on a virtual channel, not on the I/O channel.
+fn for_other_channel(pdu: &[u8], io_channel: u16) -> bool {
+    ironrdp::pdu::mcs::decode_send_data_indication(pdu).is_ok_and(|data| data.channel_id != io_channel)
 }
 
 /// What OpenCRT is shown: the Graphics Pipeline's desktop once it is on,

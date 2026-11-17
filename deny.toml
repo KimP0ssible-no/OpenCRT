@@ -18,6 +18,9 @@ ignore = [
     # signs with the user's key and IronRDP only uses public keys. No fixed
     # rsa release exists yet.
     { id = "RUSTSEC-2023-0071", reason = "no RSA decryption; no fixed release" },
+    # chrono is unmaintained, with no maintained release. Slint and russh-sftp
+    # need it too, so it stays in the build whatever OpenCRT itself uses.
+    { id = "RUSTSEC-2026-0543", reason = "Slint and russh-sftp depend on chrono; no maintained release" },
 ]
 
 [licenses]

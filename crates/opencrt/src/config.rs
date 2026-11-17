@@ -539,8 +539,8 @@ pub struct Options {
     /// Terminal font: a name (see `render::available_fonts`) or the full path
     /// of a font file; empty for the first installed.
     pub font: String,
-    /// Terminal font size in logical pixels.
-    pub font_size: f32,
+    /// Terminal font size in points, as SecureCRT gives it.
+    pub font_points: f32,
     /// Lines of scrollback kept per session.
     pub scrollback: usize,
     /// Default colour scheme name.
@@ -1122,7 +1122,7 @@ impl Default for Options {
     fn default() -> Self {
         Self {
             font: String::new(),
-            font_size: 15.0,
+            font_points: 10.0,
             scrollback: 10_000,
             scheme: crate::terminal::SCHEMES[0].name.to_string(),
             keywords: Vec::new(),
@@ -1238,12 +1238,21 @@ pub fn machine_options_file() -> Option<PathBuf> {
 /// Load options from `path`, with `machine` (if given) overriding its
 /// machine-specific ones.
 pub fn load_options(path: &Path, machine: Option<&Path>) -> anyhow::Result<Options> {
-    let Some(machine) = machine else { return load(path) };
     let mut table: toml::Table = load(path)?;
-    let local: toml::Table = load(machine)?;
-    // Another computer's (from before it shared them) are not this one's.
-    table.retain(|k, _| !MACHINE_OPTIONS.contains(&k));
-    table.extend(local.into_iter().filter(|(k, _)| MACHINE_OPTIONS.contains(&k.as_str())));
+    if let Some(machine) = machine {
+        let local: toml::Table = load(machine)?;
+        // Another computer's (from before it shared them) are not this one's.
+        table.retain(|k, _| !MACHINE_OPTIONS.contains(&k));
+        table.extend(local.into_iter().filter(|(k, _)| MACHINE_OPTIONS.contains(&k.as_str())));
+    }
+    // Up to 0.7.2 the size was in pixels: the whole point size that draws the
+    // same pixels, else the half point that does.
+    if let Some(px) = table.remove("font_size").and_then(|v| v.as_float().or_else(|| v.as_integer().map(|i| i as f64))) {
+        let (px, per_point) = (px as f32, crate::render::PX_PER_POINT);
+        let exact = px / per_point;
+        let points = if (exact.round() * per_point).round() == px.round() { exact.round() } else { (exact * 2.0).round() / 2.0 };
+        table.entry("font_points").or_insert(f64::from(points).into());
+    }
     toml::Value::Table(table).try_into().with_context(|| format!("reading {}", path.display()))
 }
 
@@ -1364,6 +1373,29 @@ pub fn expand_log_text(template: &str, session: &str, host: &str, now: chrono::N
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn font_size_in_pixels_becomes_the_same_size_in_points() {
+        let path = std::env::temp_dir().join(format!("opencrt-points-{}.toml", std::process::id()));
+        let px = |o: &Options| (o.font_points * crate::render::PX_PER_POINT).round();
+        // Old files: every whole pixel size comes back as itself, mostly as whole points.
+        for (size, points) in [("13", 10.0), ("14.0", 10.5), ("15.0", 11.0), ("17", 13.0)] {
+            std::fs::write(&path, format!("font_size = {size}\n")).unwrap();
+            let options = load_options(&path, None).unwrap();
+            assert_eq!(px(&options), size.parse::<f32>().unwrap(), "font_size = {size}");
+            if !cfg!(target_os = "macos") {
+                assert_eq!(options.font_points, points, "font_size = {size}");
+            }
+            save_options(&path, None, &options).unwrap();
+            let text = std::fs::read_to_string(&path).unwrap();
+            assert!(text.contains("\nfont_points = ") && !text.contains("\nfont_size = "), "{text}");
+        }
+        // A file with both (another computer still on 0.7.2 wrote font_size): points win.
+        std::fs::write(&path, "font_size = 20.0\nfont_points = 12.0\n").unwrap();
+        assert_eq!(load_options(&path, None).unwrap().font_points, 12.0);
+        std::fs::remove_file(&path).unwrap();
+        assert_eq!(load_options(&path, None).unwrap().font_points, 10.0, "SecureCRT's default");
+    }
 
     #[test]
     fn expands_environment_variables() {

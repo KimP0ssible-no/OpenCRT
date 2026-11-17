@@ -165,18 +165,14 @@ async fn connect(
         dynamic = dynamic.with_dynamic_channel(sound::Dynamic::new());
     }
     // The Graphics Pipeline (H.264, as Windows' own client gets it), with the
-    // OpenH264 decoder built in; without it the server sends RemoteFX.
-    let decoder = match target.h264.then(ironrdp_egfx::decode::OpenH264Decoder::new) {
-        Some(Ok(decoder)) => Some(decoder),
-        Some(Err(e)) => {
-            note(format_args!("no H.264 decoder ({e}): RemoteFX instead"));
-            None
-        }
-        None => None,
-    };
-    let pipeline = decoder.is_some();
+    // OpenH264 decoder built in; without it the server sends RemoteFX. The
+    // decoder is only tried here: gfx::Listener makes one each time the
+    // channel opens.
+    let pipeline = target.h264
+        && ironrdp_egfx::decode::OpenH264Decoder::new()
+            .inspect_err(|e| note(format_args!("no H.264 decoder ({e}): RemoteFX instead")))
+            .is_ok();
     if pipeline {
-        // A new decoder each time the channel opens (see gfx::Listener).
         dynamic = dynamic.with_listener(gfx::Listener { events: gfx_queue });
     }
     let clipboard = CliprdrClient::new(Box::new(clipboard::Clipboard::new(clip_queue, out.clone())));
@@ -700,6 +696,23 @@ fn display_control_ready(stage: &mut ActiveStage) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// xrdp sends clipboard data while the session is reactivated after a
+    /// resize: that goes to its channel, not to the reactivation.
+    #[test]
+    fn virtual_channel_data_is_told_apart() {
+        let on = |channel_id| {
+            let pdu = ironrdp::pdu::mcs::SendDataIndication {
+                initiator_id: 1002,
+                channel_id,
+                user_data: std::borrow::Cow::Borrowed(&[1, 2, 3]),
+            };
+            ironrdp::core::encode_vec(&ironrdp::pdu::x224::X224(pdu)).unwrap()
+        };
+        assert!(for_other_channel(&on(1005), 1003));
+        assert!(!for_other_channel(&on(1003), 1003));
+        assert!(!for_other_channel(&[0x03, 0x00], 1003));
+    }
 
     #[test]
     fn connection_errors_in_plain_words() {

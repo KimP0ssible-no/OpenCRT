@@ -596,6 +596,25 @@ mod tests {
     const RED: [u8; 4] = [255, 0, 0, 255];
     const BLUE: [u8; 4] = [0, 0, 255, 255];
 
+    /// xrdp closes the Graphics Pipeline and opens it again on each resize:
+    /// the reopened channel needs a pipeline of its own.
+    #[test]
+    fn the_graphics_channel_opens_again_after_a_close() {
+        use ironrdp::dvc::DrdynvcClient;
+        use ironrdp::dvc::pdu::{ClosePdu, CreateRequestPdu, DrdynvcServerPdu};
+        use ironrdp::svc::SvcProcessor as _;
+        let (events, _received) = tokio::sync::mpsc::unbounded_channel();
+        let mut client = DrdynvcClient::new().with_listener(Listener { events });
+        let mut send = |pdu: DrdynvcServerPdu| client.process(&ironrdp::core::encode_vec(&pdu).unwrap()).unwrap();
+        let open = |id| DrdynvcServerPdu::Create(CreateRequestPdu::new(id, ironrdp_egfx::CHANNEL_NAME.to_owned()));
+
+        send(open(3));
+        send(DrdynvcServerPdu::Close(ClosePdu::new(3)));
+        send(open(4));
+        assert!(client.get_dvc_by_channel_id(3).is_none());
+        assert!(client.get_dvc_by_channel_id(4).is_some());
+    }
+
     /// A ZGFX segment longer than its message is the server's error, not a
     /// panic (found by fuzz/fuzz_targets/egfx.rs).
     #[test]

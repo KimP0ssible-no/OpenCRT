@@ -11,7 +11,7 @@ use std::time::Duration;
 use anyhow::{Context as _, anyhow, bail};
 use ironrdp::cliprdr::CliprdrClient;
 use ironrdp::cliprdr::backend::ClipboardMessage;
-use ironrdp::connector::{self, ClientConnector, ClientConnectorState, ConnectionResult, Credentials, ServerName};
+use ironrdp::connector::{self, ClientConnector, ClientConnectorState, ConnectionResult, Credentials, Sequence as _, ServerName};
 use ironrdp::pdu::nego::SecurityProtocol;
 use ironrdp::displaycontrol::client::DisplayControlClient;
 use ironrdp::displaycontrol::pdu::MonitorLayoutEntry;
@@ -24,7 +24,7 @@ use ironrdp::pdu::rdp::client_info::{PerformanceFlags, TimezoneInfo};
 use ironrdp::session::image::DecodedImage;
 use ironrdp::session::{ActiveStage, ActiveStageBuilder, ActiveStageOutput, fast_path};
 use ironrdp::graphics::image_processing::PixelFormat;
-use ironrdp_tokio::{FramedWrite as _, TokioFramed, single_sequence_step_read, split_tokio_framed};
+use ironrdp_tokio::{FramedWrite as _, TokioFramed, split_tokio_framed};
 use opencrt_rdp_proto::{BUTTON_LEFT, BUTTON_MIDDLE, BUTTON_RIGHT, FromHelper, SPEED_BEST, SPEED_FASTEST, ToHelper};
 use sha2::{Digest as _, Sha256};
 use tokio::net::TcpStream;
@@ -215,19 +215,15 @@ async fn connect(
         dynamic = dynamic.with_dynamic_channel(sound::Dynamic::new());
     }
     // The Graphics Pipeline (H.264, as Windows' own client gets it), with the
-    // OpenH264 decoder built in; without it the server sends RemoteFX.
-    let decoder = match target.h264.then(ironrdp_egfx::decode::OpenH264Decoder::new) {
-        Some(Ok(decoder)) => Some(decoder),
-        Some(Err(e)) => {
-            note(format_args!("no H.264 decoder ({e}): RemoteFX instead"));
-            None
-        }
-        None => None,
-    };
-    let pipeline = decoder.is_some();
-    if let Some(decoder) = decoder {
-        let handler = Box::new(gfx::Handler::new(gfx_queue));
-        dynamic = dynamic.with_dynamic_channel(ironrdp_egfx::client::GraphicsPipelineClient::new(handler, Some(Box::new(decoder))));
+    // OpenH264 decoder built in; without it the server sends RemoteFX. The
+    // decoder is only tried here: gfx::Listener makes one each time the
+    // channel opens.
+    let pipeline = target.h264
+        && ironrdp_egfx::decode::OpenH264Decoder::new()
+            .inspect_err(|e| note(format_args!("no H.264 decoder ({e}): RemoteFX instead")))
+            .is_ok();
+    if pipeline {
+        dynamic = dynamic.with_listener(gfx::Listener { events: gfx_queue });
     }
     let clipboard = CliprdrClient::new(Box::new(clipboard::Clipboard::new(clip_queue, out.clone())));
     let mut config = config(target);
@@ -601,7 +597,12 @@ async fn session(
             }
             Some(message) = clips.recv() => {
                 let messages = match stage.get_svc_processor_mut::<CliprdrClient>() {
-                    Some(cliprdr) => clipboard::send(cliprdr, message)?,
+                    // A clipboard that is not ready (xrdp restarts its channel
+                    // after the login) loses this message, not the session.
+                    Some(cliprdr) => clipboard::send(cliprdr, message).unwrap_or_else(|e| {
+                        note(format_args!("clipboard: {e:#}"));
+                        None
+                    }),
                     None => None,
                 };
                 match messages {
@@ -686,7 +687,25 @@ async fn session(
                     let mut activation = activation_factory.create();
                     let mut buf = ironrdp::pdu::WriteBuf::new();
                     loop {
-                        let written = single_sequence_step_read(&mut reader, &mut activation, &mut buf).await?;
+                        buf.clear();
+                        let written = match activation.next_pdu_hint() {
+                            Some(hint) => {
+                                let pdu = reader.read_by_hint(hint).await.context("reading from the server")?;
+                                // Virtual channel data can come in the middle (xrdp's
+                                // clipboard answers right after its login): it goes to
+                                // its channel, not to the activation sequence.
+                                if for_other_channel(&pdu, activation.io_channel_id()) {
+                                    for output in stage.process(&mut image, ironrdp::pdu::Action::X224, &pdu)? {
+                                        if let ActiveStageOutput::ResponseFrame(frame) = output {
+                                            writer.write_all(&frame).await.context("writing to the server")?;
+                                        }
+                                    }
+                                    continue;
+                                }
+                                activation.step(&pdu, &mut buf)?
+                            }
+                            None => activation.step_no_input(&mut buf)?,
+                        };
                         if written.size().is_some() {
                             writer.write_all(buf.filled()).await?;
                         }
@@ -756,6 +775,11 @@ async fn session(
     }
 }
 
+/// A PDU sent on a virtual channel, not on the I/O channel.
+fn for_other_channel(pdu: &[u8], io_channel: u16) -> bool {
+    ironrdp::pdu::mcs::decode_send_data_indication(pdu).is_ok_and(|data| data.channel_id != io_channel)
+}
+
 /// What OpenCRT is shown: the Graphics Pipeline's desktop once it is on,
 /// else the classic one, with its size.
 fn shown<'a>(image: &'a DecodedImage, canvas: Option<&'a gfx::Canvas>) -> (&'a [u8], (u16, u16)) {
@@ -775,6 +799,23 @@ fn display_control_ready(stage: &mut ActiveStage) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// xrdp sends clipboard data while the session is reactivated after a
+    /// resize: that goes to its channel, not to the reactivation.
+    #[test]
+    fn virtual_channel_data_is_told_apart() {
+        let on = |channel_id| {
+            let pdu = ironrdp::pdu::mcs::SendDataIndication {
+                initiator_id: 1002,
+                channel_id,
+                user_data: std::borrow::Cow::Borrowed(&[1, 2, 3]),
+            };
+            ironrdp::core::encode_vec(&ironrdp::pdu::x224::X224(pdu)).unwrap()
+        };
+        assert!(for_other_channel(&on(1005), 1003));
+        assert!(!for_other_channel(&on(1003), 1003));
+        assert!(!for_other_channel(&[0x03, 0x00], 1003));
+    }
 
     #[test]
     fn connection_errors_in_plain_words() {

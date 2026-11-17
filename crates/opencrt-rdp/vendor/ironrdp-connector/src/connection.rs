@@ -138,6 +138,9 @@ pub struct ClientConnector {
     pub static_channels: StaticChannelSet,
     /// MCS message channel ID assigned by the server, once negotiated.
     pub message_channel_id: Option<u16>,
+    /// A connect-time bandwidth measurement in progress: when its Bandwidth
+    /// Measure Start arrived, and the payload bytes received since.
+    bandwidth_measure: Option<(std::time::Instant, u32)>,
 }
 
 impl ClientConnector {
@@ -148,6 +151,7 @@ impl ClientConnector {
             client_addr,
             static_channels: StaticChannelSet::new(),
             message_channel_id: None,
+            bandwidth_measure: None,
         }
     }
 
@@ -309,6 +313,11 @@ impl Sequence for ClientConnector {
                     // In fact, we purposefully choose to not set `PROTOCOL_SSL` unless `enable_winlogon` is `true`.
                     // This tells the server that we are not going to accept downgrading NLA to TLS security.
                     security_protocol.insert(nego::SecurityProtocol::HYBRID | nego::SecurityProtocol::HYBRID_EX);
+                }
+
+                // OpenCRT: a redirected connection authenticates with RDSTLS only.
+                if self.config.rdstls {
+                    security_protocol = nego::SecurityProtocol::RDSTLS | nego::SecurityProtocol::SSL;
                 }
 
                 if security_protocol.is_standard_rdp_security() {
@@ -566,6 +575,7 @@ impl Sequence for ClientConnector {
                     if let Ok(autodetect) = decode::<rdp::autodetect::AutoDetectReqPdu>(&data.user_data) {
                         let written = respond_to_connect_time_autodetect(
                             autodetect.request,
+                            &mut self.bandwidth_measure,
                             message_channel_id,
                             user_channel_id,
                             output,
@@ -748,28 +758,49 @@ pub fn encode_send_data_request<T: Encode>(
 
 fn respond_to_connect_time_autodetect(
     request: rdp::autodetect::AutoDetectRequest,
+    bandwidth_measure: &mut Option<(std::time::Instant, u32)>,
     message_channel_id: u16,
     user_channel_id: u16,
     output: &mut WriteBuf,
 ) -> ConnectorResult<Written> {
-    use ironrdp_pdu::rdp::autodetect::{AutoDetectRequest, AutoDetectResponse, AutoDetectRspPdu};
+    use ironrdp_pdu::rdp::autodetect::{
+        AutoDetectRequest, AutoDetectResponse, AutoDetectRspPdu, BW_RESULTS_CONNECT_TIME,
+    };
 
-    match request {
-        AutoDetectRequest::RttRequest { sequence_number, .. } => {
-            let response = AutoDetectRspPdu::new(AutoDetectResponse::RttResponse { sequence_number });
-            let written = encode_send_data_request(user_channel_id, message_channel_id, &response, output)?;
-            Written::from_size(written)
+    let response = match request {
+        AutoDetectRequest::RttRequest { sequence_number, .. } => AutoDetectResponse::RttResponse { sequence_number },
+        // OpenCRT: a connect-time Bandwidth Measure Stop is answered with Bandwidth
+        // Measure Results ([MS-RDPBCGR] 2.2.14.1.4), as FreeRDP's client does.
+        // FreeRDP-based servers (gnome-remote-desktop) wait for it and never
+        // start licensing without it.
+        AutoDetectRequest::BandwidthMeasureStart { .. } => {
+            *bandwidth_measure = Some((std::time::Instant::now(), 0));
+            return Ok(Written::Nothing);
         }
-        // Only RTT is answered at connect time. A connect-time Bandwidth Measure
-        // Stop ([MS-RDPBCGR] 2.2.14.1.4) is defined to warrant a Bandwidth Measure
-        // Results reply, and the Network Characteristics Result is informational.
-        // We deliberately send neither: connect-time auto-detect is informational
-        // and the server proceeds to licensing whether or not it receives them, so
-        // skipping them does not stall the sequence. Full connect-time bandwidth
-        // measurement (replying to Bandwidth Measure Stop with Bandwidth Measure
-        // Results) is left for a follow-up.
-        _ => Ok(Written::Nothing),
-    }
+        AutoDetectRequest::BandwidthMeasurePayload { payload, .. } => {
+            if let Some((_, bytes)) = bandwidth_measure.as_mut() {
+                *bytes = bytes.saturating_add(u32::try_from(payload.len()).unwrap_or(u32::MAX));
+            }
+            return Ok(Written::Nothing);
+        }
+        AutoDetectRequest::BandwidthMeasureStop {
+            sequence_number, payload, ..
+        } => {
+            let (started, bytes) = bandwidth_measure.take().unwrap_or((std::time::Instant::now(), 0));
+            let stop_bytes = payload.map_or(0, |p| u32::try_from(p.len()).unwrap_or(u32::MAX));
+            AutoDetectResponse::BandwidthMeasureResults {
+                sequence_number,
+                response_type: BW_RESULTS_CONNECT_TIME,
+                time_delta_ms: u32::try_from(started.elapsed().as_millis()).unwrap_or(u32::MAX),
+                byte_count: bytes.saturating_add(stop_bytes),
+            }
+        }
+        // The Network Characteristics Result is informational.
+        _ => return Ok(Written::Nothing),
+    };
+    let response = AutoDetectRspPdu::new(response);
+    let written = encode_send_data_request(user_channel_id, message_channel_id, &response, output)?;
+    Written::from_size(written)
 }
 
 #[expect(single_use_lifetimes)] // anonymous lifetimes in `impl Trait` are unstable

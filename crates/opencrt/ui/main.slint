@@ -5615,22 +5615,23 @@ export component MainWindow inherits Window {
             title: @tr("Edit");
             MenuItem {
                 title: @tr("Copy");
-                enabled: root.has-selection;
+                // A remote desktop has its own clipboard keys (Ctrl+C, Ctrl+V).
+                enabled: root.has-selection && !root.remote-desktop;
                 activated => { root.menu("copy"); }
             }
             MenuItem {
                 title: @tr("Copy with Colours");
-                enabled: root.has-selection;
+                enabled: root.has-selection && !root.remote-desktop;
                 activated => { root.menu("copy-html"); }
             }
             MenuItem {
                 title: @tr("Paste");
-                enabled: root.session-live;
+                enabled: root.session-live && !root.remote-desktop;
                 activated => { root.menu("paste"); }
             }
             MenuItem {
                 title: @tr("Copy and Paste");
-                enabled: root.has-selection && root.session-live;
+                enabled: root.has-selection && root.session-live && !root.remote-desktop;
                 activated => { root.menu("copy-paste"); }
             }
             MenuItem {
@@ -6138,14 +6139,14 @@ export component MainWindow inherits Window {
                     tip: @tr("Copy");
                     icon-size: 20px;
                     icon: IconKind.copy;
-                    enabled: root.has-selection;
+                    enabled: root.has-selection && !root.remote-desktop;
                     clicked => { root.action("copy"); }
                 }
                 ToolButton {
                     tip: @tr("Paste");
                     icon-size: 20px;
                     icon: IconKind.paste;
-                    enabled: root.session-live;
+                    enabled: root.session-live && !root.remote-desktop;
                     clicked => { root.action("paste"); }
                 }
                 ToolButton {

@@ -175,9 +175,9 @@ async fn connect(
         None => None,
     };
     let pipeline = decoder.is_some();
-    if let Some(decoder) = decoder {
-        let handler = Box::new(gfx::Handler::new(gfx_queue));
-        dynamic = dynamic.with_dynamic_channel(ironrdp_egfx::client::GraphicsPipelineClient::new(handler, Some(Box::new(decoder))));
+    if pipeline {
+        // A new decoder each time the channel opens (see gfx::Listener).
+        dynamic = dynamic.with_listener(gfx::Listener { events: gfx_queue });
     }
     let clipboard = CliprdrClient::new(Box::new(clipboard::Clipboard::new(clip_queue, out.clone())));
     let mut config = config(target);
@@ -499,7 +499,12 @@ async fn session(
             }
             Some(message) = clips.recv() => {
                 let messages = match stage.get_svc_processor_mut::<CliprdrClient>() {
-                    Some(cliprdr) => clipboard::send(cliprdr, message)?,
+                    // A clipboard that is not ready (xrdp restarts its channel
+                    // after the login) loses this message, not the session.
+                    Some(cliprdr) => clipboard::send(cliprdr, message).unwrap_or_else(|e| {
+                        note(format_args!("clipboard: {e:#}"));
+                        None
+                    }),
                     None => None,
                 };
                 match messages {

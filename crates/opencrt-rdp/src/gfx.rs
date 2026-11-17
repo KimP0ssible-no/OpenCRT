@@ -82,6 +82,25 @@ pub struct Handler {
 
 const STATS_EVERY: Duration = Duration::from_secs(10);
 
+/// Makes a Graphics Pipeline each time the server opens its channel. xrdp
+/// closes and opens it again when the desktop is resized; a channel that can
+/// be opened only once leaves the desktop black after the first resize.
+pub struct Listener {
+    pub events: UnboundedSender<Event>,
+}
+
+impl ironrdp::dvc::DvcChannelListener for Listener {
+    fn channel_name(&self) -> &str {
+        ironrdp_egfx::CHANNEL_NAME
+    }
+
+    fn create(&mut self, _channel_id: u32) -> Option<Box<dyn ironrdp::dvc::DvcProcessor>> {
+        let decoder = ironrdp_egfx::decode::OpenH264Decoder::new().ok()?;
+        let handler = Box::new(Handler::new(self.events.clone()));
+        Some(Box::new(ironrdp_egfx::client::GraphicsPipelineClient::new(handler, Some(Box::new(decoder)))))
+    }
+}
+
 impl Handler {
     pub fn new(events: UnboundedSender<Event>) -> Self {
         Handler {

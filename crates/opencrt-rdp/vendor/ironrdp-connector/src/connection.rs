@@ -769,8 +769,8 @@ fn respond_to_connect_time_autodetect(
 
     let response = match request {
         AutoDetectRequest::RttRequest { sequence_number, .. } => AutoDetectResponse::RttResponse { sequence_number },
-        // OpenCRT: a connect-time Bandwidth Measure Stop is answered with Bandwidth
-        // Measure Results ([MS-RDPBCGR] 2.2.14.1.4), as FreeRDP's client does.
+        // OpenCRT: a connect-time Bandwidth Measure Stop ([MS-RDPBCGR] 2.2.14.1.4) is
+        // answered with Bandwidth Measure Results (2.2.14.2.2), as FreeRDP's client does.
         // FreeRDP-based servers (gnome-remote-desktop) wait for it and never
         // start licensing without it.
         AutoDetectRequest::BandwidthMeasureStart { .. } => {

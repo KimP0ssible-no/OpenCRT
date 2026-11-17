@@ -146,6 +146,9 @@ async fn run(mut input: UnboundedReceiver<ToHelper>, out: &Out) -> anyhow::Resul
             Ended::Closed => return Ok(()),
             Ended::Redirect(next) => {
                 note(format_args!("the server redirects us: {next:?}"));
+                if let Some(other) = next.other_host(&target.host) {
+                    bail!("the server redirects to another host ({other}), which OpenCRT does not support yet");
+                }
                 // A server that keeps redirecting at once would loop forever.
                 quick_redirects = if started.elapsed() < Duration::from_secs(5) { quick_redirects + 1 } else { 0 };
                 if quick_redirects > MAX_QUICK_REDIRECTS {

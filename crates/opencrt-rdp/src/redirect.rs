@@ -90,6 +90,13 @@ impl Redirect {
         let bytes = self.password.as_ref()?;
         Some(utf16(bytes))
     }
+
+    /// The server this redirection sends us to, when it is not `host`.
+    /// OpenCRT does not follow those yet (a connection broker's redirection):
+    /// the certificate would be checked against the saved one of `host`.
+    pub fn other_host(&self, host: &str) -> Option<&str> {
+        self.host.as_deref().filter(|named| !named.trim().eq_ignore_ascii_case(host.trim()))
+    }
 }
 
 /// A Server Redirection in a slow-path PDU from the server (a whole TPKT
@@ -314,7 +321,27 @@ mod tests {
         assert_eq!(r.guid, wide("R1VJRA=="));
         assert_eq!(r.certificate.as_deref(), Some(&[0x30, 0x01, 0x00][..]));
         assert_eq!(r.host, None);
+        assert_eq!(r.other_host("gnome.example"), None);
         assert!(!format!("{r:?}").contains("secret"));
+    }
+
+    #[test]
+    fn names_another_host() {
+        // A connection broker's redirection: another server, plain password.
+        let flags = LB_TARGET_NET_ADDRESS | LB_USERNAME | LB_PASSWORD;
+        let mut body = Vec::new();
+        body.extend_from_slice(&SEC_REDIRECTION_PKT.to_le_bytes());
+        body.extend_from_slice(&0u16.to_le_bytes());
+        body.extend_from_slice(&0u32.to_le_bytes());
+        body.extend_from_slice(&flags.to_le_bytes());
+        field(&mut body, &wide("192.0.2.7"));
+        field(&mut body, &wide("user"));
+        field(&mut body, &wide("pass"));
+
+        let r = parse(&body).unwrap();
+        assert!(!r.rdstls);
+        assert_eq!(r.other_host("broker.example"), Some("192.0.2.7"));
+        assert_eq!(r.other_host("192.0.2.7"), None);
     }
 
     #[test]

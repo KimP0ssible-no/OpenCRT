@@ -266,12 +266,11 @@ impl Encode for ShareControlHeader {
 
 impl<'de> Decode<'de> for ShareControlHeader {
     fn decode(src: &mut ReadCursor<'de>) -> DecodeResult<Self> {
-        ensure_fixed_part_size!(in: src);
+        ensure_size!(in: src, size: 2 * 3);
 
         let total_length = usize::from(src.read_u16());
         let pdu_type_with_version = src.read_u16();
         let pdu_source = src.read_u16();
-        let share_id = src.read_u32();
 
         let pdu_type = ShareControlPduType::from_u16(pdu_type_with_version & SHARE_CONTROL_HEADER_MASK)
             .ok_or_else(|| invalid_field_err!("pdu_type", "invalid pdu type"))?;
@@ -279,6 +278,15 @@ impl<'de> Decode<'de> for ShareControlHeader {
         if pdu_version != PROTOCOL_VERSION {
             return Err(invalid_field_err!("pdu_version", "invalid PDU version"));
         }
+
+        // OpenCRT: xrdp up to 0.10.1 sends Deactivate All as the bare header,
+        // without even the shareId.
+        if pdu_type == ShareControlPduType::DeactivateAllPdu && src.len() < 4 {
+            let share_control_pdu = ShareControlPdu::ServerDeactivateAll(ServerDeactivateAll);
+            return Ok(Self { share_control_pdu, pdu_source, share_id: 0 });
+        }
+        ensure_size!(in: src, size: 4);
+        let share_id = src.read_u32();
 
         let share_pdu = ShareControlPdu::from_type(src, pdu_type)?;
         let header = Self {

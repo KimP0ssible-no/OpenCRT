@@ -33,6 +33,7 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 mod clipboard;
 mod drive;
 mod gfx;
+mod redirect;
 mod sound;
 use x509_cert::der::Encode as _;
 
@@ -79,8 +80,15 @@ fn main() {
         .map_err(anyhow::Error::from)
         .and_then(|runtime| runtime.block_on(run(in_rx, &out_tx)));
     let _ = out_tx.send(match result {
-        Ok(()) => FromHelper::Closed,
-        Err(e) => FromHelper::Error(format!("{e:#}")),
+        Ok(()) => {
+            note(format_args!("closed"));
+            FromHelper::Closed
+        }
+        Err(e) => {
+            // Also in rdp.log: the tab's message alone is easily lost.
+            note(format_args!("ended: {e:#}"));
+            FromHelper::Error(format!("{e:#}"))
+        }
     });
     drop(out_tx);
     let _ = writer.join();
@@ -109,21 +117,56 @@ struct Target {
 }
 
 async fn run(mut input: UnboundedReceiver<ToHelper>, out: &Out) -> anyhow::Result<()> {
-    let target = match input.recv().await {
+    let mut target = match input.recv().await {
         Some(ToHelper::Connect { host, port, user, domain, password, width, height, speed, sound, share, h264, admin }) => {
             Target { host, port, user, domain, password, width, height, speed, sound, share, h264, admin }
         }
         Some(ToHelper::Close) | None => return Ok(()),
         Some(other) => bail!("expected a connect request first, got {other:?}"),
     };
-    let (clip_queue, clips) = unbounded_channel();
-    let (gfx_queue, gfx_events) = unbounded_channel();
     note(format_args!(
         "connecting to {}:{} as {}x{}, speed {}, sound {}, shared folder {:?}, H.264 {}, admin {}",
         target.host, target.port, target.width, target.height, target.speed, target.sound, target.share, target.h264, target.admin
     ));
-    let (result, framed, security) = connect(&target, &mut input, out, clip_queue, gfx_queue).await?;
-    session(result, framed, security, input, clips, gfx_events, out).await
+    // A server may send us on (Server Redirection): GNOME's remote login does
+    // twice, to its login screen and then to the user's desktop.
+    let mut redirect: Option<redirect::Redirect> = None;
+    let mut quick_redirects = 0;
+    loop {
+        let (clip_queue, clips) = unbounded_channel();
+        let (gfx_queue, gfx_events) = unbounded_channel();
+        let connection = connect(&target, redirect.as_ref(), &mut input, out, clip_queue, gfx_queue).await?;
+        let started = std::time::Instant::now();
+        // The tab's size as last asked for: the next connection after a
+        // redirection starts at it, as a resize sent to the old one is lost.
+        let mut tab_size = (target.width, target.height);
+        let ended = session(connection, redirect.is_none(), &mut tab_size, &mut input, clips, gfx_events, out).await?;
+        (target.width, target.height) = tab_size;
+        match ended {
+            Ended::Closed => return Ok(()),
+            Ended::Redirect(next) => {
+                note(format_args!("the server redirects us: {next:?}"));
+                if let Some(other) = next.other_host(&target.host) {
+                    bail!("the server redirects to another host ({other}), which OpenCRT does not support yet");
+                }
+                // A server that keeps redirecting at once would loop forever.
+                quick_redirects = if started.elapsed() < Duration::from_secs(5) { quick_redirects + 1 } else { 0 };
+                if quick_redirects > MAX_QUICK_REDIRECTS {
+                    bail!("the server keeps redirecting the connection");
+                }
+                redirect = Some(next);
+            }
+        }
+    }
+}
+
+/// Redirections in a row, each within seconds of the last, before giving up.
+const MAX_QUICK_REDIRECTS: u32 = 5;
+
+/// How a session ended without an error.
+enum Ended {
+    Closed,
+    Redirect(redirect::Redirect),
 }
 
 /// The certificate check: OpenCRT decides; nothing secret has been sent yet.
@@ -143,17 +186,24 @@ async fn trusted(cert: &x509_cert::Certificate, input: &mut UnboundedReceiver<To
 
 type Framed = TokioFramed<ironrdp_tls::TlsStream<TcpStream>>;
 
+/// A connected server: the connector's result, the stream, and how it is
+/// secured (e.g. "TLS 1.3, NLA").
+type Connection = (ConnectionResult, Framed, String);
+
 async fn connect(
     target: &Target,
+    redirect: Option<&redirect::Redirect>,
     input: &mut UnboundedReceiver<ToHelper>,
     out: &Out,
     clip_queue: UnboundedSender<ClipboardMessage>,
     gfx_queue: UnboundedSender<gfx::Event>,
-) -> anyhow::Result<(ConnectionResult, Framed, String)> {
-    let stream = tokio::time::timeout(CONNECT_TIMEOUT, TcpStream::connect((target.host.as_str(), target.port)))
+) -> anyhow::Result<Connection> {
+    // A redirection keeps the same server unless it names another.
+    let host = redirect.and_then(|r| r.host.as_deref()).unwrap_or(&target.host);
+    let stream = tokio::time::timeout(CONNECT_TIMEOUT, TcpStream::connect((host, target.port)))
         .await
-        .map_err(|_| anyhow!("{}:{} did not answer", target.host, target.port))?
-        .with_context(|| format!("cannot connect to {}:{}", target.host, target.port))?;
+        .map_err(|_| anyhow!("{host}:{} did not answer", target.port))?
+        .with_context(|| format!("cannot connect to {host}:{}", target.port))?;
     let client_addr = stream.local_addr()?;
     // Display Control (a dynamic channel) lets the desktop follow the tab's size.
     let display_control = DisplayControlClient::new(|caps| {
@@ -182,6 +232,18 @@ async fn connect(
     let clipboard = CliprdrClient::new(Box::new(clipboard::Clipboard::new(clip_queue, out.clone())));
     let mut config = config(target);
     config.support_dyn_vc_gfx_protocol = pipeline;
+    if let Some(r) = redirect {
+        // Back with the routing token, as the user the redirection names: with
+        // its one-time token over RDSTLS, or its password over NLA.
+        config.request_data = r.routing_token.clone().map(ironrdp::pdu::nego::NegoRequestData::routing_token);
+        config.rdstls = r.rdstls;
+        let username = r.user.clone().unwrap_or_else(|| target.user.clone());
+        let password = if r.rdstls { String::new() } else { r.password_text().unwrap_or_else(|| target.password.clone()) };
+        config.credentials = Credentials::UsernamePassword { username, password };
+        if let Some(domain) = &r.domain {
+            config.domain = (!domain.is_empty()).then(|| domain.clone());
+        }
+    }
     let mut connector = ClientConnector::new(config, client_addr).with_static_channel(dynamic).with_static_channel(clipboard);
     if target.sound {
         connector.attach_static_channel(ironrdp::rdpsnd::client::Rdpsnd::new(Box::new(sound::Sound::new())));
@@ -206,15 +268,40 @@ async fn connect(
         .await
         .map_err(|e| anyhow!("{}", connect_error(&format!("{e:#}"))))?;
     // NLA when the server chose CredSSP; otherwise TLS alone.
-    let nla = matches!(&connector.state, ClientConnectorState::EnhancedSecurityUpgrade { selected_protocol }
-        if selected_protocol.intersects(SecurityProtocol::HYBRID | SecurityProtocol::HYBRID_EX));
+    let selected = match &connector.state {
+        ClientConnectorState::EnhancedSecurityUpgrade { selected_protocol } => *selected_protocol,
+        _ => SecurityProtocol::empty(),
+    };
+    let nla = selected.intersects(SecurityProtocol::HYBRID | SecurityProtocol::HYBRID_EX);
+    let rdstls = selected.contains(SecurityProtocol::RDSTLS);
 
     let (stream, leftover) = framed.into_inner();
-    let (tls, cert) = ironrdp_tls::upgrade(stream, &target.host).await.context("TLS")?;
+    let (mut tls, cert) = ironrdp_tls::upgrade(stream, host).await.context("TLS")?;
     let tls_version = tls.get_ref().1.protocol_version().map_or("TLS".into(), |v| format!("{v:?}").replace("TLSv1_", "TLS 1."));
-    let security = if nla { format!("{tls_version}, NLA") } else { tls_version };
-    if !trusted(&cert, input, out).await? {
-        bail!("the server certificate was not trusted");
+    let security = if nla {
+        format!("{tls_version}, NLA")
+    } else if rdstls {
+        format!("{tls_version}, RDSTLS")
+    } else {
+        tls_version
+    };
+    match redirect.and_then(|r| r.certificate.as_deref()) {
+        // The redirection (from the server already trusted) named the next
+        // server's certificate: it must be that one, and nobody is asked.
+        Some(named) => {
+            if cert.to_der().context("encoding the server certificate")? != named {
+                bail!("the redirected server's certificate is not the one the redirection named");
+            }
+        }
+        None => {
+            if !trusted(&cert, input, out).await? {
+                bail!("the server certificate was not trusted");
+            }
+        }
+    }
+    if rdstls {
+        let r = redirect.ok_or_else(|| anyhow!("the server chose RDSTLS, which only follows a redirection"))?;
+        redirect::rdstls(&mut tls, r, &target.domain).await?;
     }
     let server_public_key = ironrdp_tls::extract_tls_server_public_key(&cert)
         .ok_or_else(|| anyhow!("cannot read the server's public key"))?
@@ -226,7 +313,7 @@ async fn connect(
         connector,
         &mut framed,
         &mut NoKerberos,
-        ServerName::new(target.host.clone()),
+        ServerName::new(host.to_owned()),
         server_public_key,
         None,
     )
@@ -302,6 +389,7 @@ fn config(target: &Target) -> connector::Config {
         enable_server_pointer: false,
         support_dyn_vc_gfx_protocol: false, // set in connect, with the channel
         admin_session: target.admin,
+        rdstls: false, // set in connect, after a redirection
         request_data: None,
         autologon: false,
         enable_audio_playback: target.sound,
@@ -422,15 +510,17 @@ fn operation(message: ToHelper) -> Option<Operation> {
     })
 }
 
+/// `first` is the tab's first connection (not one after a redirection);
+/// `tab_size` follows the desktop size OpenCRT asks for.
 async fn session(
-    result: ConnectionResult,
-    framed: Framed,
-    security: String,
-    mut input: UnboundedReceiver<ToHelper>,
+    (result, framed, security): Connection,
+    first: bool,
+    tab_size: &mut (u16, u16),
+    input: &mut UnboundedReceiver<ToHelper>,
     mut clips: UnboundedReceiver<ClipboardMessage>,
     mut gfx_events: UnboundedReceiver<gfx::Event>,
     out: &Out,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<Ended> {
     let (mut reader, mut writer) = split_tokio_framed(framed);
     let size = result.desktop_size;
     let mut image = DecodedImage::new(PixelFormat::RgbA32, size.width, size.height);
@@ -448,7 +538,12 @@ async fn session(
     .build();
     let mut keys = Database::new();
     note(format_args!("connected ({security}): the server's desktop is {}x{}", size.width, size.height));
-    send(out, FromHelper::Connected { width: size.width, height: size.height, security })?;
+    if first {
+        send(out, FromHelper::Connected { width: size.width, height: size.height, security })?;
+    } else {
+        // After a redirection OpenCRT already shows a desktop: start it again, black.
+        send(out, FromHelper::DesktopSize { width: size.width, height: size.height })?;
+    }
     // What OpenCRT has been sent so far; changes are diffed against it and
     // sent at most every FRAME_INTERVAL.
     let mut sent = image.data().to_vec();
@@ -495,6 +590,13 @@ async fn session(
             }
             pdu = reader.read_pdu() => {
                 let (action, payload) = pdu.context("reading from the server")?;
+                // IronRDP cannot read a Server Redirection; this connection ends
+                // and the next one starts where it says.
+                if action == ironrdp::pdu::Action::X224
+                    && let Some(next) = redirect::find(&payload)?
+                {
+                    return Ok(Ended::Redirect(next));
+                }
                 stage.process(&mut image, action, &payload)?
             }
             Some(message) = clips.recv() => {
@@ -517,7 +619,7 @@ async fn session(
                             let _ = writer.write_all(&frame).await;
                         }
                     }
-                    return Ok(());
+                    return Ok(Ended::Closed);
                 }
                 Some(ToHelper::ReleaseAll) => stage.process_fastpath_input(&mut image, &keys.release_all())?,
                 Some(message @ (ToHelper::Clipboard(_) | ToHelper::ClipboardImage { .. })) => {
@@ -535,6 +637,7 @@ async fn session(
                 }
                 Some(ToHelper::Resize { width, height }) => {
                     let size = MonitorLayoutEntry::adjust_display_size(width.into(), height.into());
+                    *tab_size = (u16::try_from(size.0).unwrap_or(width), u16::try_from(size.1).unwrap_or(height));
                     let now = shown(&image, canvas.as_ref()).1;
                     wanted = (size != (now.0.into(), now.1.into())).then_some(size);
                     waiting_noted = false;
@@ -576,7 +679,7 @@ async fn session(
             match output {
                 ActiveStageOutput::ResponseFrame(frame) => writer.write_all(&frame).await.context("writing to the server")?,
                 ActiveStageOutput::GraphicsUpdate(_) => dirty = true,
-                ActiveStageOutput::Terminate(_) => return Ok(()),
+                ActiveStageOutput::Terminate(_) => return Ok(Ended::Closed),
                 ActiveStageOutput::DeactivateAll => {
                     // Deactivation-Reactivation: run a fresh activation sequence,
                     // then carry on with the (possibly resized) desktop.

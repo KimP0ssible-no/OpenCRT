@@ -3,10 +3,11 @@ resolver = "2"
 members = ["crates/opencrt", "crates/rdp-proto"]
 # The RDP helper is its own workspace: IronRDP and russh pin incompatible
 # versions of the same crypto crates, so they cannot share a lockfile.
-exclude = ["crates/opencrt-rdp", "crates/opencrt/vendor/alacritty_terminal"]
+exclude = ["crates/opencrt-rdp", "crates/opencrt/vendor/alacritty_terminal", "crates/opencrt/vendor/vte"]
 
 [patch.crates-io]
 alacritty_terminal = { path = "crates/opencrt/vendor/alacritty_terminal" }
+vte = { path = "crates/opencrt/vendor/vte" }
 
 [profile.release]
 # Smaller shipped binaries: drop symbols and optimise across crates.

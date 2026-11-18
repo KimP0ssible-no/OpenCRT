@@ -17,6 +17,7 @@ opencrt = { path = ".." }
 
 [patch.crates-io]
 alacritty_terminal = { path = "../vendor/alacritty_terminal" }
+vte = { path = "../vendor/vte" }
 
 [[bin]]
 name = "terminal"

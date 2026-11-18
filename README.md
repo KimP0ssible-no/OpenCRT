@@ -182,15 +182,23 @@ OpenCRT is written in Rust from the first line, and it guards your logins:
   privately (see `SECURITY.md`).
 
 ### Light on memory
-With a Remote Desktop session to the same Windows host open, OpenCRT uses
-about one quarter of the memory that SecureCRT uses:
+<!-- DRAFT: the SSH rows need the scrollback-chunks branch released; name that version. -->
+OpenCRT uses less memory than SecureCRT, and with a Remote Desktop session
+open it uses about one quarter:
 
-| One Remote Desktop tab, Windows 11 | Memory |
-| --- | --- |
-| OpenCRT 0.7.3: the window (39.1 MB) and its Remote Desktop helper (35.5 MB) | 74.6 MB |
-| SecureCRT 9.7 | 300.5 MB |
+| Scenario | OpenCRT | SecureCRT |
+| --- | --- | --- |
+| Started, no tabs (Linux) | 49 MB | 63 MB |
+| One SSH tab (Linux) | 57 MB | 65 MB |
+| Ten SSH tabs (Linux) | 68 MB | 72 MB |
+| One Remote Desktop tab (Windows 11) | 74.6 MB | 300.5 MB |
 
-Measured with Windows Task Manager (the Memory column of the Processes tab).
+On Linux, both programs connected to the same local SSH server, and the
+figures are PSS (each process's share of memory, from
+`/proc/<pid>/smaps_rollup`) against SecureCRT 9.7.2. On Windows, the figures
+come from Task Manager against SecureCRT 9.7, and the OpenCRT figure adds the
+window (39.1 MB) and its Remote Desktop helper (35.5 MB). A tab that fills its
+10,000 lines of scrollback uses more: about 28 MB at 101 columns.
 
 ### Runs where you work
 Windows 10 and 11 (setup, MSI for Group Policy, or a portable zip for a USB

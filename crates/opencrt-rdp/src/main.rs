@@ -476,9 +476,12 @@ fn changed(old: &[u8], new: &[u8], width: u16, height: u16) -> Vec<InclusiveRect
 const FRAME_INTERVAL: Duration = Duration::from_millis(33);
 
 /// Windows takes a resize early in the session but keeps (or resets to) the
-/// old size until it is ready, so an unanswered one is asked again.
+/// old size until it is ready, so an unanswered one is asked again: soon at
+/// first, then less often. xrdp refuses every resize while its login screen
+/// shows, and does not apply them after the login.
 const RESIZE_RETRY: Duration = Duration::from_secs(2);
 const RESIZE_TRIES: u8 = 5;
+const RESIZE_RETRY_SLOW: Duration = Duration::from_secs(10);
 
 fn whole(image: &DecodedImage) -> InclusiveRectangle {
     InclusiveRectangle { left: 0, top: 0, right: image.width().saturating_sub(1), bottom: image.height().saturating_sub(1) }
@@ -565,7 +568,6 @@ async fn session(
                 let now = shown(&image, canvas.as_ref()).1;
                 if let Some(size) = asked.take()
                     && size != (now.0.into(), now.1.into())
-                    && tries < RESIZE_TRIES
                 {
                     note(format_args!("the desktop is still {}x{}: asking for {}x{} again", now.0, now.1, size.0, size.1));
                     wanted = Some(size);
@@ -664,8 +666,9 @@ async fn session(
                     note(format_args!("resize to {width}x{height} sent"));
                     wanted = None;
                     asked = Some((width, height));
-                    check_at = Some(tokio::time::Instant::now() + RESIZE_RETRY);
-                    tries += 1;
+                    tries = tries.saturating_add(1);
+                    let wait = if tries < RESIZE_TRIES { RESIZE_RETRY } else { RESIZE_RETRY_SLOW };
+                    check_at = Some(tokio::time::Instant::now() + wait);
                 }
                 None if !waiting_noted => {
                     let open = stage.get_dvc::<DisplayControlClient>().is_some_and(|dvc| dvc.channel_id().is_some());
@@ -799,6 +802,21 @@ fn display_control_ready(stage: &mut ActiveStage) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// xrdp up to 0.10.1 starts each desktop resize with a Deactivate All PDU
+    /// that is the bare 6-byte header.
+    #[test]
+    fn reads_xrdps_bare_deactivate_all() {
+        use ironrdp::pdu::rdp::headers::{ShareControlHeader, ShareControlPdu};
+        let decode = |bytes: &[u8]| ironrdp::core::decode::<ShareControlHeader>(bytes);
+        let bare = decode(&[6, 0, 0x16, 0, 0xea, 0x03]).unwrap();
+        assert!(matches!(bare.share_control_pdu, ShareControlPdu::ServerDeactivateAll(_)));
+        // The full PDU, as Windows sends it, keeps its shareId.
+        let full = decode(&[13, 0, 0x16, 0, 0xea, 0x03, 0x01, 0x00, 0x01, 0x00, 1, 0, 0]).unwrap();
+        assert_eq!(full.share_id, 0x0001_0001);
+        // Any other PDU still needs its shareId.
+        assert!(decode(&[6, 0, 0x17, 0, 0xea, 0x03]).is_err());
+    }
 
     /// xrdp sends clipboard data while the session is reactivated after a
     /// resize: that goes to its channel, not to the reactivation.

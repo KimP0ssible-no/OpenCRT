@@ -1,4 +1,4 @@
-# ironrdp-pdu 0.9.0, with two fixes
+# ironrdp-pdu 0.9.0, with three fixes
 
 A copy of [ironrdp-pdu](https://crates.io/crates/ironrdp-pdu) 0.9.0 (Devolutions,
 MIT OR Apache-2.0; see LICENSE-MIT and LICENSE-APACHE), used through
@@ -15,5 +15,12 @@ The second, in `src/codecs/clearcodec/rlex.rs` (`decode_rlex`): with a one-colou
 RLEX palette every segment still starts with the packed stopIndex/suiteDepth byte
 (a 1-bit stopIndex); 0.9.0 read each byte as a run length instead, so one-colour
 areas failed with "suite exceeds region pixel count".
+
+The third, in `src/rdp/headers.rs` (`ShareControlHeader::decode`): xrdp up to
+0.10.1 sends its Deactivate All PDU as the bare 6-byte Share Control Header,
+without the shareId (and the fields after it). 0.9.0 asked for the shareId first,
+so every desktop resize on such a server ended the session with "not enough bytes
+provided to decode: received 6 bytes, expected 10 bytes". The bare header now
+decodes as a Deactivate All with shareId 0.
 
 Delete this copy and the patch once a released ironrdp-pdu reads it right.

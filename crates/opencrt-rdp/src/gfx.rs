@@ -82,6 +82,25 @@ pub struct Handler {
 
 const STATS_EVERY: Duration = Duration::from_secs(10);
 
+/// Makes a Graphics Pipeline each time the server opens its channel. xrdp
+/// closes and opens it again when the desktop is resized; a channel that can
+/// be opened only once leaves the desktop black after the first resize.
+pub struct Listener {
+    pub events: UnboundedSender<Event>,
+}
+
+impl ironrdp::dvc::DvcChannelListener for Listener {
+    fn channel_name(&self) -> &str {
+        ironrdp_egfx::CHANNEL_NAME
+    }
+
+    fn create(&mut self, _channel_id: u32) -> Option<Box<dyn ironrdp::dvc::DvcProcessor>> {
+        let decoder = ironrdp_egfx::decode::OpenH264Decoder::new().ok()?;
+        let handler = Box::new(Handler::new(self.events.clone()));
+        Some(Box::new(ironrdp_egfx::client::GraphicsPipelineClient::new(handler, Some(Box::new(decoder)))))
+    }
+}
+
 impl Handler {
     pub fn new(events: UnboundedSender<Event>) -> Self {
         Handler {
@@ -576,6 +595,25 @@ mod tests {
 
     const RED: [u8; 4] = [255, 0, 0, 255];
     const BLUE: [u8; 4] = [0, 0, 255, 255];
+
+    /// xrdp closes the Graphics Pipeline and opens it again on each resize:
+    /// the reopened channel needs a pipeline of its own.
+    #[test]
+    fn the_graphics_channel_opens_again_after_a_close() {
+        use ironrdp::dvc::DrdynvcClient;
+        use ironrdp::dvc::pdu::{ClosePdu, CreateRequestPdu, DrdynvcServerPdu};
+        use ironrdp::svc::SvcProcessor as _;
+        let (events, _received) = tokio::sync::mpsc::unbounded_channel();
+        let mut client = DrdynvcClient::new().with_listener(Listener { events });
+        let mut send = |pdu: DrdynvcServerPdu| client.process(&ironrdp::core::encode_vec(&pdu).unwrap()).unwrap();
+        let open = |id| DrdynvcServerPdu::Create(CreateRequestPdu::new(id, ironrdp_egfx::CHANNEL_NAME.to_owned()));
+
+        send(open(3));
+        send(DrdynvcServerPdu::Close(ClosePdu::new(3)));
+        send(open(4));
+        assert!(client.get_dvc_by_channel_id(3).is_none());
+        assert!(client.get_dvc_by_channel_id(4).is_some());
+    }
 
     /// A ZGFX segment longer than its message is the server's error, not a
     /// panic (found by fuzz/fuzz_targets/egfx.rs).

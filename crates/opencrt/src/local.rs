@@ -50,11 +50,12 @@ fn shell_env(term: &str) -> std::collections::HashMap<String, String> {
     [("TERM", term), ("COLORTERM", "truecolor")].into_iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
 }
 
-/// Start `program`, or with none the user's shell (PowerShell on Windows,
-/// `$SHELL` elsewhere), in their home folder, as a `term` terminal.
+/// Start `program` (a command line), or with none the user's shell
+/// (PowerShell on Windows, `$SHELL` elsewhere), in their home folder, as a
+/// `term` terminal.
 pub fn connect(program: &str, term: &str, cols: u32, rows: u32) -> SshHandle {
     let env = shell_env(term);
-    let shell = (!program.is_empty()).then(|| tty::Shell::new(program.to_string(), Vec::new()));
+    let shell = (!program.is_empty()).then(|| command_line(program));
     ssh::spawn(move |io| {
         let mut options = Options { drain_on_exit: true, working_directory: std::env::home_dir(), env, ..Options::default() };
         options.shell = shell;
@@ -102,6 +103,19 @@ pub fn connect(program: &str, term: &str, cols: u32, rows: u32) -> SshHandle {
             }
         }
     })
+}
+
+/// A command line as the program to start. Windows starts a command line as
+/// it is. Elsewhere the user's login shell runs it: it splits the arguments,
+/// and its PATH finds the program (an app started from the desktop has a
+/// short PATH, without e.g. /usr/local/bin or /opt/homebrew/bin).
+fn command_line(program: &str) -> tty::Shell {
+    // A program's own path starts as it is, spaces and all.
+    if cfg!(windows) || std::path::Path::new(program).is_file() {
+        return tty::Shell::new(program.to_string(), Vec::new());
+    }
+    let shell = std::env::var("SHELL").ok().filter(|s| !s.is_empty()).unwrap_or_else(|| "/bin/sh".into());
+    tty::Shell::new(shell, vec!["-l".into(), "-c".into(), program.to_string()])
 }
 
 /// `write_all` for a non-blocking writer: retry briefly while it is full (the
@@ -153,6 +167,48 @@ mod tests {
     #[test]
     fn runs_a_command_in_a_chosen_shell() {
         echoes_a_command(if cfg!(windows) { "cmd.exe" } else { "sh" });
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn runs_a_program_path_with_spaces() {
+        use std::os::unix::fs::PermissionsExt as _;
+        let dir = std::env::temp_dir().join(format!("opencrt local {}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let program = dir.join("my tool");
+        std::fs::write(&program, "#!/bin/sh\necho path-$((40+2))\n").unwrap();
+        std::fs::set_permissions(&program, std::fs::Permissions::from_mode(0o755)).unwrap();
+        let mut handle = connect(&program.to_string_lossy(), "xterm-256color", 80, 24);
+        let deadline = std::time::Instant::now() + Duration::from_secs(60);
+        let mut out = Vec::new();
+        while !String::from_utf8_lossy(&out).contains("path-42") {
+            assert!(std::time::Instant::now() < deadline, "got {:?}", String::from_utf8_lossy(&out));
+            match handle.try_recv() {
+                Ok(SshEvent::Data(d)) => out.extend(d),
+                Ok(SshEvent::Error(e)) => panic!("local program failed: {e}"),
+                Ok(_) => {}
+                Err(_) => std::thread::sleep(Duration::from_millis(20)),
+            }
+        }
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn runs_a_command_line_with_arguments() {
+        // Quoted arguments, as in `tsh ssh -o "ForwardAgent yes" host` (#174).
+        let mut handle = connect(r#"printf '%s|' one "two words"; exit"#, "xterm-256color", 80, 24);
+        let deadline = std::time::Instant::now() + Duration::from_secs(60);
+        let mut out = Vec::new();
+        while !String::from_utf8_lossy(&out).contains("one|two words|") {
+            assert!(std::time::Instant::now() < deadline, "got {:?}", String::from_utf8_lossy(&out));
+            match handle.try_recv() {
+                Ok(SshEvent::Data(d)) => out.extend(d),
+                Ok(SshEvent::Error(e)) => panic!("local command failed: {e}"),
+                Ok(_) => {}
+                Err(_) => std::thread::sleep(Duration::from_millis(20)),
+            }
+        }
     }
 
     fn echoes_a_command(program: &str) {

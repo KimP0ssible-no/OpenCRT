@@ -1355,6 +1355,28 @@ mod tests {
     }
 
     #[test]
+    fn scrollback_fills_fast_in_small_steps() {
+        let feed = |t: &mut Terminal, lines: std::ops::Range<usize>| {
+            let text: String = lines.map(|i| format!("line {i}\r\n")).collect();
+            let start = std::time::Instant::now();
+            for chunk in text.as_bytes().chunks(4096) {
+                t.feed(chunk);
+            }
+            start.elapsed()
+        };
+        let mut t = Terminal::new(100, 24);
+        // The first 10,000 lines grow the scrollback 100 rows at a time; the next only reuse rows.
+        let growing = feed(&mut t, 0..10_000);
+        let full = feed(&mut t, 10_000..20_000);
+        eprintln!("10,000 lines: growing {growing:?}, full {full:?}");
+        assert_eq!(t.scroll_position(), (0, 10_000));
+        assert_eq!(t.screen_text().lines().nth(22), Some("line 19999"));
+        t.scroll(Scroll::Top);
+        assert_eq!(t.screen_text().lines().next(), Some("line 9977"));
+        assert!(growing < full * 3 + std::time::Duration::from_millis(100), "growing {growing:?}, full {full:?}");
+    }
+
+    #[test]
     fn overlong_osc_colour_is_refused() {
         let mut t = Terminal::new(10, 2);
         t.feed(format!("\x1b]10;#{}\x07", "0".repeat(60)).as_bytes());

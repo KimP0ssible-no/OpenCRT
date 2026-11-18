@@ -110,7 +110,8 @@ pub fn connect(program: &str, term: &str, cols: u32, rows: u32) -> SshHandle {
 /// and its PATH finds the program (an app started from the desktop has a
 /// short PATH, without e.g. /usr/local/bin or /opt/homebrew/bin).
 fn command_line(program: &str) -> tty::Shell {
-    if cfg!(windows) {
+    // A program's own path starts as it is, spaces and all.
+    if cfg!(windows) || std::path::Path::new(program).is_file() {
         return tty::Shell::new(program.to_string(), Vec::new());
     }
     let shell = std::env::var("SHELL").ok().filter(|s| !s.is_empty()).unwrap_or_else(|| "/bin/sh".into());
@@ -166,6 +167,30 @@ mod tests {
     #[test]
     fn runs_a_command_in_a_chosen_shell() {
         echoes_a_command(if cfg!(windows) { "cmd.exe" } else { "sh" });
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn runs_a_program_path_with_spaces() {
+        use std::os::unix::fs::PermissionsExt as _;
+        let dir = std::env::temp_dir().join(format!("opencrt local {}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let program = dir.join("my tool");
+        std::fs::write(&program, "#!/bin/sh\necho path-$((40+2))\n").unwrap();
+        std::fs::set_permissions(&program, std::fs::Permissions::from_mode(0o755)).unwrap();
+        let mut handle = connect(&program.to_string_lossy(), "xterm-256color", 80, 24);
+        let deadline = std::time::Instant::now() + Duration::from_secs(60);
+        let mut out = Vec::new();
+        while !String::from_utf8_lossy(&out).contains("path-42") {
+            assert!(std::time::Instant::now() < deadline, "got {:?}", String::from_utf8_lossy(&out));
+            match handle.try_recv() {
+                Ok(SshEvent::Data(d)) => out.extend(d),
+                Ok(SshEvent::Error(e)) => panic!("local program failed: {e}"),
+                Ok(_) => {}
+                Err(_) => std::thread::sleep(Duration::from_millis(20)),
+            }
+        }
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

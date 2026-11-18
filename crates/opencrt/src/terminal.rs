@@ -439,7 +439,8 @@ impl EventListener for Listener {
 /// vte 0.15 overflows a shift (a panic with overflow checks on) parsing an OSC
 /// 4/10/11/12 colour of `#` and 51+ bytes, so such a colour is cut to 48 bytes
 /// and an `x` that makes it invalid. Tracks vte's OSC string state: it skips
-/// C0 bytes, ends on BEL, CAN, SUB or ESC, and splits parameters on `;`.
+/// C0 bytes, ends on BEL, CAN, SUB or ESC, and splits parameters on `;`. Its
+/// escape state ignores DEL and bytes 0x80-0xff.
 #[derive(Default)]
 struct ColourGuard {
     esc: bool,
@@ -478,7 +479,7 @@ impl ColourGuard {
         self.esc = match b {
             0x1b => true,
             0x18 | 0x1a => false,
-            0x00..=0x1f | 0x7f => esc,
+            0x00..=0x1f | 0x7f..=0xff => esc,
             _ => false,
         };
         if esc && b == b']' {
@@ -1361,7 +1362,10 @@ mod tests {
         t.feed(b"\x1b]4;1;#");
         t.feed("0\x01".repeat(60).as_bytes());
         t.feed(b"\x1b\\");
+        // The parser stays in its escape state over bytes 0x80-0xff.
+        t.feed(&[b"\x1b\x9b]11;#".as_slice(), "0".repeat(60).as_bytes(), b"\x07"].concat());
         assert_eq!(t.term.colors()[NamedColor::Foreground], None);
+        assert_eq!(t.term.colors()[NamedColor::Background], None);
         assert_eq!(t.term.colors()[1], None);
 
         t.feed(b"\x1b]10;#102030\x07");

@@ -3259,6 +3259,7 @@ component GlobalOptionsDialog inherits DialogFrame {
     in-out property <bool> connect-bar;
     in-out property <bool> confirm-disconnect;
     in-out property <bool> check-updates;
+    in property <bool> updates-enabled: true;
     in-out property <string> recent-count;
     in-out property <string> warn-count;
     in-out property <string> global-key;
@@ -3342,7 +3343,7 @@ component GlobalOptionsDialog inherits DialogFrame {
                     text: @tr("Ask before closing a connected tab or exiting");
                     checked <=> root.confirm-disconnect;
                 }
-                if root.category == 0: CheckBox {
+                if root.category == 0 && root.updates-enabled: CheckBox {
                     text: @tr("Check for a new version at start-up and once a day");
                     checked <=> root.check-updates;
                 }
@@ -4274,6 +4275,7 @@ component AboutDialog inherits DialogFrame {
     in property <string> update-status;
     // This copy can install the new version itself (Windows setup, macOS app).
     in property <bool> update-installable;
+    in property <bool> updates-enabled: true;
     callback check-updates();
     callback install-update();
     callback release-notes();
@@ -4332,7 +4334,7 @@ component AboutDialog inherits DialogFrame {
         font-weight: root.update-version != "" ? 600 : 400;
     }
     DialogButtons {
-        DialogButton {
+        if root.updates-enabled: DialogButton {
             text: @tr("Check for Updates");
             clicked => { root.check-updates(); }
         }
@@ -5031,6 +5033,8 @@ export component MainWindow inherits Window {
     in property <string> update-version;
     in property <string> update-status;
     in property <bool> update-installable;
+    // Built with the update check and Update Now.
+    in property <bool> updates-enabled: true;
     in property <string> status-cipher;
     // Tabs running only port forwards, connected.
     in property <int> tunnel-count;
@@ -5995,7 +5999,7 @@ export component MainWindow inherits Window {
                 title: @tr("Keyboard Shortcuts");
                 activated => { root.menu("shortcuts"); }
             }
-            MenuItem {
+            if root.updates-enabled: MenuItem {
                 title: @tr("Check for Updates");
                 activated => { root.menu("check-updates"); }
             }
@@ -7181,6 +7185,7 @@ export component MainWindow inherits Window {
         connect-bar <=> root.go-connect-bar;
         confirm-disconnect <=> root.go-confirm-disconnect;
         check-updates <=> root.go-check-updates;
+        updates-enabled: root.updates-enabled;
         recent-count <=> root.go-recent-count;
         warn-count <=> root.go-warn-count;
         global-key <=> root.go-global-key;
@@ -7726,6 +7731,7 @@ export component MainWindow inherits Window {
         update-version: root.update-version;
         update-status: root.update-status;
         update-installable: root.update-installable;
+        updates-enabled: root.updates-enabled;
         check-updates => { root.action("check-updates"); }
         install-update => { root.action("install-update"); }
         release-notes => { root.action("release-notes"); }

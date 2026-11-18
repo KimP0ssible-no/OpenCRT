@@ -6346,7 +6346,7 @@ impl App {
     /// Look for a new release in the background; `asked` reports the outcome
     /// in About even when there is nothing new or the check fails.
     fn check_updates(&mut self, ui: &MainWindow, asked: bool) {
-        if self.update_check.is_some() {
+        if !SELF_UPDATE || self.update_check.is_some() {
             return;
         }
         let (tx, rx) = std::sync::mpsc::channel();
@@ -6399,7 +6399,7 @@ impl App {
         let Ok(exe) = std::env::current_exe() else {
             return;
         };
-        if self.update_install.is_some() || version.is_empty() {
+        if !SELF_UPDATE || self.update_install.is_some() || version.is_empty() {
             return;
         }
         let (tx, rx) = std::sync::mpsc::channel();
@@ -8174,13 +8174,16 @@ const PRE_CONNECT_LIMIT: Duration = Duration::from_secs(60);
 
 /// Run `line` through the system shell on a thread; Ok once it exits
 /// successfully, Err if it fails, cannot start or outlasts `limit` (then it is killed).
+/// Built with the update check and Update Now (`--no-default-features` drops them).
+const SELF_UPDATE: bool = cfg!(feature = "self-update");
+
 /// The automatic update check: a day apart, or an hour after one that failed.
 const UPDATE_EVERY: Duration = Duration::from_secs(24 * 60 * 60);
 const UPDATE_RETRY: Duration = Duration::from_secs(60 * 60);
 
 /// Time for the automatic update check: turned on, none running, and its time come.
 fn update_due(enabled: bool, checking: bool, now: Instant, next: Instant) -> bool {
-    enabled && !checking && now >= next
+    SELF_UPDATE && enabled && !checking && now >= next
 }
 
 /// How long after an Enter a following file browser asks where the shell is
@@ -8570,6 +8573,7 @@ fn set_window_theme(ui: &MainWindow, theme: config::UiTheme, changed: bool) -> b
 pub fn run(args: &[String]) -> anyhow::Result<()> {
     let ui = MainWindow::new()?;
     ui.set_version(env!("CARGO_PKG_VERSION").into());
+    ui.set_updates_enabled(SELF_UPDATE);
     ui.set_settings_dir(config::dir().map(|d| d.display().to_string()).unwrap_or_default().into());
     let app = Rc::new(RefCell::new(App::new()?));
 
@@ -9323,6 +9327,14 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "self-update"))]
+    fn updates_are_never_checked_without_the_feature() {
+        let start = Instant::now();
+        assert!(!update_due(true, false, start, start));
+    }
+
+    #[test]
+    #[cfg(feature = "self-update")]
     fn updates_are_checked_at_start_and_then_daily() {
         let start = Instant::now();
         // The first tick after start-up checks (the next check starts at "now").

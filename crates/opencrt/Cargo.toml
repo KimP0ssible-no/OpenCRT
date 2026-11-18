@@ -65,6 +65,11 @@ short_description = "SSH, Telnet, serial and local terminal client"
 resources = ["LICENSE", "NOTICE", "SLINT-LICENSE.md", "crates/opencrt/ui/fonts/OFL.txt", "target/THIRD-PARTY-NOTICES.html", "target/THIRD-PARTY-NOTICES-RDP.html"]
 osx = { info_plist_exts = ["packaging/macos/Info-extra.plist"] }
 
+[features]
+default = ["self-update"]
+# The update check and Update Now. Distribution packages build without it.
+self-update = []
+
 [dependencies]
 alacritty_terminal = "0.26.0"
 anyhow = "1.0.104"

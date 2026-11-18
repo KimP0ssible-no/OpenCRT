@@ -122,6 +122,10 @@ nothing about you or your sessions is sent) and says so in the status bar when
 there is a newer one. Help > Check for Updates asks at any time; turn the
 automatic check off in Options > Global Options > General.
 
+Distribution packagers can build OpenCRT without the update check and Update
+Now. Build with `--no-default-features`, as [Build and run](#build-and-run)
+shows. That build never contacts GitHub and has no update menu item or button.
+
 ## Features
 - **Protocols**: SSH2 (password, keyboard-interactive, public key incl. PuTTY
   PPK, with passphrase prompts, and SSH agent keys — Pageant or the OpenSSH
@@ -403,6 +407,7 @@ cargo run --release -- /RDP /L "DOMAIN\user" winhost  # remote desktop (needs th
 cargo run --release -- /VNC /P 5901 pi               # VNC desktop; also vnc://host:port
 cargo run --release -- ssh://me@host:2222            # also sftp:// and telnet:// links; /I keyfile
 cargo run --release -- /T /LOG web1.log /S web1      # new tab in the running window, logged to a file
+cargo build --release -p opencrt --no-default-features  # for distribution packages: no update check or Update Now
 ```
 
 RDP runs in a separate helper program, `opencrt-rdp`, which must sit next to
@@ -455,8 +460,8 @@ This program will not transfer any information to other networked systems
 unless specifically requested by the user or the person installing or
 operating it. The one exception is the update check described under
 [New versions](#new-versions): a single request to GitHub that sends nothing
-about you or your sessions, and that Options > Global Options > General turns
-off. GitHub handles that request under the
+about you or your sessions, that Options > Global Options > General turns
+off, and that builds made with `--no-default-features` leave out. GitHub handles that request under the
 [GitHub General Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
 
 ## Licence

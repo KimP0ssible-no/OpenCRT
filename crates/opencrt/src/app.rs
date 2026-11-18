@@ -8174,12 +8174,12 @@ const PRE_CONNECT_LIMIT: Duration = Duration::from_secs(60);
 
 /// Run `line` through the system shell on a thread; Ok once it exits
 /// successfully, Err if it fails, cannot start or outlasts `limit` (then it is killed).
-/// Built with the update check and Update Now (`--no-default-features` drops them).
-const SELF_UPDATE: bool = cfg!(feature = "self-update");
-
 /// The automatic update check: a day apart, or an hour after one that failed.
 const UPDATE_EVERY: Duration = Duration::from_secs(24 * 60 * 60);
 const UPDATE_RETRY: Duration = Duration::from_secs(60 * 60);
+
+/// Built with the update check and Update Now (`--no-default-features` drops them).
+const SELF_UPDATE: bool = cfg!(feature = "self-update");
 
 /// Time for the automatic update check: turned on, none running, and its time come.
 fn update_due(enabled: bool, checking: bool, now: Instant, next: Instant) -> bool {

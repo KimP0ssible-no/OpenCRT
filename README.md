@@ -182,7 +182,6 @@ OpenCRT is written in Rust from the first line, and it guards your logins:
   privately (see `SECURITY.md`).
 
 ### Light on memory
-<!-- DRAFT: the SSH rows need the scrollback-chunks branch released; name that version. -->
 OpenCRT uses less memory than SecureCRT, and with a Remote Desktop session
 open it uses about one quarter:
 

@@ -187,17 +187,20 @@ open it uses about one quarter:
 
 | Scenario | OpenCRT | SecureCRT |
 | --- | --- | --- |
-| Started, no tabs (Linux) | 49 MB | 63 MB |
+| Started, no tabs (Linux) | 48 MB | 63 MB |
 | One SSH tab (Linux) | 57 MB | 65 MB |
-| Ten SSH tabs (Linux) | 68 MB | 72 MB |
+| Ten SSH tabs (Linux) | 64 MB | 72 MB |
+| Four SSH tabs with a full scrollback (Linux) | 76 MB | 83 MB |
 | One Remote Desktop tab (Windows 11) | 74.6 MB | 300.5 MB |
 
-On Linux, both programs connected to the same local SSH server, and the
-figures are PSS (each process's share of memory, from
-`/proc/<pid>/smaps_rollup`) against SecureCRT 9.7.2. On Windows, the figures
-come from Task Manager against SecureCRT 9.7, and the OpenCRT figure adds the
-window (39.1 MB) and its Remote Desktop helper (35.5 MB). A tab that fills its
-10,000 lines of scrollback uses more: about 28 MB at 101 columns.
+Scrollback lines are stored only up to their last character, and fonts for
+Chinese, Japanese, Korean and symbols are read only as their characters
+appear. On Linux, both programs connected to the same local SSH server, with
+10,000 lines of scrollback each, and the figures are PSS (each process's share
+of memory, from `/proc/<pid>/smaps_rollup`) against SecureCRT 9.7.2. On
+Windows, the figures come from Task Manager against SecureCRT 9.7, and the
+OpenCRT figure adds the window (39.1 MB) and its Remote Desktop helper
+(35.5 MB).
 
 ### Runs where you work
 Windows 10 and 11 (setup, MSI for Group Policy, or a portable zip for a USB

@@ -203,8 +203,9 @@ impl<T> Row<T> {
             return;
         }
         self.tail = Some(last.clone());
-        self.inner.truncate(keep);
-        self.inner.shrink_to_fit();
+        // A new buffer, so the whole full-width one is freed: shrinking it in place would
+        // leave a hole in the heap that only a smaller allocation can reuse.
+        self.inner = self.inner[..keep].to_vec();
     }
 
     /// Compact the row, and hand its full buffer to `spare`, a compacted row about to be reset,

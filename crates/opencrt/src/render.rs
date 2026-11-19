@@ -42,14 +42,40 @@ impl std::ops::Deref for Face {
 /// decoded only when drawn, where fontdue decodes every glyph on loading (about
 /// 230 MB for Noto Sans CJK).
 struct Fallback {
-    data: std::borrow::Cow<'static, [u8]>,
+    data: FontBytes,
+}
+
+/// A font's bytes: built in, or a font file mapped into memory, so only the
+/// parts swash reads take memory.
+enum FontBytes {
+    Bundled(&'static [u8]),
+    Mapped(memmap2::Mmap),
+}
+
+impl std::ops::Deref for FontBytes {
+    type Target = [u8];
+
+    fn deref(&self) -> &[u8] {
+        match self {
+            FontBytes::Bundled(bytes) => bytes,
+            FontBytes::Mapped(map) => map,
+        }
+    }
 }
 
 impl Fallback {
-    fn new(data: impl Into<std::borrow::Cow<'static, [u8]>>) -> Option<Self> {
-        let fallback = Self { data: data.into() };
+    fn new(data: FontBytes) -> Option<Self> {
+        let fallback = Self { data };
         fallback.font()?;
         Some(fallback)
+    }
+
+    fn open(path: &Path) -> Option<Self> {
+        let file = std::fs::File::open(path).ok()?;
+        // SAFETY: system font files are replaced, not rewritten in place, when they are
+        // updated, so the mapping stays readable for the rest of the run.
+        let map = unsafe { memmap2::Mmap::map(&file) }.ok()?;
+        Self::new(FontBytes::Mapped(map))
     }
 
     fn font(&self) -> Option<swash::FontRef<'_>> {
@@ -393,7 +419,7 @@ impl Renderer {
             bold,
             scale: ScaleContext::new(),
             fallbacks: None,
-            symbols: Fallback::new(NERD_SYMBOLS).ok_or_else(|| anyhow!("the bundled symbols font is unreadable"))?,
+            symbols: Fallback::new(FontBytes::Bundled(NERD_SYMBOLS)).ok_or_else(|| anyhow!("the bundled symbols font is unreadable"))?,
             keywords: HashMap::new(),
             adhoc: Vec::new(),
             find: None,
@@ -871,7 +897,7 @@ fn load_mono(name: &str) -> Option<(Face, Option<Face>)> {
 /// The system fallback fonts, read once per run and shared.
 fn fallback_fonts() -> &'static [Fallback] {
     static FONTS: std::sync::OnceLock<Vec<Fallback>> = std::sync::OnceLock::new();
-    FONTS.get_or_init(|| FALLBACKS.iter().filter_map(|name| Fallback::new(std::fs::read(font_path(name)).ok()?)).collect())
+    FONTS.get_or_init(|| FALLBACKS.iter().filter_map(|name| Fallback::open(&font_path(name))).collect())
 }
 
 fn load_first(names: &[&str]) -> Option<Face> {

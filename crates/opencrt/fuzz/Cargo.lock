@@ -4065,6 +4065,7 @@ dependencies = [
  "keyring",
  "libc",
  "md5",
+ "memmap2",
  "minisign-verify",
  "num-bigint 0.5.1",
  "opencrt-rdp-proto",

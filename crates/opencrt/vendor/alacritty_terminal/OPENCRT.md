@@ -22,8 +22,9 @@ a wide window took tens of MB even for short lines. Now:
 - `Grid::scroll_up` (`src/grid/mod.rs`) compacts the lines that go into
   history. `Storage::compact_into` hands each one's full buffer to a new line
   at the bottom that is about to be cleared, so a full scrollback costs no
-  extra allocation per line. `Grid::resize` (`src/grid/resize.rs`) compacts
-  the history again after a reflow.
+  extra allocation per line. A reflow in `Grid::resize` stores every cell
+  again; `Grid::compact_history` compacts the history afterwards, and OpenCRT
+  calls it once resizing pauses, so a window drag stays fast.
 - `Storage::swap` (`src/grid/storage.rs`) uses `slice::swap`. Upstream copied
   rows as four machine words, which is wrong once `Row` is larger.
 - `LineLength::line_length` (`src/term/cell.rs`) reads the row cell by cell,

@@ -3747,6 +3747,7 @@ impl App {
                 tab.connect_if_deferred();
             }
             tab.poll();
+            tab.terminal.tidy(now);
             if let Some(text) = tab.terminal.take_clipboard()
                 && let Some(clipboard) = self.clipboard.as_mut()
                 && clipboard.set_text(text.clone()).is_ok()

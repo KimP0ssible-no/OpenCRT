@@ -33,11 +33,6 @@ impl<T: GridCell + Default + PartialEq> Grid<T> {
 
         // Restore template cell.
         self.cursor.template = template;
-
-        // Resizing stores every cell of each line again; keep only the used ones in history.
-        for i in 1..=self.history_size() {
-            self.raw[Line(-(i as i32))].compact();
-        }
     }
 
     /// Add lines to the visible area.

@@ -312,6 +312,13 @@ impl<T: GridCell + Default + PartialEq> Grid<T> {
         }
     }
 
+    /// Store only the used cells of every history line again, as `resize` stores them all.
+    pub fn compact_history(&mut self) {
+        for i in 1..=self.history_size() {
+            self.raw[Line(-(i as i32))].compact();
+        }
+    }
+
     pub fn clear_viewport<D>(&mut self)
     where
         T: ResetDiscriminant<D>,

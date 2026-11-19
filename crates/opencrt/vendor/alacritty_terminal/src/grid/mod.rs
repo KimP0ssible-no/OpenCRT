@@ -19,7 +19,7 @@ mod tests;
 pub use self::row::Row;
 use self::storage::Storage;
 
-pub trait GridCell: Sized {
+pub trait GridCell: Sized + Clone + PartialEq {
     /// Check if the cell contains any content.
     fn is_empty(&self) -> bool;
 
@@ -293,6 +293,12 @@ impl<T: GridCell + Default + PartialEq> Grid<T> {
             for i in (region.end.0..screen_lines).rev().map(Line::from) {
                 self.raw.swap(i, i - positions);
             }
+
+            // Store only the used cells of the lines that just went into history; their full
+            // buffers go to the new lines at the bottom, which are cleared below.
+            for i in 1..=min(positions, self.history_size()) {
+                self.raw.compact_into(Line(-(i as i32)), Line(region.end.0 - i as i32));
+            }
         } else {
             // Rotate lines without moving anything into history.
             for i in (region.start.0..region.end.0 - positions as i32).map(Line::from) {
@@ -434,7 +440,10 @@ impl<T> Grid<T> {
     }
 
     #[inline]
-    pub fn cursor_cell(&mut self) -> &mut T {
+    pub fn cursor_cell(&mut self) -> &mut T
+    where
+        T: Clone,
+    {
         let point = self.cursor.point;
         &mut self[point.line][point.column]
     }
@@ -475,7 +484,7 @@ impl<T> Index<Point> for Grid<T> {
     }
 }
 
-impl<T> IndexMut<Point> for Grid<T> {
+impl<T: Clone> IndexMut<Point> for Grid<T> {
     #[inline]
     fn index_mut(&mut self, point: Point) -> &mut T {
         &mut self[point.line][point.column]

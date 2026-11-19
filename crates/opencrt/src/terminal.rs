@@ -1377,6 +1377,24 @@ mod tests {
     }
 
     #[test]
+    fn compacted_scrollback_reads_copies_finds_and_reflows() {
+        let mut t = Terminal::new(100, 24);
+        t.feed((0..300).map(|i| format!("line {i}\r\n")).collect::<String>().as_bytes());
+        t.scroll(Scroll::Top);
+        assert_eq!(t.screen_text().lines().next(), Some("line 0"));
+        t.select_all();
+        let before = t.selection_text().unwrap();
+        assert!(before.starts_with("line 0") && before.contains("line 150") && before.contains("line 299"));
+        assert!(t.find("line 7", true, true));
+
+        // Reflow stores whole lines again; the history must read the same afterwards.
+        t.resize(40, 24);
+        t.resize(100, 24);
+        t.select_all();
+        assert_eq!(t.selection_text().unwrap(), before);
+    }
+
+    #[test]
     fn overlong_osc_colour_is_refused() {
         let mut t = Terminal::new(10, 2);
         t.feed(format!("\x1b]10;#{}\x07", "0".repeat(60)).as_bytes());

@@ -166,6 +166,21 @@ impl server::Handler for DevShell {
         }
     }
 
+    // Clients such as SecureCRT wait for this reply before they ask for a shell.
+    async fn pty_request(
+        &mut self,
+        channel: ChannelId,
+        _term: &str,
+        _cols: u32,
+        _rows: u32,
+        _width: u32,
+        _height: u32,
+        _modes: &[(russh::Pty, u32)],
+        session: &mut Session,
+    ) -> Result<(), Self::Error> {
+        session.channel_success(channel)
+    }
+
     async fn shell_request(&mut self, channel: ChannelId, session: &mut Session) -> Result<(), Self::Error> {
         // A shell is served through `data` below. An unread Channel object would
         // also queue every message and stall the session once its buffer is full.

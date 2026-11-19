@@ -15,6 +15,10 @@ opencrt = { path = ".." }
 #   cargo +nightly fuzz run terminal
 [workspace]
 
+[patch.crates-io]
+alacritty_terminal = { path = "../vendor/alacritty_terminal" }
+vte = { path = "../vendor/vte" }
+
 [[bin]]
 name = "terminal"
 path = "fuzz_targets/terminal.rs"

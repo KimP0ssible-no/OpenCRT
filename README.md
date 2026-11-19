@@ -7,6 +7,206 @@ workflow of SecureCRT and written from scratch in Rust.
 
 ![OpenCRT with a Windows desktop over Remote Desktop in a tab](docs/screenshot-rdp.png)
 
+## Why OpenCRT
+### Every connection in one window
+SSH2, SFTP, Telnet, RLogin, raw TCP, serial consoles, local shells, Remote
+Desktop and VNC all open as tabs in the same window. Jump hosts, port
+forwarding, SOCKS and HTTP proxies, X11 and agent forwarding, Zmodem, Xmodem,
+Ymodem and a TFTP server are built in. There is nothing extra to install and
+no plug-in to find.
+- SSH2 logs in with a password, keyboard-interactive or a public key (PuTTY
+  PPK files too), and asks for passphrases. When no key file is set, it uses
+  your SSH agent: Pageant or the OpenSSH agent on Windows, `SSH_AUTH_SOCK`
+  elsewhere.
+- Serial ports (COM or tty) come with modem dialling and work for VM
+  consoles.
+- On Windows, the toolbar's local-shell button opens PowerShell, Command
+  Prompt or a WSL distribution.
+
+### Remote desktops in a tab
+Remote Desktop and VNC desktops open in a tab next to your terminals:
+- Remote Desktop connects to Windows, xrdp and GNOME Remote Desktop, with
+  NLA (user name and password), the console session (like `mstsc /admin`),
+  keyboard and mouse, clipboard text both ways, and a desktop that follows
+  the size of the tab.
+- VNC connects to RFB 3.3 to 3.8 servers such as TightVNC, a QEMU console or
+  a Mac with its own user account. It logs in with no password, a VNC
+  password, TightVNC's login or VeNCrypt TLS. Tight with JPEG quality suits
+  slow links, and ZRLE is there too. The desktop is shown whole or scaled to
+  the tab.
+- OpenCRT checks the server's certificate before it sends a password (for
+  VNC, over VeNCrypt). Set a jump host to tunnel either protocol over SSH.
+
+### A terminal that does it all
+Everything you expect from xterm, and the tools around it:
+- xterm emulation with 256 colours, truecolour, mouse reporting and bracketed
+  paste, and CJK text.
+- Scrollback with Find. Copy on select, paste on a right or middle click, and
+  a question before a multi-line paste, each if you want it.
+- Twenty colour schemes: OpenCRT Dark by default, Solarized, Gruvbox,
+  Dracula, Nord, Tomorrow, One Dark, Catppuccin, Tango, Tokyo Night and more.
+- IBM Plex Mono built in, or any system font, and your choice of cursor
+  shape.
+- Light and dark window themes that follow the system, and an interface font
+  size for menus, tabs and dialogs (on Linux it starts at the desktop's).
+- The bell as a flash or a sound.
+- Plain-text session logs with optional timestamps and dated file names that
+  roll over at midnight, per session or with File > Log Session. A raw log
+  beside it keeps the bytes as received (`.raw`, for emulation debugging).
+- Recordings in asciicast v2 (File > Record Session), for `asciinema play`
+  and web players.
+- Send Break for serial and Telnet, a terminal type per session, Latin-1
+  encoding, Backspace as ^H and function-key mapping.
+- Full screen and always on top.
+
+### Sessions your way
+Every device you look after stays one click away:
+- The Session Manager has folders (rename, Connect All, drag and drop), a
+  filter where Enter connects, and duplicate.
+- Session Options include a tab colour per session. A Default Session is the
+  starting point for new sessions, Quick Connect and the connect bar
+  (`user@host`).
+- Tabs reconnect, clone and move. An SSH2 clone or an SFTP tab reuses the
+  tab's connection, so there is no second login.
+- Automatic reconnect, last time's sessions reopened at start-up, SSH
+  keepalive and anti-idle per session.
+- Global Options, the Button Bar, the Command Manager (with folders) and the
+  Command Window.
+- Keyword highlighting in any colour on the background or the text, in bold,
+  for whole words, whole lines or regular expressions.
+- Edit > Send Input to All Tabs.
+- Sessions export to a file and import back. Tools > Import Sessions also
+  reads `~/.ssh/config` and Remote Desktop Connection `.rdp` files (as RDP
+  sessions, several at once).
+
+### Files in and out
+Every way to move a file, in the same window:
+- An SFTP tab with an `sftp>` prompt: get, put, ls and cd, with wildcards
+  and progress.
+- An SFTP GUI tab with the local and remote file lists side by side and a
+  queue of waiting, failed and finished transfers. Folders copy whole.
+- Zmodem downloads start when the host runs `sz`, into Downloads or the
+  folder set in Global Options. Uploads start from Transfer > Zmodem Upload
+  or when the host runs `rz`.
+- Xmodem and Ymodem send and receive.
+- Drop a file on a tab to upload it.
+- A built-in TFTP server for network devices (Global Options > File
+  Transfer).
+
+### Tunnels and proxies
+Reach any host, however it is hidden:
+- Local, remote and dynamic (SOCKS4/5) SSH port forwarding.
+- Jump hosts: connect through a gateway, set per session.
+- SOCKS5 or HTTP proxies for SSH2, Telnet and raw connections.
+- Agent and X11 forwarding, and optional compression.
+- Legacy algorithms for old devices, per session or for every host (Global
+  Options > Connection).
+
+### Bring your SecureCRT setup with you
+OpenCRT reads what you already have:
+- Tools > Import Sessions takes your SecureCRT sessions with their folders,
+  button bar and keyword list. The button bars keep their send and
+  run-script buttons, and the keyword lists keep their exact colours and
+  regular expressions. Older Keyword List V2 files work too.
+- SecureCRT Python 3 scripts run unchanged, with the `crt` object and its
+  constants.
+- Rhai scripts use the same `crt` names, so a script ports in minutes.
+- The command line is the one you know: `/SSH2 /L user /P 22 host`, `/S`,
+  `/T`, `/F`, `/LOG`, `/TELNET`, `/SERIAL COM3 /BAUD 9600`.
+
+### Scripts that do the typing
+Automate the boring parts:
+- Run [Rhai](https://rhai.rs) scripts (`.rhai`, see Scripting below),
+  SecureCRT Python scripts (`.py`) and simple `wait` / `send` / `sleep` /
+  `timeout` scripts from Script > Run or as a session's logon script.
+- Script > Start Recording writes a Rhai script from what you type.
+  Passwords are asked for when it runs.
+- Scripts in the `scripts` folder of the settings folder (where Script > Run
+  starts) go wherever Settings Sync takes your settings. A logon script in
+  there is saved by its name, so every computer finds it.
+- Every script runs locked in its own process. Before a script reads files
+  outside its own folders, starts a program or uses the network, OpenCRT
+  asks you.
+
+### Your settings on every computer
+Settings Sync keeps your sessions, options, host keys and scripts in a
+private git repository on GitHub, GitLab or your own server, over HTTPS with
+a token or SSH with a key or agent. Change a session on your Windows laptop
+and it is on your Linux desktop and your Mac at the next sync. OpenCRT merges
+changes by content, so two computers can make changes at the same time.
+Passwords and machine-specific settings stay on each computer, and passwords
+travel encrypted only when you set a master password. Settings Sync uses the
+installed `git`: the Linux packages depend on it, and on Windows OpenCRT
+offers to download Git for Windows.
+
+### In your language
+The interface speaks 30 languages: English, Simplified and Traditional
+Chinese, Japanese, Korean and 25 European languages. OpenCRT follows the
+system language, and the Language menu chooses another.
+
+### Safe by design
+OpenCRT is written in Rust from the first line, and it guards your logins:
+- Host keys are checked against OpenCRT's own `known_hosts`. You confirm an
+  unknown key (or, if Global Options > Connection says so, it is saved
+  without a question, like OpenSSH's `accept-new`). A changed key blocks the
+  connection. Tools > Host Keys shows the saved keys and removes them.
+- Remote Desktop server certificates are checked the same way
+  (`rdp_known_certs`) before any password is sent.
+- Saved passwords and key passphrases live in the system keychain. With a
+  master password (Tools > Master Password) they live in the settings folder
+  instead, encrypted with Argon2id and AES-256-GCM, unlocked once per run
+  when first needed, and carried by Settings Sync.
+- Tools > Create Public Key makes an Ed25519 key pair.
+- The Remote Desktop client runs in a separate helper process, so a
+  misbehaving server cannot take down your terminal tabs.
+
+### A supply chain you can check
+- Release files are built only by the project's GitHub Actions workflow from
+  a tagged commit, and the maintainer approves every release by hand.
+- Windows programs and installers are signed with a Certum code signing
+  certificate.
+- `SHA256SUMS` is signed with minisign, and every file has a GitHub build
+  provenance attestation (`gh attestation verify`).
+- The apt, dnf, zypper and pacman repositories are signed with GPG.
+- Releases are immutable: a published version cannot be changed afterwards.
+- The built-in updater installs a download only if its checksum is in a
+  `SHA256SUMS` that carries the release key's signature.
+- Every pull request passes cargo-deny (licences, banned crates, crate
+  sources), CodeQL for Rust, Python and the workflows, and a fuzzing run. A
+  release tag also fails on any known RustSec advisory.
+- A daily job checks every dependency against the RustSec database and fuzzes
+  the terminal parser, Telnet, Zmodem, Xmodem and Ymodem, Kermit and the
+  Remote Desktop graphics decoder for 20 minutes each. A weekly job runs the
+  Remote Desktop decoder's tests under Miri.
+- Dependabot watches the dependencies, and you can report a vulnerability
+  privately (see `SECURITY.md`).
+
+### Light on memory
+OpenCRT uses less memory than SecureCRT, and with a Remote Desktop session
+open it uses about one quarter:
+
+| Scenario | OpenCRT | SecureCRT |
+| --- | --- | --- |
+| Started, no tabs (Linux) | 48 MB | 63 MB |
+| One SSH tab (Linux) | 57 MB | 65 MB |
+| Ten SSH tabs (Linux) | 64 MB | 72 MB |
+| Four SSH tabs with a full scrollback (Linux) | 76 MB | 83 MB |
+| One Remote Desktop tab (Windows 11) | 74.6 MB | 300.5 MB |
+
+Scrollback lines are stored only up to their last character, and fonts for
+Chinese, Japanese, Korean and symbols are read only as their characters
+appear. On Linux, both programs connected to the same local SSH server, with
+10,000 lines of scrollback each, and the figures are PSS (each process's share
+of memory, from `/proc/<pid>/smaps_rollup`) against SecureCRT 9.7.2. On
+Windows, the figures come from Task Manager against SecureCRT 9.7, and the
+OpenCRT figure adds the window (39.1 MB) and its Remote Desktop helper
+(35.5 MB).
+
+### Runs where you work
+Windows 10 and 11 (setup, MSI for Group Policy, or a portable zip for a USB
+stick), macOS on Apple silicon and Intel, Debian and Ubuntu, RHEL, Rocky,
+Alma, Fedora and SUSE, and Arch Linux. OpenCRT is free and open source.
+
 ## A clean-room implementation
 OpenCRT is an independent project. It is not affiliated with, endorsed by or
 derived from VanDyke Software or its SecureCRT product. No SecureCRT source
@@ -122,86 +322,9 @@ nothing about you or your sessions is sent) and says so in the status bar when
 there is a newer one. Help > Check for Updates asks at any time; turn the
 automatic check off in Options > Global Options > General.
 
-## Features
-- **Protocols**: SSH2 (password, keyboard-interactive, public key incl. PuTTY
-  PPK, with passphrase prompts, and SSH agent keys — Pageant or the OpenSSH
-  agent on Windows, `SSH_AUTH_SOCK` elsewhere — when no key file is set),
-  Telnet, RLogin, raw TCP, serial (COM / tty, modem dialling, VM consoles),
-  local shell (on Windows PowerShell, Command Prompt or a WSL distribution from
-  the toolbar's local-shell button), and RDP (remote desktop
-  in a tab that follows the tab's size, keyboard and mouse, clipboard text
-  both ways; NLA with user name and password; the console (administrative)
-  session like `mstsc /admin`), and VNC (RFB 3.3 to 3.8: no
-  password, a VNC password, TightVNC's login, a Mac's own account, or
-  VeNCrypt TLS with a certificate checked like RDP's; Tight with JPEG
-  quality for slow links, ZRLE; the desktop is shown whole or scaled to the
-  tab; without VeNCrypt, set a jump host to tunnel it over SSH).
-- **Security**: host keys checked against OpenCRT's own `known_hosts`; unknown
-  keys are confirmed by the user (or, if Global Options > Connection says so,
-  saved without asking, as OpenSSH's `accept-new`), changed keys block the
-  connection; saved keys
-  can be reviewed and removed in Tools > Host Keys. RDP server certificates
-  are checked the same way (`rdp_known_certs`) before any password is sent.
-  Saved passwords and key passphrases live in the system keychain, or, with a
-  master password (Tools > Master Password), in the settings folder encrypted
-  (Argon2id, AES-256-GCM), entered once per run when first needed and carried
-  by Settings Sync.
-- **Terminal**: xterm emulation (256 colours, truecolour, mouse reporting,
-  bracketed paste), scrollback with Find, selection and copy (optionally copy
-  on select, paste on right- or middle-click, ask before multi-line pastes),
-  twenty colour schemes (OpenCRT Dark by default; Solarized, Gruvbox, Dracula,
-  Nord, Tomorrow, One Dark, Catppuccin, Tango, Tokyo Night and more), IBM Plex
-  Mono built in or a system font, cursor shape, light and dark window themes that follow the
-  system, an interface font size for menus, tabs and dialogs (on Linux it starts at the desktop's), CJK text, bell as flash or sound, plain-text session
-  logging with optional timestamps and dated file names that roll over at
-  midnight (per session or File > Log Session), a raw log beside it with the
-  bytes as received (`.raw`, for emulation debugging), recordings in asciicast
-  v2 (File > Record Session, for `asciinema play` and web players), Send
-  Break for serial and Telnet, per-session terminal type, Latin-1 encoding
-  and Backspace as ^H, function-key mapping, full screen and always on top.
-- **Sessions**: Session Manager with folders (rename, Connect All, drag and drop), filter
-  (Enter connects) and duplicate; Session Options incl. a tab colour per
-  session; a Default Session that new sessions, Quick Connect and the
-  connect bar start from; connect bar (`user@host`); tabs with
-  reconnect/clone/move (an SSH2 clone or SFTP tab reuses the tab's
-  connection, no second login); automatic reconnect; reopening last time's
-  sessions; SSH keepalive and per-session anti-idle; Global Options, Button
-  Bar, Command Manager (with folders), Command Window, keyword
-  highlighting (any colour on the background or the text, bold, whole words,
-  whole lines, regular expressions),
-  Edit > Send Input to All Tabs; import from `~/.ssh/config`,
-  from SecureCRT (sessions with their button bar and keyword list, the button
-  bars' send and run-script buttons, and keyword lists with their exact
-  colours and regular expressions, older Keyword List V2 files too),
-  export/import of sessions, and Remote Desktop Connection `.rdp` files as RDP
-  sessions (Tools > Import Sessions, several at once).
-- **Settings Sync**: keep sessions, options, host keys and scripts in a
-  private git repository (GitHub, GitLab or your own server; HTTPS with a
-  token or SSH with a key or agent) shared by all your computers on any OS.
-  Changes are merged by content; passwords and machine-specific settings stay
-  on each computer. Uses the installed `git` (a dependency of the Linux
-  packages; on Windows OpenCRT offers to download Git for Windows).
-- **Automation**: [Rhai](https://rhai.rs) scripts (`.rhai`, see Scripting
-  below), SecureCRT's Python scripts (`.py`, unchanged) and simple
-  `wait` / `send` / `sleep` / `timeout` scripts, run from
-  Script > Run or as a session's logon script; Script > Start Recording writes
-  a Rhai script from what you type (passwords are asked for when it runs).
-  Scripts kept in the `scripts` folder in the settings folder (where Script >
-  Run starts) go wherever Settings Sync takes your settings; a logon script
-  in there is saved by its name, so every computer finds it.
-- **Keys**: Tools > Create Public Key makes an Ed25519 key pair.
-- **File transfer**: SFTP tab (`sftp>` prompt with get/put/ls/cd, wildcards and
-  progress) or SFTP GUI tab (local and remote file lists side by side, with a
-  queue of waiting, failed and finished transfers; folders copy whole); Zmodem downloads start when the host runs `sz` (saved to
-  Downloads or the folder set in Global Options), uploads via Transfer >
-  Zmodem Upload or when the host runs `rz`; Xmodem and Ymodem send and
-  receive; drop a file on a tab to upload it; a built-in TFTP server for
-  network devices (Global Options > File Transfer).
-- **SSH port forwarding**: local, remote and dynamic (SOCKS4/5); jump hosts
-  (connect through a gateway, set per session); SOCKS5 or HTTP proxies (SSH2,
-  Telnet, raw); agent and X11 forwarding; optional compression;
-  legacy algorithms for old devices, per session or for every host (Global
-  Options > Connection).
+Distribution packagers can build OpenCRT without the update check and Update
+Now. Build with `--no-default-features`, as [Build and run](#build-and-run)
+shows. That build never contacts GitHub and has no update menu item or button.
 
 ## Languages
 OpenCRT's interface is available in English, Simplified and Traditional
@@ -403,6 +526,7 @@ cargo run --release -- /RDP /L "DOMAIN\user" winhost  # remote desktop (needs th
 cargo run --release -- /VNC /P 5901 pi               # VNC desktop; also vnc://host:port
 cargo run --release -- ssh://me@host:2222            # also sftp:// and telnet:// links; /I keyfile
 cargo run --release -- /T /LOG web1.log /S web1      # new tab in the running window, logged to a file
+cargo build --release -p opencrt --no-default-features  # for distribution packages: no update check or Update Now
 ```
 
 RDP runs in a separate helper program, `opencrt-rdp`, which must sit next to
@@ -455,8 +579,8 @@ This program will not transfer any information to other networked systems
 unless specifically requested by the user or the person installing or
 operating it. The one exception is the update check described under
 [New versions](#new-versions): a single request to GitHub that sends nothing
-about you or your sessions, and that Options > Global Options > General turns
-off. GitHub handles that request under the
+about you or your sessions, that Options > Global Options > General turns
+off, and that builds made with `--no-default-features` leave out. GitHub handles that request under the
 [GitHub General Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
 
 ## Licence

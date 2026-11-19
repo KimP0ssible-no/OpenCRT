@@ -3,6 +3,7 @@
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::time::{Duration, Instant};
 
 use alacritty_terminal::event::{Event, EventListener};
 use alacritty_terminal::grid::{Dimensions, Scroll};
@@ -509,6 +510,9 @@ impl ColourGuard {
     }
 }
 
+/// How long resizing must pause before the history is compacted again.
+const COMPACT_DELAY: Duration = Duration::from_millis(500);
+
 pub struct Terminal {
     term: Term<Listener>,
     listener: Listener,
@@ -531,6 +535,8 @@ pub struct Terminal {
     delimiters: Option<String>,
     /// The host may set the clipboard (OSC 52).
     host_copy: bool,
+    /// When to store the history compactly again after a resize.
+    compact_at: Option<Instant>,
 }
 
 impl Terminal {
@@ -556,6 +562,7 @@ impl Terminal {
             cursor: CursorShape::Block,
             delimiters: None,
             host_copy: true,
+            compact_at: None,
         }
     }
 
@@ -665,6 +672,25 @@ impl Terminal {
         self.term.resize(Size { cols, rows });
         self.cols = cols;
         self.rows = rows;
+        // A resize stores every cell of each history line; compacting them on each step
+        // of a window drag would make it sluggish, so wait until resizing pauses.
+        self.compact_at = Some(Instant::now() + COMPACT_DELAY);
+    }
+
+    /// Once resizing has paused, store the history compactly again and give the
+    /// freed memory back to the system. Waits while a full-screen program runs,
+    /// as the history then belongs to the inactive screen.
+    pub fn tidy(&mut self, now: Instant) {
+        if self.compact_at.is_none_or(|at| now < at) || self.term.mode().contains(TermMode::ALT_SCREEN) {
+            return;
+        }
+        self.compact_at = None;
+        self.term.grid_mut().compact_history();
+        #[cfg(all(target_os = "linux", target_env = "gnu"))]
+        // SAFETY: malloc_trim only hands free heap pages back to the system.
+        unsafe {
+            libc::malloc_trim(0);
+        }
     }
 
     pub fn scroll(&mut self, scroll: Scroll) {
@@ -1352,6 +1378,51 @@ mod tests {
 
         let (fg, back) = cell_colors(red, bg, Flags::INVERSE, colors, classic);
         assert_eq!((fg, back), (DEFAULT_BG, ANSI16[1]));
+    }
+
+    #[test]
+    fn scrollback_fills_fast_in_small_steps() {
+        let feed = |t: &mut Terminal, lines: std::ops::Range<usize>| {
+            let text: String = lines.map(|i| format!("line {i}\r\n")).collect();
+            let start = std::time::Instant::now();
+            for chunk in text.as_bytes().chunks(4096) {
+                t.feed(chunk);
+            }
+            start.elapsed()
+        };
+        let mut t = Terminal::new(100, 24);
+        // The first 10,000 lines grow the scrollback 100 rows at a time; the next only reuse rows.
+        let growing = feed(&mut t, 0..10_000);
+        let full = feed(&mut t, 10_000..20_000);
+        eprintln!("10,000 lines: growing {growing:?}, full {full:?}");
+        assert_eq!(t.scroll_position(), (0, 10_000));
+        assert_eq!(t.screen_text().lines().nth(22), Some("line 19999"));
+        t.scroll(Scroll::Top);
+        assert_eq!(t.screen_text().lines().next(), Some("line 9977"));
+        assert!(growing < full * 3 + std::time::Duration::from_millis(100), "growing {growing:?}, full {full:?}");
+    }
+
+    #[test]
+    fn compacted_scrollback_reads_copies_finds_and_reflows() {
+        let mut t = Terminal::new(100, 24);
+        t.feed((0..300).map(|i| format!("line {i}\r\n")).collect::<String>().as_bytes());
+        t.scroll(Scroll::Top);
+        assert_eq!(t.screen_text().lines().next(), Some("line 0"));
+        t.select_all();
+        let before = t.selection_text().unwrap();
+        assert!(before.starts_with("line 0") && before.contains("line 150") && before.contains("line 299"));
+        assert!(t.find("line 7", true, true));
+
+        // Reflow stores whole lines again; the history must read the same afterwards,
+        // and again once it is compacted.
+        t.resize(40, 24);
+        t.resize(100, 24);
+        t.select_all();
+        assert_eq!(t.selection_text().unwrap(), before);
+        t.tidy(Instant::now() + COMPACT_DELAY);
+        assert!(t.compact_at.is_none());
+        t.select_all();
+        assert_eq!(t.selection_text().unwrap(), before);
     }
 
     #[test]

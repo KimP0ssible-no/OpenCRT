@@ -1,6 +1,6 @@
 //! CPU rasteriser for the terminal grid: a system monospace font through
-//! fontdue (metrics, and the glyphs of the fallback fonts) and swash (the main
-//! font's glyphs, hinted), a glyph cache, and an RGBA pixel buffer as output.
+//! fontdue (metrics) and swash (the main font's glyphs, hinted, and the glyphs
+//! of the fallback fonts), a glyph cache, and an RGBA pixel buffer as output.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -38,6 +38,76 @@ impl std::ops::Deref for Face {
     }
 }
 
+/// A fallback font, which swash reads straight from the file's bytes: a glyph is
+/// decoded only when drawn, where fontdue decodes every glyph on loading (about
+/// 230 MB for Noto Sans CJK).
+struct Fallback {
+    data: FontBytes,
+}
+
+/// A font's bytes: built in, or a font file mapped into memory, so only the
+/// parts swash reads take memory.
+enum FontBytes {
+    Bundled(&'static [u8]),
+    Mapped(memmap2::Mmap),
+}
+
+impl std::ops::Deref for FontBytes {
+    type Target = [u8];
+
+    fn deref(&self) -> &[u8] {
+        match self {
+            FontBytes::Bundled(bytes) => bytes,
+            FontBytes::Mapped(map) => map,
+        }
+    }
+}
+
+impl Fallback {
+    fn new(data: FontBytes) -> Option<Self> {
+        let fallback = Self { data };
+        fallback.font()?;
+        Some(fallback)
+    }
+
+    fn open(path: &Path) -> Option<Self> {
+        let file = std::fs::File::open(path).ok()?;
+        // SAFETY: system font files are replaced, not rewritten in place, when they are
+        // updated, so the mapping stays readable for the rest of the run.
+        let map = unsafe { memmap2::Mmap::map(&file) }.ok()?;
+        Self::new(FontBytes::Mapped(map))
+    }
+
+    fn font(&self) -> Option<swash::FontRef<'_>> {
+        swash::FontRef::from_index(&self.data, 0)
+    }
+
+    fn has(&self, c: char) -> bool {
+        self.font().is_some_and(|font| font.charmap().map(c) != 0)
+    }
+
+    fn advance(&self, c: char, px: f32) -> f32 {
+        self.font().map_or(0.0, |font| font.glyph_metrics(&[]).scale(px).advance_width(font.charmap().map(c)))
+    }
+
+    fn draw(&self, c: char, px: f32, scale: &mut ScaleContext) -> Option<(Metrics, Vec<u8>)> {
+        swash_glyph(self.font()?, c, px, false, scale)
+    }
+}
+
+/// `c` drawn by swash at `px`, as fontdue describes a glyph; None when the font lacks it.
+fn swash_glyph(font: swash::FontRef, c: char, px: f32, hint: bool, scale: &mut ScaleContext) -> Option<(Metrics, Vec<u8>)> {
+    // fontdue also reads a font's old-style character tables: what only those have is its to draw.
+    let id = Some(font.charmap().map(c)).filter(|id| *id != 0)?;
+    let mut scaler = scale.builder(font).size(px).hint(hint).build();
+    let image = Render::new(&[Source::Outline]).format(Format::Alpha).render(&mut scaler, id)?;
+    let at = image.placement;
+    let advance_width = font.glyph_metrics(&[]).scale(px).advance_width(id);
+    // fontdue's ymin is the bitmap's bottom edge above the baseline; swash gives its top edge.
+    let metrics = Metrics { xmin: at.left, ymin: at.top - at.height as i32, width: at.width as usize, height: at.height as usize, advance_width, ..Default::default() };
+    Some((metrics, image.data))
+}
+
 impl Face {
     fn new(data: Vec<u8>) -> Option<Self> {
         Some(Self { font: Font::from_bytes(&data[..], FontSettings::default()).ok()?, data })
@@ -46,15 +116,8 @@ impl Face {
     /// `c` at `px`, hinted, as fontdue describes a glyph; None when swash
     /// cannot read the font or draw the glyph.
     fn hinted(&self, c: char, px: f32, scale: &mut ScaleContext) -> Option<(Metrics, Vec<u8>)> {
-        let font = swash::FontRef::from_index(&self.data, 0)?;
-        // fontdue also reads a font's old-style character tables: what only those have is its to draw.
-        let id = Some(font.charmap().map(c)).filter(|id| *id != 0)?;
-        let mut scaler = scale.builder(font).size(px).hint(true).build();
-        let image = Render::new(&[Source::Outline]).format(Format::Alpha).render(&mut scaler, id)?;
-        let at = image.placement;
-        // fontdue's ymin is the bitmap's bottom edge above the baseline; swash gives its top edge.
-        let metrics = Metrics { xmin: at.left, ymin: at.top - at.height as i32, width: at.width as usize, height: at.height as usize, ..self.font.metrics(c, px) };
-        Some((metrics, image.data))
+        let (m, data) = swash_glyph(swash::FontRef::from_index(&self.data, 0)?, c, px, true, scale)?;
+        Some((Metrics { xmin: m.xmin, ymin: m.ymin, width: m.width, height: m.height, ..self.font.metrics(c, px) }, data))
     }
 }
 
@@ -65,9 +128,9 @@ pub struct Renderer {
     scale: ScaleContext,
     /// Searched in order for glyphs the main font lacks (CJK, symbols); taken
     /// from `fallback_fonts` on the first missing glyph.
-    fallbacks: Option<&'static [Font]>,
-    /// The bundled prompt icons, searched first; loaded with the fallbacks.
-    symbols: Option<Font>,
+    fallbacks: Option<&'static [Fallback]>,
+    /// The bundled prompt icons, searched first.
+    symbols: Fallback,
     px: f32,
     pub cell_w: usize,
     pub cell_h: usize,
@@ -356,7 +419,7 @@ impl Renderer {
             bold,
             scale: ScaleContext::new(),
             fallbacks: None,
-            symbols: None,
+            symbols: Fallback::new(FontBytes::Bundled(NERD_SYMBOLS)).ok_or_else(|| anyhow!("the bundled symbols font is unreadable"))?,
             keywords: HashMap::new(),
             adhoc: Vec::new(),
             find: None,
@@ -419,29 +482,31 @@ impl Renderer {
         }
         let in_regular = self.regular.lookup_glyph_index(c) != 0;
         if !in_regular && self.fallbacks.is_none() && !self.cache.contains_key(&(c, bold)) {
-            self.symbols = Font::from_bytes(NERD_SYMBOLS, FontSettings::default()).ok();
             self.fallbacks = Some(fallback_fonts());
         }
         let cell = self.cell_w as f32;
-        // The main font's face for `c`, else the font that has it.
-        let (face, font, px): (Option<&Face>, &Font, f32) = if in_regular {
-            let face = match &self.bold {
-                Some(b) if bold => b,
-                _ => &self.regular,
-            };
-            (Some(face), face, px)
-        } else if let Some(symbols) = self.symbols.as_ref().filter(|f| f.lookup_glyph_index(c) != 0) {
+        let face = match &self.bold {
+            Some(b) if bold && in_regular => b,
+            _ => &self.regular,
+        };
+        // A font other than the main one that has `c`, at the size to draw it.
+        let fallback = if in_regular {
+            None
+        } else if self.symbols.has(c) {
             // Its icons are an em wide: shrink them into one cell.
-            let advance = symbols.metrics(c, px).advance_width;
-            (None, symbols, if advance > cell { px * cell / advance } else { px })
+            let advance = self.symbols.advance(c, px);
+            Some((&self.symbols, if advance > cell { px * cell / advance } else { px }))
         } else {
-            let fallbacks = self.fallbacks.unwrap_or_default();
-            (None, fallbacks.iter().find(|f| f.lookup_glyph_index(c) != 0).unwrap_or(&self.regular), px)
+            self.fallbacks.unwrap_or_default().iter().find(|f| f.has(c)).map(|f| (f, px))
         };
         let scale = &mut self.scale;
         self.cache.entry((c, bold)).or_insert_with(|| {
             // The main font with its hinting; what swash cannot draw, as fontdue draws it.
-            let (metrics, coverage) = face.and_then(|f| f.hinted(c, px, scale)).unwrap_or_else(|| font.rasterize(c, px));
+            let drawn = match fallback {
+                Some((font, px)) => font.draw(c, px, scale),
+                None => face.hinted(c, px, scale),
+            };
+            let (metrics, coverage) = drawn.unwrap_or_else(|| face.rasterize(c, px));
             Glyph { metrics, coverage }
         })
     }
@@ -675,15 +740,19 @@ pub fn vertical_label(text: &str, px: f32, color: Rgb) -> Option<(usize, usize, 
     let font = Font::from_bytes(include_bytes!("../ui/fonts/IBMPlexSans-Regular.ttf") as &[u8], FontSettings::default()).ok()?;
     // Characters the UI font lacks (Chinese, for one) come from the system's fallback fonts.
     let missing = |c: char| font.lookup_glyph_index(c) == 0;
-    let fallbacks: &[Font] = if text.chars().any(missing) { fallback_fonts() } else { &[] };
-    let pick = |c: char| fallbacks.iter().find(|f| missing(c) && f.lookup_glyph_index(c) != 0).unwrap_or(&font);
+    let fallbacks: &[Fallback] = if text.chars().any(missing) { fallback_fonts() } else { &[] };
+    let mut scale = ScaleContext::new();
+    let mut draw = |c: char| {
+        let fallback = fallbacks.iter().find(|f| missing(c) && f.has(c));
+        fallback.and_then(|f| f.draw(c, px, &mut scale)).unwrap_or_else(|| font.rasterize(c, px))
+    };
     if text.chars().any(upright) {
-        return Some(stacked_label(text, px, color, pick));
+        return Some(stacked_label(text, px, color, draw));
     }
     let line = font.horizontal_line_metrics(px)?;
     let ascent = line.ascent.round() as i32;
     let h = (line.ascent - line.descent).ceil() as usize;
-    let glyphs: Vec<_> = text.chars().map(|c| pick(c).rasterize(c, px)).collect();
+    let glyphs: Vec<_> = text.chars().map(&mut draw).collect();
     let w = glyphs.iter().map(|(m, _)| m.advance_width).sum::<f32>().ceil() as usize + 1;
 
     // Lay the text out horizontally as coverage, then rotate while colouring.
@@ -722,12 +791,12 @@ fn upright(c: char) -> bool {
 
 /// A CJK label as CJK vertical text: each character upright, top to bottom,
 /// centred in a square cell, as (width, height, RGBA).
-fn stacked_label<'a>(text: &str, px: f32, color: Rgb, pick: impl Fn(char) -> &'a Font) -> (usize, usize, Vec<u8>) {
+fn stacked_label(text: &str, px: f32, color: Rgb, mut draw: impl FnMut(char) -> (Metrics, Vec<u8>)) -> (usize, usize, Vec<u8>) {
     let cell = (px * 1.2).ceil() as usize;
     let (w, h) = (cell, cell * text.chars().count());
     let mut rgba = vec![0u8; w * h * 4];
     for (i, c) in text.chars().enumerate() {
-        let (m, bitmap) = pick(c).rasterize(c, px);
+        let (m, bitmap) = draw(c);
         let left = (cell as i32 - m.width as i32) / 2;
         let top = (i * cell) as i32 + (cell as i32 - m.height as i32) / 2;
         for gy in 0..m.height {
@@ -825,11 +894,10 @@ fn load_mono(name: &str) -> Option<(Face, Option<Face>)> {
 }
 
 /// Load the first font in `names` that exists and parses (first face of a collection).
-/// The system fallback fonts, parsed once per run and shared: a CJK font is
-/// large and slow to parse (seconds in a debug build).
-fn fallback_fonts() -> &'static [Font] {
-    static FONTS: std::sync::OnceLock<Vec<Font>> = std::sync::OnceLock::new();
-    FONTS.get_or_init(|| FALLBACKS.iter().filter_map(|name| load_first(&[name])).map(|face| face.font).collect())
+/// The system fallback fonts, read once per run and shared.
+fn fallback_fonts() -> &'static [Fallback] {
+    static FONTS: std::sync::OnceLock<Vec<Fallback>> = std::sync::OnceLock::new();
+    FONTS.get_or_init(|| FALLBACKS.iter().filter_map(|name| Fallback::open(&font_path(name))).collect())
 }
 
 fn load_first(names: &[&str]) -> Option<Face> {
@@ -912,6 +980,17 @@ mod tests {
         let left = powerline('\u{e0b2}', 10, 20).unwrap();
         assert_eq!(row(&left, 4), row(&right, 4).into_iter().rev().collect::<Vec<_>>());
         assert!(powerline('a', 10, 20).is_none());
+    }
+
+    #[test]
+    fn cjk_draws_from_a_system_fallback() {
+        let Ok(mut r) = Renderer::new(BUILT_IN_FONT, 16.0) else { return };
+        if !fallback_fonts().iter().any(|f| f.has('日')) {
+            return;
+        }
+        let cell = r.cell_w;
+        let m = &r.glyph('日', false).metrics;
+        assert!(m.width > cell / 2 && m.height > 0 && m.advance_width > 0.0, "{m:?}");
     }
 
     #[test]

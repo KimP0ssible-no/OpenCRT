@@ -139,6 +139,13 @@ travel encrypted only when you set a master password. Settings Sync uses the
 installed `git`: the Linux packages depend on it, and on Windows OpenCRT
 offers to download Git for Windows.
 
+Keep key files at the same place in your home folder on every computer, for
+example in `~/.ssh`. OpenCRT saves such a path as `~/...`, so one path works
+everywhere. Settings Sync does not copy key files. If a key is in a different
+place on each computer, leave the session's key empty and set the key per
+computer in Global Options > Connection > Default SSH2 key file, or load it
+into your SSH agent.
+
 ### In your language
 The interface speaks 30 languages: English, Simplified and Traditional
 Chinese, Japanese, Korean and 25 European languages. OpenCRT follows the

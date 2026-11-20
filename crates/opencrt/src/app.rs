@@ -2140,7 +2140,7 @@ impl App {
     fn save_store(&mut self) {
         let result = match (&self.store_error, config::sessions_file()) {
             (Some(e), _) => Err(anyhow::anyhow!("sessions.toml could not be read ({e}); not overwriting it")),
-            (None, Some(path)) => config::save(&path, &self.store),
+            (None, Some(path)) => config::save_sessions(&path, &self.store),
             (None, None) => Err(anyhow::anyhow!("no configuration directory")),
         };
         match result {
@@ -6755,7 +6755,7 @@ impl App {
         else {
             return;
         };
-        match config::save(&path, &self.store) {
+        match config::save_sessions(&path, &self.store) {
             Ok(()) => self.notify(tr!("Exported {} sessions to {}.", self.store.sessions.len(), path.display())),
             Err(e) => self.notify(tr!("Cannot export to {}: {}", path.display(), format!("{:#}", e))),
         }

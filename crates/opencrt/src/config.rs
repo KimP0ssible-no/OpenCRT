@@ -1212,6 +1212,7 @@ pub fn options_file() -> Option<PathBuf> {
 /// kept beside it (`options.local.toml`), not shared with other machines.
 pub const MACHINE_OPTIONS: &[&str] = &[
     "window_width",
+    "recent_sessions",
     "window_height",
     "window_maximized",
     "dock_width",
@@ -1271,6 +1272,50 @@ pub fn load<T: DeserializeOwned + Default>(path: &Path) -> anyhow::Result<T> {
         Ok(text) => toml::from_str(&text).with_context(|| format!("reading {}", path.display())),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(T::default()),
         Err(e) => Err(e).with_context(|| format!("reading {}", path.display())),
+    }
+}
+
+/// Save sessions as `sessions.toml` holds them: without the settings a session
+/// leaves at their defaults, so settings a newer OpenCRT adds change no line,
+/// and with files in the home folder as `~/...`, so Settings Sync carries one
+/// path that works on every computer.
+pub fn save_sessions(path: &Path, store: &SessionStore) -> anyhow::Result<()> {
+    let home = std::env::home_dir();
+    let defaults = toml::Value::try_from(Session::default())?;
+    let tidy = |session: &mut toml::Value| {
+        let (Some(table), Some(defaults)) = (session.as_table_mut(), defaults.as_table()) else {
+            return;
+        };
+        let unchanged: Vec<String> = table.iter().filter(|(key, value)| defaults.get(*key) == Some(*value)).map(|(key, _)| key.clone()).collect();
+        for key in unchanged {
+            table.remove(&key);
+        }
+        for key in ["key_path", "cert_path", "log_file"] {
+            if let Some(toml::Value::String(file)) = table.get_mut(key) {
+                *file = home_relative(file, home.as_deref());
+            }
+        }
+    };
+    let mut value = toml::Value::try_from(store)?;
+    if let Some(sessions) = value.get_mut("session").and_then(toml::Value::as_array_mut) {
+        sessions.iter_mut().for_each(&tidy);
+    }
+    if let Some(default) = value.get_mut("default_session") {
+        tidy(default);
+    }
+    save(path, &value)
+}
+
+/// `file` as `~/...` with `/` between folders when it is inside `home`; else as it is.
+fn home_relative(file: &str, home: Option<&Path>) -> String {
+    let Some(home) = home.and_then(Path::to_str).map(|h| h.trim_end_matches(['/', '\\'])).filter(|h| !h.is_empty()) else {
+        return file.to_string();
+    };
+    // Windows paths ignore case.
+    let same = |prefix: &str| if cfg!(windows) { prefix.eq_ignore_ascii_case(home) } else { prefix == home };
+    match (file.get(..home.len()), file.get(home.len()..)) {
+        (Some(prefix), Some(rest)) if same(prefix) && rest.starts_with(['/', '\\']) => format!("~{}", rest.replace('\\', "/")),
+        _ => file.to_string(),
     }
 }
 
@@ -1408,6 +1453,25 @@ mod tests {
         assert_eq!(expand("~x/%S-%H.log"), "~x/%S-%H.log");
         assert_eq!(expand("$NOPE %NOPE% 100% ${U"), "$NOPE %NOPE% 100% ${U");
         assert_eq!(expand("cost$"), "cost$");
+    }
+
+    #[test]
+    fn sessions_save_without_defaults_and_with_home_relative_keys() {
+        let home = |h: &str| Some(PathBuf::from(h));
+        assert_eq!(home_relative("/home/kim/.ssh/id", home("/home/kim").as_deref()), "~/.ssh/id");
+        assert_eq!(home_relative(r"C:\Users\kattr\.ssh\id", home(r"C:\Users\kattr").as_deref()), "~/.ssh/id");
+        assert_eq!(home_relative("/home/kimberly/id", home("/home/kim").as_deref()), "/home/kimberly/id");
+        assert_eq!(home_relative("/etc/ssh/id", home("/home/kim").as_deref()), "/etc/ssh/id");
+
+        let dir = std::env::temp_dir().join(format!("opencrt-portable-{}", std::process::id()));
+        let path = dir.join("sessions.toml");
+        let session = Session { name: "web1".into(), host: "web1".into(), key_path: "~/.ssh/id".into(), ..Default::default() };
+        let store = SessionStore { sessions: vec![session], ..Default::default() };
+        save_sessions(&path, &store).unwrap();
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(!text.contains("raw_mode") && !text.contains("port = ") && text.contains("key_path = \"~/.ssh/id\""), "{text}");
+        assert_eq!(load::<SessionStore>(&path).unwrap(), store);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

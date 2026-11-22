@@ -75,6 +75,16 @@ jobs:
       CARGO_PROFILE_DEV_DEBUG: line-tables-only
     steps:
       - uses: actions/checkout@v7
+      # rust-skia publishes no prebuilt Skia for the static C runtime, so when
+      # skia-bindings rebuilds (a dependency of its build script changed) it
+      # builds Skia from source: its checkout has paths over 260 characters,
+      # and the runner's clang (LLVM 20) is older than its C++ library wants.
+      - name: Ready to build Skia from source
+        if: runner.os == 'Windows'
+        run: |
+          git config --system core.longpaths true
+          'SKIA_GN_ARGS=extra_cflags_cc=["/D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH"]' >> $env:GITHUB_ENV
+          'BINDGEN_EXTRA_CLANG_ARGS=-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH' >> $env:GITHUB_ENV
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -319,6 +329,16 @@ jobs:
       SIGN: ${{ matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v') }}
     steps:
       - uses: actions/checkout@v7
+      # rust-skia publishes no prebuilt Skia for the static C runtime, so when
+      # skia-bindings rebuilds (a dependency of its build script changed) it
+      # builds Skia from source: its checkout has paths over 260 characters,
+      # and the runner's clang (LLVM 20) is older than its C++ library wants.
+      - name: Ready to build Skia from source
+        if: runner.os == 'Windows'
+        run: |
+          git config --system core.longpaths true
+          'SKIA_GN_ARGS=extra_cflags_cc=["/D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH"]' >> $env:GITHUB_ENV
+          'BINDGEN_EXTRA_CLANG_ARGS=-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH' >> $env:GITHUB_ENV
       # Release tags: the version comes from the tag (main says 0.0.0).
       - name: Version from the tag
         if: github.ref_type == 'tag'

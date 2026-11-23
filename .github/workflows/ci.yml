@@ -308,7 +308,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release list --repo "$GITHUB_REPOSITORY" --limit 2 --json tagName --jq '.[].tagName' > tags
+          gh release list --repo "$GITHUB_REPOSITORY" --exclude-pre-releases --exclude-drafts --limit 2 --json tagName --jq '.[].tagName' > tags
           for tag in $(cat tags); do
             gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir pkgs -p '*.deb' -p '*.rpm' -p '*.pkg.tar.zst'
           done
@@ -612,7 +612,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO_GPG_KEY: ${{ secrets.REPO_GPG_KEY }}
         run: |
-          for tag in $(gh release list --repo "$GITHUB_REPOSITORY" --limit 3 --json tagName --jq '.[].tagName'); do
+          for tag in $(gh release list --repo "$GITHUB_REPOSITORY" --exclude-pre-releases --exclude-drafts --limit 3 --json tagName --jq '.[].tagName'); do
             gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir pkgs -p '*.deb' -p '*.rpm' -p '*.pkg.tar.zst'
           done
           export GNUPGHOME="$PWD/gnupg"

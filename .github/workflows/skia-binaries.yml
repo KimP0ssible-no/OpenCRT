@@ -37,10 +37,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eu
-          wanted=$(grep -h "TRYING TO DOWNLOAD AND INSTALL SKIA BINARIES:" target/debug/build/skia-bindings-*/output | tail -1 | sed 's/.*: //')
+          # The build script's printed output, and the folder with what it built,
+          # in the target folder cargo reports: build/skia-bindings-<hash>/ or,
+          # since cargo 1.100, build/skia-bindings/<hash>/ (GNU find: Windows has its own).
+          target=$(cargo metadata --format-version 1 --no-deps | sed -n 's/.*"target_directory":"\([^"]*\)".*/\1/p' | sed 's/\\\\/\//g')
+          echo "target folder: $target"
+          /usr/bin/find "$target" -path '*/skia-bindings[-/]*' -name bindings.rs | tee found.txt
+          # The file holding the script's printed lines changed its name with
+          # that layout too: find it by its content.
+          printed=$(grep -rl --exclude-dir=out "TRYING TO DOWNLOAD AND INSTALL SKIA BINARIES:" "$target"/debug/build/skia-bindings* | head -1)
+          echo "printed by the build script: $printed"
+          wanted=$(grep -h "TRYING TO DOWNLOAD AND INSTALL SKIA BINARIES:" "$printed" | tail -1 | sed 's/.*: //')
           tag=${wanted%%/*}
           key=${wanted#*/}
-          out=$(dirname "$(ls -t target/debug/build/skia-bindings-*/out/skia/bindings.rs | head -1)")
+          out=$(dirname "$(grep '/skia/bindings.rs$' found.txt | head -1)")
           echo "tag $tag, key $key, from $out"
           mkdir -p pack/skia-binaries
           cp "$out"/*.lib "$out"/bindings.rs pack/skia-binaries/

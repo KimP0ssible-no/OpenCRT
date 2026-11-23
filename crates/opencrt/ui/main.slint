@@ -3766,11 +3766,11 @@ component GlobalOptionsDialog inherits DialogFrame {
                         // Keep the keyword picked with the arrow keys in view.
                         function show-keyword() {
                             let row-h = 21px * Theme.ui-scale;
-                            if KeywordEditor.row * row-h + keyword-list.viewport-y < 0 {
-                                keyword-list.viewport-y = -KeywordEditor.row * row-h;
+                            if KeywordEditor.row * row-h + keyword-list.content-y < 0 {
+                                keyword-list.content-y = -KeywordEditor.row * row-h;
                             }
-                            if (KeywordEditor.row + 1) * row-h + keyword-list.viewport-y > keyword-list.visible-height {
-                                keyword-list.viewport-y = keyword-list.visible-height - (KeywordEditor.row + 1) * row-h;
+                            if (KeywordEditor.row + 1) * row-h + keyword-list.content-y > keyword-list.visible-height {
+                                keyword-list.content-y = keyword-list.visible-height - (KeywordEditor.row + 1) * row-h;
                             }
                         }
                         keyword-keys := ListKeys {

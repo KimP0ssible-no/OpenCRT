@@ -145,6 +145,10 @@ fn main() {
             ui.set_dialog(5);
         }
         "global-options" => ui.set_dialog(6),
+        "highlighting" => {
+            ui.set_go_category(4);
+            ui.set_dialog(6);
+        }
         "settings-sync" => {
             ui.set_go_category(8);
             ui.set_go_git_url("https://gitlab.example.net/kim/opencrt-settings.git".into());

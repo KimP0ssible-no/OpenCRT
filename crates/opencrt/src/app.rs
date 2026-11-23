@@ -7651,10 +7651,16 @@ impl App {
         self.show_keyword_lists(ui);
     }
 
+    /// Add: with no keyword picked, the one typed into the fields; else a new empty one.
     fn kw_add_row(&mut self, ui: &MainWindow) {
+        let typed = self.kw_row.is_none();
         let rows = &mut self.kw_lists[self.kw_list].rows;
         rows.push(render::KeywordRow::default());
         let last = rows.len() - 1;
+        if typed {
+            self.kw_row = Some(last);
+            self.kw_edit_row(ui);
+        }
         self.kw_pick_row(Some(last), ui);
     }
 

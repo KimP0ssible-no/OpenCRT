@@ -37,10 +37,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eu
-          wanted=$(grep -h "TRYING TO DOWNLOAD AND INSTALL SKIA BINARIES:" target/debug/build/skia-bindings-*/output | tail -1 | sed 's/.*: //')
+          # The build script's printed output, and the folder with what it built.
+          find target -path '*skia-bindings-*' \( -name output -o -name bindings.rs \) | tee found.txt
+          printed=$(grep '/output$' found.txt | head -1)
+          wanted=$(grep -h "TRYING TO DOWNLOAD AND INSTALL SKIA BINARIES:" "$printed" | tail -1 | sed 's/.*: //')
           tag=${wanted%%/*}
           key=${wanted#*/}
-          out=$(dirname "$(ls -t target/debug/build/skia-bindings-*/out/skia/bindings.rs | head -1)")
+          out=$(dirname "$(grep '/skia/bindings.rs$' found.txt | head -1)")
           echo "tag $tag, key $key, from $out"
           mkdir -p pack/skia-binaries
           cp "$out"/*.lib "$out"/bindings.rs pack/skia-binaries/

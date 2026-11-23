@@ -3839,7 +3839,6 @@ component GlobalOptionsDialog inherits DialogFrame {
                         FormLabel { text: @tr("Keyword:"); width: 64px * Theme.ui-scale; }
                         LineEdit {
                             horizontal-stretch: 1;
-                            enabled: KeywordEditor.row >= 0;
                             text <=> KeywordEditor.pattern;
                             placeholder-text: KeywordEditor.regex ? @tr("regular expression") : @tr("word or phrase");
                             edited => { KeywordEditor.edit-row(); }
@@ -3851,19 +3850,18 @@ component GlobalOptionsDialog inherits DialogFrame {
                         FormLabel { text: @tr("Colour:"); width: 64px * Theme.ui-scale; }
                         ColourDropdown {
                             width: 110px * Theme.ui-scale;
-                            enabled: KeywordEditor.row >= 0;
                             names: KeywordEditor.colours;
                             dots: KeywordEditor.colour-dots;
                             current-index <=> KeywordEditor.colour;
                             selected => { KeywordEditor.edit-row(); }
                         }
-                        if KeywordEditor.row >= 0 && KeywordEditor.colour == KeywordEditor.colours.length - 1: LineEdit {
+                        if KeywordEditor.colour == KeywordEditor.colours.length - 1: LineEdit {
                             width: 80px * Theme.ui-scale;
                             text <=> KeywordEditor.custom-colour;
                             placeholder-text: @tr("#rrggbb");
                             edited => { KeywordEditor.edit-row(); }
                         }
-                        if KeywordEditor.row >= 0 && KeywordEditor.colour == KeywordEditor.colours.length - 1: ColourPicker {
+                        if KeywordEditor.colour == KeywordEditor.colours.length - 1: ColourPicker {
                             width: 28px * Theme.ui-scale;
                             value: KeywordEditor.custom-rgb;
                             picked(c) => { KeywordEditor.pick-colour(c); }
@@ -3874,19 +3872,16 @@ component GlobalOptionsDialog inherits DialogFrame {
                         alignment: start;
                         CheckBox {
                             text: @tr("Regular expression");
-                            enabled: KeywordEditor.row >= 0;
                             checked <=> KeywordEditor.regex;
                             toggled => { KeywordEditor.edit-row(); }
                         }
                         CheckBox {
                             text: @tr("Whole words");
-                            enabled: KeywordEditor.row >= 0;
                             checked <=> KeywordEditor.word;
                             toggled => { KeywordEditor.edit-row(); }
                         }
                         CheckBox {
                             text: @tr("Whole line");
-                            enabled: KeywordEditor.row >= 0;
                             checked <=> KeywordEditor.line;
                             toggled => { KeywordEditor.edit-row(); }
                         }
@@ -3896,13 +3891,11 @@ component GlobalOptionsDialog inherits DialogFrame {
                         alignment: start;
                         CheckBox {
                             text: @tr("Colour the text only");
-                            enabled: KeywordEditor.row >= 0;
                             checked <=> KeywordEditor.text;
                             toggled => { KeywordEditor.edit-row(); }
                         }
                         CheckBox {
                             text: @tr("Bold");
-                            enabled: KeywordEditor.row >= 0;
                             checked <=> KeywordEditor.bold;
                             toggled => { KeywordEditor.edit-row(); }
                         }

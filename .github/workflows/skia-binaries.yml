@@ -37,8 +37,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eu
-          # The build script's printed output, and the folder with what it built.
-          find target -path '*skia-bindings-*' \( -name output -o -name bindings.rs \) | tee found.txt
+          # The build script's printed output, and the folder with what it built,
+          # in the target folder cargo reports (GNU find: Windows has its own).
+          target=$(cargo metadata --format-version 1 --no-deps | sed -n 's/.*"target_directory":"\([^"]*\)".*/\1/p' | sed 's/\\\\/\//g')
+          echo "target folder: $target"
+          ls "$target" "$target/debug/build" | head -40 || true
+          /usr/bin/find "$target" -path '*skia-bindings-*' \( -name output -o -name bindings.rs \) | tee found.txt
           printed=$(grep '/output$' found.txt | head -1)
           wanted=$(grep -h "TRYING TO DOWNLOAD AND INSTALL SKIA BINARIES:" "$printed" | tail -1 | sed 's/.*: //')
           tag=${wanted%%/*}

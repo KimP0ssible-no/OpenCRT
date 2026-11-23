@@ -143,9 +143,10 @@ Settings that depend on the computer are kept per platform (Windows, Linux,
 macOS): a serial session's port, a local session's command, the pre-connect
 command, the folder shared with a remote desktop, and key, certificate and log
 files outside your home folder. Set them once on each platform, and each keeps
-its own. Files inside your home folder are saved as `~/...`, so keep key files
-at the same place there on every computer, for example in `~/.ssh`, and one
-path works everywhere. Settings Sync does not copy key files. If two computers
+its own. Files inside your home folder are saved as `~/...`. A path is shared
+by every platform until a platform sets a different one, so keep key files at
+the same place in your home folder on every computer, for example in `~/.ssh`,
+and one path works everywhere. Settings Sync does not copy key files. If two computers
 on the same platform keep a key in different places, leave the session's key
 empty and set it per computer in Global Options > Connection > Default SSH2 key
 file, or load it into your SSH agent.

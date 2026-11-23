@@ -1990,7 +1990,7 @@ fn push_recent(recent: &mut Vec<String>, path: String) {
 
 impl App {
     fn new() -> anyhow::Result<Self> {
-        let (store, store_error) = match config::sessions_file().map(|p| config::load::<SessionStore>(&p)) {
+        let (store, store_error) = match config::sessions_file().map(|p| config::load_sessions(&p)) {
             Some(Ok(store)) => (store, None),
             Some(Err(e)) => (SessionStore::default(), Some(format!("{e:#}"))),
             None => (SessionStore::default(), Some("no configuration directory".into())),
@@ -2140,7 +2140,7 @@ impl App {
     fn save_store(&mut self) {
         let result = match (&self.store_error, config::sessions_file()) {
             (Some(e), _) => Err(anyhow::anyhow!("sessions.toml could not be read ({e}); not overwriting it")),
-            (None, Some(path)) => config::save(&path, &self.store),
+            (None, Some(path)) => config::save_sessions(&path, &self.store),
             (None, None) => Err(anyhow::anyhow!("no configuration directory")),
         };
         match result {
@@ -5335,6 +5335,7 @@ impl App {
             anti_idle: ui.get_so_anti_idle().to_string(),
             anti_idle_secs: ui.get_so_anti_idle_secs().trim().parse().unwrap_or(0),
             anti_idle_protocol: ui.get_so_anti_idle_protocol(),
+            platform: Default::default(),
         }
     }
 
@@ -5346,7 +5347,7 @@ impl App {
             "" => Some(0),
             secs => secs.parse::<u32>().ok(),
         };
-        let session = self.session_from_ui(ui);
+        let mut session = self.session_from_ui(ui);
         let invalid = script::Runner::parse(&session.logon_actions)
             .err()
             .map(|e| tr!("Logon script: {}", e))
@@ -5393,7 +5394,8 @@ impl App {
                 self.editing_default = true;
                 return ui.set_so_error(e.into());
             }
-            self.store.default_session = Session { name: String::new(), folder: String::new(), ..session };
+            let platform = self.store.default_session.platform.clone();
+            self.store.default_session = Session { name: String::new(), folder: String::new(), platform, ..session };
             self.editing = None;
             self.save_store();
             ui.set_dialog(DIALOG_NONE);
@@ -5422,7 +5424,11 @@ impl App {
 
         let old_path = index.map(|i| self.store.sessions[i].path());
         match index {
-            Some(i) => self.store.sessions[i] = session.clone(),
+            Some(i) => {
+                // The other platforms' values are not in the dialog.
+                session.platform = self.store.sessions[i].platform.clone();
+                self.store.sessions[i] = session.clone();
+            }
             None => self.store.sessions.push(session.clone()),
         }
         if !session.folder.is_empty() {
@@ -6755,7 +6761,7 @@ impl App {
         else {
             return;
         };
-        match config::save(&path, &self.store) {
+        match config::save_sessions(&path, &self.store) {
             Ok(()) => self.notify(tr!("Exported {} sessions to {}.", self.store.sessions.len(), path.display())),
             Err(e) => self.notify(tr!("Cannot export to {}: {}", path.display(), format!("{:#}", e))),
         }
@@ -6780,7 +6786,7 @@ impl App {
         let extension = path.extension().map(|e| e.to_ascii_lowercase());
         let mut note = String::new();
         let other = if extension.as_deref() == Some("toml".as_ref()) {
-            config::load::<SessionStore>(path).map_err(|e| format!("{e:#}"))
+            config::load_sessions(path).map_err(|e| format!("{e:#}"))
         } else if extension.as_deref() == Some("rdp".as_ref()) {
             let name = path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
             std::fs::read(path)

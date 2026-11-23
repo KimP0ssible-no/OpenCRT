@@ -440,6 +440,10 @@ pub struct Session {
     pub proxy: String,
     /// Tab colour name (`red`, `green`, ...); empty for none.
     pub tab_color: String,
+    /// The settings that depend on the computer (`machine_keys`) where a
+    /// platform ("linux", "windows", "macos") differs from the shared value,
+    /// which is kept under "any" while loaded.
+    pub platform: std::collections::BTreeMap<String, toml::Table>,
 }
 
 impl Default for Session {
@@ -504,6 +508,7 @@ impl Default for Session {
             tab_color: String::new(),
             credential: String::new(),
             cert_path: String::new(),
+            platform: std::collections::BTreeMap::new(),
         }
     }
 }
@@ -1212,6 +1217,7 @@ pub fn options_file() -> Option<PathBuf> {
 /// kept beside it (`options.local.toml`), not shared with other machines.
 pub const MACHINE_OPTIONS: &[&str] = &[
     "window_width",
+    "recent_sessions",
     "window_height",
     "window_maximized",
     "dock_width",
@@ -1271,6 +1277,104 @@ pub fn load<T: DeserializeOwned + Default>(path: &Path) -> anyhow::Result<T> {
         Ok(text) => toml::from_str(&text).with_context(|| format!("reading {}", path.display())),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(T::default()),
         Err(e) => Err(e).with_context(|| format!("reading {}", path.display())),
+    }
+}
+
+/// The shared entry in `Session::platform`, beside the platforms' own.
+const ANY: &str = "any";
+/// Settings that depend on the computer, which may differ per platform; files
+/// among them inside the home folder are shared as `~/...`.
+const MACHINE_KEYS: &[&str] = &["serial_port", "pre_connect", "rdp_share", "key_path", "cert_path", "log_file"];
+const FILE_KEYS: &[&str] = &["rdp_share", "key_path", "cert_path", "log_file"];
+
+/// `MACHINE_KEYS`, and for a local session its command line.
+fn machine_keys(local: bool) -> impl Iterator<Item = &'static str> {
+    MACHINE_KEYS.iter().copied().chain(local.then_some("remote_command"))
+}
+
+/// Load sessions with this platform's own values for the settings that depend
+/// on the computer.
+pub fn load_sessions(path: &Path) -> anyhow::Result<SessionStore> {
+    let mut store: SessionStore = load(path)?;
+    for session in store.sessions.iter_mut().chain(std::iter::once(&mut store.default_session)) {
+        let local = session.protocol == Protocol::Local;
+        let mut table = toml::Table::try_from(&*session)?;
+        let shared: toml::Table = machine_keys(local).filter_map(|key| Some((key.to_string(), table.get(key)?.clone()))).collect();
+        let own = session.platform.get(std::env::consts::OS).cloned().unwrap_or_default();
+        table.extend(own.into_iter().filter(|(key, _)| machine_keys(local).any(|k| k == key)));
+        let mut loaded: Session = table.try_into()?;
+        loaded.platform.insert(ANY.into(), shared);
+        *session = loaded;
+    }
+    Ok(store)
+}
+
+/// Save sessions as `sessions.toml` holds them: without the settings a session
+/// leaves at their defaults, so settings a newer OpenCRT adds change no line;
+/// with files in the home folder as `~/...`; and with the settings that depend
+/// on the computer shared where they agree and per platform where they differ,
+/// so Settings Sync carries values that work on every computer.
+pub fn save_sessions(path: &Path, store: &SessionStore) -> anyhow::Result<()> {
+    let home = std::env::home_dir();
+    let defaults = toml::Value::try_from(Session::default())?;
+    let text = |value: Option<&toml::Value>, key: &str| {
+        let value = value.and_then(toml::Value::as_str).unwrap_or_default();
+        if FILE_KEYS.contains(&key) { home_relative(value, home.as_deref()) } else { value.to_string() }
+    };
+    let tidy = |session: &mut toml::Value| {
+        let (Some(table), Some(defaults)) = (session.as_table_mut(), defaults.as_table()) else {
+            return;
+        };
+        let local = table.get("protocol").and_then(toml::Value::as_str) == Some("local");
+        let mut platforms = match table.remove("platform") {
+            Some(toml::Value::Table(platforms)) => platforms,
+            _ => toml::Table::new(),
+        };
+        // A session saved for the first time shares its own values.
+        let shared = match platforms.remove(ANY) {
+            Some(toml::Value::Table(shared)) => Some(shared),
+            _ => None,
+        };
+        let mut own = toml::Table::new();
+        for key in machine_keys(local) {
+            let value = text(table.get(key), key);
+            let shared_value = shared.as_ref().map_or_else(|| value.clone(), |s| text(s.get(key), key));
+            if value != shared_value {
+                own.insert(key.into(), value.into());
+            }
+            table.insert(key.into(), shared_value.into());
+        }
+        if own.is_empty() {
+            platforms.remove(std::env::consts::OS);
+        } else {
+            platforms.insert(std::env::consts::OS.into(), own.into());
+        }
+        table.insert("platform".into(), platforms.into());
+        let unchanged: Vec<String> = table.iter().filter(|(key, value)| defaults.get(*key) == Some(*value)).map(|(key, _)| key.clone()).collect();
+        for key in unchanged {
+            table.remove(&key);
+        }
+    };
+    let mut value = toml::Value::try_from(store)?;
+    if let Some(sessions) = value.get_mut("session").and_then(toml::Value::as_array_mut) {
+        sessions.iter_mut().for_each(&tidy);
+    }
+    if let Some(default) = value.get_mut("default_session") {
+        tidy(default);
+    }
+    save(path, &value)
+}
+
+/// `file` as `~/...` with `/` between folders when it is inside `home`; else as it is.
+fn home_relative(file: &str, home: Option<&Path>) -> String {
+    let Some(home) = home.and_then(Path::to_str).map(|h| h.trim_end_matches(['/', '\\'])).filter(|h| !h.is_empty()) else {
+        return file.to_string();
+    };
+    // Windows paths ignore case.
+    let same = |prefix: &str| if cfg!(windows) { prefix.eq_ignore_ascii_case(home) } else { prefix == home };
+    match (file.get(..home.len()), file.get(home.len()..)) {
+        (Some(prefix), Some(rest)) if same(prefix) && rest.starts_with(['/', '\\']) => format!("~{}", rest.replace('\\', "/")),
+        _ => file.to_string(),
     }
 }
 
@@ -1408,6 +1512,57 @@ mod tests {
         assert_eq!(expand("~x/%S-%H.log"), "~x/%S-%H.log");
         assert_eq!(expand("$NOPE %NOPE% 100% ${U"), "$NOPE %NOPE% 100% ${U");
         assert_eq!(expand("cost$"), "cost$");
+    }
+
+    #[test]
+    fn sessions_save_without_defaults_and_with_home_relative_keys() {
+        let home = |h: &str| Some(PathBuf::from(h));
+        assert_eq!(home_relative("/home/kim/.ssh/id", home("/home/kim").as_deref()), "~/.ssh/id");
+        assert_eq!(home_relative(r"C:\Users\kattr\.ssh\id", home(r"C:\Users\kattr").as_deref()), "~/.ssh/id");
+        assert_eq!(home_relative("/home/kimberly/id", home("/home/kim").as_deref()), "/home/kimberly/id");
+        assert_eq!(home_relative("/etc/ssh/id", home("/home/kim").as_deref()), "/etc/ssh/id");
+
+        let dir = std::env::temp_dir().join(format!("opencrt-portable-{}", std::process::id()));
+        let path = dir.join("sessions.toml");
+        let session = Session { name: "web1".into(), host: "web1".into(), key_path: "~/.ssh/id".into(), ..Default::default() };
+        let store = SessionStore { sessions: vec![session], ..Default::default() };
+        save_sessions(&path, &store).unwrap();
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(!text.contains("raw_mode") && !text.contains("port = ") && text.contains("key_path = \"~/.ssh/id\""), "{text}");
+        assert_eq!(load::<SessionStore>(&path).unwrap(), store);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn machine_settings_differ_per_platform_and_are_shared_where_they_agree() {
+        let os = std::env::consts::OS;
+        let dir = std::env::temp_dir().join(format!("opencrt-platform-{}", std::process::id()));
+        let path = dir.join("sessions.toml");
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = format!(
+            "[[session]]\nname = \"console\"\nprotocol = \"serial\"\nserial_port = \"COM3\"\n\n[session.platform.{os}]\nserial_port = \"/dev/ttyUSB0\"\n\n\
+             [session.platform.elsewhere]\nserial_port = \"tty.usbserial\"\n\n[[session]]\nname = \"shell\"\nprotocol = \"local\"\nremote_command = \"powershell\"\n\n\
+             [[session]]\nname = \"web\"\nremote_command = \"uptime\"\n"
+        );
+        std::fs::write(&path, file).unwrap();
+        let mut store = load_sessions(&path).unwrap();
+        assert_eq!(store.sessions[0].serial_port, "/dev/ttyUSB0");
+        save_sessions(&path, &store).unwrap();
+        assert_eq!(load_sessions(&path).unwrap(), store);
+
+        // Back to the shared port here: this platform needs no value of its own.
+        store.sessions[0].serial_port = "COM3".into();
+        // A local session's command is the computer's; an SSH session's runs on the host.
+        store.sessions[1].remote_command = "bash".into();
+        store.sessions[2].remote_command = "df".into();
+        save_sessions(&path, &store).unwrap();
+        let file: SessionStore = load(&path).unwrap();
+        let [console, shell, web] = &file.sessions[..] else { panic!("{:?}", file.sessions) };
+        assert_eq!(console.serial_port, "COM3");
+        assert!(!console.platform.contains_key(os) && console.platform.contains_key("elsewhere"));
+        assert_eq!((shell.remote_command.as_str(), shell.platform[os]["remote_command"].as_str()), ("powershell", Some("bash")));
+        assert_eq!((web.remote_command.as_str(), web.platform.contains_key(os)), ("df", false));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

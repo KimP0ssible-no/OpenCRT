@@ -699,11 +699,12 @@ mod tests {
     fn machine_options_stay_on_the_machine() {
         let dir = temp("options");
         let (shared, machine) = (dir.join("options.toml"), dir.join("options.local.toml"));
-        let options = Options { window_width: 1234.0, font_points: 13.0, ..Default::default() };
+        let options = Options { window_width: 1234.0, font_points: 13.0, recent_sessions: vec!["web1".into()], ..Default::default() };
         config::save_options(&shared, Some(&machine), &options).unwrap();
         let text = std::fs::read_to_string(&shared).unwrap();
-        assert!(text.contains("font_points") && !text.contains("window_width"));
-        assert!(std::fs::read_to_string(&machine).unwrap().contains("window_width"));
+        assert!(text.contains("font_points") && !text.contains("window_width") && !text.contains("recent_sessions"));
+        let local = std::fs::read_to_string(&machine).unwrap();
+        assert!(local.contains("window_width") && local.contains("recent_sessions"));
         assert_eq!(config::load_options(&shared, Some(&machine)).unwrap(), options);
         // Another computer's window size in the shared file is not used here.
         std::fs::write(&shared, format!("{text}window_width = 99.0\n")).unwrap();

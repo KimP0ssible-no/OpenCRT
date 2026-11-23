@@ -162,17 +162,18 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("opencrt-vault-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         create(&dir, "correct horse", &[("credential:web".into(), "pä55".into())]).unwrap();
-        set(&dir, "firewall:office", Some("fw")).unwrap();
+        // Secrets with characters Base64 never uses, so random ciphertext cannot match them.
+        set(&dir, "firewall:office", Some("fw-secret")).unwrap();
         assert_eq!(get(&dir, "credential:web").unwrap().as_deref(), Some("pä55"));
         let text = std::fs::read_to_string(dir.join(FILE)).unwrap();
-        assert!(!text.contains("pä55") && !text.contains("fw "), "nothing in clear: {text}");
+        assert!(!text.contains("pä55") && !text.contains("fw-secret"), "nothing in clear: {text}");
 
         // Another run: locked until the right master password.
         *KEY.lock().unwrap() = None;
         assert_eq!(get(&dir, "credential:web").unwrap_err(), LOCKED);
         assert!(unlock(&dir, "wrong").is_err());
         unlock(&dir, "correct horse").unwrap();
-        assert_eq!(get(&dir, "firewall:office").unwrap().as_deref(), Some("fw"));
+        assert_eq!(get(&dir, "firewall:office").unwrap().as_deref(), Some("fw-secret"));
 
         // A swapped line does not decrypt as the other account.
         let swapped = text.replace(&B64.encode("credential:web"), &B64.encode("credential:other"));

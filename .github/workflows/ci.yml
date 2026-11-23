@@ -6,6 +6,8 @@ on:
     branches: [main]
     tags: ['v*']
   pull_request:
+    # "labeled": adding the packages label builds a pull request's packages.
+    types: [opened, synchronize, reopened, labeled]
 
 # Read-only unless a job says otherwise (release and pages).
 permissions:
@@ -26,6 +28,9 @@ jobs:
       pull-requests: read
     outputs:
       code: ${{ steps.check.outputs.code }}
+      # Packages take the longest; a pull request builds them only with the
+      # "packages" label. Main and tags always do.
+      packages: ${{ steps.check.outputs.code == 'true' && (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'packages')) }}
     steps:
       - id: check
         env:
@@ -85,6 +90,9 @@ jobs:
           git config --system core.longpaths true
           'SKIA_GN_ARGS=extra_cflags_cc=["/D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH"]' >> $env:GITHUB_ENV
           'BINDGEN_EXTRA_CLANG_ARGS=-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH' >> $env:GITHUB_ENV
+          # Our own prebuilt Skia, made by skia-binaries.yml; a version it has
+          # not built yet is a 404, and Skia is built from source as above.
+          'SKIA_BINARIES_URL=https://github.com/${{ github.repository }}/releases/download/skia-{tag}/skia-binaries-{key}.tar.gz' >> $env:GITHUB_ENV
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -192,8 +200,11 @@ jobs:
 
   # Built against glibc 2.28 so the packages install, with nothing else, on
   # RHEL/Rocky/Alma 8+, Fedora, Debian 10+ and Ubuntu 20.04+.
+  # Packages build beside the tests rather than after them: a release waits
+  # for both (see release).
   linux-packages:
-    needs: test
+    needs: changes
+    if: needs.changes.outputs.packages == 'true'
     runs-on: ubuntu-latest
     container: almalinux:8
     steps:
@@ -318,7 +329,8 @@ jobs:
   # On a tag, Windows signs with the Certum certificate: its login is a secret
   # of the "release" environment, so this job waits for approval there.
   package:
-    needs: test
+    needs: changes
+    if: needs.changes.outputs.packages == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -339,6 +351,9 @@ jobs:
           git config --system core.longpaths true
           'SKIA_GN_ARGS=extra_cflags_cc=["/D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH"]' >> $env:GITHUB_ENV
           'BINDGEN_EXTRA_CLANG_ARGS=-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH' >> $env:GITHUB_ENV
+          # Our own prebuilt Skia, made by skia-binaries.yml; a version it has
+          # not built yet is a 404, and Skia is built from source as above.
+          'SKIA_BINARIES_URL=https://github.com/${{ github.repository }}/releases/download/skia-{tag}/skia-binaries-{key}.tar.gz' >> $env:GITHUB_ENV
       # Release tags: the version comes from the tag (main says 0.0.0).
       - name: Version from the tag
         if: github.ref_type == 'tag'
@@ -542,7 +557,7 @@ jobs:
   # for approval before this job runs.
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [deny, fuzz, linux-packages, arch-package, package]
+    needs: [test, deny, fuzz, linux-packages, arch-package, package]
     runs-on: ubuntu-latest
     environment: release
     permissions:

@@ -1,0 +1,57 @@
+name: Skia binaries
+
+# Run by hand once for each skia-bindings version. rust-skia publishes no
+# prebuilt Skia for the static C runtime the Windows programs link, so CI would
+# otherwise build Skia from source (about half an hour) whenever skia-bindings
+# rebuilds. This builds it once and attaches it to a "skia-<version>"
+# pre-release, where CI's SKIA_BINARIES_URL finds it.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      # As in ci.yml, without SKIA_BINARIES_URL: rust-skia's own URL answers
+      # 404, so Skia is built from source.
+      - name: Ready to build Skia from source
+        run: |
+          git config --system core.longpaths true
+          'SKIA_GN_ARGS=extra_cflags_cc=["/D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH"]' >> $env:GITHUB_ENV
+          'BINDGEN_EXTRA_CLANG_ARGS=-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH' >> $env:GITHUB_ENV
+      - uses: dtolnay/rust-toolchain@stable
+      # The opencrt build, so skia-bindings gets the same features as in CI.
+      - name: Build Skia
+        run: cargo build -p opencrt
+      # The archive the build script downloads: a skia-binaries/ folder with
+      # the libraries and bindings, named with the key the build script asked for.
+      - name: Pack and publish
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          wanted=$(grep -h "TRYING TO DOWNLOAD AND INSTALL SKIA BINARIES:" target/debug/build/skia-bindings-*/output | tail -1 | sed 's/.*: //')
+          tag=${wanted%%/*}
+          key=${wanted#*/}
+          out=$(dirname "$(ls -t target/debug/build/skia-bindings-*/out/skia/bindings.rs | head -1)")
+          echo "tag $tag, key $key, from $out"
+          mkdir -p pack/skia-binaries
+          cp "$out"/*.lib "$out"/bindings.rs pack/skia-binaries/
+          # The build put Skia's sources in skia/ beside the crate, as rust-skia's own export expects.
+          cp "$(ls -d "${CARGO_HOME:-$HOME/.cargo}"/registry/src/*/skia-bindings-"$tag" | head -1)/skia/LICENSE" pack/skia-binaries/LICENSE_SKIA
+          printf '%s' "$tag" > pack/skia-binaries/tag.txt
+          printf '%s' "$key" > pack/skia-binaries/key.txt
+          ls -l pack/skia-binaries
+          archive="skia-binaries-$key.tar.gz"
+          tar czf "$archive" -C pack skia-binaries
+          # Releases here are immutable: the archive goes in as the release is made.
+          gh release create "skia-$tag" "$archive" --prerelease --latest=false \
+            --title "Skia $tag for Windows (static C runtime)" \
+            --notes "Skia $tag built from source by skia-binaries.yml, for CI's Windows builds (SKIA_BINARIES_URL). Not an OpenCRT release. Skia is BSD-3-Clause (LICENSE_SKIA)."

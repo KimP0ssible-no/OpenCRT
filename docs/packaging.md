@@ -46,7 +46,11 @@ The packages need nothing beyond what every system already has:
   a newer glibc or libstdc++, or another library. It builds x86_64 on
   `ubuntu-latest` and ARM64 natively on `ubuntu-24.04-arm` (the same
   container, rust-skia's prebuilt aarch64 Skia). Each makes a .deb, an .rpm
-  and an AppImage. The Arch package is x86_64 only.
+  and an AppImage. The Arch package is x86_64 only. A `flatpak` job per
+  architecture wraps the same binaries into a Flatpak bundle on the
+  freedesktop 26.08 runtime (`packaging/flatpak/`), with git built in for
+  Settings Sync. Inside the sandbox (`/.flatpak-info` exists), local shells
+  start on the host through `flatpak-spawn --host`.
 - **Windows**: the C runtime is linked into the executables
   (`.cargo/config.toml`, `+crt-static`), so no Visual C++ Redistributable is
   needed; CI fails if an executable imports the dynamic runtime. Git is not
@@ -71,6 +75,7 @@ all of them.
 | Debian/Ubuntu | `cargo install cargo-deb` | `cargo deb -p opencrt --no-build` | `target/debian/*.deb` |
 | Red Hat/Fedora/SUSE | `cargo install cargo-generate-rpm` | `cargo generate-rpm -p crates/opencrt` | `target/generate-rpm/*.rpm` |
 | Arch Linux | `makepkg` (in Arch) | `packaging/arch/makepkg.sh` (or `packaging/arch/build-arch.sh` with Docker) | `dist/*.pkg.tar.zst` |
+| Linux (Flatpak) | flatpak, flatpak-builder | `packaging/flatpak/build.sh target/portable/release target <output folder>` | `OpenCRT-<ver>-<arch>.flatpak` |
 | Linux (AppImage) | curl (downloads the pinned appimagetool) | `packaging/linux/build-appimage.sh target/portable/release target <output folder>` | `OpenCRT-<ver>-<arch>.AppImage` |
 | macOS | `cargo install cargo-bundle` | `cargo bundle --release -p opencrt --bin opencrt` (from the repository root), copy `opencrt-rdp` and `ocrt` into `OpenCRT.app/Contents/MacOS/`, `codesign --sign -`, then `hdiutil create` (see CI) | `OpenCRT.app` / `.dmg` |
 
@@ -142,7 +147,8 @@ build the packages. A pull request builds them only with the `packages` label,
 and adding the label starts a run. Pushing a tag
 `vX.Y.Z` also publishes a GitHub Release with the Windows installers, MSIs and
 portable zips (x64 and ARM64), the macOS disk image, the .deb and .rpm (x86_64
-and ARM64), the Arch package, the AppImages (x86_64 and ARM64), and `SHA256SUMS`.
+and ARM64), the Arch package, the AppImages and Flatpak bundles (x86_64 and
+ARM64), and `SHA256SUMS`.
 The version comes from the tag: main stays at `0.0.0`, and on a tag every
 packaging job runs `packaging/set-version.sh X.Y.Z` before it builds (run it
 locally too, to build a numbered package by hand). The annotated tag's message

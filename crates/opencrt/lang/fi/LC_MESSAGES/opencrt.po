@@ -3239,3 +3239,6 @@ msgstr "Käyttäjänimi ({}):"
 
 msgid "Password for {} on {}:"
 msgstr "Käyttäjän {} salasana isännässä {}:"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "Lataa uusi .flatpak julkaisusivulta ja asenna se komennolla flatpak install --user."

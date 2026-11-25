@@ -218,7 +218,7 @@ OpenCRT figure adds the window (39.1 MB) and its Remote Desktop helper
 Windows 10 and 11 (setup, MSI for Group Policy, or a portable zip for a USB
 stick), macOS on Apple silicon and Intel, Debian and Ubuntu, RHEL, Rocky,
 Alma, Fedora and SUSE, and Arch Linux, on x86_64 and on ARM64 (an AppImage
-for any other Linux). OpenCRT is free and open source.
+and a Flatpak for any other Linux). OpenCRT is free and open source.
 
 ## A clean-room implementation
 OpenCRT is an independent project. It is not affiliated with, endorsed by or
@@ -244,12 +244,19 @@ files are signed as the [Code signing policy](#code-signing-policy) describes):
 | RHEL / Rocky / Alma / Fedora / SUSE | `opencrt-<version>-1.x86_64.rpm`, ARM64: `opencrt-<version>-1.aarch64.rpm` |
 | Arch Linux (x86_64) | `opencrt-<version>-1-x86_64.pkg.tar.zst` |
 | Other Linux | `OpenCRT-<version>-x86_64.AppImage`, ARM64: `OpenCRT-<version>-aarch64.AppImage` |
+| Flatpak (any Linux, also Fedora Silverblue and SteamOS) | `OpenCRT-<version>-x86_64.flatpak`, ARM64: `OpenCRT-<version>-aarch64.flatpak` |
 
 The Linux packages need glibc 2.28 (RHEL 8, Debian 10, Ubuntu 20.04 and
 newer), fontconfig and the C++ runtime, which every desktop system has. The
 AppImage needs the same and nothing installed: make it executable
 (`chmod +x`) and run it. It does not update itself: download the new one from
 the release page. `SHA256SUMS` lists the checksum of every file.
+
+Install the Flatpak with `flatpak install --user OpenCRT-<version>-x86_64.flatpak`
+(the freedesktop runtime comes from Flathub). It does not update itself
+either: install the new file over it. Local shell tabs run on the host
+system, outside the sandbox. The Flatpak keeps its settings in
+`~/.var/app/org.opencrt.OpenCRT`, apart from a packaged OpenCRT.
 
 The portable zip carries a `portable.txt` beside `opencrt.exe`: while it is
 there, OpenCRT keeps its settings, sessions and host keys in a `settings`

@@ -4321,3 +4321,7 @@ msgstr ""
 #: crates/opencrt/src/vnc.rs:277 crates/opencrt/src/vnc.rs:383
 msgid "Password for {} on {}:"
 msgstr ""
+
+#: crates/opencrt/src/update.rs:331
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr ""

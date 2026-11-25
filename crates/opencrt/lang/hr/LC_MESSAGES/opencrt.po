@@ -3240,3 +3240,6 @@ msgstr "Korisničko ime za {}:"
 
 msgid "Password for {} on {}:"
 msgstr "Lozinka za {} na {}:"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "Preuzmite novi .flatpak sa stranice izdanja i instalirajte ga naredbom flatpak install --user."

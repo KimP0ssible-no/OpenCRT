@@ -3240,3 +3240,6 @@ msgstr "Nume de utilizator pentru {}:"
 
 msgid "Password for {} on {}:"
 msgstr "Parola pentru {} pe {}:"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "Descărcați noul .flatpak de pe pagina versiunii și instalați-l cu flatpak install --user."

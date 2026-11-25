@@ -3238,3 +3238,6 @@ msgstr "{}의 사용자 이름:"
 
 msgid "Password for {} on {}:"
 msgstr "{}의 암호(호스트 {}):"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "릴리스 페이지에서 새 .flatpak을 다운로드하여 flatpak install --user로 설치하십시오."

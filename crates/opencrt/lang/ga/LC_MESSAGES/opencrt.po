@@ -3242,3 +3242,6 @@ msgstr "Ainm úsáideora do {}:"
 
 msgid "Password for {} on {}:"
 msgstr "Focal faire do {} ar {}:"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "Íoslódáil an .flatpak nua ón leathanach eisiúna agus suiteáil é le flatpak install --user."

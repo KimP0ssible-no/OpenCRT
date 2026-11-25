@@ -3240,3 +3240,6 @@ msgstr "Uživatelské jméno pro {}:"
 
 msgid "Password for {} on {}:"
 msgstr "Heslo pro {} na {}:"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "Stáhněte nový .flatpak ze stránky vydání a nainstalujte jej příkazem flatpak install --user."

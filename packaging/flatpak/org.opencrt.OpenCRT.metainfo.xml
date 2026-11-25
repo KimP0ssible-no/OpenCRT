@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.opencrt.OpenCRT</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Apache-2.0 AND GPL-3.0-only</project_license>
+  <name>OpenCRT</name>
+  <summary>SSH, Telnet, serial and remote desktop client</summary>
+  <developer id="org.opencrt">
+    <name>Kim Attree</name>
+  </developer>
+  <description>
+    <p>
+      OpenCRT is a tabbed terminal client with a session manager. It connects
+      over SSH, Telnet, rlogin, serial ports and raw sockets, opens local
+      shells, and shows RDP and VNC desktops in tabs.
+    </p>
+    <ul>
+      <li>SFTP file transfers, port forwarding and X11 forwarding</li>
+      <li>Session logs, terminal recording and keyword highlighting</li>
+      <li>Rhai and Python scripts, button bars and command windows</li>
+      <li>Settings Sync between computers through a git repository</li>
+    </ul>
+    <p>
+      Local shell tabs run on the host system, outside the sandbox.
+    </p>
+  </description>
+  <launchable type="desktop-id">org.opencrt.OpenCRT.desktop</launchable>
+  <url type="homepage">https://github.com/KimP0ssible-no/OpenCRT</url>
+  <url type="bugtracker">https://github.com/KimP0ssible-no/OpenCRT/issues</url>
+  <url type="vcs-browser">https://github.com/KimP0ssible-no/OpenCRT</url>
+  <content_rating type="oars-1.1"/>
+  <provides>
+    <binary>opencrt</binary>
+    <binary>ocrt</binary>
+  </provides>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+</component>

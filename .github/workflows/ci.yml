@@ -304,6 +304,49 @@ jobs:
           name: opencrt-Arch
           path: dist/*.pkg.tar.zst
 
+  # The Flatpak bundle: the same binaries in Flatpak's sandbox, on the
+  # freedesktop runtime from Flathub (packaging/flatpak/).
+  flatpak:
+    needs: [changes, linux-packages]
+    if: needs.changes.outputs.packages == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v7
+      # Release tags: the version comes from the tag (main says 0.0.0).
+      - name: Version from the tag
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: sh packaging/set-version.sh "${GITHUB_REF_NAME#v}"
+      - uses: actions/download-artifact@v8
+        with:
+          name: linux-binaries-${{ matrix.arch }}
+          path: ci-linux
+      - name: Flatpak tools
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q flatpak flatpak-builder appstream
+          # Flatpak's sandbox needs user namespaces, which Ubuntu 24.04 restricts.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - run: appstreamcli validate --no-net packaging/flatpak/org.opencrt.OpenCRT.metainfo.xml
+      - run: packaging/flatpak/build.sh ci-linux/release ci-linux target/flatpak-bundle
+      # What the sandbox gives the programs: their libraries, git for Settings
+      # Sync, python3 for scripts and flatpak-spawn for local shells.
+      - name: The bundle installs and has what OpenCRT runs
+        run: |
+          flatpak install --user -y --noninteractive target/flatpak-bundle/*.flatpak
+          flatpak run --command=sh org.opencrt.OpenCRT -c '
+            set -e
+            if ldd /app/bin/opencrt /app/bin/opencrt-rdp /app/bin/ocrt | grep "not found"; then exit 1; fi
+            git --version && python3 --version && command -v flatpak-spawn'
+          flatpak info --show-permissions org.opencrt.OpenCRT
+      - uses: actions/upload-artifact@v7
+        with:
+          name: opencrt-Flatpak-${{ matrix.arch }}
+          path: target/flatpak-bundle/*.flatpak
+
   # The package repositories GitHub Pages serves, built from the two latest
   # releases with a throwaway key: each distribution installs the older
   # version from them and must upgrade to the newer one.
@@ -550,7 +593,7 @@ jobs:
   # the pull request only changes documentation.
   ci-ok:
     if: always()
-    needs: [changes, test, deny, fuzz, linux-packages, arch-package, linux-repos, package]
+    needs: [changes, test, deny, fuzz, linux-packages, arch-package, flatpak, linux-repos, package]
     runs-on: ubuntu-latest
     steps:
       - env:
@@ -566,7 +609,7 @@ jobs:
   # for approval before this job runs.
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [test, deny, fuzz, linux-packages, arch-package, package]
+    needs: [test, deny, fuzz, linux-packages, arch-package, flatpak, package]
     runs-on: ubuntu-latest
     environment: release
     permissions:

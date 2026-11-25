@@ -3240,3 +3240,6 @@ msgstr "Naudotojo vardas ({}):"
 
 msgid "Password for {} on {}:"
 msgstr "Slaptažodis ({}, serveris {}):"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "Atsisiųskite naują .flatpak iš laidos puslapio ir įdiekite jį komanda flatpak install --user."

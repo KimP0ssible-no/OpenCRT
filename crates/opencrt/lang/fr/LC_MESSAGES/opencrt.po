@@ -3239,3 +3239,6 @@ msgstr "Nom d'utilisateur pour {} :"
 
 msgid "Password for {} on {}:"
 msgstr "Mot de passe pour {} sur {} :"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "Téléchargez le nouveau .flatpak depuis la page de la version et installez-le avec flatpak install --user."

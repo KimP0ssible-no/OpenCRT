@@ -3238,3 +3238,6 @@ msgstr "{} のユーザー名:"
 
 msgid "Password for {} on {}:"
 msgstr "{} のパスワード（ホスト {}）:"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "リリースページから新しい .flatpak をダウンロードし、flatpak install --user でインストールしてください。"

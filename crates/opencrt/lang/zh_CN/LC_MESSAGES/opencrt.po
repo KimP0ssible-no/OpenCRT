@@ -3238,3 +3238,6 @@ msgstr "{} 的用户名："
 
 msgid "Password for {} on {}:"
 msgstr "{} 在 {} 上的密码："
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "请从发布页面下载新的 .flatpak，并用 flatpak install --user 安装。"

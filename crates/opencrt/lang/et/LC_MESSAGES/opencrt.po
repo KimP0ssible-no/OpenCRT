@@ -3239,3 +3239,6 @@ msgstr "Kasutajanimi hostile {}:"
 
 msgid "Password for {} on {}:"
 msgstr "Kasutaja {} parool hostis {}:"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "Laadige uus .flatpak väljalaskelehelt alla ja paigaldage see käsuga flatpak install --user."

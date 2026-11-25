@@ -4,6 +4,7 @@ AWS_LC_SYS_PREBUILT_NASM = "1"
 # linked statically by crates/opencrt-rdp/build.rs, so the binary still needs
 # only glibc; cc must not add the shared libstdc++.
 CXXSTDLIB_x86_64_unknown_linux_gnu = ""
+CXXSTDLIB_aarch64_unknown_linux_gnu = ""
 # OpenH264 without its assembly: no nasm needed on any build machine (or for
 # the universal macOS build), and plain C still decodes a full 1080p frame in
 # well under 10 ms.

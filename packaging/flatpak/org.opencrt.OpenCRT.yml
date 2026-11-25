@@ -29,11 +29,12 @@ finish-args:
   # Saved passwords in the desktop's keyring (Secret Service).
   - --talk-name=org.freedesktop.secrets
 modules:
-  # Settings Sync runs git, which the runtime lacks.
+  # Settings Sync runs git, which the runtime lacks. Without its optional
+  # Rust part: the SDK has no cargo without an extension.
   - name: git
     buildsystem: simple
     build-commands:
-      - make -j"$FLATPAK_BUILDER_N_JOBS" prefix=/app NO_TCLTK=1 NO_GETTEXT=1 NO_PERL=1 NO_PYTHON=1 NO_INSTALL_HARDLINKS=1 install
+      - make -j"$FLATPAK_BUILDER_N_JOBS" prefix=/app NO_TCLTK=1 NO_GETTEXT=1 NO_PERL=1 NO_PYTHON=1 NO_RUST=1 NO_INSTALL_HARDLINKS=1 install
     cleanup:
       - /share/man
       - /share/git-core/templates

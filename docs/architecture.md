@@ -2,13 +2,20 @@
 
 ## Decisions
 - **Language**: Rust (stable, edition 2024).
-- **GUI**: Slint 1.18, Fluent style, **software renderer** on the winit backend
-  (CPU-drawn like a classic desktop app; no GPU swapchain). Replaced egui/eframe
-  on 2026-10-12 for a native, SecureCRT-like look.
-- **Terminal emulator**: `alacritty_terminal` (VT/xterm engine), GUI-agnostic.
-- **Terminal rendering**: `render.rs` rasterises the grid on the CPU with
-  `fontdue` (system monospace font, lazy CJK/symbol fallbacks) into an RGBA
-  buffer shown as a Slint `Image`. Repainted only when the session changed.
+- **GUI**: Slint 1.18, Fluent style, Skia drawing on the CPU (renderer
+  `skia-software`, since 0.7.0) on the winit backend: no GPU swapchain, and
+  sharper text than Slint's own software renderer. Replaced egui/eframe on
+  2026-10-12 for a native, SecureCRT-like look.
+- **Terminal emulator**: `alacritty_terminal` (VT/xterm engine) and its parser
+  `vte`, GUI-agnostic, vendored under `crates/opencrt/vendor/` with small
+  changes (each crate's `OPENCRT.md` lists them): history lines are stored only
+  up to their last change, the scrollback grows 100 rows at a time, and the
+  parser reserves no synchronized-update buffer up front.
+- **Terminal rendering**: `render.rs` rasterises the grid on the CPU into an
+  RGBA buffer shown as a Slint `Image`, repainted only when the session
+  changed. The main font: `fontdue` for metrics, `swash` for hinted glyphs.
+  Fallback fonts (CJK, symbols) are mapped from their files and drawn by
+  `swash` glyph by glyph, only when a character needs them.
 - **SSH**: `russh` (pure-Rust async SSH2 client), one tokio runtime per session
   thread, bridged to the UI with channels; the UI polls them on a 15 ms timer.
 - **Clipboard**: `arboard` (Slint has no Rust clipboard API).
@@ -41,7 +48,8 @@ Telnet, raw, serial, local and SFTP tabs alike.
 - `src/app.rs` — app state (tabs, prompts, mouse/selection, transfers, scripts,
   auto-reconnect), Slint callbacks, the 15 ms tick.
 - `src/terminal.rs` — alacritty wrapper: feed, replies, scrollback, selection,
-  find, cursor shape, resolved cells for rendering.
+  find, cursor shape, resolved cells for rendering; compacts the history again
+  once resizing pauses.
 - `src/render.rs` — CPU glyph rasteriser, font catalogue, keyword highlighting,
   vertical dock-tab labels.
 - `src/input.rs` — key/paste/mouse encoding, Button Bar escapes, Latin-1.
@@ -72,7 +80,11 @@ Telnet, raw, serial, local and SFTP tabs alike.
   object on Windows and a process group on Unix back it up.
 - `src/sessions.rs` — Session Manager tree, folder rename, merge, ssh_config import.
 - `src/config.rs` — config folder (or `/F`), sessions.toml / options.toml types,
-  crash log.
+  crash log. Sessions are saved without settings left at their defaults, with
+  home-folder paths as `~/...`, and with the settings that depend on the
+  computer per platform (`[session.platform.<os>]`, `load_sessions` /
+  `save_sessions`). Options that belong to one computer go to
+  `options.local.toml` when Settings Sync is on.
 - `src/log.rs` — plain-text session logs (escape-stripped, optional timestamps).
 - `examples/dev_server.rs` — local SSH server for manual testing (sz/rz/sx/sb,
   mouse, bell, title, lines, exit, and SFTP via `src/memfs.rs`, the in-memory
@@ -88,7 +100,7 @@ AWS_LC_SYS_PREBUILT_NASM = "1"
 ```
 
 ## Slint notes
-- The software renderer cannot rotate items, so vertical text is pre-rendered.
+- The renderer cannot rotate items, so vertical text is pre-rendered.
 - A `TouchArea` inside a `ContextMenuArea` takes right-clicks first; open the menu
   with `ContextMenuArea.show()` from `pointer-event`.
 - Slint reports macOS Command as `control` and Control as `meta`.

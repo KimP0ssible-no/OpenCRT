@@ -328,17 +328,31 @@ jobs:
 
   # On a tag, Windows signs with the Certum certificate: its login is a secret
   # of the "release" environment, so this job waits for approval there.
+  # Windows ARM64 is cross-compiled on the x64 runner: Certum's SimplySign
+  # signs only there, and the windows-arm64 job runs what it built.
   package:
     needs: changes
     if: needs.changes.outputs.packages == 'true'
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]
+        include:
+          - os: windows-latest
+            arch: x64
+            bin: target\release
+            skia: skia-{tag}
+          - os: windows-latest
+            arch: arm64
+            target: aarch64-pc-windows-msvc
+            bin: target\aarch64-pc-windows-msvc\release
+            skia: skia-{tag}-arm64
+          - os: macos-latest
     runs-on: ${{ matrix.os }}
     environment: ${{ matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v') && 'release' || '' }}
     env:
       SIGN: ${{ matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v') }}
+      TARGET: ${{ matrix.target }}
+      BIN: ${{ matrix.bin }}
     steps:
       - uses: actions/checkout@v7
       # rust-skia publishes no prebuilt Skia for the static C runtime, so when
@@ -353,13 +367,15 @@ jobs:
           'BINDGEN_EXTRA_CLANG_ARGS=-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH' >> $env:GITHUB_ENV
           # Our own prebuilt Skia, made by skia-binaries.yml; a version it has
           # not built yet is a 404, and Skia is built from source as above.
-          'SKIA_BINARIES_URL=https://github.com/${{ github.repository }}/releases/download/skia-{tag}/skia-binaries-{key}.tar.gz' >> $env:GITHUB_ENV
+          'SKIA_BINARIES_URL=https://github.com/${{ github.repository }}/releases/download/${{ matrix.skia }}/skia-binaries-{key}.tar.gz' >> $env:GITHUB_ENV
       # Release tags: the version comes from the tag (main says 0.0.0).
       - name: Version from the tag
         if: github.ref_type == 'tag'
         shell: bash
         run: sh packaging/set-version.sh "${GITHUB_REF_NAME#v}"
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
       # Dependencies and cargo-installed tools, as built by the last run on
       # main; pull requests and tags only read it.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
@@ -367,9 +383,13 @@ jobs:
           workspaces: |
             . -> target
             crates/opencrt-rdp -> target
+          # The two Windows builds run as the same job: one cache each.
+          key: ${{ matrix.target }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo build --release
-      - run: cargo build --release --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target
+      - shell: bash
+        run: cargo build --release ${TARGET:+--target $TARGET}
+      - shell: bash
+        run: cargo build --release --manifest-path crates/opencrt-rdp/Cargo.toml --target-dir target ${TARGET:+--target $TARGET}
       - name: Third-party licence notices
         shell: bash
         run: |
@@ -380,10 +400,12 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          command -v objdump || { echo "::warning::no objdump on this runner; DLL check skipped"; exit 0; }
+          # LLVM's objdump reads ARM64 programs too; GNU's may not.
+          od=$(command -v llvm-objdump || command -v objdump) || { echo "::warning::no objdump on this runner; DLL check skipped"; exit 0; }
           for b in opencrt opencrt-rdp ocrt; do
-            deps=$(objdump -p target/release/$b.exe | awk '/DLL Name/{print $3}' | tr 'A-Z' 'a-z' | sort -u | tr '\n' ' ')
+            deps=$("$od" -p "${BIN//\\//}/$b.exe" | awk '/DLL Name/{print $3}' | tr 'A-Z' 'a-z' | sort -u | tr '\n' ' ')
             echo "$b.exe: $deps"
+            echo "$deps" | grep -q kernel32
             ! echo "$deps" | grep -qE 'vcruntime|msvcp|ucrtbase|api-ms-win-crt'
           done
       # Windows shows these in each file's properties.
@@ -392,7 +414,7 @@ jobs:
         run: |
           $v = (Select-String -Path crates\opencrt\Cargo.toml -Pattern '^version = "(.*)"').Matches[0].Groups[1].Value
           foreach ($b in 'opencrt', 'opencrt-rdp', 'ocrt') {
-            $info = (Get-Item "target\release\$b.exe").VersionInfo
+            $info = (Get-Item "$env:BIN\$b.exe").VersionInfo
             "$b.exe: $($info.ProductName) $($info.ProductVersion)"
             if ($info.ProductName -ne 'OpenCRT' -or $info.ProductVersion -ne $v) { throw "$b.exe has the wrong version information" }
           }
@@ -407,17 +429,18 @@ jobs:
       - name: Sign the Windows executables
         if: env.SIGN == 'true'
         run: |
-          signtool sign /sha1 $env:CERTUM_CERT_THUMBPRINT /fd SHA256 /tr http://time.certum.pl /td SHA256 target\release\opencrt.exe target\release\opencrt-rdp.exe target\release\ocrt.exe
+          signtool sign /sha1 $env:CERTUM_CERT_THUMBPRINT /fd SHA256 /tr http://time.certum.pl /td SHA256 $env:BIN\opencrt.exe $env:BIN\opencrt-rdp.exe $env:BIN\ocrt.exe
           if ($LASTEXITCODE) { throw 'signtool failed' }
       # Inno Setup signs the setup and the uninstaller it carries.
       - name: Windows installer
         if: runner.os == 'Windows'
         run: |
           choco install innosetup -y
+          $iscc = "/DArch=${{ matrix.arch }}", "/DBinDir=..\..\$env:BIN"
           if ($env:SIGN -eq 'true') {
-            iscc /DSign ('/Scertum=signtool sign /sha1 ' + $env:CERTUM_CERT_THUMBPRINT + ' /fd SHA256 /tr http://time.certum.pl /td SHA256 $f') packaging\windows\opencrt.iss
+            iscc @iscc /DSign ('/Scertum=signtool sign /sha1 ' + $env:CERTUM_CERT_THUMBPRINT + ' /fd SHA256 /tr http://time.certum.pl /td SHA256 $f') packaging\windows\opencrt.iss
           } else {
-            iscc packaging\windows\opencrt.iss
+            iscc @iscc packaging\windows\opencrt.iss
           }
           if ($LASTEXITCODE) { throw 'iscc failed' }
       - name: Windows MSI (unattended / Group Policy installs)
@@ -425,7 +448,9 @@ jobs:
         run: |
           choco install wixtoolset -y --no-progress
           cargo install cargo-wix --locked
-          cargo wix -p opencrt --no-build --nocapture --bin-path "C:\Program Files (x86)\WiX Toolset v3.14\bin" -o target\wix\
+          $target = if ($env:TARGET) { '--target', $env:TARGET } else { @() }
+          cargo wix -p opencrt --no-build --nocapture @target --bin-path "C:\Program Files (x86)\WiX Toolset v3.14\bin" -o target\wix\
+          if ($LASTEXITCODE) { throw 'cargo wix failed' }
       # The portable version: the signed programs, the notices and portable.txt
       # (which keeps the settings beside the program), unpacked anywhere.
       - name: Windows portable zip
@@ -434,11 +459,12 @@ jobs:
           $v = (Select-String -Path crates\opencrt\Cargo.toml -Pattern '^version = "(.*)"').Matches[0].Groups[1].Value
           $dir = 'target\portable\OpenCRT'
           New-Item -ItemType Directory -Force $dir | Out-Null
-          Copy-Item target\release\opencrt.exe, target\release\opencrt-rdp.exe, target\release\ocrt.exe, packaging\windows\portable.txt, SLINT-LICENSE.md, crates\opencrt\ui\fonts\OFL.txt, target\THIRD-PARTY-NOTICES.html, target\THIRD-PARTY-NOTICES-RDP.html $dir
+          Copy-Item $env:BIN\opencrt.exe, $env:BIN\opencrt-rdp.exe, $env:BIN\ocrt.exe, packaging\windows\portable.txt, SLINT-LICENSE.md, crates\opencrt\ui\fonts\OFL.txt, target\THIRD-PARTY-NOTICES.html, target\THIRD-PARTY-NOTICES-RDP.html $dir
           Copy-Item LICENSE "$dir\LICENSE.txt"
           Copy-Item NOTICE "$dir\NOTICE.txt"
-          Compress-Archive -Path $dir -DestinationPath "target\portable\opencrt-$v-x64-portable.zip" -Force
-          Expand-Archive "target\portable\opencrt-$v-x64-portable.zip" target\portable\check
+          $zip = "target\portable\opencrt-$v-${{ matrix.arch }}-portable.zip"
+          Compress-Archive -Path $dir -DestinationPath $zip -Force
+          Expand-Archive $zip target\portable\check
           foreach ($f in 'opencrt.exe', 'opencrt-rdp.exe', 'ocrt.exe', 'portable.txt', 'LICENSE.txt') {
             if (-not (Test-Path "target\portable\check\OpenCRT\$f")) { throw "the portable zip lacks $f" }
           }
@@ -447,7 +473,7 @@ jobs:
         run: |
           signtool sign /sha1 $env:CERTUM_CERT_THUMBPRINT /fd SHA256 /tr http://time.certum.pl /td SHA256 (Get-Item target\wix\*.msi).FullName
           if ($LASTEXITCODE) { throw 'signtool failed' }
-          signtool verify /pa target\release\opencrt.exe target\release\opencrt-rdp.exe target\release\ocrt.exe (Get-Item packaging\windows\Output\*.exe).FullName (Get-Item target\wix\*.msi).FullName
+          signtool verify /pa $env:BIN\opencrt.exe $env:BIN\opencrt-rdp.exe $env:BIN\ocrt.exe (Get-Item packaging\windows\Output\*.exe).FullName (Get-Item target\wix\*.msi).FullName
           if ($LASTEXITCODE) { throw 'a Windows file is not signed' }
       # Logged out before anything built here runs.
       - name: Certum SimplySign logout
@@ -456,8 +482,9 @@ jobs:
       # What Update Now does: the latest release installed per user, then the
       # new setup run with the in-app switches. It must replace the program in
       # the same place, stay closed without /RELAUNCH=1 and start with it.
+      # ARM64 has no earlier release to upgrade from yet, and cannot run here.
       - name: Windows setup upgrades the latest release in place
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && matrix.arch == 'x64'
         timeout-minutes: 10
         shell: pwsh
         env:
@@ -528,7 +555,7 @@ jobs:
           test -z "$(xattr -p com.apple.quarantine /Applications/OpenCRT.app 2>/dev/null)"
       - uses: actions/upload-artifact@v7
         with:
-          name: opencrt-${{ runner.os }}
+          name: opencrt-${{ runner.os }}${{ matrix.arch == 'arm64' && '-arm64' || '' }}
           path: |
             packaging/windows/Output/*.exe
             target/wix/*.msi
@@ -536,12 +563,45 @@ jobs:
             target/release/OpenCRT.dmg
           if-no-files-found: ignore
 
+  # The cross-compiled ARM64 Windows files on an ARM64 Windows: the setup
+  # installs silently, and the installed programs are ARM64 and start.
+  windows-arm64:
+    needs: package
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: opencrt-Windows-arm64
+          path: arm64
+      - name: Setup installs ARM64 programs that start
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $setup = (Get-ChildItem arm64 -Recurse -Filter *-arm64-setup.exe)[0].FullName
+          $p = Start-Process $setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CURRENTUSER' -PassThru
+          $p.WaitForExit()
+          if ($p.ExitCode -ne 0) { throw "setup exited with $($p.ExitCode)" }
+          $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{6F1D4C2E-8E0B-4E6B-9C5A-0C4C3D7A1E21}_is1'
+          $dir = (Get-ItemProperty $key).InstallLocation
+          foreach ($b in 'opencrt', 'opencrt-rdp', 'ocrt') {
+            $bytes = [IO.File]::ReadAllBytes("$dir\$b.exe")
+            $machine = [BitConverter]::ToUInt16($bytes, [BitConverter]::ToInt32($bytes, 0x3C) + 4)
+            "$b.exe: machine 0x$($machine.ToString('X4'))"
+            if ($machine -ne 0xAA64) { throw "$b.exe is not an ARM64 program" }
+          }
+          $help = & "$dir\ocrt.exe" --help 2>&1 | Out-String
+          if ($help -notmatch 'sftp') { throw "ocrt --help printed: $help" }
+          $app = Start-Process "$dir\opencrt.exe" -PassThru
+          Start-Sleep -Seconds 10
+          if ($app.HasExited) { throw "opencrt.exe exited with $($app.ExitCode)" }
+          $app | Stop-Process
+
   # A pushed tag vX.Y.Z publishes every package above as a GitHub Release.
   # The one check main requires: everything passed, or was skipped because
   # the pull request only changes documentation.
   ci-ok:
     if: always()
-    needs: [changes, test, deny, fuzz, linux-packages, arch-package, linux-repos, package]
+    needs: [changes, test, deny, fuzz, linux-packages, arch-package, linux-repos, package, windows-arm64]
     runs-on: ubuntu-latest
     steps:
       - env:
@@ -557,7 +617,7 @@ jobs:
   # for approval before this job runs.
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [test, deny, fuzz, linux-packages, arch-package, package]
+    needs: [test, deny, fuzz, linux-packages, arch-package, package, windows-arm64]
     runs-on: ubuntu-latest
     environment: release
     permissions:

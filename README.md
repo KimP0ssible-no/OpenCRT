@@ -236,7 +236,8 @@ files are signed as the [Code signing policy](#code-signing-policy) describes):
 | Platform | Package |
 | --- | --- |
 | Windows 10/11 (x64) | `opencrt-<version>-x64-setup.exe`, or the `.msi` for unattended and Group Policy installs |
-| Windows, portable (x64) | `opencrt-<version>-x64-portable.zip`: unpack anywhere (a USB stick), nothing installed |
+| Windows 11 (ARM64) | `opencrt-<version>-arm64-setup.exe`, or the `aarch64` `.msi` |
+| Windows, portable | `opencrt-<version>-x64-portable.zip` or `-arm64-portable.zip`: unpack anywhere (a USB stick), nothing installed |
 | macOS (Apple silicon and Intel) | `OpenCRT.dmg` |
 | Debian / Ubuntu | `opencrt_<version>-1_amd64.deb` |
 | RHEL / Rocky / Alma / Fedora / SUSE | `opencrt-<version>-1.x86_64.rpm` |

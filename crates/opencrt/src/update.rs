@@ -331,7 +331,7 @@ impl InstallKind {
     /// The release file this kind of install updates itself from.
     pub fn asset(self, version: &str) -> Option<String> {
         match self {
-            Self::InnoSetup => Some(format!("opencrt-{version}-x64-setup.exe")),
+            Self::InnoSetup => Some(format!("opencrt-{version}-{}-setup.exe", if cfg!(target_arch = "aarch64") { "arm64" } else { "x64" })),
             Self::MacBundle => Some("OpenCRT.dmg".to_string()),
             Self::Package { .. } | Self::Portable | Self::Manual => None,
         }
@@ -381,6 +381,16 @@ mod tests {
         assert_eq!(InstallKind::of(&dir.join("target/release/opencrt")), InstallKind::Manual);
         assert_eq!(InstallKind::of(&dir.join("MacOS/opencrt")), InstallKind::Manual);
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn setup_of_this_architecture() {
+        let setup = InstallKind::InnoSetup.asset("1.2.3").unwrap();
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(setup, "opencrt-1.2.3-x64-setup.exe");
+        #[cfg(target_arch = "aarch64")]
+        assert_eq!(setup, "opencrt-1.2.3-arm64-setup.exe");
+        assert_eq!(InstallKind::Portable.asset("1.2.3"), None);
     }
 
     #[test]

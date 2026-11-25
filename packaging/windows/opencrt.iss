@@ -8,6 +8,10 @@
 #ifndef BinDir
   #define BinDir "..\..\target\release"
 #endif
+; iscc /DArch=arm64 for the ARM64 setup (BinDir then names its build).
+#ifndef Arch
+  #define Arch "x64"
+#endif
 
 [Setup]
 AppId={{6F1D4C2E-8E0B-4E6B-9C5A-0C4C3D7A1E21}
@@ -19,11 +23,16 @@ VersionInfoProductTextVersion={#AppVersion}
 DefaultDirName={autopf}\OpenCRT
 DefaultGroupName=OpenCRT
 DisableProgramGroupPage=yes
-OutputBaseFilename=opencrt-{#AppVersion}-x64-setup
+OutputBaseFilename=opencrt-{#AppVersion}-{#Arch}-setup
 SetupIconFile=..\icons\opencrt.ico
 UninstallDisplayIcon={app}\opencrt.exe
+#if Arch == "arm64"
+ArchitecturesAllowed=arm64
+ArchitecturesInstallIn64BitMode=arm64
+#else
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#endif
 PrivilegesRequiredOverridesAllowed=dialog
 Compression=lzma2
 SolidCompression=yes

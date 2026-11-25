@@ -2,7 +2,8 @@
 # Write the winget manifest of a published release, ready to submit to
 # github.com/microsoft/winget-pkgs (see docs/packaging.md). The installer is
 # the signed Inno Setup program of the GitHub release; its checksum comes from
-# the release's SHA256SUMS. Output: dist/winget/manifests/o/OpenCRT/OpenCRT/<version>/.
+# the release's SHA256SUMS. The ARM64 setup is listed too when the release has
+# it. Output: dist/winget/manifests/o/OpenCRT/OpenCRT/<version>/.
 #
 #   packaging/winget/manifest.sh X.Y.Z [release date, YYYY-MM-DD]
 set -eu
@@ -11,9 +12,28 @@ echo "$v" | grep -qxE '[0-9]+\.[0-9]+\.[0-9]+' || { echo "usage: $0 X.Y.Z [YYYY-
 date=${2:-$(date -u +%F)}
 id=OpenCRT.OpenCRT
 repo=https://github.com/KimP0ssible-no/OpenCRT
-setup=opencrt-$v-x64-setup.exe
-sha=$(curl -sSfL "$repo/releases/download/v$v/SHA256SUMS" | awk -v f="$setup" '$2 == f { print toupper($1) }')
-echo "$sha" | grep -qxE '[0-9A-F]{64}' || { echo "$setup is not in the SHA256SUMS of release v$v" >&2; exit 1; }
+sums=$(curl -sSfL "$repo/releases/download/v$v/SHA256SUMS")
+sha() { echo "$sums" | awk -v f="opencrt-$v-$1-setup.exe" '$2 == f { print toupper($1) }'; }
+sha x64 | grep -qxE '[0-9A-F]{64}' || { echo "opencrt-$v-x64-setup.exe is not in the SHA256SUMS of release v$v" >&2; exit 1; }
+# The setup asks "for me" or "for all users"; winget chooses with the scope.
+installers() {
+    setup=opencrt-$v-$1-setup.exe
+    cat <<YAML
+- Architecture: $1
+  Scope: user
+  InstallerUrl: $repo/releases/download/v$v/$setup
+  InstallerSha256: $(sha "$1")
+  InstallerSwitches:
+    Custom: /CURRENTUSER
+- Architecture: $1
+  Scope: machine
+  InstallerUrl: $repo/releases/download/v$v/$setup
+  InstallerSha256: $(sha "$1")
+  InstallerSwitches:
+    Custom: /ALLUSERS
+  ElevationRequirement: elevatesSelf
+YAML
+}
 out=dist/winget/manifests/o/OpenCRT/OpenCRT/$v
 mkdir -p "$out"
 schema=1.9.0
@@ -27,7 +47,6 @@ ManifestType: version
 ManifestVersion: $schema
 YAML
 
-# The setup asks "for me" or "for all users"; winget chooses with the scope.
 cat > "$out/$id.installer.yaml" <<YAML
 # yaml-language-server: \$schema=https://aka.ms/winget-manifest.installer.$schema.schema.json
 PackageIdentifier: $id
@@ -37,19 +56,8 @@ UpgradeBehavior: install
 ProductCode: '{6F1D4C2E-8E0B-4E6B-9C5A-0C4C3D7A1E21}_is1'
 ReleaseDate: $date
 Installers:
-- Architecture: x64
-  Scope: user
-  InstallerUrl: $repo/releases/download/v$v/$setup
-  InstallerSha256: $sha
-  InstallerSwitches:
-    Custom: /CURRENTUSER
-- Architecture: x64
-  Scope: machine
-  InstallerUrl: $repo/releases/download/v$v/$setup
-  InstallerSha256: $sha
-  InstallerSwitches:
-    Custom: /ALLUSERS
-  ElevationRequirement: elevatesSelf
+$(installers x64)
+$(sha arm64 | grep -qxE '[0-9A-F]{64}' && installers arm64)
 ManifestType: installer
 ManifestVersion: $schema
 YAML

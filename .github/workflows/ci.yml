@@ -250,7 +250,10 @@ jobs:
             [ "$(printf '%s\n' "$needs" GLIBC_2.28 | sort -V | tail -1)" = GLIBC_2.28 ]
             [ "$(printf '%s\n' "$cxx" GLIBCXX_3.4.25 | sort -V | tail -1)" = GLIBCXX_3.4.25 ]
             extra=; [ $b = opencrt ] && extra='|libstdc\+\+|libfontconfig'
-            ! echo "$libs" | grep -qvE "^((libc|libm|libdl|libpthread|librt|libgcc_s$extra)\.so\.[0-9.]+|ld-linux-(x86-64|aarch64)\.so\.[12]| )+$"
+            # Not "! grep": a negated command never stops the script.
+            if echo "$libs" | grep -qvE "^((libc|libm|libdl|libpthread|librt|libgcc_s$extra)\.so\.[0-9.]+|ld-linux-(x86-64|aarch64)\.so\.[12]| )+$"; then
+              echo "::error::$b needs a library outside the list"; exit 1
+            fi
           done
       - name: Third-party licence notices
         run: |

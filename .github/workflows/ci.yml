@@ -199,13 +199,18 @@ jobs:
           path: crates/${{ matrix.crate }}/fuzz/artifacts
 
   # Built against glibc 2.28 so the packages install, with nothing else, on
-  # RHEL/Rocky/Alma 8+, Fedora, Debian 10+ and Ubuntu 20.04+.
+  # RHEL/Rocky/Alma 8+, Fedora, Debian 10+ and Ubuntu 20.04+, on x86_64 and
+  # on ARM64 (natively, on GitHub's ARM runner).
   # Packages build beside the tests rather than after them: a release waits
   # for both (see release).
   linux-packages:
     needs: changes
     if: needs.changes.outputs.packages == 'true'
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     container: almalinux:8
     steps:
       - name: Build tools
@@ -245,7 +250,7 @@ jobs:
             [ "$(printf '%s\n' "$needs" GLIBC_2.28 | sort -V | tail -1)" = GLIBC_2.28 ]
             [ "$(printf '%s\n' "$cxx" GLIBCXX_3.4.25 | sort -V | tail -1)" = GLIBCXX_3.4.25 ]
             extra=; [ $b = opencrt ] && extra='|libstdc\+\+|libfontconfig'
-            ! echo "$libs" | grep -qvE "^((libc|libm|libdl|libpthread|librt|libgcc_s$extra)\.so\.[0-9.]+|ld-linux-x86-64\.so\.2| )+$"
+            ! echo "$libs" | grep -qvE "^((libc|libm|libdl|libpthread|librt|libgcc_s$extra)\.so\.[0-9.]+|ld-linux-(x86-64|aarch64)\.so\.[12]| )+$"
           done
       - name: Third-party licence notices
         run: |
@@ -257,16 +262,20 @@ jobs:
           cargo install cargo-deb cargo-generate-rpm --locked
           cargo deb -p opencrt --no-build
           cargo generate-rpm -p crates/opencrt
+      # For Linux outside the deb, rpm and Arch repositories.
+      - name: AppImage
+        run: packaging/linux/build-appimage.sh target/release target target/appimage
       - uses: actions/upload-artifact@v7
         with:
-          name: opencrt-Linux
+          name: opencrt-Linux-${{ matrix.arch }}
           path: |
             target/debian/*.deb
             target/generate-rpm/*.rpm
+            target/appimage/*.AppImage
       # The same binaries again for the Arch package.
       - uses: actions/upload-artifact@v7
         with:
-          name: linux-binaries
+          name: linux-binaries-${{ matrix.arch }}
           path: |
             target/release/opencrt
             target/release/opencrt-rdp
@@ -287,7 +296,7 @@ jobs:
         run: sh packaging/set-version.sh "${GITHUB_REF_NAME#v}"
       - uses: actions/download-artifact@v8
         with:
-          name: linux-binaries
+          name: linux-binaries-x86_64
           path: ci-linux
       - run: BIN_DIR="$PWD/ci-linux/release" NOTICES_DIR="$PWD/ci-linux" packaging/arch/makepkg.sh
       - uses: actions/upload-artifact@v7

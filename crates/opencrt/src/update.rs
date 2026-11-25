@@ -378,6 +378,7 @@ mod tests {
         assert_eq!(InstallKind::of(&stick.join("opencrt.exe")), InstallKind::Portable);
         assert_eq!(InstallKind::of(&mac.join("opencrt")), InstallKind::MacBundle);
         assert!(matches!(InstallKind::of(Path::new("/usr/bin/opencrt")), InstallKind::Package { .. }));
+        assert_eq!(InstallKind::of(Path::new("/tmp/.mount_OpenCRaB12cD/usr/bin/opencrt")), InstallKind::Manual);
         assert_eq!(InstallKind::of(&dir.join("target/release/opencrt")), InstallKind::Manual);
         assert_eq!(InstallKind::of(&dir.join("MacOS/opencrt")), InstallKind::Manual);
         std::fs::remove_dir_all(&dir).unwrap();

@@ -48,7 +48,7 @@ Telnet, raw, serial, local and SFTP tabs alike.
 - `src/app.rs` — app state (tabs, prompts, mouse/selection, transfers, scripts,
   auto-reconnect), Slint callbacks, the 15 ms tick.
 - `src/terminal.rs` — alacritty wrapper: feed, replies, scrollback, selection,
-  find, cursor shape, resolved cells for rendering; compacts the history again
+  find, cursor shape, resolved cells for rendering. Compacts the history again
   once resizing pauses.
 - `src/render.rs` — CPU glyph rasteriser, font catalogue, keyword highlighting,
   vertical dock-tab labels.

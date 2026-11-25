@@ -133,8 +133,8 @@ update buttons in About and no update check box in Global Options.
 ## Releases
 CI (`.github/workflows/ci.yml`) builds and tests every push. The package jobs
 run beside the tests, and the release job waits for both. Main and tags always
-build the packages; a pull request builds them only with the `packages` label
-(adding the label starts a run). Pushing a tag
+build the packages. A pull request builds them only with the `packages` label,
+and adding the label starts a run. Pushing a tag
 `vX.Y.Z` also publishes a GitHub Release with the Windows installer and MSI,
 the macOS disk image, the .deb, .rpm and Arch packages, and `SHA256SUMS`.
 The version comes from the tag: main stays at `0.0.0`, and on a tag every

@@ -217,7 +217,8 @@ OpenCRT figure adds the window (39.1 MB) and its Remote Desktop helper
 ### Runs where you work
 Windows 10 and 11 (setup, MSI for Group Policy, or a portable zip for a USB
 stick), macOS on Apple silicon and Intel, Debian and Ubuntu, RHEL, Rocky,
-Alma, Fedora and SUSE, and Arch Linux. OpenCRT is free and open source.
+Alma, Fedora and SUSE, and Arch Linux, on x86_64 and on ARM64 (an AppImage
+for any other Linux). OpenCRT is free and open source.
 
 ## A clean-room implementation
 OpenCRT is an independent project. It is not affiliated with, endorsed by or
@@ -239,12 +240,16 @@ files are signed as the [Code signing policy](#code-signing-policy) describes):
 | Windows 11 (ARM64) | `opencrt-<version>-arm64-setup.exe`, or the `aarch64` `.msi` |
 | Windows, portable | `opencrt-<version>-x64-portable.zip` or `-arm64-portable.zip`: unpack anywhere (a USB stick), nothing installed |
 | macOS (Apple silicon and Intel) | `OpenCRT.dmg` |
-| Debian / Ubuntu | `opencrt_<version>-1_amd64.deb` |
-| RHEL / Rocky / Alma / Fedora / SUSE | `opencrt-<version>-1.x86_64.rpm` |
-| Arch Linux | `opencrt-<version>-1-x86_64.pkg.tar.zst` |
+| Debian / Ubuntu | `opencrt_<version>-1_amd64.deb`, ARM64: `opencrt_<version>-1_arm64.deb` |
+| RHEL / Rocky / Alma / Fedora / SUSE | `opencrt-<version>-1.x86_64.rpm`, ARM64: `opencrt-<version>-1.aarch64.rpm` |
+| Arch Linux (x86_64) | `opencrt-<version>-1-x86_64.pkg.tar.zst` |
+| Other Linux | `OpenCRT-<version>-x86_64.AppImage`, ARM64: `OpenCRT-<version>-aarch64.AppImage` |
 
 The Linux packages need glibc 2.28 (RHEL 8, Debian 10, Ubuntu 20.04 and
-newer), fontconfig and the C++ runtime, which every desktop system has. `SHA256SUMS` lists the checksum of every file.
+newer), fontconfig and the C++ runtime, which every desktop system has. The
+AppImage needs the same and nothing installed: make it executable
+(`chmod +x`) and run it. It does not update itself: download the new one from
+the release page. `SHA256SUMS` lists the checksum of every file.
 
 The portable zip carries a `portable.txt` beside `opencrt.exe`: while it is
 there, OpenCRT keeps its settings, sessions and host keys in a `settings`

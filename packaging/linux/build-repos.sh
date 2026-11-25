@@ -3,7 +3,8 @@
 # serves, from release packages:
 #   packaging/linux/build-repos.sh <packages folder> <output folder> <base URL>
 # The folder holds the .deb, .rpm and .pkg.tar.zst files of the releases to
-# offer (newest Arch package wins: a pacman repository has one per name).
+# offer, x86_64 and ARM64 (newest Arch package wins: a pacman repository has
+# one per name, and there is no ARM64 one).
 # Signs with the OpenPGP key $REPO_KEY_ID from gpg's keyring: the .rpm
 # packages, each Arch package and every repository's metadata.
 # Needs apt-utils, createrepo-c, rpm, pacman-package-manager, makepkg,
@@ -15,18 +16,21 @@ url=$3
 key=${REPO_KEY_ID:?REPO_KEY_ID is the signing key}
 sign() { gpg --batch --yes --local-user "$key" "$@"; }
 
-mkdir -p "$out/apt/pool/main" "$out/apt/dists/stable/main/binary-amd64" "$out/rpm" "$out/arch"
+mkdir -p "$out/apt/pool/main" "$out/rpm" "$out/arch"
 gpg --batch --yes --armor --export "$key" > "$out/opencrt.asc"
 
 cp "$src"/*.deb "$out/apt/pool/main/"
 (
     cd "$out/apt"
-    apt-ftparchive packages pool > dists/stable/main/binary-amd64/Packages
-    gzip -9kf dists/stable/main/binary-amd64/Packages
+    for a in amd64 arm64; do
+        mkdir -p dists/stable/main/binary-$a
+        apt-ftparchive --arch $a packages pool > dists/stable/main/binary-$a/Packages
+        gzip -9kf dists/stable/main/binary-$a/Packages
+    done
     apt-ftparchive \
         -o APT::FTPArchive::Release::Origin=OpenCRT -o APT::FTPArchive::Release::Label=OpenCRT \
         -o APT::FTPArchive::Release::Suite=stable -o APT::FTPArchive::Release::Codename=stable \
-        -o APT::FTPArchive::Release::Architectures=amd64 -o APT::FTPArchive::Release::Components=main \
+        -o "APT::FTPArchive::Release::Architectures=amd64 arm64" -o APT::FTPArchive::Release::Components=main \
         release dists/stable > dists/stable/Release
     sign --clearsign --output dists/stable/InRelease dists/stable/Release
     sign --armor --detach-sign --output dists/stable/Release.gpg dists/stable/Release

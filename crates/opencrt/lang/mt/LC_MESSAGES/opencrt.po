@@ -3241,3 +3241,6 @@ msgstr "Isem tal-utent għal {}:"
 
 msgid "Password for {} on {}:"
 msgstr "Password għal {} fuq {}:"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "Niżżel il-.flatpak il-ġdid mill-paġna tar-rilaxx u installah b'flatpak install --user."

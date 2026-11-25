@@ -3239,3 +3239,6 @@ msgstr "Felhasználónév ({}):"
 
 msgid "Password for {} on {}:"
 msgstr "Jelszó (felhasználó: {}, gazdagép: {}):"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "Töltse le az új .flatpak fájlt a kiadási oldalról, és telepítse a flatpak install --user paranccsal."

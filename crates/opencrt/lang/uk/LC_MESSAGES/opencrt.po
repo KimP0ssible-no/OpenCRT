@@ -3240,3 +3240,6 @@ msgstr "Ім’я користувача для {}:"
 
 msgid "Password for {} on {}:"
 msgstr "Пароль для {} на {}:"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "Завантажте новий .flatpak зі сторінки випуску та встановіть його командою flatpak install --user."

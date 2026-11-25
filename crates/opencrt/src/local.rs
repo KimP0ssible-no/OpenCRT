@@ -55,9 +55,14 @@ fn shell_env(term: &str) -> std::collections::HashMap<String, String> {
 /// `term` terminal.
 pub fn connect(program: &str, term: &str, cols: u32, rows: u32) -> SshHandle {
     let env = shell_env(term);
-    let shell = (!program.is_empty()).then(|| command_line(program));
+    let home = std::env::home_dir();
+    let shell = if in_flatpak() {
+        Some(tty::Shell::new("flatpak-spawn".into(), host_shell_args(program, term, home.as_deref())))
+    } else {
+        (!program.is_empty()).then(|| command_line(program))
+    };
     ssh::spawn(move |io| {
-        let mut options = Options { drain_on_exit: true, working_directory: std::env::home_dir(), env, ..Options::default() };
+        let mut options = Options { drain_on_exit: true, working_directory: home, env, ..Options::default() };
         options.shell = shell;
         let mut pty = tty::new(&options, window(cols, rows), 0)?;
         let _ = io.output.send(SshEvent::Connected);
@@ -118,6 +123,26 @@ fn command_line(program: &str) -> tty::Shell {
     tty::Shell::new(shell, vec!["-l".into(), "-c".into(), program.to_string()])
 }
 
+/// Inside a Flatpak sandbox, which has neither the user's shell nor their programs.
+pub fn in_flatpak() -> bool {
+    std::path::Path::new("/.flatpak-info").is_file()
+}
+
+/// `flatpak-spawn` arguments that start the shell on the host, on this PTY
+/// (the host side makes it the controlling terminal): the login shell from the
+/// host's user database, else `$SHELL`. With `program`, a host file runs as it
+/// is and anything else through that shell, as [`command_line`] does. The host
+/// process gets the host's environment, so the terminal settings go along.
+fn host_shell_args(program: &str, term: &str, home: Option<&std::path::Path>) -> Vec<String> {
+    const SCRIPT: &str = r#"s=$(getent passwd "$(id -un)" | cut -d: -f7); s=${s:-${SHELL:-/bin/sh}}; [ $# -eq 0 ] && exec "$s"; [ -f "$1" ] && exec "$1"; exec "$s" -l -c "$1""#;
+    let mut args: Vec<String> = vec!["--host".into(), "--watch-bus".into()];
+    args.extend(shell_env(term).into_iter().map(|(k, v)| format!("--env={k}={v}")));
+    args.extend(home.map(|h| format!("--directory={}", h.display())));
+    args.extend(["sh", "-c", SCRIPT, "sh"].map(String::from));
+    args.extend((!program.is_empty()).then(|| program.to_string()));
+    args
+}
+
 /// `write_all` for a non-blocking writer: retry briefly while it is full (the
 /// Windows writer reports a full pipe as a zero-length write).
 fn write_all(writer: &mut impl Write, mut bytes: &[u8]) -> std::io::Result<()> {
@@ -147,6 +172,26 @@ fn write_all(writer: &mut impl Write, mut bytes: &[u8]) -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn flatpak_runs_the_shell_on_the_host() {
+        let args = host_shell_args("", "xterm-256color", Some(std::path::Path::new("/home/kim")));
+        assert_eq!(args[..2], ["--host", "--watch-bus"]);
+        assert!(args.contains(&"--env=TERM=xterm-256color".into()) && args.contains(&"--env=COLORTERM=truecolor".into()));
+        assert!(args.contains(&"--directory=/home/kim".into()));
+        assert_eq!(args[args.len() - 4..][..2], ["sh", "-c"]);
+        assert_eq!(args.last().unwrap(), "sh");
+        let with = host_shell_args("echo  hi", "vt100", None);
+        assert_eq!(with.last().unwrap(), "echo  hi");
+        assert!(!with.iter().any(|a| a.starts_with("--directory")));
+        // What the host runs: a file as it is, anything else through the user's shell.
+        #[cfg(unix)]
+        for (program, out) in [("/bin/pwd", "/\n"), ("echo  hi", "hi\n")] {
+            let args = host_shell_args(program, "vt100", None);
+            let run = std::process::Command::new("sh").args(&args[args.len() - 4..]).current_dir("/").output().unwrap();
+            assert!(String::from_utf8_lossy(&run.stdout).ends_with(out), "{program}: {run:?}");
+        }
+    }
 
     #[test]
     fn wsl_names_from_utf16_or_utf8() {

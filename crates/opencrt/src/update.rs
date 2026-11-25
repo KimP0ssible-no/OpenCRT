@@ -295,6 +295,8 @@ pub enum InstallKind {
     Package { repo: bool },
     /// The Windows portable zip (`portable.txt` beside the program).
     Portable,
+    /// The `.flatpak` bundle: Flatpak keeps the app under /app.
+    Flatpak,
     /// The MSI, a copied folder or a development build.
     Manual,
 }
@@ -308,6 +310,8 @@ impl InstallKind {
             Self::InnoSetup
         } else if dir.ends_with("Contents/MacOS") && dir.parent().and_then(Path::parent).is_some_and(|app| app.extension().is_some_and(|e| e == "app")) {
             Self::MacBundle
+        } else if exe.starts_with("/app/") {
+            Self::Flatpak
         } else if exe.starts_with("/usr/") {
             Self::Package { repo: repo_configured(Path::new("/")) }
         } else {
@@ -324,6 +328,7 @@ impl InstallKind {
                 tr!("To get it, and later versions, with your system's updates, set up the OpenCRT package repository once: kimp0ssible-no.github.io/OpenCRT")
             }
             Self::Portable => tr!("Download the portable zip from the release page and replace the program files in this folder; the settings folder stays as it is."),
+            Self::Flatpak => tr!("Download the new .flatpak from the release page and install it with flatpak install --user."),
             Self::Manual => tr!("Download it from the release page."),
         }
     }
@@ -333,7 +338,7 @@ impl InstallKind {
         match self {
             Self::InnoSetup => Some(format!("opencrt-{version}-x64-setup.exe")),
             Self::MacBundle => Some("OpenCRT.dmg".to_string()),
-            Self::Package { .. } | Self::Portable | Self::Manual => None,
+            Self::Package { .. } | Self::Portable | Self::Flatpak | Self::Manual => None,
         }
     }
 }
@@ -379,6 +384,8 @@ mod tests {
         assert_eq!(InstallKind::of(&mac.join("opencrt")), InstallKind::MacBundle);
         assert!(matches!(InstallKind::of(Path::new("/usr/bin/opencrt")), InstallKind::Package { .. }));
         assert_eq!(InstallKind::of(Path::new("/tmp/.mount_OpenCRaB12cD/usr/bin/opencrt")), InstallKind::Manual);
+        assert_eq!(InstallKind::of(Path::new("/app/bin/opencrt")), InstallKind::Flatpak);
+        assert_eq!(InstallKind::Flatpak.asset("1.2.3"), None);
         assert_eq!(InstallKind::of(&dir.join("target/release/opencrt")), InstallKind::Manual);
         assert_eq!(InstallKind::of(&dir.join("MacOS/opencrt")), InstallKind::Manual);
         std::fs::remove_dir_all(&dir).unwrap();

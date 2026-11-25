@@ -3240,3 +3240,6 @@ msgstr "Lietotājvārds resursdatoram {}:"
 
 msgid "Password for {} on {}:"
 msgstr "Parole lietotājam {} resursdatorā {}:"
+
+msgid "Download the new .flatpak from the release page and install it with flatpak install --user."
+msgstr "Lejupielādējiet jauno .flatpak no laidiena lapas un instalējiet to ar flatpak install --user."

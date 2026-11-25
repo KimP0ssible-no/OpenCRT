@@ -1,0 +1,57 @@
+# OpenCRT as a Flatpak bundle (the .flatpak on the release page), built by
+# packaging/flatpak/build.sh from the glibc 2.28 Linux binaries. They need
+# only glibc, libstdc++ and fontconfig, which the runtime has.
+app-id: org.opencrt.OpenCRT
+runtime: org.freedesktop.Platform
+runtime-version: '26.08'
+sdk: org.freedesktop.Sdk
+command: opencrt
+rename-desktop-file: opencrt.desktop
+rename-icon: opencrt
+finish-args:
+  # SSH, Telnet, RDP, VNC and raw sockets; checking for updates.
+  - --share=network
+  # X11's shared memory.
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  # Serial ports (/dev/ttyS*, /dev/ttyUSB*, /dev/ttyACM*) and the GPU, which
+  # Skia draws the window with. Flatpak has no narrower serial permission.
+  - --device=all
+  # The SSH agent for key logins and agent forwarding.
+  - --socket=ssh-auth
+  # SFTP transfers, logs, scripts and key files (~/.ssh too: key generation
+  # writes there) where the user keeps them.
+  - --filesystem=home
+  # Local shell tabs run on the host through flatpak-spawn --host: the
+  # sandbox has neither the user's shell nor their programs.
+  - --talk-name=org.freedesktop.Flatpak
+  # Saved passwords in the desktop's keyring (Secret Service).
+  - --talk-name=org.freedesktop.secrets
+modules:
+  # Settings Sync runs git, which the runtime lacks. Without its optional
+  # Rust part: the SDK has no cargo without an extension.
+  - name: git
+    buildsystem: simple
+    build-commands:
+      - make -j"$FLATPAK_BUILDER_N_JOBS" prefix=/app NO_TCLTK=1 NO_GETTEXT=1 NO_PERL=1 NO_PYTHON=1 NO_RUST=1 NO_INSTALL_HARDLINKS=1 install
+    cleanup:
+      - /share/man
+      - /share/git-core/templates
+    sources:
+      - type: archive
+        url: https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.56.1.tar.xz
+        sha256: f0b0bf89264b9bd2e1c640363e7529643989da76281600473c50745cd34a607f
+  - name: opencrt
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 -t /app/bin opencrt opencrt-rdp ocrt
+      - install -Dm644 -t /app/share/doc/opencrt LICENSE NOTICE SLINT-LICENSE.md OFL.txt THIRD-PARTY-NOTICES*.html
+      - install -Dm644 -t /app/share/applications opencrt.desktop
+      - for s in 16 24 32 48 64 128 256; do install -Dm644 opencrt-$s.png /app/share/icons/hicolor/${s}x$s/apps/opencrt.png; done
+      - install -Dm644 opencrt.svg /app/share/icons/hicolor/scalable/apps/opencrt.svg
+      - install -Dm644 -t /app/share/metainfo org.opencrt.OpenCRT.metainfo.xml
+    sources:
+      # Staged by build.sh: the programs, the notices and the files below.
+      - type: dir
+        path: ../../target/flatpak/input

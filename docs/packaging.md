@@ -70,7 +70,8 @@ all of them.
 | Platform | Tool | Command | Output |
 |---|---|---|---|
 | Windows | Inno Setup 6 | `iscc packaging\windows\opencrt.iss` | `packaging\windows\Output\opencrt-<ver>-x64-setup.exe` |
-| Windows (MSI) | `cargo install cargo-wix`, WiX 3 | `cargo wix -p opencrt --no-build` | `target\wix\*.msi` |
+| Windows ARM64 | `rustup target add aarch64-pc-windows-msvc`, build with `--target aarch64-pc-windows-msvc`, Inno Setup 6 | `iscc /DArch=arm64 /DBinDir=..\..\target\aarch64-pc-windows-msvc\release packaging\windows\opencrt.iss` | `packaging\windows\Output\opencrt-<ver>-arm64-setup.exe` |
+| Windows (MSI) | `cargo install cargo-wix`, WiX 3 | `cargo wix -p opencrt --no-build` (add `--target aarch64-pc-windows-msvc` for ARM64) | `target\wix\*.msi` |
 | Debian/Ubuntu | `cargo install cargo-deb` | `cargo deb -p opencrt --no-build` | `target/debian/*.deb` |
 | Red Hat/Fedora/SUSE | `cargo install cargo-generate-rpm` | `cargo generate-rpm -p crates/opencrt` | `target/generate-rpm/*.rpm` |
 | Arch Linux | `makepkg` (in Arch) | `packaging/arch/makepkg.sh` (or `packaging/arch/build-arch.sh` with Docker) | `dist/*.pkg.tar.zst` |
@@ -144,9 +145,10 @@ CI (`.github/workflows/ci.yml`) builds and tests every push. The package jobs
 run beside the tests, and the release job waits for both. Main and tags always
 build the packages. A pull request builds them only with the `packages` label,
 and adding the label starts a run. Pushing a tag
-`vX.Y.Z` also publishes a GitHub Release with the Windows installer and MSI,
-the macOS disk image, the .deb and .rpm (x86_64 and ARM64), the Arch package,
-the AppImages and Flatpak bundles (x86_64 and ARM64), and `SHA256SUMS`.
+`vX.Y.Z` also publishes a GitHub Release with the Windows installers, MSIs and
+portable zips (x64 and ARM64), the macOS disk image, the .deb and .rpm (x86_64
+and ARM64), the Arch package, the AppImages and Flatpak bundles (x86_64 and
+ARM64), and `SHA256SUMS`.
 The version comes from the tag: main stays at `0.0.0`, and on a tag every
 packaging job runs `packaging/set-version.sh X.Y.Z` before it builds (run it
 locally too, to build a numbered package by hand). The annotated tag's message

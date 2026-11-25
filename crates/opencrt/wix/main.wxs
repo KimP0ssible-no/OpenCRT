@@ -9,7 +9,7 @@
              Manufacturer='OpenCRT' Language='1033' Codepage='1252' Version='$(var.Version)'>
         <Package Id='*' Description='SSH, Telnet, serial and local terminal client' Manufacturer='OpenCRT'
                  InstallerVersion='500' Languages='1033' Compressed='yes' InstallScope='perMachine'
-                 Platform='x64' SummaryCodepage='1252'/>
+                 Platform='$(sys.BUILDARCH)' SummaryCodepage='1252'/>
         <MajorUpgrade Schedule='afterInstallInitialize'
                       DowngradeErrorMessage='A newer version of [ProductName] is already installed.'/>
         <Media Id='1' Cabinet='opencrt.cab' EmbedCab='yes'/>

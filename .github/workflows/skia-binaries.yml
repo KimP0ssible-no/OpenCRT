@@ -3,8 +3,10 @@ name: Skia binaries
 # Run by hand once for each skia-bindings version. rust-skia publishes no
 # prebuilt Skia for the static C runtime the Windows programs link, so CI would
 # otherwise build Skia from source (about half an hour) whenever skia-bindings
-# rebuilds. This builds it once and attaches it to a "skia-<version>"
-# pre-release, where CI's SKIA_BINARIES_URL finds it.
+# rebuilds. This builds it once and attaches it to a pre-release, where CI's
+# SKIA_BINARIES_URL finds it: "skia-<version>" for x64 and, cross-compiled on
+# the same runner, "skia-<version>-arm64" for ARM64 (releases are immutable,
+# so each target has its own). A target already published is skipped.
 on:
   workflow_dispatch:
 
@@ -13,25 +15,51 @@ permissions:
 
 jobs:
   windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            release: skia-{tag}
+          - target: aarch64-pc-windows-msvc
+            release: skia-{tag}-arm64
     runs-on: windows-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v7
+      - name: Already published?
+        id: done
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(grep -A1 '^name = "skia-bindings"$' Cargo.lock | sed -n 's/^version = "\(.*\)"$/\1/p')
+          release=$(echo '${{ matrix.release }}' | sed "s/{tag}/$v/")
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          if gh release view "$release" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "$release is already published"; echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
       # As in ci.yml, without SKIA_BINARIES_URL: rust-skia's own URL answers
       # 404, so Skia is built from source.
       - name: Ready to build Skia from source
+        if: steps.done.outputs.skip != 'true'
         run: |
           git config --system core.longpaths true
           'SKIA_GN_ARGS=extra_cflags_cc=["/D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH"]' >> $env:GITHUB_ENV
           'BINDGEN_EXTRA_CLANG_ARGS=-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH' >> $env:GITHUB_ENV
-      - uses: dtolnay/rust-toolchain@stable
+      - if: steps.done.outputs.skip != 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
       # The opencrt build, so skia-bindings gets the same features as in CI.
       - name: Build Skia
-        run: cargo build -p opencrt
+        if: steps.done.outputs.skip != 'true'
+        run: cargo build -p opencrt --target ${{ matrix.target }}
       # The archive the build script downloads: a skia-binaries/ folder with
       # the libraries and bindings, named with the key the build script asked for.
       - name: Pack and publish
+        if: steps.done.outputs.skip != 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -45,11 +73,13 @@ jobs:
           /usr/bin/find "$target" -path '*/skia-bindings[-/]*' -name bindings.rs | tee found.txt
           # The file holding the script's printed lines changed its name with
           # that layout too: find it by its content.
-          printed=$(grep -rl --exclude-dir=out "TRYING TO DOWNLOAD AND INSTALL SKIA BINARIES:" "$target"/debug/build/skia-bindings* | head -1)
+          printed=$(grep -rl --exclude-dir=out "TRYING TO DOWNLOAD AND INSTALL SKIA BINARIES:" "$target"/${{ matrix.target }}/debug/build/skia-bindings* | head -1)
           echo "printed by the build script: $printed"
           wanted=$(grep -h "TRYING TO DOWNLOAD AND INSTALL SKIA BINARIES:" "$printed" | tail -1 | sed 's/.*: //')
           tag=${wanted%%/*}
           key=${wanted#*/}
+          release='${{ steps.done.outputs.release }}'
+          [ "$release" = "$(echo '${{ matrix.release }}' | sed "s/{tag}/$tag/")" ] || { echo "::error::built Skia $tag, but Cargo.lock named $release"; exit 1; }
           out=$(dirname "$(grep '/skia/bindings.rs$' found.txt | head -1)")
           echo "tag $tag, key $key, from $out"
           mkdir -p pack/skia-binaries
@@ -62,6 +92,6 @@ jobs:
           archive="skia-binaries-$key.tar.gz"
           tar czf "$archive" -C pack skia-binaries
           # Releases here are immutable: the archive goes in as the release is made.
-          gh release create "skia-$tag" "$archive" --prerelease --latest=false \
-            --title "Skia $tag for Windows (static C runtime)" \
+          gh release create "$release" "$archive" --prerelease --latest=false \
+            --title "Skia $tag for Windows ${{ matrix.target }} (static C runtime)" \
             --notes "Skia $tag built from source by skia-binaries.yml, for CI's Windows builds (SKIA_BINARIES_URL). Not an OpenCRT release. Skia is BSD-3-Clause (LICENSE_SKIA)."
